@@ -14,7 +14,7 @@ import SellIcon from '@mui/icons-material/ShoppingCart';
 import { useReactToPrint } from 'react-to-print';
 import { ikinciElMotorService, musteriService, authService } from '../services/api';
 import { SEGMENTLER } from './Vitrin';
-import { BekleyenBelgeler, bekleyenBelgeleriYukle } from '../components/SatisBelgeleri';
+import { BelgeBolumu, BekleyenBelgeler, bekleyenBelgeleriYukle } from '../components/SatisBelgeleri';
 import { useAuth } from '../context/AuthContext';
 
 // Ödeme dağılımı JSON'unu güvenle diziye çevirir
@@ -61,7 +61,7 @@ const MotorStok = () => {
   const [activeFilter, setActiveFilter] = useState(null);
   const [secondaryFilter, setSecondaryFilter] = useState(null);
   const [hizliSatis, setHizliSatis] = useState({ open: false, motor: null });
-  // Satış diyaloğunda seçilen, satış tamamlanınca yüklenecek belgeler (sözleşme vb.)
+  // Yeni motor eklenirken seçilen, kayıttan sonra yüklenecek belgeler (kayıtlı motorda belgeler anında yüklenir)
   const [bekleyenBelgeler, setBekleyenBelgeler] = useState([]);
   const [satisKaydediliyor, setSatisKaydediliyor] = useState(false);
   const [hizliForm, setHizliForm] = useState({
@@ -115,6 +115,7 @@ const MotorStok = () => {
       yatirimci: false, yatirimci_id: '', yatirimci_kar_orani: '',
     vitrin_baslik: '', vitrin_aciklama: '', vitrin_segment: '', vitrin_cc: '', vitrin_hasar: ''
     });
+    setBekleyenBelgeler([]);
     setDialog({ open: true, data: motor });
   };
 
@@ -123,13 +124,19 @@ const MotorStok = () => {
     try {
       const payload = { ...formData };
       if (!payload.yatirimci) { payload.yatirimci_id = null; payload.yatirimci_kar_orani = 0; }
+      let belgeHatalari = [];
       if (dialog.data) {
         await ikinciElMotorService.update(dialog.data.id, payload);
       } else {
-        await ikinciElMotorService.create(payload);
+        const res = await ikinciElMotorService.create(payload);
+        if (bekleyenBelgeler.length) belgeHatalari = await bekleyenBelgeleriYukle(res.data.id, bekleyenBelgeler);
       }
       setDialog({ open: false, data: null });
+      setBekleyenBelgeler([]);
       loadData();
+      if (belgeHatalari.length) {
+        alert(`Motor kaydedildi ancak şu belgeler yüklenemedi:\n${belgeHatalari.join('\n')}\n\nMotoru düzenleyerek tekrar ekleyebilirsiniz.`);
+      }
     } catch (err) { setError(err.response?.data?.message || 'Hata oluştu'); }
   };
 
@@ -146,7 +153,6 @@ const MotorStok = () => {
       yatirimci_kar: motor.yatirimci_kar || ''
     });
     setOdemeKalemleri(parseOdeme(motor.odeme_detaylari));
-    setBekleyenBelgeler([]);
     setHizliSatis({ open: true, motor });
   };
 
@@ -161,22 +167,15 @@ const MotorStok = () => {
     const kalan = dolular.length > 0 ? Math.max(0, satis - dolular.reduce((s, o) => s + parseFloat(o.tutar || 0), 0)) : 0;
     setSatisKaydediliyor(true);
     try {
-      const motorId = hizliSatis.motor.id;
-      await ikinciElMotorService.update(motorId, {
+      await ikinciElMotorService.update(hizliSatis.motor.id, {
         ...hizliSatis.motor,
         ...hizliForm,
         durum: 'tamamlandi',
         kalan_odeme: kalan,
         odeme_detaylari: JSON.stringify(dolular)
       });
-      // Satış tamamlandı; seçilen belgeler şimdi bu satışa yüklenir
-      const belgeHatalari = bekleyenBelgeler.length ? await bekleyenBelgeleriYukle(motorId, bekleyenBelgeler) : [];
       setHizliSatis({ open: false, motor: null });
-      setBekleyenBelgeler([]);
       loadData();
-      if (belgeHatalari.length) {
-        alert(`Satış kaydedildi ancak şu belgeler yüklenemedi:\n${belgeHatalari.join('\n')}\n\nMotor Satış sayfasında satışın detayından tekrar ekleyebilirsiniz.`);
-      }
     } catch (err) { alert(err.response?.data?.message || 'Hata'); }
     setSatisKaydediliyor(false);
   };
@@ -488,6 +487,11 @@ const MotorStok = () => {
           <Grid container spacing={2} sx={{ mt: 1 }}>
             <Grid size={{ xs: 12 }}><TextField fullWidth label="Açıklama" value={f.aciklama} onChange={e => setFormData({ ...f, aciklama: e.target.value })} multiline rows={2} /></Grid>
           </Grid>
+
+          {/* Ruhsat, alış sözleşmesi vb.: motor satılınca aynı belgeler satış kaydında da görünür */}
+          {dialog.data
+            ? <BelgeBolumu key={dialog.data.id} motorId={dialog.data.id} />
+            : <BekleyenBelgeler dosyalar={bekleyenBelgeler} setDosyalar={setBekleyenBelgeler} />}
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDialog({ open: false, data: null })}>İptal</Button>
@@ -601,8 +605,8 @@ const MotorStok = () => {
             );
           })()}
 
-          {/* Satış sözleşmesi vb. belgeler: burada seçilir, satış tamamlanınca yüklenir */}
-          <BekleyenBelgeler dosyalar={bekleyenBelgeler} setDosyalar={setBekleyenBelgeler} disabled={satisKaydediliyor} />
+          {/* Belgeler motora bağlıdır: stokta eklenenler burada da görünür, burada eklenenler motorda kalır */}
+          {hizliSatis.motor && <BelgeBolumu key={hizliSatis.motor.id} motorId={hizliSatis.motor.id} />}
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setHizliSatis({ open: false, motor: null })} disabled={satisKaydediliyor}>İptal</Button>
@@ -613,13 +617,13 @@ const MotorStok = () => {
       </Dialog>
 
       {/* Motor Detay Modal */}
-      <StokDetayModal open={detayModal.open} data={detayModal.data} onClose={() => setDetayModal({ open: false, data: null })} printRef={printRef} isMobile={isMobile} perms={{ canAlis, canListe, canMusteri, canKar, isYatirimci: isYatirimciSahip }} />
+      <StokDetayModal open={detayModal.open} data={detayModal.data} onClose={() => setDetayModal({ open: false, data: null })} printRef={printRef} isMobile={isMobile} perms={{ canAlis, canListe, canMusteri, canKar, isYatirimci: isYatirimciSahip, canBelge: canEdit }} />
     </Box>
   );
 };
 
 const StokDetayModal = ({ open, data, onClose, printRef, isMobile, perms = {} }) => {
-  const { canAlis = true, canListe = true, canMusteri = true, canKar = true, isYatirimci = false } = perms;
+  const { canAlis = true, canListe = true, canMusteri = true, canKar = true, isYatirimci = false, canBelge = false } = perms;
   const handlePrint = useReactToPrint({ contentRef: printRef });
   if (!data) return null;
 
@@ -758,6 +762,8 @@ const StokDetayModal = ({ open, data, onClose, printRef, isMobile, perms = {} })
             </>
           )}
         </Box>
+        {/* Belgeler yazdırma alanının (printRef) dışında: çıktıya girmez */}
+        {canBelge && <BelgeBolumu key={data.id} motorId={data.id} />}
       </DialogContent>
     </Dialog>
   );

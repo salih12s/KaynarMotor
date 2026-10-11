@@ -254,7 +254,7 @@ router.post('/users', authenticateToken, isAdmin, async (req, res) => {
     if (!kullanici_adi || !sifre || !ad_soyad) {
       return res.status(400).json({ message: 'Kullanıcı adı, şifre ve ad soyad zorunludur' });
     }
-    const gecerliRoller = ['personel', 'yatirimci'];
+    const gecerliRoller = ['personel', 'yatirimci', 'muhasebeci'];
     const yeniRol = gecerliRoller.includes(rol) ? rol : 'personel';
 
     const existing = await pool.query('SELECT id FROM kullanicilar WHERE kullanici_adi = $1', [kullanici_adi]);
@@ -273,7 +273,7 @@ router.post('/users', authenticateToken, isAdmin, async (req, res) => {
     await logAktivite({
       kullanici_id: req.user.id, kullanici_adi: req.user.kullanici_adi,
       islem_tipi: ISLEM_TIPLERI.REGISTER,
-      islem_detay: `${yeniRol === 'yatirimci' ? 'Yatırımcı' : 'Kullanıcı'} oluşturuldu: ${ad_soyad}`,
+      islem_detay: `${{ yatirimci: 'Yatırımcı', muhasebeci: 'Muhasebeci' }[yeniRol] || 'Kullanıcı'} oluşturuldu: ${ad_soyad}`,
       hedef_tablo: 'kullanicilar', hedef_id: result.rows[0].id
     });
 

@@ -33,7 +33,7 @@ const Yetkilendirme = () => {
     try {
       const res = await authService.getUsers();
       // Admin ve yatırımcı dışındaki (personel) kullanıcılar yetkilendirilir
-      setUsers(res.data.filter(u => u.rol !== 'admin' && u.rol !== 'yatirimci'));
+      setUsers(res.data.filter(u => u.rol !== 'admin' && u.rol !== 'yatirimci' && u.rol !== 'muhasebeci'));
     } catch { setError('Kullanıcılar yüklenemedi'); }
   };
 

@@ -154,6 +154,7 @@ const Kullanicilar = () => {
               <TextField select fullWidth label="Rol" value={createForm.rol} onChange={e => setCreateForm({ ...createForm, rol: e.target.value })}>
                 <MenuItem value="yatirimci">Yatırımcı</MenuItem>
                 <MenuItem value="personel">Personel</MenuItem>
+                <MenuItem value="muhasebeci">Muhasebeci (sadece Belge Arşivi)</MenuItem>
               </TextField>
             </Grid>
             <Grid size={{ xs: 12 }}><TextField fullWidth label="Ad Soyad" value={createForm.ad_soyad} onChange={e => setCreateForm({ ...createForm, ad_soyad: e.target.value })} required /></Grid>

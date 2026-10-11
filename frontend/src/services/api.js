@@ -121,6 +121,7 @@ export const ikinciElMotorService = {
 // Satış belgeleri (sözleşme vb.). Yükleme JSON değil, ham dosya gövdesidir (base64 şişmesi olmasın).
 export const satisBelgeService = {
   list: (motorId) => api.get(`/satis-belgeleri/motor/${motorId}`),
+  arsiv: () => api.get('/satis-belgeleri/arsiv'),
   upload: (motorId, file) => api.post(`/satis-belgeleri/motor/${motorId}`, file, {
     params: { ad: file.name },
     headers: { 'Content-Type': 'application/octet-stream' },

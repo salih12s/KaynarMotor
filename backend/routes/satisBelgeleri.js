@@ -29,10 +29,42 @@ const pozitifId = (v) => { const n = Number(v); return Number.isInteger(n) && n 
 
 // Sözleşmelerde TC kimlik gibi kişisel veri olur: satış sayfasına girebilenler (admin veya
 // Motor Satış yetkilisi) görür/yükler/siler. Yatırımcı ve diğer personel erişemez.
+// Muhasebeci yalnızca arşiv listesini görür ve dosya indirir (yükleme/silme yok).
 router.use((req, res, next) => {
   const u = req.user || {};
   if (u.rol === 'admin' || u.motor_satis_yetkisi) return next();
+  if (u.rol === 'muhasebeci' && req.method === 'GET' && (req.path === '/arsiv' || /^\/\d+\/indir$/.test(req.path))) return next();
   return res.status(403).json({ message: 'Satış belgelerine erişim yetkiniz yok' });
+});
+
+// GET /arsiv - belgesi olan tüm motorlar (muhasebeci arşivi). Sıra: önce satılanlar, en son satış en üstte;
+// ardından stoktakiler, en yeni kayıt önde.
+// Fiyat, alıcı adı, TC gibi alanlar dönülmez; yalnızca araç kimliği ve dosya bilgisi.
+router.get('/arsiv', async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT m.id AS motor_id, m.plaka, m.marka, m.model, m.durum,
+              b.id, b.dosya_adi, b.mime, b.boyut, b.created_at
+       FROM satis_belgeleri b
+       JOIN ikinci_el_motorlar m ON m.id = b.motor_id
+       ORDER BY (m.durum = 'tamamlandi') DESC, m.tamamlama_tarihi DESC NULLS LAST, m.created_at DESC, m.id DESC,
+                b.created_at ASC, b.id ASC`);
+    const gruplar = [];
+    const harita = new Map();
+    for (const r of result.rows) {
+      let g = harita.get(r.motor_id);
+      if (!g) {
+        g = { motor_id: r.motor_id, plaka: r.plaka, marka: r.marka, model: r.model, durum: r.durum, belgeler: [] };
+        harita.set(r.motor_id, g);
+        gruplar.push(g);
+      }
+      g.belgeler.push({ id: r.id, dosya_adi: r.dosya_adi, mime: r.mime, boyut: r.boyut, created_at: r.created_at });
+    }
+    res.json(gruplar);
+  } catch (e) {
+    console.error('Belge arşivi hatası:', e.message);
+    res.status(500).json({ message: 'Sunucu hatası' });
+  }
 });
 
 // GET /motor/:motorId - bir satışın belge listesi (dosya içeriği YOK, yalnızca bilgi)

@@ -12,6 +12,28 @@ const MAX_BELGE_BOYUT = 10 * 1024 * 1024; // sunucu limitiyle aynı
 const boyutYaz = (b) => (b >= 1024 * 1024 ? `${(b / 1024 / 1024).toFixed(1)} MB` : `${Math.max(1, Math.round(b / 1024))} KB`);
 const BELGE_ACIKLAMA = 'PDF, Word, Excel, JPG veya PNG (dosya başına en fazla 10 MB).';
 
+export const belgeOnizlenebilir = (b) => b.mime === 'application/pdf' || b.mime.startsWith('image/');
+
+// PDF/görsel yeni sekmede açılır, diğerleri indirilir. Sekme tıklamayla eşzamanlı açılır (açılır pencere engeli olmasın).
+// Açılamazsa hata fırlatır.
+export const belgeAc = async (b, goster) => {
+  const sekme = goster && belgeOnizlenebilir(b) ? window.open('', '_blank') : null;
+  try {
+    const res = await satisBelgeService.download(b.id);
+    const url = URL.createObjectURL(new Blob([res.data], { type: b.mime }));
+    if (sekme) sekme.location.href = url;
+    else {
+      const a = document.createElement('a');
+      a.href = url; a.download = b.dosya_adi;
+      document.body.appendChild(a); a.click(); a.remove();
+    }
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+  } catch (e) {
+    if (sekme) sekme.close();
+    throw e;
+  }
+};
+
 // Satışa sözleşme vb. dosya ekleme (PDF/Word/Excel/görsel). Zorunlu değil, etiket yok: ad + yüklenme tarihi.
 // Kayıtlı bir satış için kullanılır: dosya seçildiği anda yüklenir.
 export const BelgeBolumu = ({ motorId }) => {
@@ -51,25 +73,10 @@ export const BelgeBolumu = ({ motorId }) => {
     else setMesaj({ sev: 'success', text: `${basarili} dosya yüklendi` });
   };
 
-  // PDF/görsel yeni sekmede açılır, diğerleri indirilir. Sekme tıklamayla eşzamanlı açılır (açılır pencere engeli olmasın).
   const ac = async (b, goster) => {
     setIslemId(b.id);
-    const onizlenebilir = goster && (b.mime === 'application/pdf' || b.mime.startsWith('image/'));
-    const sekme = onizlenebilir ? window.open('', '_blank') : null;
-    try {
-      const res = await satisBelgeService.download(b.id);
-      const url = URL.createObjectURL(new Blob([res.data], { type: b.mime }));
-      if (sekme) sekme.location.href = url;
-      else {
-        const a = document.createElement('a');
-        a.href = url; a.download = b.dosya_adi;
-        document.body.appendChild(a); a.click(); a.remove();
-      }
-      setTimeout(() => URL.revokeObjectURL(url), 60000);
-    } catch {
-      if (sekme) sekme.close();
-      setMesaj({ sev: 'error', text: 'Belge açılamadı' });
-    }
+    try { await belgeAc(b, goster); }
+    catch { setMesaj({ sev: 'error', text: 'Belge açılamadı' }); }
     setIslemId(null);
   };
 
@@ -106,7 +113,7 @@ export const BelgeBolumu = ({ motorId }) => {
           </Box>
           {islemId === b.id ? <CircularProgress size={20} /> : (
             <>
-              {(b.mime === 'application/pdf' || b.mime.startsWith('image/')) && (
+              {belgeOnizlenebilir(b) && (
                 <IconButton size="small" onClick={() => ac(b, true)} title="Görüntüle"><ViewIcon fontSize="small" /></IconButton>
               )}
               <IconButton size="small" onClick={() => ac(b, false)} title="İndir"><FileDownloadIcon fontSize="small" /></IconButton>
@@ -146,7 +153,7 @@ export const BekleyenBelgeler = ({ dosyalar, setDosyalar, disabled }) => {
       <Divider sx={{ my: 1 }} />
       {uyari && <Alert severity="warning" onClose={() => setUyari('')} sx={{ mb: 1 }}>{uyari}</Alert>}
       {dosyalar.length === 0 ? (
-        <Typography variant="body2" color="text.secondary">Satış sözleşmesi gibi belgeleri buradan ekleyebilirsiniz. {BELGE_ACIKLAMA}</Typography>
+        <Typography variant="body2" color="text.secondary">Ruhsat, sözleşme gibi belgeleri buradan ekleyebilirsiniz. {BELGE_ACIKLAMA}</Typography>
       ) : (
         <>
           {dosyalar.map((f, i) => (
@@ -163,7 +170,7 @@ export const BekleyenBelgeler = ({ dosyalar, setDosyalar, disabled }) => {
             </Box>
           ))}
           <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.75 }}>
-            Belgeler satış kaydedildiğinde yüklenir.
+            Belgeler kayıt tamamlandığında yüklenir.
           </Typography>
         </>
       )}

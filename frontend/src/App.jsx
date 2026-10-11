@@ -29,6 +29,7 @@ import Storefront from './pages/Storefront';
 import StorefrontDetay from './pages/StorefrontDetay';
 import TaksitHesaplama from './pages/TaksitHesaplama';
 import TaksitGoruntule from './pages/TaksitGoruntule';
+import BelgeArsivi from './pages/BelgeArsivi';
 
 // Route Guards
 const ProtectedRoute = ({ children }) => {
@@ -68,6 +69,15 @@ const MotorStokRoute = ({ children }) => {
   if (loading) return null;
   if (!user) return <Navigate to="/login" />;
   if (user.rol !== 'admin' && user.rol !== 'yatirimci' && !user.motor_satis_yetkisi) return <Navigate to="/" />;
+  return children;
+};
+
+// Belge Arşivi: muhasebeci (tek sayfası) ve admin
+const BelgeArsivRoute = ({ children }) => {
+  const { user, loading } = useAuth();
+  if (loading) return null;
+  if (!user) return <Navigate to="/login" />;
+  if (user.rol !== 'admin' && user.rol !== 'muhasebeci') return <Navigate to="/" />;
   return children;
 };
 
@@ -127,6 +137,7 @@ const PublicRoute = ({ children }) => {
   if (user) {
     if (user.rol === 'admin') return <Navigate to="/" />;
     if (user.rol === 'yatirimci') return <Navigate to="/motor-stok" />;
+    if (user.rol === 'muhasebeci') return <Navigate to="/belge-arsivi" />;
     if (user.servis_yetkisi) return <Navigate to="/" />;
     if (user.aksesuar_yetkisi) return <Navigate to="/aksesuarlar" />;
     if (user.motor_satis_yetkisi) return <Navigate to="/ikinci-el-motor" />;
@@ -143,6 +154,7 @@ const PublicRoute = ({ children }) => {
 const panelHedefi = (user) => {
   if (user.rol === 'admin') return '/servis';
   if (user.rol === 'yatirimci') return '/motor-stok';
+  if (user.rol === 'muhasebeci') return '/belge-arsivi';
   if (user.servis_yetkisi) return '/servis';
   if (user.aksesuar_yetkisi) return '/aksesuarlar';
   if (user.motor_satis_yetkisi) return '/ikinci-el-motor';
@@ -205,6 +217,7 @@ const ThemedApp = () => {
               <Route path="/ikinci-el-motor" element={<MotorSatisRoute><IkinciElMotor /></MotorSatisRoute>} />
               <Route path="/motor-stok" element={<MotorStokRoute><MotorStok /></MotorStokRoute>} />
               <Route path="/motor/:id" element={<MotorSatisRoute><MotorDetay /></MotorSatisRoute>} />
+              <Route path="/belge-arsivi" element={<BelgeArsivRoute><BelgeArsivi /></BelgeArsivRoute>} />
               <Route path="/eticaret" element={<EticaretRoute><ETicaret /></EticaretRoute>} />
               <Route path="/yedek-parcalar" element={<YedekParcaRoute><YedekParcalar /></YedekParcaRoute>} />
               <Route path="/yedek-parca-stok" element={<YedekParcaRoute><YedekParcaStok /></YedekParcaRoute>} />

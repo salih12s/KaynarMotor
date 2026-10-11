@@ -21,6 +21,7 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import VeresiyeIcon from '@mui/icons-material/AccountBalanceWallet';
 import HomeIcon from '@mui/icons-material/Home';
 import CalculateIcon from '@mui/icons-material/Calculate';
+import FolderIcon from '@mui/icons-material/FolderCopy';
 import { useAuth } from '../context/AuthContext';
 import { useCustomTheme } from '../context/ThemeContext';
 import { authService } from '../services/api';
@@ -68,6 +69,7 @@ const Layout = () => {
 
   const isAdmin = user?.rol === 'admin';
   const isYatirimci = user?.rol === 'yatirimci';
+  const isMuhasebeci = user?.rol === 'muhasebeci';
   const hasAksesuar = user?.aksesuar_yetkisi;
   const hasMotor = user?.motor_satis_yetkisi;
   const hasEticaret = user?.eticaret_yetkisi;
@@ -88,6 +90,7 @@ const Layout = () => {
     if (pathname === '/yedek-parcalar') return 'Yedek Parça';
     if (pathname === '/yedek-parca-stok') return 'Yedek Parça Stok';
     if (pathname === '/taksit-hesaplama') return 'Taksit Hesaplama';
+    if (pathname === '/belge-arsivi') return 'Belge Arşivi';
     if (pathname === '/veresiye') return 'Veresiye';
     if (pathname === '/raporlar') return 'Raporlar';
     if (pathname === '/musteriler') return 'Müşteriler';
@@ -119,7 +122,7 @@ const Layout = () => {
       ]
     },
     { title: 'E-Ticaret', path: '/eticaret', icon: <StoreIcon />, show: isAdmin || hasEticaret, color: '#C62828' },
-    { title: 'Taksit Hesaplama', path: '/taksit-hesaplama', icon: <CalculateIcon />, show: !isYatirimci, color: '#C62828' },
+    { title: 'Taksit Hesaplama', path: '/taksit-hesaplama', icon: <CalculateIcon />, show: !isYatirimci && !isMuhasebeci, color: '#C62828' },
     {
       title: 'Yedek Parça', icon: <SettingsIcon />, color: '#C62828', show: isAdmin || hasYedekParca,
       subItems: [
@@ -131,9 +134,10 @@ const Layout = () => {
     { title: 'Veresiye', path: '/veresiye', icon: <VeresiyeIcon />, show: isAdmin, color: '#C62828' },
     { title: isYatirimci ? 'Raporum' : 'Raporlar', path: '/raporlar', icon: <ReportIcon />, show: isAdmin || isYatirimci, color: '#C62828' },
     { title: 'Müşteriler', path: '/musteriler', icon: <PeopleIcon />, show: isAdmin, color: '#C62828' },
+    { title: 'Belge Arşivi', path: '/belge-arsivi', icon: <FolderIcon />, show: isAdmin || isMuhasebeci, color: '#C62828' },
     { title: 'Kullanıcılar', path: '/kullanicilar', icon: <AdminIcon />, show: isAdmin, color: '#C62828' },
     { title: 'Yetkilendirme', path: '/yetkilendirme', icon: <SettingsIcon />, show: isAdmin, color: '#C62828' },
-        { title: 'Ana Sayfaya Git', path: '/site', icon: <HomeIcon />, show: true, color: '#C62828' },  
+        { title: 'Ana Sayfaya Git', path: '/site', icon: <HomeIcon />, show: !isMuhasebeci, color: '#C62828' },
 
   ];
 
