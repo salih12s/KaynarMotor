@@ -24,3 +24,6 @@ ekran-goruntuleri/
 
 # Ornek veri (npm run seed) fotograflari - npm run seed:gorseller ile indirilir
 backend/scripts/seed-gorseller/
+
+# Hostinger yayin paketi (npm run package:hostinger)
+deploy/

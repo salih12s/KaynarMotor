@@ -8,7 +8,9 @@
     "start": "cd backend && node server.js",
     "build": "cd frontend && npm run build",
     "seed": "cd backend && npm run seed",
-    "seed:gorseller": "cd backend && npm run seed:gorseller"
+    "seed:gorseller": "cd backend && npm run seed:gorseller",
+    "package:hostinger": "node scripts/package-hostinger.cjs",
+    "test": "cd backend && npm test"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"
