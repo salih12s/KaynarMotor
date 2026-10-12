@@ -1,12 +1,9 @@
 const express = require('express');
 const crypto = require('crypto');
 const router = express.Router();
+router.param('id', require('../middleware/idDogrula').idParam);
 const { pool } = require('../config/db');
 const { logAktivite, ISLEM_TIPLERI } = require('../config/activityLogger');
-
-// Fiş numarası üretimini serileştiren advisory lock anahtarı (bkz. POST /).
-// Sabit ve bu uygulamaya özgü olması yeterlidir.
-const FIS_NO_LOCK_KEY = 727001;
 
 const emptyToNull = (value) => (value === '' || value === undefined) ? null : value;
 const emptyToZero = (value) => {
@@ -23,11 +20,14 @@ const yedekParcaStokAyarla = async (client, parcalar, yon) => {
     if (!kod) continue;
     const miktar = (emptyToZero(parca.adet) || 1) * yon;
     // GREATEST: stok 0'ın altına düşmez (miktar negatifken, yani geri eklemede, etkisizdir).
+    // MariaDB SET atamalarını soldan sağa, GÜNCELLENMİŞ değerlerle çalıştırır (PostgreSQL hepsini
+    // eski değerle hesaplar): envanter_degeri, mevcut'tan ÖNCE yazılmalıdır. IFNULL: PostgreSQL'in
+    // GREATEST'i NULL'ı yok sayar, MariaDB'inki NULL döner.
     await client.query(
       `UPDATE yedek_parca_stok SET
-         cikan_miktar = GREATEST(cikan_miktar + $1, 0),
-         mevcut = GREATEST(mevcut - $1, 0),
-         envanter_degeri = GREATEST(mevcut - $1, 0) * satis_fiyati,
+         cikan_miktar = GREATEST(IFNULL(cikan_miktar + $1, 0), 0),
+         envanter_degeri = GREATEST(IFNULL(mevcut - $1, 0), 0) * satis_fiyati,
+         mevcut = GREATEST(IFNULL(mevcut - $1, 0), 0),
          updated_at = CURRENT_TIMESTAMP WHERE stok_kodu = $2`,
       [miktar, kod]
     );
@@ -38,7 +38,8 @@ const yedekParcaStokAyarla = async (client, parcalar, yon) => {
 router.get('/next-fis-no/preview', async (req, res) => {
   try {
     const result = await pool.query('SELECT COALESCE(MAX(fis_no), 0) + 1 AS next_fis_no FROM is_emirleri');
-    res.json({ nextFisNo: result.rows[0].next_fis_no });
+    // MAX()+1 MariaDB'de BIGINT (metin) döner; PostgreSQL'de int4 (sayı) dönüyordu.
+    res.json({ nextFisNo: Number(result.rows[0].next_fis_no) });
   } catch (error) {
     res.status(500).json({ message: 'Sunucu hatası' });
   }
@@ -57,7 +58,7 @@ router.get('/', async (req, res) => {
     }
     if (bitis) {
       params.push(bitis);
-      query += ` AND created_at <= $${params.length}::date + interval '1 day'`;
+      query += ` AND created_at <= DATE_ADD(CAST($${params.length} AS DATE), INTERVAL 1 DAY)`;
     }
     if (durum) {
       params.push(durum);
@@ -102,13 +103,13 @@ router.post('/', async (req, res) => {
     // Fiş numarası.
     // İki iş emri aynı anda oluşturulduğunda ikisi de aynı MAX(fis_no) değerini okuyup
     // aynı numarayı üretiyordu; fis_no UNIQUE olduğu için biri "Sunucu hatası" alıyordu.
-    // Advisory lock numara üretimini serileştirir ve COMMIT/ROLLBACK'te kendiliğinden bırakılır.
+    // Tek satırlık kilit tablosundaki satır kilidi numara üretimini serileştirir ve COMMIT/ROLLBACK'te
+    // kendiliğinden bırakılır (PostgreSQL'deki advisory lock karşılığı). Kilit, MAX okumasından ÖNCE
+    // alınır; böylece sıradaki istek, öncekinin yazdığı numarayı görür.
     // Numaralama mantığı (MAX+1) bilinçli olarak korunmuştur.
-    // ::bigint cast şart: pg_advisory_xact_lock'un (bigint) ve (int,int) aşırı yüklemeleri
-    // olduğundan, tipsiz parametreyle Postgres fonksiyonu çözemez.
-    await client.query('SELECT pg_advisory_xact_lock($1::bigint)', [FIS_NO_LOCK_KEY]);
+    await client.query('SELECT id FROM fis_no_kilidi WHERE id = 1 FOR UPDATE');
     const fisNoResult = await client.query('SELECT COALESCE(MAX(fis_no), 0) + 1 AS next_fis_no FROM is_emirleri');
-    const fisNo = fisNoResult.rows[0].next_fis_no;
+    const fisNo = Number(fisNoResult.rows[0].next_fis_no);
 
     // Müşteri oluştur/güncelle (telefon bazlı)
     let musteriId = null;
@@ -307,12 +308,9 @@ router.post('/qr-token', async (req, res) => {
     const plaka = String(req.body.plaka || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
     if (!plaka) return res.status(400).json({ message: 'Plaka gerekli' });
     const token = crypto.randomBytes(8).toString('hex');
-    const result = await pool.query(
-      `INSERT INTO servis_qr_tokenler (plaka, token) VALUES ($1, $2)
-       ON CONFLICT (plaka) DO UPDATE SET plaka = EXCLUDED.plaka
-       RETURNING plaka, token`,
-      [plaka, token]
-    );
+    // Plaka için token varsa dokunulmaz (eski token kalır), yoksa yenisi eklenir; sonra okunur.
+    await pool.query('INSERT IGNORE INTO servis_qr_tokenler (plaka, token) VALUES ($1, $2)', [plaka, token]);
+    const result = await pool.query('SELECT plaka, token FROM servis_qr_tokenler WHERE plaka = $1', [plaka]);
     res.json(result.rows[0]);
   } catch (error) {
     console.error('QR token hatası:', error);

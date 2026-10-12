@@ -5,7 +5,9 @@
  *
  * NE YAPAR
  *  - Şema yoksa oluşturur (config/initDb.js ile aynı kurulum).
- *  - İş verisi tablolarını BOŞALTIR ve örnek veriyle yeniden doldurur
+ *  - İş verisi tablolarını BOŞALTIR (DELETE; MariaDB'de TRUNCATE işlemi örtük commit yapıp
+ *    transaction'ı bozardı, bu yüzden kayıt numaraları 1'den değil kaldığı yerden devam eder)
+ *    ve örnek veriyle yeniden doldurur
  *    (müşteri, iş emri, stok, satış, motor, vitrin, e-ticaret, aktivite logu).
  *  - Mevcut kullanıcı hesaplarına DOKUNMAZ; yalnızca aşağıdaki demo hesaplarını ekler/günceller.
  *  - Her şey tek transaction içindedir: bir adım patlarsa eski veri olduğu gibi kalır.
@@ -51,6 +53,7 @@ if (sorunlar.length > 0) {
 
 // Kilit geçildikten SONRA yüklenir: db.js bağlantı ayarını require anında ortamdan okur.
 const bcrypt = require('bcryptjs');
+const os = require('os');
 const { pool } = require('../config/db');
 const { initializeDatabase } = require('../config/initDb');
 const { hesaplaKomisyon, detectPlatform } = require('../routes/eticaret');
@@ -482,8 +485,8 @@ const seed = async (client) => {
   const logla = (kullanici, tip, detay, tablo, hedefId, tarih) => loglar.push({ kullanici, tip, detay, tablo, hedefId, tarih });
 
   // --- Temizlik ---
-  await client.query(`TRUNCATE TABLE ${BOSALTILACAK.join(', ')} RESTART IDENTITY CASCADE`);
-  await client.query('ALTER SEQUENCE vitrin_ilan_no_seq RESTART WITH 1');
+  // Alt kayıtlar önce silinir (BOSALTILACAK sırası). DELETE transaction içinde kalır: bir adım patlarsa geri alınır.
+  for (const tablo of BOSALTILACAK) await client.query(`DELETE FROM ${tablo}`);
 
   // --- Kullanıcılar ---
   const sifreHash = await bcrypt.hash(DEMO_SIFRE, 10);
@@ -501,17 +504,17 @@ const seed = async (client) => {
   const kullanicilar = {}; // kullanici_adi → { id, ad_soyad, kullanici_adi }
   for (const k of DEMO_KULLANICILAR) {
     const yetkiDegerleri = YETKI_ALANLARI.map((y) => k.yetkiler.includes(y));
-    const r = await client.query(
+    await client.query(
       `INSERT INTO kullanicilar (kullanici_adi, sifre, plain_sifre, ad_soyad, rol, onay_durumu, ${YETKI_ALANLARI.join(', ')})
        VALUES ($1, $2, $3, $4, $5, $6, ${YETKI_ALANLARI.map((_, i) => `$${i + 7}`).join(', ')})
-       ON CONFLICT (kullanici_adi) DO UPDATE SET
-         sifre = EXCLUDED.sifre, plain_sifre = EXCLUDED.plain_sifre, ad_soyad = EXCLUDED.ad_soyad,
-         rol = EXCLUDED.rol, onay_durumu = EXCLUDED.onay_durumu,
-         ${YETKI_ALANLARI.map((y) => `${y} = EXCLUDED.${y}`).join(', ')}
-       RETURNING id`,
+       ON DUPLICATE KEY UPDATE
+         sifre = VALUES(sifre), plain_sifre = VALUES(plain_sifre), ad_soyad = VALUES(ad_soyad),
+         rol = VALUES(rol), onay_durumu = VALUES(onay_durumu),
+         ${YETKI_ALANLARI.map((y) => `${y} = VALUES(${y})`).join(', ')}`,
       [k.kullanici_adi, sifreHash, DEMO_SIFRE, k.ad_soyad, k.rol, k.onay || 'onaylandi', ...yetkiDegerleri]
     );
-    kullanicilar[k.kullanici_adi] = { id: r.rows[0].id, ad_soyad: k.ad_soyad, kullanici_adi: k.kullanici_adi };
+    const kayit = await client.query('SELECT id FROM kullanicilar WHERE kullanici_adi = $1', [k.kullanici_adi]);
+    kullanicilar[k.kullanici_adi] = { id: kayit.rows[0].id, ad_soyad: k.ad_soyad, kullanici_adi: k.kullanici_adi };
   }
   const admin = (await client.query("SELECT id, kullanici_adi, ad_soyad FROM kullanicilar WHERE kullanici_adi = 'admin'")).rows[0];
   kullanicilar.admin = admin;
@@ -929,20 +932,23 @@ const main = async () => {
   const client = await pool.connect();
   try {
     // İkinci kilit: gerçekten bağlanılan sunucu bu makine mi? (şemaya dokunmadan ÖNCE)
-    const hedef = (await client.query('SELECT current_database() AS db, inet_server_addr()::text AS adres')).rows[0];
-    if (hedef.adres && !['127.0.0.1', '::1'].includes(hedef.adres.split('/')[0])) {
-      throw new Error(`Bağlanılan sunucu yerel değil (${hedef.adres}). Hiçbir veri değiştirilmedi.`);
+    // 127.0.0.1'e yönlendirilmiş uzak bir veritabanı (SSH tüneli gibi) ana makine adından anlaşılır.
+    const hedef = (await client.query('SELECT DATABASE() AS db, @@hostname AS sunucu')).rows[0];
+    if (hedef.sunucu && hedef.sunucu.toLowerCase() !== os.hostname().toLowerCase()) {
+      throw new Error(`Bağlanılan sunucu bu makine değil (${hedef.sunucu}). Hiçbir veri değiştirilmedi.`);
     }
     // Şema hazır olsun (boş veritabanında da çalışabilmek için)
     await initializeDatabase();
-    console.log(`\nHedef: ${process.env.DB_HOST}:${process.env.DB_PORT || 5432}/${hedef.db} (yerel)`);
+    console.log(`\nHedef: ${process.env.DB_HOST}:${process.env.DB_PORT || 3306}/${hedef.db} (yerel)`);
+    // Vitrin ilan numarası dizisi: DDL olduğu için transaction'dan ÖNCE sıfırlanır.
+    await client.query('ALTER SEQUENCE vitrin_ilan_no_seq RESTART 1');
     console.log('Örnek veri yükleniyor...');
 
     await client.query('BEGIN');
     const sonuc = await seed(client);
     await client.query('COMMIT');
 
-    const say = async (tablo) => (await client.query(`SELECT COUNT(*)::int AS n FROM ${tablo}`)).rows[0].n;
+    const say = async (tablo) => Number((await client.query(`SELECT COUNT(*) AS n FROM ${tablo}`)).rows[0].n);
     console.log('\nYÜKLENDİ');
     console.log(`  Müşteri            : ${await say('musteriler')}`);
     console.log(`  İş emri            : ${await say('is_emirleri')}  (${await say('parcalar')} kalem)`);

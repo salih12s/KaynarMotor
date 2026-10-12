@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { pool } = require('../config/db');
+const { parcalariEkle } = require('../config/altKayitlar');
 
 // GET / - Tüm açık borçları (kalan_odeme > 0) tek bir listede döndür
 router.get('/', async (req, res) => {
@@ -45,17 +46,14 @@ router.get('/', async (req, res) => {
              ie.kalan_odeme, ie.gercek_toplam_ucret AS toplam_tutar,
              COALESCE(ie.tamamlama_tarihi, ie.created_at) AS tarih,
              ie.marka, ie.model_tip, ie.km, ie.ariza_sikayetler, ie.aciklama AS notlar,
-             ie.odeme_detaylari, ie.durum, ie.tahmini_toplam_ucret,
-             COALESCE(json_agg(json_build_object(
-               'takilan_parca', p.takilan_parca, 'adet', p.adet,
-               'birim_fiyat', p.birim_fiyat, 'toplam_fiyat', p.toplam_fiyat
-             )) FILTER (WHERE p.id IS NOT NULL), '[]') AS parcalar
+             ie.odeme_detaylari, ie.durum, ie.tahmini_toplam_ucret
       FROM is_emirleri ie
-      LEFT JOIN parcalar p ON p.is_emri_id = ie.id
       WHERE COALESCE(ie.kalan_odeme, 0) > 0
-      GROUP BY ie.id
       ORDER BY COALESCE(ie.tamamlama_tarihi, ie.created_at) DESC
     `);
+    // json_agg karşılığı: parçalar ayrı sorguyla eklenir
+    servis.rows = await parcalariEkle(servis.rows, 'parcalar', 'is_emri_id',
+      ['takilan_parca', 'adet', 'birim_fiyat', 'toplam_fiyat'], ['birim_fiyat', 'toplam_fiyat']);
     servis.rows.forEach(r => sources.push({
       kaynak: 'Servis',
       kaynak_key: 'servis',
@@ -81,17 +79,13 @@ router.get('/', async (req, res) => {
       SELECT a.id, a.ad_soyad AS musteri_adi, a.telefon,
              a.kalan_odeme, a.toplam_satis AS toplam_tutar,
              COALESCE(a.satis_tarihi, a.created_at) AS tarih,
-             a.aciklama AS notlar, a.odeme_sekli, a.odeme_detaylari, a.durum,
-             COALESCE(json_agg(json_build_object(
-               'urun_adi', ap.urun_adi, 'adet', ap.adet,
-               'satis_fiyati', ap.satis_fiyati
-             )) FILTER (WHERE ap.id IS NOT NULL), '[]') AS parcalar
+             a.aciklama AS notlar, a.odeme_sekli, a.odeme_detaylari, a.durum
       FROM aksesuarlar a
-      LEFT JOIN aksesuar_parcalar ap ON ap.aksesuar_id = a.id
       WHERE COALESCE(a.kalan_odeme, 0) > 0
-      GROUP BY a.id
       ORDER BY COALESCE(a.satis_tarihi, a.created_at) DESC
     `);
+    aksesuar.rows = await parcalariEkle(aksesuar.rows, 'aksesuar_parcalar', 'aksesuar_id',
+      ['urun_adi', 'adet', 'satis_fiyati'], ['satis_fiyati']);
     aksesuar.rows.forEach(r => sources.push({
       kaynak: 'Aksesuar',
       kaynak_key: 'aksesuar',

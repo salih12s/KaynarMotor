@@ -5,15 +5,18 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const path = require('path');
+const fs = require('fs');
 const { initializeDatabase } = require('./config/initDb');
+const { pool } = require('./config/db');
 
 const app = express();
 const PORT = process.env.PORT || 5100;
 
-// Railway tek bir ters vekil sunucunun arkasında çalışır. Bu ayar olmadan req.ip
-// vekilin adresini gösterir; hız sınırlama ve aktivite logu yanlış IP kaydeder.
-// Değerin 1 olması (true değil) express-rate-limit'in "aşırı geniş" uyarısını da önler.
-app.set('trust proxy', 1);
+// Uygulama bir ters vekil sunucunun arkasında çalışır (Hostinger'da LiteSpeed/CDN). Bu ayar
+// olmadan req.ip vekilin adresini gösterir; hız sınırlama ve aktivite logu yanlış IP kaydeder.
+// Değerin sayı olması (true değil) express-rate-limit'in "aşırı geniş" uyarısını da önler.
+// Vekil sayısı farklıysa TRUST_PROXY ortam değişkeniyle ayarlanır.
+app.set('trust proxy', Number(process.env.TRUST_PROXY) || 1);
 
 // CORS
 const allowedOrigins = [
@@ -22,6 +25,8 @@ const allowedOrigins = [
   'http://localhost:5000',
   'http://localhost:5100',
   'https://web-production-ac0ed.up.railway.app',
+  // Hostinger prova adresi (kaynarmotor.com.tr'ye geçişten önce denenir)
+  'https://yeni.kaynarmotor.com.tr',
   'https://kaynarmotor.com.tr',
   'https://www.kaynarmotor.com.tr',
   'http://kaynarmotor.com.tr',
@@ -122,11 +127,33 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
-// Serve frontend in production
+// Veritabanı sağlık kontrolü (deploy sonrası duman testi). Ayrıntı sızdırmaz.
+app.get('/api/health/database', async (req, res) => {
+  try {
+    await pool.query('SELECT 1');
+    res.json({ status: 'OK' });
+  } catch (error) {
+    console.error('Veritabanı sağlık kontrolü başarısız:', error.message);
+    res.status(503).json({ status: 'HATA' });
+  }
+});
+
+// Arayüzü sun (production). Hostinger paketinde arayüz sunucunun yanındaki "public" klasöründedir;
+// depodan çalışırken frontend/build kullanılır.
 if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, '../frontend/build')));
+  const paketlenmis = path.join(__dirname, 'public');
+  const arayuzKlasoru = fs.existsSync(paketlenmis) ? paketlenmis : path.join(__dirname, '../frontend/build');
+  // Derleme çıktısındaki dosya adları içerik özetli olduğundan sonsuza kadar önbelleğe alınabilir.
+  app.use('/static', express.static(path.join(arayuzKlasoru, 'static'), { immutable: true, maxAge: '1y', index: false }));
+  app.use(express.static(arayuzKlasoru, { index: false }));
+  // /api ile başlayan bilinmeyen adres arayüz sayfası yerine 404 JSON döner.
+  app.use('/api', (req, res) => res.status(404).json({ message: 'Bulunamadı' }));
   app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../frontend/build', 'index.html'));
+    // Uzantılı bir dosya (örn. /eski.mp4) bulunamadıysa arayüz sayfası yerine 404 döner.
+    if (/\.[A-Za-z0-9]{2,8}$/.test(req.path)) return res.status(404).type('text/plain').send('Bulunamadı');
+    // index.html önbelleğe alınmaz: yeni sürüm yayınlanınca tarayıcı yeni dosya adlarını görsün.
+    res.set('Cache-Control', 'no-cache');
+    res.sendFile(path.join(arayuzKlasoru, 'index.html'));
   });
 }
 
@@ -141,6 +168,14 @@ app.use((err, req, res, next) => {
     return res.status(413).json({ message: 'Gönderilen veri boyutu çok büyük' });
   }
   res.status(500).json({ message: 'Sunucu hatası' });
+});
+
+// Beklenmeyen hata sürecin sessizce ölmesine yol açmasın: Hostinger'da süreç kapanınca site 503 verir.
+process.on('unhandledRejection', (neden) => {
+  console.error('Yakalanmayan söz reddi:', neden);
+});
+process.on('uncaughtException', (hata) => {
+  console.error('Yakalanmayan istisna:', hata);
 });
 
 // Start server (DB'den bağımsız)

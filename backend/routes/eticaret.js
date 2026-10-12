@@ -1,7 +1,9 @@
 const express = require('express');
 const router = express.Router();
+router.param('id', require('../middleware/idDogrula').idParam);
 const { pool } = require('../config/db');
 const { logAktivite, ISLEM_TIPLERI } = require('../config/activityLogger');
+const { orderByText } = require('../config/sqlText');
 
 const emptyToZero = (v) => { if (v === '' || v === undefined || v === null) return 0; const n = Number(v); return isNaN(n) ? 0 : n; };
 
@@ -74,7 +76,7 @@ const hesaplaKomisyon = (satisFiyati, alisFiyati, komisyonOrani, kdvOrani, kargo
 // GET /platformlar
 router.get('/platformlar', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM eticaret_platformlar ORDER BY platform_adi');
+    const result = await pool.query(`SELECT * FROM eticaret_platformlar ORDER BY ${orderByText('platform_adi')}`);
     res.json(result.rows);
   } catch (error) {
     res.status(500).json({ message: 'Sunucu hatası' });
@@ -210,9 +212,11 @@ router.post('/', async (req, res) => {
     // Stoktan düş
     if (stok_id) {
       await client.query(
+        // envanter_degeri, mevcut'tan ÖNCE yazılır: MariaDB SET atamalarını soldan sağa, güncellenmiş
+        // değerlerle çalıştırır (PostgreSQL hepsini eski değerle hesaplar).
         `UPDATE aksesuar_stok SET cikan_miktar = cikan_miktar + $1,
-         mevcut = GREATEST(mevcut - $1, 0),
          envanter_degeri = GREATEST(mevcut - $1, 0) * satis_fiyati,
+         mevcut = GREATEST(mevcut - $1, 0),
          updated_at = CURRENT_TIMESTAMP WHERE id = $2`,
         [miktar, stok_id]
       );
@@ -255,9 +259,10 @@ router.put('/:id', async (req, res) => {
     // Eski stok geri ekle
     if (eski.stok_id) {
       await client.query(
+        // envanter_degeri, mevcut'tan ÖNCE yazılır (bkz. yukarıdaki not).
         `UPDATE aksesuar_stok SET cikan_miktar = GREATEST(cikan_miktar - $1, 0),
-         mevcut = mevcut + $1,
          envanter_degeri = (mevcut + $1) * satis_fiyati,
+         mevcut = mevcut + $1,
          updated_at = CURRENT_TIMESTAMP WHERE id = $2`,
         [eski.adet, eski.stok_id]
       );
@@ -291,9 +296,11 @@ router.put('/:id', async (req, res) => {
     // Yeni stoktan düş
     if (stok_id) {
       await client.query(
+        // envanter_degeri, mevcut'tan ÖNCE yazılır: MariaDB SET atamalarını soldan sağa, güncellenmiş
+        // değerlerle çalıştırır (PostgreSQL hepsini eski değerle hesaplar).
         `UPDATE aksesuar_stok SET cikan_miktar = cikan_miktar + $1,
-         mevcut = GREATEST(mevcut - $1, 0),
          envanter_degeri = GREATEST(mevcut - $1, 0) * satis_fiyati,
+         mevcut = GREATEST(mevcut - $1, 0),
          updated_at = CURRENT_TIMESTAMP WHERE id = $2`,
         [miktar, stok_id]
       );
@@ -322,9 +329,10 @@ router.delete('/:id', async (req, res) => {
     const existing = await client.query('SELECT * FROM eticaret_satislar WHERE id = $1', [req.params.id]);
     if (existing.rows.length > 0 && existing.rows[0].stok_id) {
       await client.query(
+        // envanter_degeri, mevcut'tan ÖNCE yazılır (bkz. yukarıdaki not).
         `UPDATE aksesuar_stok SET cikan_miktar = GREATEST(cikan_miktar - $1, 0),
-         mevcut = mevcut + $1,
          envanter_degeri = (mevcut + $1) * satis_fiyati,
+         mevcut = mevcut + $1,
          updated_at = CURRENT_TIMESTAMP WHERE id = $2`,
         [existing.rows[0].adet, existing.rows[0].stok_id]
       );

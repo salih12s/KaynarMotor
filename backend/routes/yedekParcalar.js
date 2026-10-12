@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
+router.param('id', require('../middleware/idDogrula').idParam);
 const { pool } = require('../config/db');
+const { orderByText } = require('../config/sqlText');
 
 const emptyToZero = (v) => { if (v === '' || v === undefined || v === null) return 0; const n = Number(v); return isNaN(n) ? 0 : n; };
 
@@ -9,11 +11,14 @@ const stokAyarla = async (client, stokId, adet, yon) => {
   if (!stokId || !adet) return;
   const miktar = adet * yon;
   // GREATEST: stok 0'ın altına düşmez (miktar negatifken, yani geri eklemede, etkisizdir).
+  // MariaDB SET atamalarını soldan sağa, GÜNCELLENMİŞ değerlerle çalıştırır (PostgreSQL hepsini
+  // eski değerle hesaplar): envanter_degeri, mevcut'tan ÖNCE yazılmalıdır. IFNULL: PostgreSQL'in
+  // GREATEST'i NULL'ı yok sayar, MariaDB'inki NULL döner.
   await client.query(
     `UPDATE yedek_parca_stok SET
-       cikan_miktar = GREATEST(cikan_miktar + $1, 0),
-       mevcut = GREATEST(mevcut - $1, 0),
-       envanter_degeri = GREATEST(mevcut - $1, 0) * satis_fiyati,
+       cikan_miktar = GREATEST(IFNULL(cikan_miktar + $1, 0), 0),
+       envanter_degeri = GREATEST(IFNULL(mevcut - $1, 0), 0) * satis_fiyati,
+       mevcut = GREATEST(IFNULL(mevcut - $1, 0), 0),
        updated_at = CURRENT_TIMESTAMP WHERE id = $2`,
     [miktar, stokId]
   );
@@ -22,7 +27,7 @@ const stokAyarla = async (client, stokId, adet, yon) => {
 // GET /
 router.get('/', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM yedek_parcalar ORDER BY urun_adi');
+    const result = await pool.query(`SELECT * FROM yedek_parcalar ORDER BY ${orderByText('urun_adi')}`);
     res.json(result.rows);
   } catch (error) {
     res.status(500).json({ message: 'Sunucu hatası' });

@@ -1,7 +1,7 @@
 const express = require('express');
 const path = require('path');
 const router = express.Router();
-const { pool } = require('../config/db');
+const { pool, maxPaket, paketHatasi } = require('../config/db');
 const { logAktivite, ISLEM_TIPLERI } = require('../config/activityLogger');
 
 const MAX_BOYUT = 10 * 1024 * 1024; // dosya başına 10 MB
@@ -47,7 +47,7 @@ router.get('/arsiv', async (req, res) => {
               b.id, b.dosya_adi, b.mime, b.boyut, b.created_at
        FROM satis_belgeleri b
        JOIN ikinci_el_motorlar m ON m.id = b.motor_id
-       ORDER BY (m.durum = 'tamamlandi') DESC, m.tamamlama_tarihi DESC NULLS LAST, m.created_at DESC, m.id DESC,
+       ORDER BY (m.durum = 'tamamlandi') DESC, m.tamamlama_tarihi DESC, m.created_at DESC, m.id DESC,
                 b.created_at ASC, b.id ASC`);
     const gruplar = [];
     const harita = new Map();
@@ -94,13 +94,18 @@ router.post('/motor/:motorId', express.raw({ type: () => true, limit: MAX_BOYUT 
   const tur = TURLER[path.extname(dosyaAdi).slice(1).toLowerCase()];
   if (!tur) return res.status(400).json({ message: 'Desteklenmeyen dosya türü (PDF, Word, Excel, JPG, PNG kabul edilir)' });
   if (!tur.gecerli(buf)) return res.status(400).json({ message: 'Dosya içeriği uzantısıyla uyuşmuyor' });
+  // Veritabanı sunucusunun tek pakette kabul ettiği boyut belge sınırından küçük olabilir.
+  const paketSiniri = (await maxPaket()) - 512 * 1024;
+  if (buf.length > paketSiniri) {
+    return res.status(413).json({ message: `Dosya çok büyük (en fazla ${Math.floor(paketSiniri / 1048576)} MB yüklenebilir)` });
+  }
 
   try {
     const motor = await pool.query(
-      `SELECT m.id, (SELECT COUNT(*)::int FROM satis_belgeleri b WHERE b.motor_id = m.id) AS adet
+      `SELECT m.id, (SELECT COUNT(*) FROM satis_belgeleri b WHERE b.motor_id = m.id) AS adet
        FROM ikinci_el_motorlar m WHERE m.id = $1`, [motorId]);
     if (motor.rows.length === 0) return res.status(404).json({ message: 'Satış kaydı bulunamadı' });
-    if (motor.rows[0].adet >= MAX_ADET) return res.status(400).json({ message: `Bir satışa en fazla ${MAX_ADET} belge eklenebilir` });
+    if (Number(motor.rows[0].adet) >= MAX_ADET) return res.status(400).json({ message: `Bir satışa en fazla ${MAX_ADET} belge eklenebilir` });
 
     const ins = await pool.query(
       `INSERT INTO satis_belgeleri (motor_id, dosya_adi, mime, boyut, icerik, yukleyen_id, yukleyen_adi)
@@ -117,6 +122,7 @@ router.post('/motor/:motorId', express.raw({ type: () => true, limit: MAX_BOYUT 
     res.status(201).json(ins.rows[0]);
   } catch (e) {
     console.error('Satış belgesi yükleme hatası:', e.message);
+    if (paketHatasi(e)) return res.status(413).json({ message: 'Dosya çok büyük' });
     res.status(500).json({ message: 'Sunucu hatası' });
   }
 });

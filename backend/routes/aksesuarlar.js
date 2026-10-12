@@ -1,8 +1,10 @@
 const express = require('express');
 const router = express.Router();
+router.param('id', require('../middleware/idDogrula').idParam);
 const { pool } = require('../config/db');
 const { logAktivite, ISLEM_TIPLERI } = require('../config/activityLogger');
 const { upsertMusteri } = require('../config/musteriHelper');
+const { parcalariEkle } = require('../config/altKayitlar');
 
 const emptyToZero = (v) => { if (v === '' || v === undefined || v === null) return 0; const n = Number(v); return isNaN(n) ? 0 : n; };
 
@@ -13,15 +15,18 @@ const emptyToZero = (v) => { if (v === '' || v === undefined || v === null) retu
 // stok_adi UNIQUE olmadığından, aynı adlı birden fazla kayıt varsa eskiden UPDATE
 // hepsini birden güncelliyordu; alt sorgu ile artık tek ve deterministik satır güncellenir.
 // mevcut/cikan_miktar GREATEST ile 0'ın altına düşürülmez.
+// MariaDB SET atamalarını soldan sağa, GÜNCELLENMİŞ değerlerle çalıştırır (PostgreSQL hepsini
+// eski değerle hesaplar): envanter_degeri, mevcut'tan ÖNCE yazılmalıdır. IFNULL: PostgreSQL'in
+// GREATEST'i NULL'ı yok sayar, MariaDB'inki NULL döner.
 const aksesuarStokAyarla = async (client, urunAdi, adet, yon) => {
   const ad = String(urunAdi || '').trim();
   const miktar = (emptyToZero(adet) || 1) * yon;
   if (!ad || !miktar) return;
   const sonuc = await client.query(
     `UPDATE aksesuar_stok SET
-       cikan_miktar = GREATEST(cikan_miktar + $1, 0),
-       mevcut = GREATEST(mevcut - $1, 0),
-       envanter_degeri = GREATEST(mevcut - $1, 0) * satis_fiyati,
+       cikan_miktar = GREATEST(IFNULL(cikan_miktar + $1, 0), 0),
+       envanter_degeri = GREATEST(IFNULL(mevcut - $1, 0), 0) * satis_fiyati,
+       mevcut = GREATEST(IFNULL(mevcut - $1, 0), 0),
        updated_at = CURRENT_TIMESTAMP
      WHERE id = (SELECT id FROM aksesuar_stok WHERE stok_adi = $2 ORDER BY id LIMIT 1)`,
     [miktar, ad]
@@ -55,14 +60,11 @@ router.get('/stats/genel', async (req, res) => {
 // GET / - Tüm aksesuar satışları
 router.get('/', async (req, res) => {
   try {
-    const result = await pool.query(`
-      SELECT a.*, COALESCE(json_agg(ap.*) FILTER (WHERE ap.id IS NOT NULL), '[]') as parcalar
-      FROM aksesuarlar a
-      LEFT JOIN aksesuar_parcalar ap ON a.id = ap.aksesuar_id
-      GROUP BY a.id
-      ORDER BY a.created_at DESC
-    `);
-    res.json(result.rows);
+    const result = await pool.query('SELECT * FROM aksesuarlar ORDER BY created_at DESC');
+    // Parçalar ayrı sorguyla çekilip birleştirilir (PostgreSQL'deki json_agg karşılığı).
+    // json_agg(ap.*) tüm parça kolonlarını verir.
+    res.json(await parcalariEkle(result.rows, 'aksesuar_parcalar', 'aksesuar_id',
+      ['id', 'urun_adi', 'adet', 'maliyet', 'satis_fiyati', 'created_at'], ['maliyet', 'satis_fiyati'], { anahtariTut: true }));
   } catch (error) {
     res.status(500).json({ message: 'Sunucu hatası' });
   }

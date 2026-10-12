@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const { pool } = require('../config/db');
+router.param('id', require('../middleware/idDogrula').idParam);
+const { pool, isUniqueViolation } = require('../config/db');
+const { orderByText } = require('../config/sqlText');
 
 // Yedek parça barkodları aksesuardan ayırt edilebilsin diye 9 ile başlar (13 hane)
 const ILK_KOD = '9000000000001';
@@ -9,7 +11,7 @@ const ILK_KOD = '9000000000001';
 router.get('/next-stok-kodu', async (req, res) => {
   try {
     const result = await pool.query(
-      `SELECT stok_kodu FROM yedek_parca_stok WHERE stok_kodu ~ '^9[0-9]{12}$' ORDER BY stok_kodu DESC LIMIT 1`
+      `SELECT stok_kodu FROM yedek_parca_stok WHERE stok_kodu REGEXP '^9[0-9]{12}$' ORDER BY stok_kodu DESC LIMIT 1`
     );
     let nextCode = ILK_KOD;
     if (result.rows.length > 0) {
@@ -25,7 +27,7 @@ router.get('/next-stok-kodu', async (req, res) => {
 // GET / - Tüm stok kayıtları
 router.get('/', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM yedek_parca_stok ORDER BY stok_adi');
+    const result = await pool.query(`SELECT * FROM yedek_parca_stok ORDER BY ${orderByText('stok_adi')}`);
     res.json(result.rows);
   } catch (error) {
     res.status(500).json({ message: 'Sunucu hatası' });
@@ -39,7 +41,8 @@ router.get('/ara', async (req, res) => {
     if (!q || q.length < 2) return res.json([]);
     const searchQuery = `%${q}%`;
     const result = await pool.query(
-      'SELECT * FROM yedek_parca_stok WHERE stok_kodu ILIKE $1 OR stok_adi ILIKE $1 OR marka ILIKE $1 ORDER BY stok_adi LIMIT 20',
+      `SELECT * FROM yedek_parca_stok WHERE LOWER(stok_kodu) LIKE LOWER($1) OR LOWER(stok_adi) LIKE LOWER($1) OR LOWER(marka) LIKE LOWER($1)
+       ORDER BY ${orderByText('stok_adi')} LIMIT 20`,
       [searchQuery]
     );
     res.json(result.rows);
@@ -80,7 +83,7 @@ router.post('/', async (req, res) => {
     );
     res.status(201).json(result.rows[0]);
   } catch (error) {
-    if (error.code === '23505') return res.status(400).json({ message: 'Bu stok kodu zaten mevcut' });
+    if (isUniqueViolation(error)) return res.status(400).json({ message: 'Bu stok kodu zaten mevcut' });
     res.status(500).json({ message: 'Sunucu hatası' });
   }
 });
@@ -102,7 +105,7 @@ router.put('/:id', async (req, res) => {
     if (result.rows.length === 0) return res.status(404).json({ message: 'Stok bulunamadı' });
     res.json(result.rows[0]);
   } catch (error) {
-    if (error.code === '23505') return res.status(400).json({ message: 'Bu stok kodu zaten mevcut' });
+    if (isUniqueViolation(error)) return res.status(400).json({ message: 'Bu stok kodu zaten mevcut' });
     res.status(500).json({ message: 'Sunucu hatası' });
   }
 });
@@ -130,10 +133,10 @@ router.post('/toplu', async (req, res) => {
       await pool.query(
         `INSERT INTO yedek_parca_stok (stok_kodu, stok_adi, marka, giren_miktar, mevcut, birimi, alis_fiyati, satis_fiyati, envanter_degeri)
          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
-         ON CONFLICT (stok_kodu) DO UPDATE SET
-           stok_adi=EXCLUDED.stok_adi, marka=EXCLUDED.marka, giren_miktar=EXCLUDED.giren_miktar, mevcut=EXCLUDED.mevcut,
-           alis_fiyati=EXCLUDED.alis_fiyati, satis_fiyati=EXCLUDED.satis_fiyati, envanter_degeri=EXCLUDED.envanter_degeri,
-           updated_at=CURRENT_TIMESTAMP`,
+         ON DUPLICATE KEY UPDATE
+           stok_adi=VALUES(stok_adi), marka=VALUES(marka), giren_miktar=VALUES(giren_miktar), mevcut=VALUES(mevcut),
+           alis_fiyati=VALUES(alis_fiyati), satis_fiyati=VALUES(satis_fiyati), envanter_degeri=VALUES(envanter_degeri),
+           updated_at=CURRENT_TIMESTAMP(6)`,
         [stok.stok_kodu, stok.stok_adi, stok.marka || null, mevcut, mevcut, stok.birimi || 'Adet',
          parseFloat(stok.alis_fiyati) || 0, parseFloat(stok.satis_fiyati) || 0, envanter]
       );

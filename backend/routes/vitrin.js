@@ -1,5 +1,6 @@
 const express = require('express');
-const { pool } = require('../config/db');
+const { pool, maxPaket, paketHatasi } = require('../config/db');
+const { orderByText } = require('../config/sqlText');
 
 // Geçerli kategoriler
 const KATEGORILER = ['motor', 'aksesuar', 'yedek_parca', 'bakim_servis', 'nakliye', 'sigorta'];
@@ -14,6 +15,28 @@ const numOrNull = (v) => {
   return isNaN(n) ? null : n;
 };
 
+// İlanların vitrin sırasını topluca yazar: ids[i] -> siralama = i. (PostgreSQL'deki
+// UPDATE ... FROM unnest(...) WITH ORDINALITY karşılığı.) Etkilenen satır sayısını döndürür.
+// Aynı kategoriye ait olmayan id'ler güncellenmez; çağıran satır sayısını ids.length ile karşılaştırır.
+const siralamaYaz = async (client, ids, kategori) => {
+  const durumlar = ids.map((_, i) => `WHEN $${i + 2} THEN ${i}`).join(' ');
+  const liste = ids.map((_, i) => `$${i + 2}`).join(', ');
+  return client.query(
+    `UPDATE vitrin_urunleri SET siralama = CASE id ${durumlar} END, updated_at = CURRENT_TIMESTAMP
+     WHERE id IN (${liste}) AND kategori = $1`,
+    [kategori, ...ids]
+  );
+};
+
+// Veritabanı sunucusunun tek pakette kabul ettiği boyutu aşan yükleme (görsel/video) önceden reddedilir.
+// Aksi halde sorgu 'Sunucu hatası' ile (ve bağlantı koparak) düşerdi. Dönüş: sınır (bayt) ya da null.
+const paketAsimi = async (...metinler) => {
+  const sinir = (await maxPaket()) - 1024 * 1024; // sorgunun geri kalanı için pay
+  return metinler.some((m) => typeof m === 'string' && Buffer.byteLength(m) > sinir) ? sinir : null;
+};
+const cokBuyukYanit = (res, sinir) =>
+  res.status(413).json({ message: `Dosya çok büyük (en fazla ${Math.floor(sinir / 1048576)} MB yüklenebilir)` });
+
 // base64 data URL'i { mime, buffer } olarak çözer
 const parseDataUrl = (data) => {
   if (!data || typeof data !== 'string') return null;
@@ -24,6 +47,7 @@ const parseDataUrl = (data) => {
 
 module.exports = (authenticateToken, isAdmin) => {
   const router = express.Router();
+  router.param('id', require('../middleware/idDogrula').idParam);
   const admin = [authenticateToken, isAdmin];
 
   // Vitrin yazma yetkisi: admin VEYA motor/aksesuar vitrin yetkisi olan personel
@@ -47,7 +71,7 @@ module.exports = (authenticateToken, isAdmin) => {
   // GET /segmentler - dinamik segment listesi
   router.get('/segmentler', async (req, res) => {
     try {
-      const result = await pool.query('SELECT id, ad FROM vitrin_segmentler ORDER BY sira ASC, ad ASC');
+      const result = await pool.query(`SELECT id, ad FROM vitrin_segmentler ORDER BY sira ASC, ${orderByText('ad')}`);
       res.json(result.rows);
     } catch (e) {
       console.error('Vitrin segment hatası:', e.message);
@@ -60,7 +84,7 @@ module.exports = (authenticateToken, isAdmin) => {
     if (!ad) return;
     try {
       const max = await pool.query('SELECT COALESCE(MAX(sira),0)+1 AS s FROM vitrin_segmentler');
-      await pool.query('INSERT INTO vitrin_segmentler (ad, sira) VALUES ($1,$2) ON CONFLICT (ad) DO NOTHING', [ad, max.rows[0].s]);
+      await pool.query('INSERT IGNORE INTO vitrin_segmentler (ad, sira) VALUES ($1,$2)', [ad, max.rows[0].s]);
     } catch { /* sessiz */ }
   };
 
@@ -90,7 +114,8 @@ module.exports = (authenticateToken, isAdmin) => {
                 (gorsel IS NOT NULL) AS gorsel_var, updated_at
          FROM vitrin_kategori_iletisim`
       );
-      res.json(result.rows);
+      // Boolean ifade MariaDB'de 1/0 döner; PostgreSQL true/false döndürüyordu.
+      res.json(result.rows.map((r) => ({ ...r, gorsel_var: Number(r.gorsel_var) === 1 })));
     } catch (e) {
       console.error('Vitrin iletişim hatası:', e.message);
       res.status(500).json({ message: 'Sunucu hatası' });
@@ -197,7 +222,7 @@ module.exports = (authenticateToken, isAdmin) => {
       if (cc_min) { params.push(Number(cc_min)); query += ` AND motor_cc >= $${params.length}`; }
       if (cc_max) { params.push(Number(cc_max)); query += ` AND motor_cc <= $${params.length}`; }
       if (km_max) { params.push(Number(km_max)); query += ` AND km <= $${params.length}`; }
-      if (q) { params.push(`%${q}%`); query += ` AND (baslik ILIKE $${params.length} OR aciklama ILIKE $${params.length} OR marka ILIKE $${params.length} OR model ILIKE $${params.length})`; }
+      if (q) { params.push(`%${q}%`); query += ` AND (LOWER(baslik) LIKE LOWER($${params.length}) OR LOWER(aciklama) LIKE LOWER($${params.length}) OR LOWER(marka) LIKE LOWER($${params.length}) OR LOWER(model) LIKE LOWER($${params.length}))`; }
 
       // Yönetim ekranında belirlenen sıra her zaman önceliklidir. one_cikan sadece
       // aynı sıra değerine sahip eski kayıtlarda ikincil bir tercih olarak kalır.
@@ -215,13 +240,21 @@ module.exports = (authenticateToken, isAdmin) => {
     try {
       const { durum } = req.query;
       const params = [];
-      let query = `SELECT MIN(TRIM(marka)) AS marka, COUNT(*)::int AS adet
-                   FROM vitrin_urunleri
-                   WHERE kategori = 'motor' AND yayinda = TRUE AND COALESCE(TRIM(marka), '') <> ''`;
+      // Aynı markanın büyük/küçük harf farklı yazımları tek satırda toplanır (UPPER(TRIM(marka))); gösterilen
+      // yazım, sıralamada ilk gelendir (PostgreSQL'deki MIN karşılığı: küçük harf önce). Önce her yazım
+      // ayrı sayılır, sonra pencere fonksiyonuyla toplanıp ilk yazım seçilir.
+      let query = `SELECT marka, adet FROM (
+                     SELECT TRIM(marka) AS marka,
+                            SUM(COUNT(*)) OVER (PARTITION BY UPPER(TRIM(marka))) AS adet,
+                            ROW_NUMBER() OVER (PARTITION BY UPPER(TRIM(marka)) ORDER BY ${orderByText('TRIM(marka)')}) AS sira
+                     FROM vitrin_urunleri
+                     WHERE kategori = 'motor' AND yayinda = TRUE AND COALESCE(TRIM(marka), '') <> ''`;
       if (durum && MOTOR_DURUMLARI.includes(durum)) { params.push(durum); query += ` AND motor_durumu = $1`; }
-      query += ' GROUP BY UPPER(TRIM(marka)) ORDER BY 1 ASC';
+      query += ` GROUP BY TRIM(marka)
+                   ) t WHERE sira = 1 ORDER BY ${orderByText('marka')}`;
       const result = await pool.query(query, params);
-      res.json(result.rows);
+      // COUNT MariaDB'de metin döner; PostgreSQL'de COUNT(*)::int sayıydı.
+      res.json(result.rows.map((r) => ({ marka: r.marka, adet: Number(r.adet) })));
     } catch (e) {
       console.error('Vitrin marka listesi hatası:', e.message);
       res.status(500).json({ message: 'Sunucu hatası' });
@@ -264,13 +297,7 @@ module.exports = (authenticateToken, isAdmin) => {
     const client = await pool.connect();
     try {
       await client.query('BEGIN');
-      const result = await client.query(
-        `UPDATE vitrin_urunleri AS v
-         SET siralama = x.sira::int - 1, updated_at = CURRENT_TIMESTAMP
-         FROM unnest($1::int[]) WITH ORDINALITY AS x(id, sira)
-         WHERE v.id = x.id AND v.kategori = $2`,
-        [ids, kategori]
-      );
+      const result = await siralamaYaz(client, ids, kategori);
       if (result.rowCount !== ids.length) {
         await client.query('ROLLBACK');
         return res.status(400).json({ message: 'Bazı ilanlar bu kategoriye ait değil' });
@@ -296,21 +323,37 @@ module.exports = (authenticateToken, isAdmin) => {
     try {
       // Arşivden yayına alınan ilan eski sırasını değil, yayındaki listenin sonunu alır
       // (eski sıra numarası artık başka ilanlarla çakışıyor olabilir).
-      const result = await pool.query(
-        `UPDATE vitrin_urunleri AS v
-         SET yayinda = $1::boolean,
-             siralama = CASE
-               WHEN $1::boolean AND NOT COALESCE(v.yayinda, FALSE) THEN (
-                 SELECT COALESCE(MAX(s.siralama), -1) + 1 FROM vitrin_urunleri s
-                 WHERE s.kategori = v.kategori AND s.yayinda = TRUE AND s.id <> v.id)
-               ELSE v.siralama END,
-             updated_at = CURRENT_TIMESTAMP
-         WHERE v.id = $2
-         RETURNING v.id, v.yayinda`,
-        [yayinda, id]
-      );
-      if (result.rows.length === 0) return res.status(404).json({ message: 'Kayıt bulunamadı' });
-      res.json(result.rows[0]);
+      // MariaDB SET atamalarını soldan sağa, GÜNCELLENMİŞ değerlerle çalıştırır: siralama, yayinda'nın
+      // ESKİ değerine bakar; bu yüzden yayinda'dan ÖNCE yazılır. RETURNING yerine ayrı SELECT
+      // kullanılır (UPDATE ... RETURNING MariaDB'de yok); ikisi tek transaction'dadır.
+      const client = await pool.connect();
+      let sonuc;
+      try {
+        await client.query('BEGIN');
+        const guncel = await client.query(
+          `UPDATE vitrin_urunleri v
+           SET siralama = CASE
+                 WHEN $1 AND NOT COALESCE(v.yayinda, FALSE) THEN (
+                   SELECT COALESCE(MAX(s.siralama), -1) + 1 FROM vitrin_urunleri s
+                   WHERE s.kategori = v.kategori AND s.yayinda = TRUE AND s.id <> v.id)
+                 ELSE v.siralama END,
+               yayinda = $1,
+               updated_at = CURRENT_TIMESTAMP
+           WHERE v.id = $2`,
+          [yayinda, id]
+        );
+        sonuc = guncel.rowCount === 0
+          ? { rows: [] }
+          : await client.query('SELECT id, yayinda FROM vitrin_urunleri WHERE id = $1', [id]);
+        await client.query('COMMIT');
+      } catch (hata) {
+        await client.query('ROLLBACK');
+        throw hata;
+      } finally {
+        client.release();
+      }
+      if (sonuc.rows.length === 0) return res.status(404).json({ message: 'Kayıt bulunamadı' });
+      res.json(sonuc.rows[0]);
     } catch (e) {
       console.error('Vitrin yayın durumu hatası:', e.message);
       res.status(500).json({ message: 'Sunucu hatası' });
@@ -359,13 +402,7 @@ module.exports = (authenticateToken, isAdmin) => {
       const hedefIndex = Math.min(istenenSira, ids.length + 1) - 1;
       ids.splice(hedefIndex, 0, id);
 
-      await client.query(
-        `UPDATE vitrin_urunleri AS v
-         SET siralama = x.sira::int - 1, updated_at = CURRENT_TIMESTAMP
-         FROM unnest($1::int[]) WITH ORDINALITY AS x(id, sira)
-         WHERE v.id = x.id AND v.kategori = $2`,
-        [ids, kategori]
-      );
+      await siralamaYaz(client, ids, kategori);
       await client.query('COMMIT');
       res.json({ sira: hedefIndex + 1, urun_ids: ids });
     } catch (e) {
@@ -391,6 +428,9 @@ module.exports = (authenticateToken, isAdmin) => {
       if (!kategoriYetkiliMi(req.user, kategori)) return res.status(403).json({ message: 'Bu kategori için vitrin yetkiniz yok' });
       if (!baslik) return res.status(400).json({ message: 'Başlık zorunlu' });
       if (kategori === 'motor' && !segment) return res.status(400).json({ message: 'Motor ilanı için segment zorunlu' });
+
+      const asim = await paketAsimi(video, ...(Array.isArray(gorseller) ? gorseller : []));
+      if (asim) return cokBuyukYanit(res, asim);
 
       if (segment) await ensureSegment(segment);
       await client.query('BEGIN');
@@ -426,6 +466,7 @@ module.exports = (authenticateToken, isAdmin) => {
     } catch (e) {
       await client.query('ROLLBACK');
       console.error('Vitrin ekleme hatası:', e.message);
+      if (paketHatasi(e)) return res.status(413).json({ message: 'Dosya çok büyük' });
       res.status(500).json({ message: 'Sunucu hatası' });
     } finally {
       client.release();
@@ -449,6 +490,9 @@ module.exports = (authenticateToken, isAdmin) => {
         return res.status(403).json({ message: 'Bu kategori için vitrin yetkiniz yok' });
       }
       if (kategori === 'motor' && !segment) return res.status(400).json({ message: 'Motor ilanı için segment zorunlu' });
+
+      const asim = await paketAsimi(video, ...(Array.isArray(gorseller) ? gorseller : []));
+      if (asim) return cokBuyukYanit(res, asim);
 
       if (segment) await ensureSegment(segment);
       await client.query('BEGIN');
@@ -488,6 +532,7 @@ module.exports = (authenticateToken, isAdmin) => {
     } catch (e) {
       await client.query('ROLLBACK');
       console.error('Vitrin güncelleme hatası:', e.message);
+      if (paketHatasi(e)) return res.status(413).json({ message: 'Dosya çok büyük' });
       res.status(500).json({ message: 'Sunucu hatası' });
     } finally {
       client.release();
@@ -530,13 +575,15 @@ module.exports = (authenticateToken, isAdmin) => {
       if (!KATEGORILER.includes(kategori)) return res.status(400).json({ message: 'Geçersiz kategori' });
       if (!kategoriYetkiliMi(req.user, kategori)) return res.status(403).json({ message: 'Bu kategori için vitrin yetkiniz yok' });
       const { personel_adi, telefon, personel_adi_2, telefon_2, aciklama, baslik, gorsel, gorsel_sil } = req.body;
+      const asim = await paketAsimi(gorsel);
+      if (asim) return cokBuyukYanit(res, asim);
       await pool.query(
         `INSERT INTO vitrin_kategori_iletisim (kategori, personel_adi, telefon, aciklama, baslik, personel_adi_2, telefon_2, updated_at)
          VALUES ($1,$2,$3,$4,$5,$6,$7,CURRENT_TIMESTAMP)
-         ON CONFLICT (kategori) DO UPDATE SET
-           personel_adi=EXCLUDED.personel_adi, telefon=EXCLUDED.telefon,
-           personel_adi_2=EXCLUDED.personel_adi_2, telefon_2=EXCLUDED.telefon_2,
-           aciklama=EXCLUDED.aciklama, baslik=EXCLUDED.baslik, updated_at=CURRENT_TIMESTAMP`,
+         ON DUPLICATE KEY UPDATE
+           personel_adi=VALUES(personel_adi), telefon=VALUES(telefon),
+           personel_adi_2=VALUES(personel_adi_2), telefon_2=VALUES(telefon_2),
+           aciklama=VALUES(aciklama), baslik=VALUES(baslik), updated_at=CURRENT_TIMESTAMP`,
         [kategori, emptyToNull(personel_adi), emptyToNull(telefon), emptyToNull(aciklama), emptyToNull(baslik),
          emptyToNull(personel_adi_2), emptyToNull(telefon_2)]
       );

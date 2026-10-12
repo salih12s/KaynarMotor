@@ -15,8 +15,8 @@ async function upsertMusteri(ad_soyad, telefon, adres) {
       const tail = telDigits.slice(-10);
       const byPhone = await pool.query(
         `SELECT id FROM musteriler
-         WHERE regexp_replace(COALESCE(telefon,''), '\\D', '', 'g') LIKE '%' || $1
-         ORDER BY updated_at DESC NULLS LAST, created_at DESC
+         WHERE REGEXP_REPLACE(COALESCE(telefon,''), '[^0-9]', '') LIKE CONCAT('%', $1)
+         ORDER BY updated_at DESC, created_at DESC
          LIMIT 1`,
         [tail]
       );

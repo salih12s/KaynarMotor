@@ -1,241 +1,455 @@
 const { pool } = require('./db');
 const bcrypt = require('bcryptjs');
 
+// MariaDB şeması (Hostinger). Canlı PostgreSQL şemasından (Railway) kolon sırası, tipler,
+// varsayılanlar, yabancı anahtarlar ve indeksler korunarak üretilmiştir.
+//
+//  - Tüm tablolar utf8mb4_nopad_bin ile açılır: karşılaştırma ve LIKE büyük/küçük harfe
+//    duyarlıdır, sondaki boşluk anlamlıdır (PostgreSQL varchar davranışı).
+//  - TIMESTAMP -> DATETIME(6) (UTC), BOOLEAN -> TINYINT(1), BYTEA -> LONGBLOB,
+//    SERIAL -> AUTO_INCREMENT, vitrin ilan_no dizisi -> MariaDB SEQUENCE.
+//  - Her CREATE ... IF NOT EXISTS olduğu için açılışta tekrar çalıştırmak güvenlidir;
+//    mevcut veriyi değiştirmez. Şemaya yeni kolon eklerken MIGRATIONS listesine
+//    "ALTER TABLE ... ADD COLUMN IF NOT EXISTS ..." ekleyin.
+
+// Vitrin ilan numarası (benzersiz sıra no). vitrin_urunleri tablosundan ÖNCE oluşturulur.
+const SIRA_ONCE = ['CREATE SEQUENCE IF NOT EXISTS vitrin_ilan_no_seq START WITH 1'];
+
+const YARDIMCI = [
+  // İş emri fiş numarası üretimini serileştiren tek satırlık kilit tablosu
+  // (PostgreSQL'deki pg_advisory_xact_lock yerine; SELECT ... FOR UPDATE ile kullanılır).
+  `CREATE TABLE IF NOT EXISTS fis_no_kilidi (
+  id INT NOT NULL,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_nopad_bin`,
+  'INSERT IGNORE INTO fis_no_kilidi (id) VALUES (1)',
+];
+
+const TABLOLAR = [
+  `
+CREATE TABLE IF NOT EXISTS aksesuarlar (
+  id INT NOT NULL AUTO_INCREMENT,
+  ad_soyad VARCHAR(100),
+  telefon VARCHAR(20),
+  urun_adi VARCHAR(255),
+  odeme_tutari DECIMAL(10,2) DEFAULT 0,
+  odeme_sekli VARCHAR(50),
+  aciklama TEXT,
+  durum VARCHAR(50) DEFAULT 'beklemede',
+  toplam_maliyet DECIMAL(10,2) DEFAULT 0,
+  toplam_satis DECIMAL(10,2) DEFAULT 0,
+  kar DECIMAL(10,2) DEFAULT 0,
+  odeme_detaylari TEXT,
+  satis_tarihi DATE DEFAULT (CURRENT_DATE),
+  tamamlama_tarihi DATETIME(6),
+  created_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6),
+  updated_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6),
+  olusturan_kisi VARCHAR(100),
+  kalan_odeme DECIMAL(12,2) DEFAULT 0,
+  indirim DECIMAL(12,2) DEFAULT 0,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_nopad_bin
+  `,
+  `
+CREATE TABLE IF NOT EXISTS aksesuar_parcalar (
+  id INT NOT NULL AUTO_INCREMENT,
+  aksesuar_id INT,
+  urun_adi VARCHAR(255),
+  adet INT DEFAULT 1,
+  maliyet DECIMAL(10,2) DEFAULT 0,
+  satis_fiyati DECIMAL(10,2) DEFAULT 0,
+  created_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6),
+  PRIMARY KEY (id),
+  FOREIGN KEY (aksesuar_id) REFERENCES aksesuarlar(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_nopad_bin
+  `,
+  `
+CREATE TABLE IF NOT EXISTS aksesuar_stok (
+  id INT NOT NULL AUTO_INCREMENT,
+  stok_kodu VARCHAR(20) NOT NULL,
+  stok_adi VARCHAR(255) NOT NULL,
+  giren_miktar INT DEFAULT 0,
+  cikan_miktar INT DEFAULT 0,
+  mevcut INT DEFAULT 0,
+  birimi VARCHAR(20) DEFAULT 'Adet',
+  alis_fiyati DECIMAL(10,2) DEFAULT 0,
+  satis_fiyati DECIMAL(10,2) DEFAULT 0,
+  envanter_degeri DECIMAL(12,2) DEFAULT 0,
+  created_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6),
+  updated_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6),
+  marka VARCHAR(100),
+  platform VARCHAR(100),
+  beden VARCHAR(10),
+  renk VARCHAR(50),
+  kategori VARCHAR(50),
+  PRIMARY KEY (id),
+  UNIQUE KEY aksesuar_stok_stok_kodu_key (stok_kodu)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_nopad_bin
+  `,
+  `
+CREATE TABLE IF NOT EXISTS kullanicilar (
+  id INT NOT NULL AUTO_INCREMENT,
+  kullanici_adi VARCHAR(50) NOT NULL,
+  sifre VARCHAR(255) NOT NULL,
+  plain_sifre VARCHAR(255),
+  ad_soyad VARCHAR(100) NOT NULL,
+  rol VARCHAR(20) DEFAULT 'personel',
+  onay_durumu VARCHAR(20) DEFAULT 'beklemede',
+  aksesuar_yetkisi BOOLEAN DEFAULT FALSE,
+  motor_satis_yetkisi BOOLEAN DEFAULT FALSE,
+  created_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6),
+  eticaret_yetkisi BOOLEAN DEFAULT FALSE,
+  servis_yetkisi BOOLEAN DEFAULT FALSE,
+  aksesuar_stok_yetkisi BOOLEAN DEFAULT FALSE,
+  yedek_parca_yetkisi BOOLEAN DEFAULT FALSE,
+  liste_fiyati_gor BOOLEAN DEFAULT FALSE,
+  alis_fiyati_gor BOOLEAN DEFAULT FALSE,
+  satis_fiyati_gor BOOLEAN DEFAULT FALSE,
+  kar_gor BOOLEAN DEFAULT FALSE,
+  musteri_gor BOOLEAN DEFAULT FALSE,
+  satis_gecmisi_gor BOOLEAN DEFAULT FALSE,
+  motor_vitrin_yetkisi BOOLEAN DEFAULT FALSE,
+  aksesuar_vitrin_yetkisi BOOLEAN DEFAULT FALSE,
+  PRIMARY KEY (id),
+  UNIQUE KEY kullanicilar_kullanici_adi_key (kullanici_adi)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_nopad_bin
+  `,
+  `
+CREATE TABLE IF NOT EXISTS aktivite_log (
+  id INT NOT NULL AUTO_INCREMENT,
+  kullanici_id INT,
+  kullanici_adi VARCHAR(50),
+  islem_tipi VARCHAR(50) NOT NULL,
+  islem_detay TEXT,
+  hedef_tablo VARCHAR(50),
+  hedef_id INT,
+  ip_adresi VARCHAR(45),
+  tarayici_bilgisi TEXT,
+  created_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6),
+  PRIMARY KEY (id),
+  FOREIGN KEY (kullanici_id) REFERENCES kullanicilar(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_nopad_bin
+  `,
+  `
+CREATE TABLE IF NOT EXISTS eticaret_platformlar (
+  id INT NOT NULL AUTO_INCREMENT,
+  platform_adi VARCHAR(100) NOT NULL,
+  komisyon_orani DECIMAL(5,2) DEFAULT 0,
+  created_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6),
+  updated_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6),
+  kdv_orani DECIMAL(5,2) DEFAULT 20,
+  kargo_ucreti DECIMAL(10,2) DEFAULT 0,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_nopad_bin
+  `,
+  `
+CREATE TABLE IF NOT EXISTS eticaret_satislar (
+  id INT NOT NULL AUTO_INCREMENT,
+  stok_id INT,
+  platform_id INT,
+  urun_adi VARCHAR(255),
+  alis_fiyati DECIMAL(10,2) DEFAULT 0,
+  satis_fiyati DECIMAL(10,2) DEFAULT 0,
+  komisyon_orani DECIMAL(5,2) DEFAULT 0,
+  komisyon_tutari DECIMAL(10,2) DEFAULT 0,
+  kar DECIMAL(10,2) DEFAULT 0,
+  adet INT DEFAULT 1,
+  tarih DATE DEFAULT (CURRENT_DATE),
+  durum VARCHAR(50) DEFAULT 'tamamlandi',
+  created_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6),
+  updated_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6),
+  kdv_orani DECIMAL(5,2) DEFAULT 20,
+  kargo_ucreti DECIMAL(10,2) DEFAULT 0,
+  PRIMARY KEY (id),
+  FOREIGN KEY (platform_id) REFERENCES eticaret_platformlar(id) ON DELETE SET NULL,
+  FOREIGN KEY (stok_id) REFERENCES aksesuar_stok(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_nopad_bin
+  `,
+  `
+CREATE TABLE IF NOT EXISTS ikinci_el_motorlar (
+  id INT NOT NULL AUTO_INCREMENT,
+  tarih DATE DEFAULT (CURRENT_DATE),
+  plaka VARCHAR(20),
+  marka VARCHAR(100),
+  model VARCHAR(100),
+  km INT,
+  alis_fiyati DECIMAL(12,2) DEFAULT 0,
+  satis_fiyati DECIMAL(12,2) DEFAULT 0,
+  noter_alis DECIMAL(12,2) DEFAULT 0,
+  noter_satis DECIMAL(12,2) DEFAULT 0,
+  kar DECIMAL(12,2) DEFAULT 0,
+  alici_adi VARCHAR(255),
+  alici_tc VARCHAR(100),
+  alici_telefon VARCHAR(50),
+  alici_adres TEXT,
+  odeme_sekli VARCHAR(50) DEFAULT 'nakit',
+  aciklama TEXT,
+  durum VARCHAR(50) DEFAULT 'beklemede',
+  tamamlama_tarihi DATETIME(6),
+  created_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6),
+  updated_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6),
+  masraflar DECIMAL(12,2) DEFAULT 0,
+  stok_tipi VARCHAR(20) DEFAULT 'sahip',
+  yil INT,
+  satici_adi VARCHAR(255),
+  satici_tc VARCHAR(20),
+  kalan_odeme DECIMAL(12,2) DEFAULT 0,
+  fatura_kesildi BOOLEAN DEFAULT FALSE,
+  yevmiye_no VARCHAR(50),
+  eski_kayit BOOLEAN DEFAULT FALSE,
+  satis_tarihi DATE,
+  komisyoncu_adi VARCHAR(255),
+  komisyoncu_telefon VARCHAR(50),
+  komisyoncu_tutari DECIMAL(12,2) DEFAULT 0,
+  yatirimci_id INT,
+  yatirimci_kar_orani DECIMAL(5,2) DEFAULT 0,
+  yatirimci_kar DECIMAL(12,2) DEFAULT 0,
+  liste_fiyati DECIMAL(12,2) DEFAULT 0,
+  odeme_detaylari TEXT,
+  vitrin_baslik TEXT,
+  vitrin_aciklama TEXT,
+  vitrin_segment VARCHAR(50),
+  vitrin_cc INT,
+  vitrin_fiyat DECIMAL(12,2),
+  vitrin_hasar TEXT,
+  PRIMARY KEY (id),
+  FOREIGN KEY (yatirimci_id) REFERENCES kullanicilar(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_nopad_bin
+  `,
+  `
+CREATE TABLE IF NOT EXISTS musteriler (
+  id INT NOT NULL AUTO_INCREMENT,
+  ad_soyad VARCHAR(100),
+  adres TEXT,
+  telefon VARCHAR(20),
+  created_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6),
+  updated_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6),
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_nopad_bin
+  `,
+  `
+CREATE TABLE IF NOT EXISTS is_emirleri (
+  id INT NOT NULL AUTO_INCREMENT,
+  fis_no INT,
+  musteri_id INT,
+  musteri_ad_soyad VARCHAR(100),
+  adres TEXT,
+  telefon VARCHAR(20),
+  km INT,
+  model_tip VARCHAR(100),
+  marka VARCHAR(100),
+  aciklama TEXT,
+  ariza_sikayetler TEXT,
+  tahmini_teslim_tarihi DATE,
+  tahmini_toplam_ucret DECIMAL(10,2) DEFAULT 0,
+  gercek_toplam_ucret DECIMAL(10,2) DEFAULT 0,
+  toplam_maliyet DECIMAL(10,2) DEFAULT 0,
+  kar DECIMAL(10,2) DEFAULT 0,
+  durum VARCHAR(20) DEFAULT 'beklemede',
+  musteri_imza BOOLEAN DEFAULT FALSE,
+  teslim_alan_ad_soyad VARCHAR(100),
+  teslim_eden_teknisyen VARCHAR(100),
+  teslim_tarihi DATE,
+  olusturan_kullanici_id INT,
+  olusturan_kisi VARCHAR(100),
+  odeme_detaylari TEXT,
+  tamamlama_tarihi DATETIME(6),
+  created_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6),
+  updated_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6),
+  kalan_odeme DECIMAL(12,2) DEFAULT 0,
+  plaka VARCHAR(20),
+  PRIMARY KEY (id),
+  UNIQUE KEY is_emirleri_fis_no_key (fis_no),
+  FOREIGN KEY (musteri_id) REFERENCES musteriler(id),
+  FOREIGN KEY (olusturan_kullanici_id) REFERENCES kullanicilar(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_nopad_bin
+  `,
+  `
+CREATE TABLE IF NOT EXISTS parcalar (
+  id INT NOT NULL AUTO_INCREMENT,
+  is_emri_id INT,
+  parca_kodu VARCHAR(50),
+  takilan_parca VARCHAR(200),
+  adet INT DEFAULT 1,
+  birim_fiyat DECIMAL(10,2) DEFAULT 0,
+  maliyet DECIMAL(10,2) DEFAULT 0,
+  toplam_fiyat DECIMAL(10,2) DEFAULT 0,
+  created_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6),
+  PRIMARY KEY (id),
+  FOREIGN KEY (is_emri_id) REFERENCES is_emirleri(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_nopad_bin
+  `,
+  `
+CREATE TABLE IF NOT EXISTS satis_belgeleri (
+  id INT NOT NULL AUTO_INCREMENT,
+  motor_id INT NOT NULL,
+  dosya_adi VARCHAR(255) NOT NULL,
+  mime VARCHAR(100) NOT NULL,
+  boyut INT NOT NULL,
+  icerik LONGBLOB NOT NULL,
+  yukleyen_id INT,
+  yukleyen_adi VARCHAR(100),
+  created_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6),
+  PRIMARY KEY (id),
+  FOREIGN KEY (motor_id) REFERENCES ikinci_el_motorlar(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_nopad_bin
+  `,
+  `
+CREATE TABLE IF NOT EXISTS servis_qr_tokenler (
+  id INT NOT NULL AUTO_INCREMENT,
+  plaka VARCHAR(20) NOT NULL,
+  token VARCHAR(64) NOT NULL,
+  created_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6),
+  PRIMARY KEY (id),
+  UNIQUE KEY servis_qr_tokenler_plaka_key (plaka),
+  UNIQUE KEY servis_qr_tokenler_token_key (token)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_nopad_bin
+  `,
+  `
+CREATE TABLE IF NOT EXISTS vitrin_urunleri (
+  id INT NOT NULL AUTO_INCREMENT,
+  kategori VARCHAR(30) NOT NULL,
+  baslik VARCHAR(255) NOT NULL,
+  aciklama TEXT,
+  fiyat DECIMAL(12,2) DEFAULT 0,
+  video_url TEXT,
+  kapak_gorsel_id INT,
+  marka VARCHAR(100),
+  model VARCHAR(100),
+  yil INT,
+  segment VARCHAR(30),
+  motor_cc INT,
+  km INT,
+  yayinda BOOLEAN DEFAULT TRUE,
+  siralama INT DEFAULT 0,
+  created_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6),
+  updated_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6),
+  ilan_no INT DEFAULT nextval(vitrin_ilan_no_seq),
+  video_dosya_id INT,
+  stok_motor_id INT,
+  one_cikan BOOLEAN DEFAULT FALSE,
+  rubik_link TEXT,
+  hasar_kaydi TEXT,
+  motor_durumu VARCHAR(20) DEFAULT 'ikinci_el',
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_nopad_bin
+  `,
+  `
+CREATE TABLE IF NOT EXISTS vitrin_gorseller (
+  id INT NOT NULL AUTO_INCREMENT,
+  urun_id INT,
+  data LONGTEXT NOT NULL,
+  sira INT DEFAULT 0,
+  created_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6),
+  PRIMARY KEY (id),
+  FOREIGN KEY (urun_id) REFERENCES vitrin_urunleri(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_nopad_bin
+  `,
+  `
+CREATE TABLE IF NOT EXISTS vitrin_kategori_iletisim (
+  kategori VARCHAR(30) NOT NULL,
+  personel_adi VARCHAR(100),
+  telefon VARCHAR(50),
+  aciklama TEXT,
+  updated_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6),
+  gorsel LONGTEXT,
+  baslik VARCHAR(255),
+  personel_adi_2 VARCHAR(100),
+  telefon_2 VARCHAR(50),
+  PRIMARY KEY (kategori)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_nopad_bin
+  `,
+  `
+CREATE TABLE IF NOT EXISTS vitrin_segmentler (
+  id INT NOT NULL AUTO_INCREMENT,
+  ad VARCHAR(50) NOT NULL,
+  sira INT DEFAULT 0,
+  created_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6),
+  PRIMARY KEY (id),
+  UNIQUE KEY vitrin_segmentler_ad_key (ad)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_nopad_bin
+  `,
+  `
+CREATE TABLE IF NOT EXISTS vitrin_videolar (
+  id INT NOT NULL AUTO_INCREMENT,
+  urun_id INT,
+  data LONGTEXT NOT NULL,
+  mime VARCHAR(60),
+  created_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6),
+  PRIMARY KEY (id),
+  FOREIGN KEY (urun_id) REFERENCES vitrin_urunleri(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_nopad_bin
+  `,
+  `
+CREATE TABLE IF NOT EXISTS yedek_parca_stok (
+  id INT NOT NULL AUTO_INCREMENT,
+  stok_kodu VARCHAR(20) NOT NULL,
+  stok_adi VARCHAR(255) NOT NULL,
+  marka VARCHAR(100),
+  giren_miktar INT DEFAULT 0,
+  cikan_miktar INT DEFAULT 0,
+  mevcut INT DEFAULT 0,
+  birimi VARCHAR(20) DEFAULT 'Adet',
+  alis_fiyati DECIMAL(10,2) DEFAULT 0,
+  satis_fiyati DECIMAL(10,2) DEFAULT 0,
+  envanter_degeri DECIMAL(12,2) DEFAULT 0,
+  created_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6),
+  updated_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6),
+  PRIMARY KEY (id),
+  UNIQUE KEY yedek_parca_stok_stok_kodu_key (stok_kodu)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_nopad_bin
+  `,
+  `
+CREATE TABLE IF NOT EXISTS yedek_parcalar (
+  id INT NOT NULL AUTO_INCREMENT,
+  urun_adi VARCHAR(255) NOT NULL,
+  alis_fiyati DECIMAL(10,2) DEFAULT 0,
+  satis_fiyati DECIMAL(10,2) DEFAULT 0,
+  created_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6),
+  updated_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6),
+  musteri_adi VARCHAR(255),
+  musteri_telefon VARCHAR(50),
+  kalan_odeme DECIMAL(12,2) DEFAULT 0,
+  stok_id INT,
+  adet INT DEFAULT 1,
+  PRIMARY KEY (id),
+  FOREIGN KEY (stok_id) REFERENCES yedek_parca_stok(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_nopad_bin
+  `
+];
+
+const INDEKSLER = [
+  'CREATE INDEX IF NOT EXISTS idx_aksesuar_parcalar_aksesuar ON aksesuar_parcalar (aksesuar_id)',
+  'CREATE INDEX IF NOT EXISTS idx_aksesuar_stok_adi ON aksesuar_stok (stok_adi)',
+  'CREATE INDEX IF NOT EXISTS idx_aktivite_log_kullanici ON aktivite_log (kullanici_id, created_at DESC)',
+  'CREATE INDEX IF NOT EXISTS idx_motorlar_durum ON ikinci_el_motorlar (durum)',
+  'CREATE INDEX IF NOT EXISTS idx_motorlar_yatirimci ON ikinci_el_motorlar (yatirimci_id)',
+  'CREATE INDEX IF NOT EXISTS idx_is_emirleri_created ON is_emirleri (created_at DESC)',
+  'CREATE INDEX IF NOT EXISTS idx_is_emirleri_durum ON is_emirleri (durum)',
+  'CREATE INDEX IF NOT EXISTS idx_musteriler_telefon ON musteriler (telefon)',
+  'CREATE INDEX IF NOT EXISTS idx_parcalar_is_emri ON parcalar (is_emri_id)',
+  'CREATE INDEX IF NOT EXISTS idx_satis_belge_motor ON satis_belgeleri (motor_id)',
+  'CREATE INDEX IF NOT EXISTS idx_vitrin_gorsel_urun ON vitrin_gorseller (urun_id)',
+  'CREATE INDEX IF NOT EXISTS idx_vitrin_kategori_yayinda ON vitrin_urunleri (kategori, yayinda)',
+  'CREATE INDEX IF NOT EXISTS idx_vitrin_video_urun ON vitrin_videolar (urun_id)'
+];
+
+// Sonradan eklenen kolonlar buraya yazılır (ör. 'ALTER TABLE x ADD COLUMN IF NOT EXISTS y INT').
+const MIGRATIONS = [];
+
 const initializeDatabase = async () => {
   const client = await pool.connect();
   try {
-    // 1. Kullanıcılar
-    await client.query(`
-      CREATE TABLE IF NOT EXISTS kullanicilar (
-        id SERIAL PRIMARY KEY,
-        kullanici_adi VARCHAR(50) UNIQUE NOT NULL,
-        sifre VARCHAR(255) NOT NULL,
-        plain_sifre VARCHAR(255),
-        ad_soyad VARCHAR(100) NOT NULL,
-        rol VARCHAR(20) DEFAULT 'personel',
-        onay_durumu VARCHAR(20) DEFAULT 'beklemede',
-        aksesuar_yetkisi BOOLEAN DEFAULT FALSE,
-        motor_satis_yetkisi BOOLEAN DEFAULT FALSE,
-        eticaret_yetkisi BOOLEAN DEFAULT FALSE,
-        servis_yetkisi BOOLEAN DEFAULT FALSE,
-        aksesuar_stok_yetkisi BOOLEAN DEFAULT FALSE,
-        yedek_parca_yetkisi BOOLEAN DEFAULT FALSE,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-    `);
-
-    // 2. Müşteriler
-    await client.query(`
-      CREATE TABLE IF NOT EXISTS musteriler (
-        id SERIAL PRIMARY KEY,
-        ad_soyad VARCHAR(100),
-        adres TEXT,
-        telefon VARCHAR(20),
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-    `);
-
-    // 3. İş Emirleri
-    await client.query(`
-      CREATE TABLE IF NOT EXISTS is_emirleri (
-        id SERIAL PRIMARY KEY,
-        fis_no INTEGER UNIQUE,
-        musteri_id INTEGER REFERENCES musteriler(id),
-        musteri_ad_soyad VARCHAR(100),
-        adres TEXT,
-        telefon VARCHAR(20),
-        km INTEGER,
-        model_tip VARCHAR(100),
-        marka VARCHAR(100),
-        aciklama TEXT,
-        ariza_sikayetler TEXT,
-        tahmini_teslim_tarihi DATE,
-        tahmini_toplam_ucret DECIMAL(10,2) DEFAULT 0,
-        gercek_toplam_ucret DECIMAL(10,2) DEFAULT 0,
-        toplam_maliyet DECIMAL(10,2) DEFAULT 0,
-        kar DECIMAL(10,2) DEFAULT 0,
-        durum VARCHAR(20) DEFAULT 'beklemede',
-        musteri_imza BOOLEAN DEFAULT FALSE,
-        teslim_alan_ad_soyad VARCHAR(100),
-        teslim_eden_teknisyen VARCHAR(100),
-        teslim_tarihi DATE,
-        olusturan_kullanici_id INTEGER REFERENCES kullanicilar(id),
-        olusturan_kisi VARCHAR(100),
-        odeme_detaylari TEXT,
-        tamamlama_tarihi TIMESTAMP,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-    `);
-
-    // 4. Parçalar
-    await client.query(`
-      CREATE TABLE IF NOT EXISTS parcalar (
-        id SERIAL PRIMARY KEY,
-        is_emri_id INTEGER REFERENCES is_emirleri(id) ON DELETE CASCADE,
-        parca_kodu VARCHAR(50),
-        takilan_parca VARCHAR(200),
-        adet INTEGER DEFAULT 1,
-        birim_fiyat DECIMAL(10,2) DEFAULT 0,
-        maliyet DECIMAL(10,2) DEFAULT 0,
-        toplam_fiyat DECIMAL(10,2) DEFAULT 0,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-    `);
-
-    // 5. Aksesuar Stok
-    await client.query(`
-      CREATE TABLE IF NOT EXISTS aksesuar_stok (
-        id SERIAL PRIMARY KEY,
-        stok_kodu VARCHAR(20) UNIQUE NOT NULL,
-        stok_adi VARCHAR(255) NOT NULL,
-        marka VARCHAR(100),
-        giren_miktar INTEGER DEFAULT 0,
-        cikan_miktar INTEGER DEFAULT 0,
-        mevcut INTEGER DEFAULT 0,
-        birimi VARCHAR(20) DEFAULT 'Adet',
-        alis_fiyati DECIMAL(10,2) DEFAULT 0,
-        satis_fiyati DECIMAL(10,2) DEFAULT 0,
-        envanter_degeri DECIMAL(12,2) DEFAULT 0,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-    `);
-
-    // 6. Aksesuarlar (Satışlar)
-    await client.query(`
-      CREATE TABLE IF NOT EXISTS aksesuarlar (
-        id SERIAL PRIMARY KEY,
-        ad_soyad VARCHAR(100),
-        telefon VARCHAR(20),
-        urun_adi VARCHAR(255),
-        odeme_tutari DECIMAL(10,2) DEFAULT 0,
-        odeme_sekli VARCHAR(50),
-        aciklama TEXT,
-        durum VARCHAR(50) DEFAULT 'beklemede',
-        toplam_maliyet DECIMAL(10,2) DEFAULT 0,
-        toplam_satis DECIMAL(10,2) DEFAULT 0,
-        kar DECIMAL(10,2) DEFAULT 0,
-        odeme_detaylari TEXT,
-        satis_tarihi DATE DEFAULT CURRENT_DATE,
-        tamamlama_tarihi TIMESTAMP,
-        olusturan_kisi VARCHAR(100),
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-    `);
-
-    // 7. Aksesuar Parçalar
-    await client.query(`
-      CREATE TABLE IF NOT EXISTS aksesuar_parcalar (
-        id SERIAL PRIMARY KEY,
-        aksesuar_id INTEGER REFERENCES aksesuarlar(id) ON DELETE CASCADE,
-        urun_adi VARCHAR(255),
-        adet INTEGER DEFAULT 1,
-        maliyet DECIMAL(10,2) DEFAULT 0,
-        satis_fiyati DECIMAL(10,2) DEFAULT 0,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-    `);
-
-    // 8. 2. El Motorlar
-    await client.query(`
-      CREATE TABLE IF NOT EXISTS ikinci_el_motorlar (
-        id SERIAL PRIMARY KEY,
-        tarih DATE DEFAULT CURRENT_DATE,
-        plaka VARCHAR(20),
-        marka VARCHAR(100),
-        model VARCHAR(100),
-        km INTEGER,
-        alis_fiyati DECIMAL(12,2) DEFAULT 0,
-        satis_fiyati DECIMAL(12,2) DEFAULT 0,
-        noter_alis DECIMAL(12,2) DEFAULT 0,
-        noter_satis DECIMAL(12,2) DEFAULT 0,
-        masraflar DECIMAL(12,2) DEFAULT 0,
-        kar DECIMAL(12,2) DEFAULT 0,
-        alici_adi VARCHAR(255),
-        alici_tc VARCHAR(100),
-        alici_telefon VARCHAR(50),
-        alici_adres TEXT,
-        odeme_sekli VARCHAR(50) DEFAULT 'nakit',
-        aciklama TEXT,
-        durum VARCHAR(50) DEFAULT 'beklemede',
-        tamamlama_tarihi TIMESTAMP,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-    `);
-
-    // 9. E-Ticaret Platformlar
-    await client.query(`
-      CREATE TABLE IF NOT EXISTS eticaret_platformlar (
-        id SERIAL PRIMARY KEY,
-        platform_adi VARCHAR(100) NOT NULL,
-        komisyon_orani DECIMAL(5,2) DEFAULT 0,
-        kdv_orani DECIMAL(5,2) DEFAULT 20,
-        kargo_ucreti DECIMAL(10,2) DEFAULT 0,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-    `);
-
-    // 10. E-Ticaret Satışlar
-    await client.query(`
-      CREATE TABLE IF NOT EXISTS eticaret_satislar (
-        id SERIAL PRIMARY KEY,
-        stok_id INTEGER REFERENCES aksesuar_stok(id) ON DELETE SET NULL,
-        platform_id INTEGER REFERENCES eticaret_platformlar(id) ON DELETE SET NULL,
-        urun_adi VARCHAR(255),
-        alis_fiyati DECIMAL(10,2) DEFAULT 0,
-        satis_fiyati DECIMAL(10,2) DEFAULT 0,
-        komisyon_orani DECIMAL(5,2) DEFAULT 0,
-        komisyon_tutari DECIMAL(10,2) DEFAULT 0,
-        kdv_orani DECIMAL(5,2) DEFAULT 20,
-        kargo_ucreti DECIMAL(10,2) DEFAULT 0,
-        kar DECIMAL(10,2) DEFAULT 0,
-        adet INTEGER DEFAULT 1,
-        tarih DATE DEFAULT CURRENT_DATE,
-        durum VARCHAR(50) DEFAULT 'tamamlandi',
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-    `);
-
-    // 11. Yedek Parçalar (Fiyat Listesi)
-    await client.query(`
-      CREATE TABLE IF NOT EXISTS yedek_parcalar (
-        id SERIAL PRIMARY KEY,
-        urun_adi VARCHAR(255) NOT NULL,
-        alis_fiyati DECIMAL(10,2) DEFAULT 0,
-        satis_fiyati DECIMAL(10,2) DEFAULT 0,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-    `);
-
-    // 12. Aktivite Log
-    await client.query(`
-      CREATE TABLE IF NOT EXISTS aktivite_log (
-        id SERIAL PRIMARY KEY,
-        kullanici_id INTEGER REFERENCES kullanicilar(id) ON DELETE SET NULL,
-        kullanici_adi VARCHAR(50),
-        islem_tipi VARCHAR(50) NOT NULL,
-        islem_detay TEXT,
-        hedef_tablo VARCHAR(50),
-        hedef_id INTEGER,
-        ip_adresi VARCHAR(45),
-        tarayici_bilgisi TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-    `);
+    for (const sql of SIRA_ONCE) await client.query(sql);
+    for (const sql of TABLOLAR) await client.query(sql);
+    for (const sql of YARDIMCI) await client.query(sql);
+    for (const sql of INDEKSLER) await client.query(sql);
+    for (const sql of MIGRATIONS) await client.query(sql);
 
     // Varsayılan admin kullanıcı oluştur.
     // Şifre ADMIN_INITIAL_PASSWORD ortam değişkeninden okunur; tanımlı değilse
     // admin oluşturulmaz (koda gömülü varsayılan şifre bilinçli olarak yoktur).
-    const adminCheck = await client.query(
-      "SELECT id FROM kullanicilar WHERE kullanici_adi = 'admin'"
-    );
+    const adminCheck = await client.query("SELECT id FROM kullanicilar WHERE kullanici_adi = 'admin'");
     if (adminCheck.rows.length === 0) {
       const initialPassword = process.env.ADMIN_INITIAL_PASSWORD;
       if (initialPassword) {
@@ -255,7 +469,7 @@ const initializeDatabase = async () => {
     }
 
     // Varsayılan e-ticaret platformları
-    const platformCheck = await client.query("SELECT id FROM eticaret_platformlar LIMIT 1");
+    const platformCheck = await client.query('SELECT id FROM eticaret_platformlar LIMIT 1');
     if (platformCheck.rows.length === 0) {
       await client.query(`
         INSERT INTO eticaret_platformlar (platform_adi, komisyon_orani) VALUES
@@ -265,303 +479,22 @@ const initializeDatabase = async () => {
       console.log('Varsayılan e-ticaret platformları oluşturuldu');
     }
 
-    // Migration: masraflar kolonu ekle (yoksa)
-    await client.query(`
-      ALTER TABLE ikinci_el_motorlar ADD COLUMN IF NOT EXISTS masraflar DECIMAL(12,2) DEFAULT 0;
-    `);
-
-    // Migration: marka kolonu ekle (yoksa)
-    await client.query(`
-      ALTER TABLE aksesuar_stok ADD COLUMN IF NOT EXISTS marka VARCHAR(100);
-    `);
-
-    // Migration: olusturan_kisi kolonu aksesuarlar tablosuna ekle (yoksa)
-    await client.query(`
-      ALTER TABLE aksesuarlar ADD COLUMN IF NOT EXISTS olusturan_kisi VARCHAR(100);
-    `);
-
-    // Migration: e-ticaret platformlara kdv ve kargo ekle
-    await client.query(`
-      ALTER TABLE eticaret_platformlar ADD COLUMN IF NOT EXISTS kdv_orani DECIMAL(5,2) DEFAULT 20;
-    `);
-    await client.query(`
-      ALTER TABLE eticaret_platformlar ADD COLUMN IF NOT EXISTS kargo_ucreti DECIMAL(10,2) DEFAULT 0;
-    `);
-
-    // Migration: e-ticaret satışlara kdv ve kargo ekle
-    await client.query(`
-      ALTER TABLE eticaret_satislar ADD COLUMN IF NOT EXISTS kdv_orani DECIMAL(5,2) DEFAULT 20;
-    `);
-    await client.query(`
-      ALTER TABLE eticaret_satislar ADD COLUMN IF NOT EXISTS kargo_ucreti DECIMAL(10,2) DEFAULT 0;
-    `);
-
-    // Migration: aksesuar_stok tablosuna platform alanı ekle
-    await client.query(`
-      ALTER TABLE aksesuar_stok ADD COLUMN IF NOT EXISTS platform VARCHAR(100);
-    `);
-
-    // Migration: ikinci_el_motorlar tablosuna stok_tipi alanı ekle
-    await client.query(`
-      ALTER TABLE ikinci_el_motorlar ADD COLUMN IF NOT EXISTS stok_tipi VARCHAR(20) DEFAULT 'sahip';
-    `);
-
-    // Migration: ikinci_el_motorlar tablosuna yeni alanlar ekle
-    await client.query(`ALTER TABLE ikinci_el_motorlar ADD COLUMN IF NOT EXISTS yil INTEGER;`);
-    await client.query(`ALTER TABLE ikinci_el_motorlar ADD COLUMN IF NOT EXISTS satici_adi VARCHAR(255);`);
-    await client.query(`ALTER TABLE ikinci_el_motorlar ADD COLUMN IF NOT EXISTS satici_tc VARCHAR(20);`);
-    await client.query(`ALTER TABLE ikinci_el_motorlar ADD COLUMN IF NOT EXISTS kalan_odeme DECIMAL(12,2) DEFAULT 0;`);
-    await client.query(`ALTER TABLE ikinci_el_motorlar ADD COLUMN IF NOT EXISTS fatura_kesildi BOOLEAN DEFAULT FALSE;`);
-    await client.query(`ALTER TABLE ikinci_el_motorlar ADD COLUMN IF NOT EXISTS yevmiye_no VARCHAR(50);`);
-    await client.query(`ALTER TABLE ikinci_el_motorlar ADD COLUMN IF NOT EXISTS eski_kayit BOOLEAN DEFAULT FALSE;`);
-
-    // Migration: durum 'beklemede' → 'stokta'
-    await client.query(`UPDATE ikinci_el_motorlar SET durum = 'stokta' WHERE durum = 'beklemede';`);
-
-    // Migration: alici_tc column width
-    await client.query(`ALTER TABLE ikinci_el_motorlar ALTER COLUMN alici_tc TYPE VARCHAR(100);`);
-
-    // Migration: kullanicilar tablosuna yeni yetki alanları ekle
-    await client.query(`ALTER TABLE kullanicilar ADD COLUMN IF NOT EXISTS eticaret_yetkisi BOOLEAN DEFAULT FALSE;`);
-    await client.query(`ALTER TABLE kullanicilar ADD COLUMN IF NOT EXISTS servis_yetkisi BOOLEAN DEFAULT FALSE;`);
-    await client.query(`ALTER TABLE kullanicilar ADD COLUMN IF NOT EXISTS aksesuar_stok_yetkisi BOOLEAN DEFAULT FALSE;`);
-    await client.query(`ALTER TABLE kullanicilar ADD COLUMN IF NOT EXISTS yedek_parca_yetkisi BOOLEAN DEFAULT FALSE;`);
-    // Vitrin (site) yönetimi yetkileri — motor ve aksesuar vitrini ayrı ayrı verilebilir
-    await client.query(`ALTER TABLE kullanicilar ADD COLUMN IF NOT EXISTS motor_vitrin_yetkisi BOOLEAN DEFAULT FALSE;`);
-    await client.query(`ALTER TABLE kullanicilar ADD COLUMN IF NOT EXISTS aksesuar_vitrin_yetkisi BOOLEAN DEFAULT FALSE;`);
-
-    // Migration: aksesuar_stok tablosuna beden, renk ve kategori alanları ekle
-    await client.query(`ALTER TABLE aksesuar_stok ADD COLUMN IF NOT EXISTS beden VARCHAR(10);`);
-    await client.query(`ALTER TABLE aksesuar_stok ADD COLUMN IF NOT EXISTS renk VARCHAR(50);`);
-    await client.query(`ALTER TABLE aksesuar_stok ADD COLUMN IF NOT EXISTS kategori VARCHAR(50);`);
-
-    // Migration: ikinci_el_motorlar tablosuna satis_tarihi ekle
-    await client.query(`ALTER TABLE ikinci_el_motorlar ADD COLUMN IF NOT EXISTS satis_tarihi DATE;`);
-
-    // Migration: ikinci_el_motorlar tablosuna komisyoncu alanları ekle
-    await client.query(`ALTER TABLE ikinci_el_motorlar ADD COLUMN IF NOT EXISTS komisyoncu_adi VARCHAR(255);`);
-    await client.query(`ALTER TABLE ikinci_el_motorlar ADD COLUMN IF NOT EXISTS komisyoncu_telefon VARCHAR(50);`);
-    await client.query(`ALTER TABLE ikinci_el_motorlar ADD COLUMN IF NOT EXISTS komisyoncu_tutari DECIMAL(12,2) DEFAULT 0;`);
-
-    // Migration: yedek_parcalar tablosuna müşteri bilgileri ekle
-    await client.query(`ALTER TABLE yedek_parcalar ADD COLUMN IF NOT EXISTS musteri_adi VARCHAR(255);`);
-    await client.query(`ALTER TABLE yedek_parcalar ADD COLUMN IF NOT EXISTS musteri_telefon VARCHAR(50);`);
-    // Migration: kalan_odeme alanlarÄ± (veresiye/borÃ§ takibi)
-    await client.query(`ALTER TABLE is_emirleri ADD COLUMN IF NOT EXISTS kalan_odeme DECIMAL(12,2) DEFAULT 0;`);
-    await client.query(`ALTER TABLE aksesuarlar ADD COLUMN IF NOT EXISTS kalan_odeme DECIMAL(12,2) DEFAULT 0;`);
-    await client.query(`ALTER TABLE yedek_parcalar ADD COLUMN IF NOT EXISTS kalan_odeme DECIMAL(12,2) DEFAULT 0;`);
-    // Migration: aksesuar satışında indirim (toplam ve kârdan düşülür)
-    await client.query(`ALTER TABLE aksesuarlar ADD COLUMN IF NOT EXISTS indirim DECIMAL(12,2) DEFAULT 0;`);
-    // Migration: iş emrine plaka alanı
-    await client.query(`ALTER TABLE is_emirleri ADD COLUMN IF NOT EXISTS plaka VARCHAR(20);`);
-
-    // Migration: ikinci_el_motorlar tablosuna yatırımcı ve liste fiyatı alanları ekle
-    await client.query(`ALTER TABLE ikinci_el_motorlar ADD COLUMN IF NOT EXISTS yatirimci_id INTEGER REFERENCES kullanicilar(id) ON DELETE SET NULL;`);
-    await client.query(`ALTER TABLE ikinci_el_motorlar ADD COLUMN IF NOT EXISTS yatirimci_kar_orani DECIMAL(5,2) DEFAULT 0;`);
-    await client.query(`ALTER TABLE ikinci_el_motorlar ADD COLUMN IF NOT EXISTS yatirimci_kar DECIMAL(12,2) DEFAULT 0;`);
-    await client.query(`ALTER TABLE ikinci_el_motorlar ADD COLUMN IF NOT EXISTS liste_fiyati DECIMAL(12,2) DEFAULT 0;`);
-
-    // Migration: kullanicilar tablosuna alan bazlı görüntüleme yetkileri ekle
-    await client.query(`ALTER TABLE kullanicilar ADD COLUMN IF NOT EXISTS liste_fiyati_gor BOOLEAN DEFAULT FALSE;`);
-    await client.query(`ALTER TABLE kullanicilar ADD COLUMN IF NOT EXISTS alis_fiyati_gor BOOLEAN DEFAULT FALSE;`);
-    await client.query(`ALTER TABLE kullanicilar ADD COLUMN IF NOT EXISTS satis_fiyati_gor BOOLEAN DEFAULT FALSE;`);
-    await client.query(`ALTER TABLE kullanicilar ADD COLUMN IF NOT EXISTS kar_gor BOOLEAN DEFAULT FALSE;`);
-    await client.query(`ALTER TABLE kullanicilar ADD COLUMN IF NOT EXISTS musteri_gor BOOLEAN DEFAULT FALSE;`);
-    await client.query(`ALTER TABLE kullanicilar ADD COLUMN IF NOT EXISTS satis_gecmisi_gor BOOLEAN DEFAULT FALSE;`);
-
-    // 13. Vitrin Ürünleri (genel kullanıma açık mağaza ilanları)
-    //  - Görseller AYRI tabloda tutulur (vitrin_gorseller); bu tablo hafif kalır,
-    //    liste sorguları base64 yüklemez. (DB yükünü önleme stratejisi)
-    await client.query(`
-      CREATE TABLE IF NOT EXISTS vitrin_urunleri (
-        id SERIAL PRIMARY KEY,
-        kategori VARCHAR(30) NOT NULL,
-        baslik VARCHAR(255) NOT NULL,
-        aciklama TEXT,
-        fiyat DECIMAL(12,2) DEFAULT 0,
-        video_url TEXT,
-        kapak_gorsel_id INTEGER,
-        marka VARCHAR(100),
-        model VARCHAR(100),
-        yil INTEGER,
-        segment VARCHAR(30),
-        motor_cc INTEGER,
-        km INTEGER,
-        yayinda BOOLEAN DEFAULT TRUE,
-        siralama INTEGER DEFAULT 0,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-    `);
-
-    // 14. Vitrin Görselleri (base64; ürün başına çoklu)
-    await client.query(`
-      CREATE TABLE IF NOT EXISTS vitrin_gorseller (
-        id SERIAL PRIMARY KEY,
-        urun_id INTEGER REFERENCES vitrin_urunleri(id) ON DELETE CASCADE,
-        data TEXT NOT NULL,
-        sira INTEGER DEFAULT 0,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-    `);
-
-    // 15. Vitrin Kategori İletişim (kategoriye özel personel + telefon)
-    await client.query(`
-      CREATE TABLE IF NOT EXISTS vitrin_kategori_iletisim (
-        kategori VARCHAR(30) PRIMARY KEY,
-        personel_adi VARCHAR(100),
-        telefon VARCHAR(50),
-        aciklama TEXT,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-    `);
-
-    // Vitrin liste sorguları için index
-    await client.query(`CREATE INDEX IF NOT EXISTS idx_vitrin_kategori_yayinda ON vitrin_urunleri(kategori, yayinda);`);
-    await client.query(`CREATE INDEX IF NOT EXISTS idx_vitrin_gorsel_urun ON vitrin_gorseller(urun_id);`);
-
-    // 16. Vitrin Segmentleri (dinamik segment yapısı)
-    await client.query(`
-      CREATE TABLE IF NOT EXISTS vitrin_segmentler (
-        id SERIAL PRIMARY KEY,
-        ad VARCHAR(50) UNIQUE NOT NULL,
-        sira INTEGER DEFAULT 0,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-    `);
+    // Varsayılan vitrin segmentleri
     const segCheck = await client.query('SELECT id FROM vitrin_segmentler LIMIT 1');
     if (segCheck.rows.length === 0) {
       await client.query(`
-        INSERT INTO vitrin_segmentler (ad, sira) VALUES
+        INSERT IGNORE INTO vitrin_segmentler (ad, sira) VALUES
         ('Chopper',1),('Scooter',2),('Racing',3),('Naked',4),
         ('Touring',5),('Cross/Enduro',6),('Cub',7),('Maxi Scooter',8)
-        ON CONFLICT (ad) DO NOTHING
       `);
       console.log('Varsayılan vitrin segmentleri oluşturuldu');
     }
 
-    // Migration: vitrin_urunleri tablosuna benzersiz ilan_no (sıra no) ekle
-    await client.query(`CREATE SEQUENCE IF NOT EXISTS vitrin_ilan_no_seq START 1;`);
-    await client.query(`ALTER TABLE vitrin_urunleri ADD COLUMN IF NOT EXISTS ilan_no INTEGER;`);
-    await client.query(`UPDATE vitrin_urunleri SET ilan_no = nextval('vitrin_ilan_no_seq') WHERE ilan_no IS NULL;`);
-    await client.query(`ALTER TABLE vitrin_urunleri ALTER COLUMN ilan_no SET DEFAULT nextval('vitrin_ilan_no_seq');`);
-
-    // Migration: vitrin ürünleri için yüklenebilir video desteği (YouTube yerine kendi videon)
-    //  - Video ayrı tabloda (vitrin_videolar) base64 olarak tutulur; ürün/list sorguları videoyu yüklemez.
-    //  - Oynatma sırasında HTTP Range (kısmi içerik) ile parça parça gönderilir → kasmaz, ileri/geri sarılabilir.
-    await client.query(`
-      CREATE TABLE IF NOT EXISTS vitrin_videolar (
-        id SERIAL PRIMARY KEY,
-        urun_id INTEGER REFERENCES vitrin_urunleri(id) ON DELETE CASCADE,
-        data TEXT NOT NULL,
-        mime VARCHAR(60),
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-    `);
-    await client.query(`CREATE INDEX IF NOT EXISTS idx_vitrin_video_urun ON vitrin_videolar(urun_id);`);
-    await client.query(`ALTER TABLE vitrin_urunleri ADD COLUMN IF NOT EXISTS video_dosya_id INTEGER;`);
-
-    // Migration: vitrin ilanını stok motoruna bağla + öne çıkarma + manuel Rubik ödeme linki
-    await client.query(`ALTER TABLE vitrin_urunleri ADD COLUMN IF NOT EXISTS stok_motor_id INTEGER;`);
-    await client.query(`ALTER TABLE vitrin_urunleri ADD COLUMN IF NOT EXISTS one_cikan BOOLEAN DEFAULT FALSE;`);
-    await client.query(`ALTER TABLE vitrin_urunleri ADD COLUMN IF NOT EXISTS rubik_link TEXT;`);
-
-    // Migration: hizmet kategorileri (bakım/servis, nakliye, sigorta) için hizmet sayfası — resim + başlık
-    await client.query(`ALTER TABLE vitrin_kategori_iletisim ADD COLUMN IF NOT EXISTS gorsel TEXT;`);
-    await client.query(`ALTER TABLE vitrin_kategori_iletisim ADD COLUMN IF NOT EXISTS baslik VARCHAR(255);`);
-    // Migration: kategori iletişimine ikinci personel (sitede iki kişi ve iki telefon gösterilebilsin)
-    await client.query(`ALTER TABLE vitrin_kategori_iletisim ADD COLUMN IF NOT EXISTS personel_adi_2 VARCHAR(100);`);
-    await client.query(`ALTER TABLE vitrin_kategori_iletisim ADD COLUMN IF NOT EXISTS telefon_2 VARCHAR(50);`);
-
-    // Migration: ikinci_el_motorlar tablosuna parçalı ödeme dağılımı (JSON) ekle
-    await client.query(`ALTER TABLE ikinci_el_motorlar ADD COLUMN IF NOT EXISTS odeme_detaylari TEXT;`);
-
-    // Migration: motor eklerken opsiyonel vitrin/site bilgileri (taslak) — vitrine alırken otomatik dolar
-    await client.query(`ALTER TABLE ikinci_el_motorlar ADD COLUMN IF NOT EXISTS vitrin_baslik TEXT;`);
-    await client.query(`ALTER TABLE ikinci_el_motorlar ADD COLUMN IF NOT EXISTS vitrin_aciklama TEXT;`);
-    await client.query(`ALTER TABLE ikinci_el_motorlar ADD COLUMN IF NOT EXISTS vitrin_segment VARCHAR(50);`);
-    await client.query(`ALTER TABLE ikinci_el_motorlar ADD COLUMN IF NOT EXISTS vitrin_cc INTEGER;`);
-    await client.query(`ALTER TABLE ikinci_el_motorlar ADD COLUMN IF NOT EXISTS vitrin_fiyat DECIMAL(12,2);`);
-    // Migration: hasar kaydı (ilan özelliği) — motor stok taslağı ve vitrin ilanı
-    await client.query(`ALTER TABLE ikinci_el_motorlar ADD COLUMN IF NOT EXISTS vitrin_hasar TEXT;`);
-    await client.query(`ALTER TABLE vitrin_urunleri ADD COLUMN IF NOT EXISTS hasar_kaydi TEXT;`);
-    // Migration: "Site Fiyatı" (vitrin_fiyat) ile "Liste Fiyatı" tek "İlan Fiyatı"na (liste_fiyati) indirildi.
-    //  - Liste fiyatı boş olup site fiyatı girilmiş motorlarda site fiyatı ilan fiyatına taşınır, sonra alan boşaltılır.
-    await client.query(`
-      UPDATE ikinci_el_motorlar SET liste_fiyati = vitrin_fiyat
-      WHERE vitrin_fiyat > 0 AND COALESCE(liste_fiyati, 0) = 0;
-    `);
-    await client.query(`UPDATE ikinci_el_motorlar SET vitrin_fiyat = NULL WHERE vitrin_fiyat IS NOT NULL;`);
-    // Migration: motor ilanı sıfır mı ikinci el mi (sitede ayrı listelenir)
-    await client.query(`ALTER TABLE vitrin_urunleri ADD COLUMN IF NOT EXISTS motor_durumu VARCHAR(20) DEFAULT 'ikinci_el';`);
-    await client.query(`UPDATE vitrin_urunleri SET motor_durumu = 'ikinci_el' WHERE motor_durumu IS NULL;`);
-
-    // 17. Yedek Parça Stok (aksesuar stok ile aynı mantık; barkodlar 9 ile başlar)
-    await client.query(`
-      CREATE TABLE IF NOT EXISTS yedek_parca_stok (
-        id SERIAL PRIMARY KEY,
-        stok_kodu VARCHAR(20) UNIQUE NOT NULL,
-        stok_adi VARCHAR(255) NOT NULL,
-        marka VARCHAR(100),
-        giren_miktar INTEGER DEFAULT 0,
-        cikan_miktar INTEGER DEFAULT 0,
-        mevcut INTEGER DEFAULT 0,
-        birimi VARCHAR(20) DEFAULT 'Adet',
-        alis_fiyati DECIMAL(10,2) DEFAULT 0,
-        satis_fiyati DECIMAL(10,2) DEFAULT 0,
-        envanter_degeri DECIMAL(12,2) DEFAULT 0,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-    `);
-
-    // Migration: yedek parça satışını stok kaydına bağla (satışta stoktan düşme)
-    await client.query(`ALTER TABLE yedek_parcalar ADD COLUMN IF NOT EXISTS stok_id INTEGER REFERENCES yedek_parca_stok(id) ON DELETE SET NULL;`);
-    await client.query(`ALTER TABLE yedek_parcalar ADD COLUMN IF NOT EXISTS adet INTEGER DEFAULT 1;`);
-
-    // Satış belgeleri (sözleşme vb. PDF/Word/Excel/görsel) — her satışa istenen sayıda dosya.
-    //  - Dosya ham ikili (BYTEA) tutulur; base64'e göre %33 daha az yer kaplar.
-    //  - Satış listesi sorguları icerik'i HİÇ çekmez; dosya yalnızca indirilirken okunur.
-    //  - Satış silinirse belgeleri de silinir (ON DELETE CASCADE).
-    await client.query(`
-      CREATE TABLE IF NOT EXISTS satis_belgeleri (
-        id SERIAL PRIMARY KEY,
-        motor_id INTEGER NOT NULL REFERENCES ikinci_el_motorlar(id) ON DELETE CASCADE,
-        dosya_adi VARCHAR(255) NOT NULL,
-        mime VARCHAR(100) NOT NULL,
-        boyut INTEGER NOT NULL,
-        icerik BYTEA NOT NULL,
-        yukleyen_id INTEGER,
-        yukleyen_adi VARCHAR(100),
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-    `);
-    await client.query(`CREATE INDEX IF NOT EXISTS idx_satis_belge_motor ON satis_belgeleri(motor_id);`);
-
-    // 18. Servis QR tokenları — plaka bazlı, müşteriye açık servis geçmişi linki
-    //  - Plaka normalize edilerek (büyük harf, boşluksuz) saklanır; token tahmin edilemez.
-    await client.query(`
-      CREATE TABLE IF NOT EXISTS servis_qr_tokenler (
-        id SERIAL PRIMARY KEY,
-        plaka VARCHAR(20) UNIQUE NOT NULL,
-        token VARCHAR(64) UNIQUE NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-    `);
-
-    // --- Index'ler ---
-    // Sık sorgulanan yabancı anahtar ve arama kolonları. CREATE INDEX IF NOT EXISTS
-    // olduğu için tekrar çalıştırmak güvenlidir; mevcut veriyi değiştirmez.
-    // (Birincil anahtarlar üzerinden yapılan "WHERE id = ..." sorguları zaten indexlidir.)
-    await client.query(`CREATE INDEX IF NOT EXISTS idx_parcalar_is_emri ON parcalar(is_emri_id);`);
-    await client.query(`CREATE INDEX IF NOT EXISTS idx_aksesuar_parcalar_aksesuar ON aksesuar_parcalar(aksesuar_id);`);
-    await client.query(`CREATE INDEX IF NOT EXISTS idx_is_emirleri_durum ON is_emirleri(durum);`);
-    await client.query(`CREATE INDEX IF NOT EXISTS idx_is_emirleri_created ON is_emirleri(created_at DESC);`);
-    await client.query(`CREATE INDEX IF NOT EXISTS idx_motorlar_durum ON ikinci_el_motorlar(durum);`);
-    await client.query(`CREATE INDEX IF NOT EXISTS idx_motorlar_yatirimci ON ikinci_el_motorlar(yatirimci_id);`);
-    await client.query(`CREATE INDEX IF NOT EXISTS idx_musteriler_telefon ON musteriler(telefon);`);
-    await client.query(`CREATE INDEX IF NOT EXISTS idx_aksesuar_stok_adi ON aksesuar_stok(stok_adi);`);
-    await client.query(`CREATE INDEX IF NOT EXISTS idx_aktivite_log_kullanici ON aktivite_log(kullanici_id, created_at DESC);`);
+    // Veri düzeltmeleri (eski sürümlerden kalan; tekrar çalıştırmak güvenlidir)
+    //  - eski 'beklemede' motor durumu 'stokta' olur
+    //  - motor_durumu boş kalan vitrin ilanları 'ikinci_el' olur
+    await client.query("UPDATE ikinci_el_motorlar SET durum = 'stokta' WHERE durum = 'beklemede'");
+    await client.query("UPDATE vitrin_urunleri SET motor_durumu = 'ikinci_el' WHERE motor_durumu IS NULL");
 
     console.log('Tüm tablolar başarıyla oluşturuldu/kontrol edildi');
   } catch (error) {

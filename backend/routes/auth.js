@@ -1,11 +1,13 @@
 const express = require('express');
 const router = express.Router();
+router.param('id', require('../middleware/idDogrula').idParam);
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { pool } = require('../config/db');
 const { logAktivite, ISLEM_TIPLERI } = require('../config/activityLogger');
 const { authenticateToken, isAdmin } = require('../middleware/auth');
 const { girisLimiti, kayitLimiti } = require('../middleware/rateLimit');
+const { orderByText } = require('../config/sqlText');
 
 // POST /register
 router.post('/register', kayitLimiti, async (req, res) => {
@@ -126,7 +128,7 @@ router.get('/verify', authenticateToken, async (req, res) => {
 router.get('/personel-listesi', authenticateToken, async (req, res) => {
   try {
     const result = await pool.query(
-      "SELECT id, ad_soyad FROM kullanicilar WHERE onay_durumu = 'onaylandi' ORDER BY ad_soyad"
+      `SELECT id, ad_soyad FROM kullanicilar WHERE onay_durumu = 'onaylandi' ORDER BY ${orderByText('ad_soyad')}`
     );
     res.json(result.rows);
   } catch (error) {
@@ -288,7 +290,7 @@ router.post('/users', authenticateToken, isAdmin, async (req, res) => {
 router.get('/yatirimcilar', authenticateToken, async (req, res) => {
   try {
     const result = await pool.query(
-      "SELECT id, ad_soyad, kullanici_adi FROM kullanicilar WHERE rol = 'yatirimci' AND onay_durumu = 'onaylandi' ORDER BY ad_soyad"
+      `SELECT id, ad_soyad, kullanici_adi FROM kullanicilar WHERE rol = 'yatirimci' AND onay_durumu = 'onaylandi' ORDER BY ${orderByText('ad_soyad')}`
     );
     res.json(result.rows);
   } catch (error) {

@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+router.param('id', require('../middleware/idDogrula').idParam);
 const { pool } = require('../config/db');
 const { logAktivite, ISLEM_TIPLERI } = require('../config/activityLogger');
 const { upsertMusteri } = require('../config/musteriHelper');
@@ -71,11 +72,11 @@ router.get('/stats/ozet', async (req, res) => {
   try {
     const result = await pool.query(`
       SELECT
-        COUNT(*) FILTER (WHERE durum = 'tamamlandi') as toplam,
-        COALESCE(SUM(satis_fiyati) FILTER (WHERE durum = 'tamamlandi'), 0) as toplam_satis,
-        COALESCE(SUM(alis_fiyati) FILTER (WHERE durum = 'tamamlandi'), 0) as toplam_alis,
-        COALESCE(SUM(kar) FILTER (WHERE durum = 'tamamlandi'), 0) as toplam_kar,
-        COALESCE(SUM(satis_fiyati) FILTER (WHERE durum = 'tamamlandi'), 0) as toplam_satis_tutari,
+        COUNT(CASE WHEN durum = 'tamamlandi' THEN 1 END) as toplam,
+        COALESCE(SUM(CASE WHEN durum = 'tamamlandi' THEN satis_fiyati END), 0) as toplam_satis,
+        COALESCE(SUM(CASE WHEN durum = 'tamamlandi' THEN alis_fiyati END), 0) as toplam_alis,
+        COALESCE(SUM(CASE WHEN durum = 'tamamlandi' THEN kar END), 0) as toplam_kar,
+        COALESCE(SUM(CASE WHEN durum = 'tamamlandi' THEN satis_fiyati END), 0) as toplam_satis_tutari,
         COUNT(CASE WHEN durum = 'beklemede' THEN 1 END) as bekleyen,
         COUNT(CASE WHEN durum = 'tamamlandi' THEN 1 END) as tamamlanan
       FROM ikinci_el_motorlar

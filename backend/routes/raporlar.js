@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const { pool } = require('../config/db');
+const { orderByText } = require('../config/sqlText');
+const { parcalariEkle } = require('../config/altKayitlar');
 
 // Yatırımcıların genel raporlara erişimini engelle (sadece kendi raporlarını görebilir)
 const engelleYatirimci = (req, res, next) => {
@@ -84,21 +86,28 @@ router.get('/aralik', engelleYatirimci, async (req, res) => {
     const { baslangic, bitis } = req.query;
     if (!baslangic || !bitis) return res.status(400).json({ message: 'Başlangıç ve bitiş tarihi gerekli' });
 
-    const isEmirleri = await pool.query(
-      `SELECT ie.*, 
-        COALESCE((SELECT json_agg(json_build_object('takilan_parca', ip.takilan_parca, 'adet', ip.adet, 'birim_fiyat', ip.birim_fiyat, 'toplam_fiyat', ip.toplam_fiyat, 'maliyet', ip.maliyet)) FROM parcalar ip WHERE ip.is_emri_id = ie.id), '[]') as parcalar
+    const isEmirleriHam = await pool.query(
+      `SELECT ie.*
        FROM is_emirleri ie WHERE ie.durum = 'tamamlandi' AND DATE(COALESCE(ie.tamamlama_tarihi, ie.created_at)) BETWEEN $1 AND $2 ORDER BY ie.created_at DESC`,
       [baslangic, bitis]
     );
 
-    const aksesuarlar = await pool.query(
-      `SELECT a.*, COALESCE(json_agg(json_build_object('urun_adi', ap.urun_adi, 'adet', ap.adet, 'maliyet', ap.maliyet, 'satis_fiyati', ap.satis_fiyati)) FILTER (WHERE ap.id IS NOT NULL), '[]') as parcalar
+    const aksesuarlarHam = await pool.query(
+      `SELECT a.*
        FROM aksesuarlar a
-       LEFT JOIN aksesuar_parcalar ap ON a.id = ap.aksesuar_id
        WHERE DATE(COALESCE(a.tamamlama_tarihi, a.created_at)) BETWEEN $1 AND $2
-       GROUP BY a.id ORDER BY a.created_at DESC`,
+       ORDER BY a.created_at DESC`,
       [baslangic, bitis]
     );
+
+    const isEmirleri = {
+      rows: await parcalariEkle(isEmirleriHam.rows, 'parcalar', 'is_emri_id',
+        ['takilan_parca', 'adet', 'birim_fiyat', 'toplam_fiyat', 'maliyet'], ['birim_fiyat', 'toplam_fiyat', 'maliyet']),
+    };
+    const aksesuarlar = {
+      rows: await parcalariEkle(aksesuarlarHam.rows, 'aksesuar_parcalar', 'aksesuar_id',
+        ['urun_adi', 'adet', 'maliyet', 'satis_fiyati'], ['maliyet', 'satis_fiyati']),
+    };
 
     const motorlar = await pool.query(
       `SELECT * FROM ikinci_el_motorlar WHERE durum = 'tamamlandi' AND tamamlama_tarihi IS NOT NULL AND (eski_kayit IS NOT TRUE OR DATE(tamamlama_tarihi) >= '2026-01-01') AND DATE(COALESCE(satis_tarihi, tamamlama_tarihi)) BETWEEN $1 AND $2 ORDER BY COALESCE(satis_tarihi, tamamlama_tarihi) DESC`,
@@ -113,7 +122,7 @@ router.get('/aralik', engelleYatirimci, async (req, res) => {
     );
 
     const yedekParcalar = await pool.query(
-      `SELECT * FROM yedek_parcalar WHERE DATE(created_at) BETWEEN $1 AND $2 ORDER BY urun_adi`,
+      `SELECT * FROM yedek_parcalar WHERE DATE(created_at) BETWEEN $1 AND $2 ORDER BY ${orderByText('urun_adi')}`,
       [baslangic, bitis]
     );
 
@@ -239,9 +248,14 @@ router.get('/fis-kar', engelleYatirimci, async (req, res) => {
 router.get('/personeller', engelleYatirimci, async (req, res) => {
   try {
     const result = await pool.query(
-      `SELECT DISTINCT ON (LOWER(personel)) personel FROM (
-        SELECT COALESCE(NULLIF(teslim_eden_teknisyen, ''), olusturan_kisi) AS personel FROM is_emirleri
-      ) t WHERE personel IS NOT NULL AND personel != '' ORDER BY LOWER(personel), personel`
+      // DISTINCT ON (LOWER(personel)) karşılığı: her küçük harfli ad için sıralamada ilk yazım seçilir.
+      `SELECT personel FROM (
+        SELECT personel,
+               ROW_NUMBER() OVER (PARTITION BY LOWER(personel) ORDER BY ${orderByText('personel')}) AS sira
+        FROM (
+          SELECT DISTINCT COALESCE(NULLIF(teslim_eden_teknisyen, ''), olusturan_kisi) AS personel FROM is_emirleri
+        ) t WHERE personel IS NOT NULL AND personel <> ''
+      ) s WHERE sira = 1 ORDER BY ${orderByText('LOWER(personel)')}, ${orderByText('personel')}`
     );
     res.json(result.rows.map(r => r.personel));
   } catch (error) {
@@ -309,35 +323,24 @@ router.get('/yatirimci-rapor', async (req, res) => {
 router.get('/yatirimci-ozet', engelleYatirimci, async (req, res) => {
   try {
     const { baslangic, bitis } = req.query;
+    // Satış tarihi filtresi (baslangic/bitis boş olabilir). PostgreSQL'deki $1::date dönüşümü ve
+    // FILTER (WHERE ...) yerine CAST ve CASE WHEN kullanılır.
+    const satisKosulu = `m.durum = 'tamamlandi'
+            AND ($1 IS NULL OR DATE(COALESCE(m.satis_tarihi, m.tamamlama_tarihi)) >= CAST($1 AS DATE))
+            AND ($2 IS NULL OR DATE(COALESCE(m.satis_tarihi, m.tamamlama_tarihi)) <= CAST($2 AS DATE))`;
     const result = await pool.query(`
       SELECT k.id, k.ad_soyad, k.kullanici_adi,
-        COUNT(*) FILTER (WHERE m.durum <> 'tamamlandi') AS stok_adet,
-        COUNT(*) FILTER (
-          WHERE m.durum = 'tamamlandi'
-            AND ($1::date IS NULL OR DATE(COALESCE(m.satis_tarihi, m.tamamlama_tarihi)) >= $1::date)
-            AND ($2::date IS NULL OR DATE(COALESCE(m.satis_tarihi, m.tamamlama_tarihi)) <= $2::date)
-        ) AS satilan_adet,
-        COALESCE(SUM(m.alis_fiyati) FILTER (WHERE m.durum <> 'tamamlandi'), 0) AS stok_degeri,
-        COALESCE(SUM(m.satis_fiyati) FILTER (
-          WHERE m.durum = 'tamamlandi'
-            AND ($1::date IS NULL OR DATE(COALESCE(m.satis_tarihi, m.tamamlama_tarihi)) >= $1::date)
-            AND ($2::date IS NULL OR DATE(COALESCE(m.satis_tarihi, m.tamamlama_tarihi)) <= $2::date)
-        ), 0) AS toplam_satis,
-        COALESCE(SUM(m.yatirimci_kar) FILTER (
-          WHERE m.durum = 'tamamlandi'
-            AND ($1::date IS NULL OR DATE(COALESCE(m.satis_tarihi, m.tamamlama_tarihi)) >= $1::date)
-            AND ($2::date IS NULL OR DATE(COALESCE(m.satis_tarihi, m.tamamlama_tarihi)) <= $2::date)
-        ), 0) AS yatirimci_kar,
-        COALESCE(SUM(COALESCE(m.kar, 0) - COALESCE(m.yatirimci_kar, 0)) FILTER (
-          WHERE m.durum = 'tamamlandi'
-            AND ($1::date IS NULL OR DATE(COALESCE(m.satis_tarihi, m.tamamlama_tarihi)) >= $1::date)
-            AND ($2::date IS NULL OR DATE(COALESCE(m.satis_tarihi, m.tamamlama_tarihi)) <= $2::date)
-        ), 0) AS isletme_kar
+        COUNT(CASE WHEN m.durum <> 'tamamlandi' THEN 1 END) AS stok_adet,
+        COUNT(CASE WHEN ${satisKosulu} THEN 1 END) AS satilan_adet,
+        COALESCE(SUM(CASE WHEN m.durum <> 'tamamlandi' THEN m.alis_fiyati END), 0) AS stok_degeri,
+        COALESCE(SUM(CASE WHEN ${satisKosulu} THEN m.satis_fiyati END), 0) AS toplam_satis,
+        COALESCE(SUM(CASE WHEN ${satisKosulu} THEN m.yatirimci_kar END), 0) AS yatirimci_kar,
+        COALESCE(SUM(CASE WHEN ${satisKosulu} THEN COALESCE(m.kar, 0) - COALESCE(m.yatirimci_kar, 0) END), 0) AS isletme_kar
       FROM kullanicilar k
       LEFT JOIN ikinci_el_motorlar m ON m.yatirimci_id = k.id
       WHERE k.rol = 'yatirimci'
       GROUP BY k.id, k.ad_soyad, k.kullanici_adi
-      ORDER BY k.ad_soyad
+      ORDER BY ${orderByText('k.ad_soyad')}
     `, [baslangic || null, bitis || null]);
     res.json(result.rows);
   } catch (error) {

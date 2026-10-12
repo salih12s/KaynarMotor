@@ -20,7 +20,7 @@ router.get('/:token', async (req, res) => {
     const servisler = await pool.query(
       `SELECT id, fis_no, plaka, marka, model_tip, km, durum, created_at, teslim_tarihi, tamamlama_tarihi, gercek_toplam_ucret
        FROM is_emirleri
-       WHERE regexp_replace(upper(COALESCE(plaka, '')), '[^A-Z0-9]', '', 'g') = $1
+       WHERE REGEXP_REPLACE(UPPER(COALESCE(plaka, '')), '[^A-Z0-9]', '') = $1
        ORDER BY created_at DESC`,
       [plaka]
     );

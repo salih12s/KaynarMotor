@@ -1,7 +1,9 @@
 const express = require('express');
 const router = express.Router();
+router.param('id', require('../middleware/idDogrula').idParam);
 const { pool } = require('../config/db');
 const { isAdmin } = require('../middleware/auth');
+const { orderByText } = require('../config/sqlText');
 
 /*
  * Yetkilendirme notu:
@@ -29,7 +31,8 @@ router.get('/ara/:query', async (req, res) => {
   try {
     const searchQuery = `%${req.params.query}%`;
     const result = await pool.query(
-      'SELECT * FROM musteriler WHERE ad_soyad ILIKE $1 OR telefon ILIKE $1 ORDER BY ad_soyad LIMIT 20',
+      `SELECT * FROM musteriler WHERE LOWER(ad_soyad) LIKE LOWER($1) OR LOWER(telefon) LIKE LOWER($1)
+       ORDER BY ${orderByText('ad_soyad')} LIMIT 20`,
       [searchQuery]
     );
     res.json(result.rows);
@@ -48,8 +51,8 @@ router.get('/telefon/:telefon', async (req, res) => {
     const tail = raw.slice(-10);
     const result = await pool.query(
       `SELECT * FROM musteriler
-       WHERE regexp_replace(COALESCE(telefon,''), '\\D', '', 'g') LIKE '%' || $1
-       ORDER BY updated_at DESC NULLS LAST, created_at DESC
+       WHERE REGEXP_REPLACE(COALESCE(telefon,''), '[^0-9]', '') LIKE CONCAT('%', $1)
+       ORDER BY updated_at DESC, created_at DESC
        LIMIT 1`,
       [tail]
     );
