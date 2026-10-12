@@ -23,7 +23,7 @@ const IkinciElMotor = () => {
   const isAdmin = user?.rol === 'admin';
   // Motor Satış yetkilisi satış/müşteri/geçmişi/alış fiyatını görür ve düzenler; yalnızca kâr admindedir
   const canAlis = isAdmin || !!user?.alis_fiyati_gor || !!user?.motor_satis_yetkisi;
-  const canKar = isAdmin || !!user?.kar_gor;
+  const canKar = isAdmin; // kâr ve yatırımcı payı yalnızca admin'e açık
   const location = useLocation();
   const navigate = useNavigate();
   const [motorlar, setMotorlar] = useState([]);
@@ -353,7 +353,7 @@ const IkinciElMotor = () => {
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
                 <Chip label="YATIRIMCI MOTORU" color="primary" size="small" sx={{ fontWeight: 700 }} />
                 <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                  Bu motor bir yatırımcıya ait{(yatirimciMap[f.yatirimci_id] || f.yatirimci_adi) ? `: ${yatirimciMap[f.yatirimci_id] || f.yatirimci_adi}` : ''}. Satışta yatırımcı kârını aşağıdan girin.
+                  Bu motor bir yatırımcıya ait{(yatirimciMap[f.yatirimci_id] || f.yatirimci_adi) ? `: ${yatirimciMap[f.yatirimci_id] || f.yatirimci_adi}` : ''}.{canKar ? ' Satışta yatırımcı kârını aşağıdan girin.' : ''}
                 </Typography>
               </Box>
             </Alert>
@@ -433,7 +433,7 @@ const IkinciElMotor = () => {
             <Grid size={{ xs: 12, md: 4 }}><TextField fullWidth label="Masraflar (₺)" type="number" value={f.masraflar} onChange={e => setFormData({ ...f, masraflar: e.target.value })} helperText="Tamir, bakım, sigorta vb." /></Grid>
             <Grid size={{ xs: 12, md: 6 }}><TextField fullWidth label="Noter Alış (₺)" type="number" value={f.noter_alis} onChange={e => setFormData({ ...f, noter_alis: e.target.value })} /></Grid>
             <Grid size={{ xs: 12, md: 6 }}><TextField fullWidth label="Noter Satış (₺)" type="number" value={f.noter_satis} onChange={e => setFormData({ ...f, noter_satis: e.target.value })} /></Grid>
-            {f.yatirimci_id && (
+            {f.yatirimci_id && canKar && (
               <Grid size={{ xs: 12, md: 6 }}>
                 <TextField fullWidth label="Yatırımcı Kârı (₺)" type="number" value={f.yatirimci_kar}
                   onChange={e => setFormData({ ...f, yatirimci_kar: e.target.value })}

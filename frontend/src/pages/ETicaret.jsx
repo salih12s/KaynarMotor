@@ -130,6 +130,9 @@ const hesaplaKomisyon = (satisFiyati, alisFiyati, komisyonOrani, kdvOrani, kargo
   };
 };
 
+// Kâr, kâr oranı ve yatırım geri dönüş oranı yalnızca admin'e gösterilir
+const karEtiketi = (etiket) => /kâr|geri dönüş/i.test(etiket);
+
 const ETicaret = () => {
   const { user } = useAuth();
   const isMobile = useMediaQuery(useTheme().breakpoints.down('sm'));
@@ -277,7 +280,7 @@ const ETicaret = () => {
           { label: `Satış: ${stats.toplam_satis || 0}`, color: '#C62828', bg: '#ffebee' },
           { label: `Gelir: ₺${parseFloat(stats.toplam_gelir || 0).toLocaleString('tr-TR')}`, color: '#C62828', bg: '#ffebee' },
           { label: `Komisyon: ₺${parseFloat(stats.toplam_komisyon || 0).toLocaleString('tr-TR')}`, color: '#C62828', bg: '#ffebee' },
-          { label: `Kâr: ₺${hesaplananToplamKar.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`, color: '#C62828', bg: '#ffebee' },
+          ...(isAdmin ? [{ label: `Kâr: ₺${hesaplananToplamKar.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`, color: '#C62828', bg: '#ffebee' }] : []),
         ].map((c, i) => (
           <Chip key={i} label={c.label} sx={{ bgcolor: c.bg, color: c.color, fontWeight: 'bold', fontSize: '0.8rem', borderLeft: `4px solid ${c.color}` }} />
         ))}
@@ -318,7 +321,7 @@ const ETicaret = () => {
               <Box sx={{ display: 'flex', gap: 2, mt: 0.5 }}>
                 <Typography variant="body2">Alış: <strong>{formatTL(s.alis_fiyati)} ₺</strong></Typography>
                 <Typography variant="body2">Satış: <strong>{formatTL(s.satis_fiyati)} ₺</strong></Typography>
-                <Typography variant="body2" sx={{ color: sHesap.netKar >= 0 ? 'green' : 'red' }}>Kâr: <strong>{formatTL(sHesap.netKar)} ₺</strong></Typography>
+                {isAdmin && <Typography variant="body2" sx={{ color: sHesap.netKar >= 0 ? 'green' : 'red' }}>Kâr: <strong>{formatTL(sHesap.netKar)} ₺</strong></Typography>}
               </Box>
               <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 0.5 }} onClick={e => e.stopPropagation()}>
                 <IconButton size="small" color="info" onClick={() => openSatisDialog(s)}><EditIcon /></IconButton>
@@ -333,7 +336,7 @@ const ETicaret = () => {
           <Table size="small">
             <TableHead>
               <TableRow sx={{ bgcolor: '#C62828' }}>
-                {['Ürün', 'Platform', 'Adet', 'Alış (₺)', 'Satış (₺)', 'Komisyon (%)', 'KDV (%)', 'Komisyon (₺)', 'Kâr (₺)', 'Tarih', 'İşlemler'].map(h => (
+                {['Ürün', 'Platform', 'Adet', 'Alış (₺)', 'Satış (₺)', 'Komisyon (%)', 'KDV (%)', 'Komisyon (₺)', ...(isAdmin ? ['Kâr (₺)'] : []), 'Tarih', 'İşlemler'].map(h => (
                   <TableCell key={h} sx={{ color: 'white', fontWeight: 'bold' }}>{h}</TableCell>
                 ))}
               </TableRow>
@@ -352,7 +355,7 @@ const ETicaret = () => {
                   <TableCell>%{parseFloat(s.komisyon_orani || 0).toFixed(2)}</TableCell>
                   <TableCell>%{parseFloat(s.kdv_orani || 20).toFixed(0)}</TableCell>
                   <TableCell>{formatTL(sHesap.komisyonTutari)}</TableCell>
-                  <TableCell sx={{ color: sHesap.netKar >= 0 ? 'green' : 'red', fontWeight: 'bold' }}>{formatTL(sHesap.netKar)}</TableCell>
+                  {isAdmin && <TableCell sx={{ color: sHesap.netKar >= 0 ? 'green' : 'red', fontWeight: 'bold' }}>{formatTL(sHesap.netKar)}</TableCell>}
                   <TableCell>{s.tarih ? new Date(s.tarih).toLocaleDateString('tr-TR') : '-'}</TableCell>
                   <TableCell sx={{ whiteSpace: 'nowrap' }}>
                     <IconButton size="small" color="primary" onClick={() => setDetayDialog({ open: true, data: s })}><ViewIcon /></IconButton>
@@ -506,7 +509,7 @@ const ETicaret = () => {
                       { label: 'KDV', value: `${formatTL(canliHesap.odenecekKDV)} ₺`, color: '#f57f17', bg: '#fff8e1' },
                     ];
                   }
-                  return cards.map((c, i) => (
+                  return cards.filter(c => isAdmin || !karEtiketi(c.label)).map((c, i) => (
                     <Paper key={i} sx={{ p: 1.5, flex: 1, minWidth: 100, textAlign: 'center', bgcolor: c.bg, borderTop: `3px solid ${c.color}` }}>
                       <Typography variant="caption" color="text.secondary">{c.label}</Typography>
                       <Typography fontWeight="bold" color={c.color}>{c.value}</Typography>
@@ -545,13 +548,15 @@ const ETicaret = () => {
                 </Box>
               </Paper>
 
-              {/* Net Kâr büyük gösterim */}
+              {/* Net Kâr büyük gösterim (yalnızca admin) */}
+              {isAdmin && (
               <Paper sx={{ p: 2, textAlign: 'center', bgcolor: canliHesap.netKar >= 0 ? '#e8f5e9' : '#ffebee', borderRadius: 2, border: `2px solid ${canliHesap.netKar >= 0 ? '#2e7d32' : '#c62828'}` }}>
                 <Typography variant="body2" color="text.secondary">Net Kâr ({canliHesap.miktar} adet)</Typography>
                 <Typography variant="h4" fontWeight="bold" sx={{ color: canliHesap.netKar >= 0 ? '#2e7d32' : '#c62828' }}>
                   {formatTL(canliHesap.netKar)} ₺
                 </Typography>
               </Paper>
+              )}
             </Box>
           )}
         </DialogContent>
@@ -628,6 +633,7 @@ const ETicaret = () => {
                       <Typography variant="body2"><strong>Kargo:</strong> {formatTL(s.kargo_ucreti)} ₺</Typography>
                     </Paper>
                   </Grid>
+                  {isAdmin && (
                   <Grid size={{ xs: 12, md: 4 }}>
                     <Paper sx={{ p: 2, bgcolor: h.netKar >= 0 ? '#e8f5e9' : '#ffebee', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                       <Typography variant="body2" color="text.secondary">Net Kâr</Typography>
@@ -636,6 +642,7 @@ const ETicaret = () => {
                       </Typography>
                     </Paper>
                   </Grid>
+                  )}
                 </Grid>
 
                 {/* Komisyon Detayları - Platform bazlı */}
@@ -675,7 +682,7 @@ const ETicaret = () => {
                           { label: 'KDV', value: `${formatTL(h.odenecekKDV)} ₺` },
                         ];
                       }
-                      return items.map((item, i) => (
+                      return items.filter(item => isAdmin || !karEtiketi(item.label)).map((item, i) => (
                         <Grid size={{ xs: 4, md: 2 }} key={i}>
                           <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>{item.label}</Typography>
                           <Typography variant="body1" fontWeight="bold">{item.value}</Typography>

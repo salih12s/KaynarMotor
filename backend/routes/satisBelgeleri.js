@@ -27,12 +27,12 @@ const TURLER = {
 const temizAd = (s) => String(s || '').replace(/[\\/\u0000-\u001f<>:"|?*]+/g, '_').trim().slice(0, 200) || 'belge';
 const pozitifId = (v) => { const n = Number(v); return Number.isInteger(n) && n > 0 ? n : null; };
 
-// Sözleşmelerde TC kimlik gibi kişisel veri olur: satış sayfasına girebilenler (admin veya
-// Motor Satış yetkilisi) görür/yükler/siler. Yatırımcı ve diğer personel erişemez.
+// Sözleşmelerde TC kimlik gibi kişisel veri olur: admin, Motor Satış yetkilisi ve Motor Vitrini
+// (Site) yetkilisi görür/yükler/siler. Yatırımcı ve diğer personel erişemez.
 // Muhasebeci yalnızca arşiv listesini görür ve dosya indirir (yükleme/silme yok).
 router.use((req, res, next) => {
   const u = req.user || {};
-  if (u.rol === 'admin' || u.motor_satis_yetkisi) return next();
+  if (u.rol === 'admin' || u.motor_satis_yetkisi || u.motor_vitrin_yetkisi) return next();
   if (u.rol === 'muhasebeci' && req.method === 'GET' && (req.path === '/arsiv' || /^\/\d+\/indir$/.test(req.path))) return next();
   return res.status(403).json({ message: 'Satış belgelerine erişim yetkiniz yok' });
 });

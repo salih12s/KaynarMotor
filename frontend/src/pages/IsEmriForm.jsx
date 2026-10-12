@@ -8,8 +8,10 @@ import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import BackIcon from '@mui/icons-material/ArrowBack';
 import { isEmriService, musteriService } from '../services/api';
+import { useKarGor } from '../context/AuthContext';
 
 const IsEmriForm = () => {
+  const karGor = useKarGor();
   const isMobile = useMediaQuery(useTheme().breakpoints.down('sm'));
   const navigate = useNavigate();
   const { id } = useParams();
@@ -232,7 +234,7 @@ const IsEmriForm = () => {
           <Box sx={{ mt: 2, display: 'flex', gap: 4, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
             <Typography>Toplam: <strong>{toplamFiyat.toLocaleString('tr-TR')} ₺</strong></Typography>
             <Typography>Maliyet: <strong>{toplamMaliyet.toLocaleString('tr-TR')} ₺</strong></Typography>
-            <Typography sx={{ color: kar >= 0 ? 'green' : 'red' }}>Kâr: <strong>{kar.toLocaleString('tr-TR')} ₺</strong></Typography>
+            {karGor && <Typography sx={{ color: kar >= 0 ? 'green' : 'red' }}>Kâr: <strong>{kar.toLocaleString('tr-TR')} ₺</strong></Typography>}
           </Box>
         </Paper>
 

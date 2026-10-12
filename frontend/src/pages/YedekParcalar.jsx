@@ -9,8 +9,10 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import SearchIcon from '@mui/icons-material/Search';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { yedekParcaService, yedekParcaStokService, musteriService } from '../services/api';
+import { useKarGor } from '../context/AuthContext';
 
 const YedekParcalar = () => {
+  const karGor = useKarGor();
   const isMobile = useMediaQuery(useTheme().breakpoints.down('sm'));
   const location = useLocation();
   const navigate = useNavigate();
@@ -161,7 +163,7 @@ const YedekParcalar = () => {
                 <Box sx={{ display: 'flex', gap: 2 }}>
                   <Typography variant="body2">Alış: <strong>{parseFloat(p.alis_fiyati || 0).toLocaleString('tr-TR')} ₺</strong></Typography>
                   <Typography variant="body2">Satış: <strong>{parseFloat(p.satis_fiyati || 0).toLocaleString('tr-TR')} ₺</strong></Typography>
-                  <Typography variant="body2" sx={{ color: pKar >= 0 ? 'green' : 'red' }}>Kâr: <strong>{pKar.toLocaleString('tr-TR')} ₺</strong></Typography>
+                  {karGor && <Typography variant="body2" sx={{ color: pKar >= 0 ? 'green' : 'red' }}>Kâr: <strong>{pKar.toLocaleString('tr-TR')} ₺</strong></Typography>}
                 </Box>
                 <Box sx={{ mt: 0.5 }}>
                   {kalan > 0 ? (
@@ -184,7 +186,7 @@ const YedekParcalar = () => {
         <Table>
           <TableHead>
             <TableRow sx={{ bgcolor: '#C62828' }}>
-              {['Ürün Adı', 'Alış Fiyatı (₺)', 'Satış Fiyatı (₺)', 'Müşteri', 'Telefon', 'Kâr (₺)', 'Ödeme Durumu', 'İşlemler'].map(h => (
+              {['Ürün Adı', 'Alış Fiyatı (₺)', 'Satış Fiyatı (₺)', 'Müşteri', 'Telefon', ...(karGor ? ['Kâr (₺)'] : []), 'Ödeme Durumu', 'İşlemler'].map(h => (
                 <TableCell key={h} sx={{ color: 'white', fontWeight: 'bold' }}>{h}</TableCell>
               ))}
             </TableRow>
@@ -200,7 +202,7 @@ const YedekParcalar = () => {
                   <TableCell>{parseFloat(p.satis_fiyati || 0).toLocaleString('tr-TR')}</TableCell>
                   <TableCell>{p.musteri_adi || '-'}</TableCell>
                   <TableCell>{p.musteri_telefon || '-'}</TableCell>
-                  <TableCell sx={{ color: pKar >= 0 ? 'green' : 'red', fontWeight: 'bold' }}>{pKar.toLocaleString('tr-TR')}</TableCell>
+                  {karGor && <TableCell sx={{ color: pKar >= 0 ? 'green' : 'red', fontWeight: 'bold' }}>{pKar.toLocaleString('tr-TR')}</TableCell>}
                   <TableCell>
                     {kalan > 0 ? (
                       <Chip size="small" label={`Kalan: ₺${kalan.toLocaleString('tr-TR')}`} sx={{ bgcolor: '#fff3e0', color: '#ed6c02', fontWeight: 'bold', borderLeft: '3px solid #ed6c02' }} />
@@ -287,9 +289,11 @@ const YedekParcalar = () => {
                 }} />
             </Grid>
           </Grid>
+          {karGor && (
           <Paper sx={{ p: 1, mt: 2, textAlign: 'center', bgcolor: kar >= 0 ? '#e8f5e9' : '#ffebee' }}>
             <Typography sx={{ color: kar >= 0 ? 'green' : 'red' }}>Kâr: <strong>{kar.toLocaleString('tr-TR')} ₺</strong></Typography>
           </Paper>
+          )}
           <Box sx={{ mt: 2, p: 1.5, border: '1px solid #e0e0e0', borderRadius: 1 }}>
             <Typography variant="subtitle2" fontWeight="bold" sx={{ mb: 1 }}>Kalan Ödeme</Typography>
             <Grid container spacing={2} alignItems="center">

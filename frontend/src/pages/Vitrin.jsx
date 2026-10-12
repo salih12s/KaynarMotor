@@ -25,6 +25,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import ArchiveIcon from '@mui/icons-material/Archive';
 import { vitrinService, ikinciElMotorService, aksesuarStokService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { BelgeBolumu } from '../components/SatisBelgeleri';
 
 export const KATEGORILER = [
   { key: 'motor', label: 'Motor Satışı' },
@@ -813,6 +814,16 @@ const Vitrin = () => {
                 />
                 <TextField label="Hasar Kaydı" value={form.hasar_kaydi} onChange={e => setForm({ ...form, hasar_kaydi: e.target.value })} fullWidth
                   placeholder="Örn: Hasar kaydı yok / Değişen: ön kaput" helperText="İlan detayında özellikler arasında gösterilir" />
+                {/* Belgeler stoktaki motora bağlıdır (ruhsat, sözleşme vb.); ilan bir stok motoruna bağlıysa eklenebilir */}
+                {form.stok_motor_id ? (
+                  <Box sx={{ mt: -1.5 }}>
+                    <BelgeBolumu key={form.stok_motor_id} motorId={form.stok_motor_id} />
+                  </Box>
+                ) : (
+                  <Typography variant="caption" color="text.secondary">
+                    Belge eklemek için yukarıdan "Stoktan Motor Seç" ile ilanı bir stok motoruna bağlayın.
+                  </Typography>
+                )}
               </>
             )}
 

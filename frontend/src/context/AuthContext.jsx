@@ -54,4 +54,7 @@ export const AuthProvider = ({ children }) => {
 };
 
 export const useAuth = () => useContext(AuthContext);
+// Karlılık bilgisi (kâr tutarı, kâr oranı, net kâr) yalnızca admin'e gösterilir; sunucu da bu alanları
+// admin dışına göndermez (backend/middleware/yetki.js kariGizle).
+export const useKarGor = () => useContext(AuthContext)?.user?.rol === 'admin';
 export default AuthContext;

@@ -9,8 +9,10 @@ import PrintIcon from '@mui/icons-material/Print';
 import EditIcon from '@mui/icons-material/Edit';
 import { useReactToPrint } from 'react-to-print';
 import { isEmriService } from '../services/api';
+import { useKarGor } from '../context/AuthContext';
 
 const IsEmriDetay = () => {
+  const karGor = useKarGor();
   const isMobile = useMediaQuery(useTheme().breakpoints.down('sm'));
   const { id } = useParams();
   const navigate = useNavigate();
@@ -175,9 +177,11 @@ const IsEmriDetay = () => {
                 <Paper sx={{ px: 2, py: 1, bgcolor: '#ffebee' }}>
                   <Typography variant="body2">Maliyet: <strong>₺{toplamMaliyet.toLocaleString('tr-TR')}</strong></Typography>
                 </Paper>
+                {karGor && (
                 <Paper sx={{ px: 2, py: 1, bgcolor: kar >= 0 ? '#e8f5e9' : '#ffebee' }}>
                   <Typography variant="body2" sx={{ color: kar >= 0 ? '#2e7d32' : '#c62828' }}>Kâr: <strong>₺{kar.toLocaleString('tr-TR')}</strong></Typography>
                 </Paper>
+                )}
               </Box>
             </>
           ) : (

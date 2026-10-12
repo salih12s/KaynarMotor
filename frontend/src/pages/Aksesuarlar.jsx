@@ -10,12 +10,14 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import SearchIcon from '@mui/icons-material/Search';
 import ViewIcon from '@mui/icons-material/Visibility';
 import CloseIcon from '@mui/icons-material/Close';
+import { useKarGor } from '../context/AuthContext';
 import ScannerIcon from '@mui/icons-material/QrCodeScanner';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { aksesuarService, aksesuarStokService, musteriService } from '../services/api';
 
 const Aksesuarlar = () => {
   const isMobile = useMediaQuery(useTheme().breakpoints.down('sm'));
+  const karGor = useKarGor();
   const location = useLocation();
   const navigate = useNavigate();
   const [satislar, setSatislar] = useState([]);
@@ -173,7 +175,7 @@ const Aksesuarlar = () => {
     { label: `Tamamlandı: ${tamamlandiCnt}`, color: '#C62828', bg: '#ffebee' },
     { label: `İptal: 0`, color: '#C62828', bg: '#ffebee' },
     { label: `₺${parseFloat(stats.toplam_gelir || 0).toLocaleString('tr-TR')}`, color: '#C62828', bg: '#ffebee' },
-    { label: `Kâr: ₺${parseFloat(stats.toplam_kar || 0).toLocaleString('tr-TR')}`, color: '#C62828', bg: '#ffebee' },
+    ...(karGor ? [{ label: `Kâr: ₺${parseFloat(stats.toplam_kar || 0).toLocaleString('tr-TR')}`, color: '#C62828', bg: '#ffebee' }] : []),
   ];
 
   return (
@@ -219,7 +221,7 @@ const Aksesuarlar = () => {
                 <Typography variant="body2" color="text.secondary">{s.satis_tarihi ? new Date(s.satis_tarihi).toLocaleDateString('tr-TR') : '-'}</Typography>
                 <Box sx={{ display: 'flex', gap: 2, mt: 0.5 }}>
                   <Typography variant="body2">Satış: <strong>{parseFloat(s.toplam_satis || 0).toLocaleString('tr-TR')} ₺</strong></Typography>
-                  <Typography variant="body2" sx={{ color: parseFloat(s.kar || 0) >= 0 ? 'green' : 'red' }}>Kâr: <strong>{parseFloat(s.kar || 0).toLocaleString('tr-TR')} ₺</strong></Typography>
+                  {karGor && <Typography variant="body2" sx={{ color: parseFloat(s.kar || 0) >= 0 ? 'green' : 'red' }}>Kâr: <strong>{parseFloat(s.kar || 0).toLocaleString('tr-TR')} ₺</strong></Typography>}
                 </Box>
                 <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 0.5 }} onClick={e => e.stopPropagation()}>
                   <IconButton size="small" color="info" onClick={() => openDialog(s)}><EditIcon /></IconButton>
@@ -234,7 +236,7 @@ const Aksesuarlar = () => {
         <Table>
           <TableHead>
             <TableRow sx={{ bgcolor: 'primary.main' }}>
-              {['Müşteri', 'Telefon', 'Toplam Satış', 'Kâr', 'Oluşturan', 'Durum', 'Tarih', 'İşlemler'].map(h => (
+              {['Müşteri', 'Telefon', 'Toplam Satış', ...(karGor ? ['Kâr'] : []), 'Oluşturan', 'Durum', 'Tarih', 'İşlemler'].map(h => (
                 <TableCell key={h} sx={{ color: 'white', fontWeight: 'bold' }}>{h}</TableCell>
               ))}
             </TableRow>
@@ -253,7 +255,7 @@ const Aksesuarlar = () => {
                 <TableCell>{s.ad_soyad}</TableCell>
                 <TableCell>{s.telefon || '-'}</TableCell>
                 <TableCell>{parseFloat(s.toplam_satis || 0).toLocaleString('tr-TR')} ₺</TableCell>
-                <TableCell sx={{ color: parseFloat(s.kar || 0) >= 0 ? 'green' : 'red' }}>{parseFloat(s.kar || 0).toLocaleString('tr-TR')} ₺</TableCell>
+                {karGor && <TableCell sx={{ color: parseFloat(s.kar || 0) >= 0 ? 'green' : 'red' }}>{parseFloat(s.kar || 0).toLocaleString('tr-TR')} ₺</TableCell>}
                 <TableCell>{s.olusturan_kisi || '-'}</TableCell>
                 <TableCell><Chip label={s.durum === 'tamamlandi' ? 'Tamamlandı' : 'Beklemede'} size="small" color={durumRenk(s.durum)} /></TableCell>
                 <TableCell>{s.satis_tarihi ? new Date(s.satis_tarihi).toLocaleDateString('tr-TR') : '-'}</TableCell>
@@ -410,7 +412,7 @@ const Aksesuarlar = () => {
             {indirim > 0 && <Typography variant="body2" sx={{ color: '#c62828' }}>İndirim: −{indirim.toLocaleString('tr-TR')} ₺</Typography>}
             <Box sx={{ display: 'flex', gap: 3 }}>
               <Typography>Toplam: <strong>{netToplam.toLocaleString('tr-TR')} ₺</strong></Typography>
-              <Typography sx={{ color: kar >= 0 ? 'green' : 'red' }}>Kâr: <strong>{kar.toLocaleString('tr-TR')} ₺</strong></Typography>
+              {karGor && <Typography sx={{ color: kar >= 0 ? 'green' : 'red' }}>Kâr: <strong>{kar.toLocaleString('tr-TR')} ₺</strong></Typography>}
             </Box>
           </Box>
 
@@ -518,7 +520,7 @@ const Aksesuarlar = () => {
                             Adet: {p.adet} • Maliyet: ₺{pMaliyet.toLocaleString('tr-TR')} • Satış: ₺{pSatis.toLocaleString('tr-TR')}
                             {p.marka ? ` • ${p.marka}` : ''}{p.platform ? ` • ${p.platform}` : ''}{p.beden ? ` • ${p.beden}` : ''}{p.renk ? ` • ${p.renk}` : ''}
                           </Typography>
-                          <Typography variant="caption" sx={{ display: 'block', color: pKar >= 0 ? '#2e7d32' : '#c62828', fontWeight: 'bold' }}>Kâr: ₺{pKar.toLocaleString('tr-TR')}</Typography>
+                          {karGor && <Typography variant="caption" sx={{ display: 'block', color: pKar >= 0 ? '#2e7d32' : '#c62828', fontWeight: 'bold' }}>Kâr: ₺{pKar.toLocaleString('tr-TR')}</Typography>}
                         </Paper>
                       );
                     })}
@@ -528,7 +530,7 @@ const Aksesuarlar = () => {
                     <Table size="small">
                       <TableHead>
                         <TableRow sx={{ bgcolor: '#f5f5f5' }}>
-                          {['Ürün Adı', 'Marka', 'Platform', 'Beden', 'Renk', 'Adet', 'Maliyet', 'Satış Fiyatı', 'Toplam', 'Kâr'].map(h => (
+                          {['Ürün Adı', 'Marka', 'Platform', 'Beden', 'Renk', 'Adet', 'Maliyet', 'Satış Fiyatı', 'Toplam', ...(karGor ? ['Kâr'] : [])].map(h => (
                             <TableCell key={h} sx={{ fontWeight: 'bold' }}>{h}</TableCell>
                           ))}
                         </TableRow>
@@ -549,7 +551,7 @@ const Aksesuarlar = () => {
                               <TableCell>₺{pMaliyet.toLocaleString('tr-TR')}</TableCell>
                               <TableCell>₺{pSatis.toLocaleString('tr-TR')}</TableCell>
                               <TableCell sx={{ fontWeight: 'bold' }}>₺{pSatis.toLocaleString('tr-TR')}</TableCell>
-                              <TableCell sx={{ color: pKar >= 0 ? '#2e7d32' : '#c62828', fontWeight: 'bold' }}>₺{pKar.toLocaleString('tr-TR')}</TableCell>
+                              {karGor && <TableCell sx={{ color: pKar >= 0 ? '#2e7d32' : '#c62828', fontWeight: 'bold' }}>₺{pKar.toLocaleString('tr-TR')}</TableCell>}
                             </TableRow>
                           );
                         })}
@@ -578,9 +580,11 @@ const Aksesuarlar = () => {
                   <Paper sx={{ px: 2, py: 1, bgcolor: '#fff3e0' }}>
                     <Typography variant="body2">Maliyet: <strong>₺{dToplamMaliyet.toLocaleString('tr-TR')}</strong></Typography>
                   </Paper>
+                  {karGor && (
                   <Paper sx={{ px: 2, py: 1, bgcolor: '#e8f5e9' }}>
                     <Typography variant="body2">Kâr: <strong style={{ color: dKar >= 0 ? '#2e7d32' : '#c62828' }}>₺{dKar.toLocaleString('tr-TR')}</strong></Typography>
                   </Paper>
+                  )}
                 </Box>
                 <Paper sx={{ mt: 2, p: 1.5, bgcolor: parseFloat(d.kalan_odeme || 0) > 0 ? '#fff3e0' : '#e8f5e9', borderLeft: '4px solid', borderColor: parseFloat(d.kalan_odeme || 0) > 0 ? '#ed6c02' : '#2e7d32' }}>
                   <Typography variant="subtitle2" fontWeight="bold" sx={{ color: parseFloat(d.kalan_odeme || 0) > 0 ? '#ed6c02' : '#2e7d32' }}>

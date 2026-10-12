@@ -16,7 +16,7 @@ import PrintIcon from '@mui/icons-material/Print';
 import QrIcon from '@mui/icons-material/QrCode2';
 import { Checkbox, FormControlLabel } from '@mui/material';
 import { isEmriService, musteriService, authService, aksesuarStokService, yedekParcaStokService, servisGecmisiService } from '../services/api';
-import { useAuth } from '../context/AuthContext';
+import { useAuth, useKarGor } from '../context/AuthContext';
 import QRCode from 'qrcode';
 
 // Motorun üzerine yapıştırılacak servis geçmişi QR etiketi — müşteri okutunca
@@ -68,6 +68,7 @@ const IsEmirleri = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
+  const karGor = useKarGor();
   const isMobile = useMediaQuery(useTheme().breakpoints.down('sm'));
   const [isEmirleri, setIsEmirleri] = useState([]);
   const [search, setSearch] = useState('');
@@ -170,7 +171,7 @@ const IsEmirleri = () => {
     { label: `Tamamlandı: ${tamamlandiCnt}`, color: '#C62828', bg: '#ffebee' },
     { label: `İptal: 0`, color: '#C62828', bg: '#ffebee' },
     { label: `₺${toplamTutar.toLocaleString('tr-TR')}`, color: '#C62828', bg: '#ffebee' },
-    { label: `Kar: ₺${toplamKar.toLocaleString('tr-TR')}`, color: '#C62828', bg: '#ffebee' },
+    ...(karGor ? [{ label: `Kar: ₺${toplamKar.toLocaleString('tr-TR')}`, color: '#C62828', bg: '#ffebee' }] : []),
   ];
 
   // Modal functions
@@ -341,7 +342,7 @@ const IsEmirleri = () => {
                 <Typography variant="body2" color="text.secondary">{formatDate(ie.created_at || ie.tarih)} • {ie.teslim_eden_teknisyen || ie.teslim_alan_ad_soyad || ie.olusturan_kisi || '-'}</Typography>
                 <Box sx={{ display: 'flex', gap: 2, mt: 0.5 }}>
                   <Typography variant="body2">Toplam: <strong>₺{toplam.toLocaleString('tr-TR')}</strong></Typography>
-                  <Typography variant="body2" sx={{ color: kar >= 0 ? '#2e7d32' : '#c62828' }}>Kâr: <strong>₺{kar.toLocaleString('tr-TR')}</strong></Typography>
+                  {karGor && <Typography variant="body2" sx={{ color: kar >= 0 ? '#2e7d32' : '#c62828' }}>Kâr: <strong>₺{kar.toLocaleString('tr-TR')}</strong></Typography>}
                 </Box>
                 <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 0.5 }} onClick={e => e.stopPropagation()}>
                   <IconButton size="small" sx={{ color: '#C62828' }} onClick={async () => { try { const res = await isEmriService.getById(ie.id); printIsEmri(res.data); } catch {} }}><PrintIcon /></IconButton>
@@ -360,7 +361,7 @@ const IsEmirleri = () => {
         <Table size="small" sx={{ '& td, & th': { px: 0.75, py: 0.55, fontSize: '0.76rem' } }}>
           <TableHead>
             <TableRow sx={{ bgcolor: 'primary.main' }}>
-              {['Fiş No', 'Müşteri', 'Araç', 'Telefon', 'Tarih/Durum', 'Personel', 'Arıza', 'Toplam', 'Maliyet', 'Kar', 'İşlemler'].map(h => (
+              {['Fiş No', 'Müşteri', 'Araç', 'Telefon', 'Tarih/Durum', 'Personel', 'Arıza', 'Toplam', 'Maliyet', ...(karGor ? ['Kar'] : []), 'İşlemler'].map(h => (
                 <TableCell key={h} sx={{ color: 'white', fontWeight: 'bold', whiteSpace: 'nowrap' }}>{h}</TableCell>
               ))}
             </TableRow>
@@ -385,7 +386,7 @@ const IsEmirleri = () => {
                   <TableCell sx={{ maxWidth: 150, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={ie.ariza_sikayetler || ''}>{ie.ariza_sikayetler || '-'}</TableCell>
                   <TableCell sx={{ fontWeight: 'bold' }}>₺{toplam.toLocaleString('tr-TR')}</TableCell>
                   <TableCell sx={{ color: '#C62828' }}>₺{maliyet.toLocaleString('tr-TR')}</TableCell>
-                  <TableCell sx={{ color: kar >= 0 ? '#2e7d32' : '#c62828', fontWeight: 'bold' }}>₺{kar.toLocaleString('tr-TR')}</TableCell>
+                  {karGor && <TableCell sx={{ color: kar >= 0 ? '#2e7d32' : '#c62828', fontWeight: 'bold' }}>₺{kar.toLocaleString('tr-TR')}</TableCell>}
                   <TableCell sx={{ whiteSpace: 'nowrap' }}>
                     <IconButton size="small" color="primary" onClick={async () => { try { const res = await isEmriService.getById(ie.id); setDetayModal({ open: true, data: res.data }); } catch {} }}><ViewIcon /></IconButton>
                     <IconButton size="small" sx={{ color: '#C62828' }} onClick={async () => { try { const res = await isEmriService.getById(ie.id); printIsEmri(res.data); } catch {} }}><PrintIcon /></IconButton>
@@ -606,7 +607,7 @@ const IsEmirleri = () => {
                         <Box sx={{ flex: 1 }}>
                           <Typography variant="body2" fontWeight="bold">{p.takilan_parca}</Typography>
                           <Typography variant="caption" color="text.secondary">Adet: {p.adet} • Satış: ₺{pSatis.toLocaleString('tr-TR')} • Maliyet: ₺{pMaliyet.toLocaleString('tr-TR')}</Typography>
-                          <Typography variant="caption" sx={{ display: 'block', color: pKar >= 0 ? '#2e7d32' : '#c62828', fontWeight: 'bold' }}>Kâr: ₺{pKar.toLocaleString('tr-TR')}</Typography>
+                          {karGor && <Typography variant="caption" sx={{ display: 'block', color: pKar >= 0 ? '#2e7d32' : '#c62828', fontWeight: 'bold' }}>Kâr: ₺{pKar.toLocaleString('tr-TR')}</Typography>}
                         </Box>
                         <IconButton size="small" color="error" onClick={() => removeParca(i)}><CloseIcon fontSize="small" /></IconButton>
                       </Paper>
@@ -622,7 +623,7 @@ const IsEmirleri = () => {
                         <TableCell sx={{ fontWeight: 'bold' }} align="center">Adet</TableCell>
                         <TableCell sx={{ fontWeight: 'bold' }} align="right">Satış</TableCell>
                         <TableCell sx={{ fontWeight: 'bold' }} align="right">Maliyet</TableCell>
-                        <TableCell sx={{ fontWeight: 'bold' }} align="right">Kâr</TableCell>
+                        {karGor && <TableCell sx={{ fontWeight: 'bold' }} align="right">Kâr</TableCell>}
                         <TableCell sx={{ fontWeight: 'bold' }} align="center">Sil</TableCell>
                       </TableRow>
                     </TableHead>
@@ -637,7 +638,7 @@ const IsEmirleri = () => {
                             <TableCell align="center">{p.adet}</TableCell>
                             <TableCell align="right">₺{pSatis.toLocaleString('tr-TR')}</TableCell>
                             <TableCell align="right">₺{pMaliyet.toLocaleString('tr-TR')}</TableCell>
-                            <TableCell align="right" sx={{ color: pKar >= 0 ? '#2e7d32' : '#c62828', fontWeight: 'bold' }}>₺{pKar.toLocaleString('tr-TR')}</TableCell>
+                            {karGor && <TableCell align="right" sx={{ color: pKar >= 0 ? '#2e7d32' : '#c62828', fontWeight: 'bold' }}>₺{pKar.toLocaleString('tr-TR')}</TableCell>}
                             <TableCell align="center">
                               <IconButton size="small" color="error" onClick={() => removeParca(i)}><CloseIcon fontSize="small" /></IconButton>
                             </TableCell>
@@ -820,6 +821,7 @@ const printIsEmri = (data) => {
 };
 
 const IsEmriDetayModal = ({ open, data, onClose, onEdit, isMobile }) => {
+  const karGor = useKarGor();
   if (!data) return null;
 
   const parcalar = data.parcalar || [];
@@ -912,7 +914,7 @@ const IsEmriDetayModal = ({ open, data, onClose, onEdit, isMobile }) => {
                       <Paper key={i} variant="outlined" sx={{ p: 1.5 }}>
                         <Typography variant="body2" fontWeight="bold">{p.takilan_parca}</Typography>
                         <Typography variant="caption" color="text.secondary">Adet: {p.adet} • Birim: ₺{parseFloat(p.birim_fiyat || 0).toLocaleString('tr-TR')} • Toplam: ₺{pSatis.toLocaleString('tr-TR')}</Typography>
-                        <Typography variant="caption" className="no-print" sx={{ display: 'block' }}>Maliyet: ₺{pMaliyet.toLocaleString('tr-TR')} • <span style={{ color: pKar >= 0 ? '#2e7d32' : '#c62828', fontWeight: 'bold' }}>Kâr: ₺{pKar.toLocaleString('tr-TR')}</span></Typography>
+                        <Typography variant="caption" className="no-print" sx={{ display: 'block' }}>Maliyet: ₺{pMaliyet.toLocaleString('tr-TR')}{karGor && <> • <span style={{ color: pKar >= 0 ? '#2e7d32' : '#c62828', fontWeight: 'bold' }}>Kâr: ₺{pKar.toLocaleString('tr-TR')}</span></>}</Typography>
                       </Paper>
                     );
                   })}
@@ -926,7 +928,7 @@ const IsEmriDetayModal = ({ open, data, onClose, onEdit, isMobile }) => {
                           <TableCell key={h} sx={{ fontWeight: 'bold' }}>{h}</TableCell>
                         ))}
                         <TableCell sx={{ fontWeight: 'bold' }} className="no-print">Maliyet</TableCell>
-                        <TableCell sx={{ fontWeight: 'bold' }} className="no-print">Kâr</TableCell>
+                        {karGor && <TableCell sx={{ fontWeight: 'bold' }} className="no-print">Kâr</TableCell>}
                       </TableRow>
                     </TableHead>
                     <TableBody>
@@ -941,7 +943,7 @@ const IsEmriDetayModal = ({ open, data, onClose, onEdit, isMobile }) => {
                             <TableCell>₺{parseFloat(p.birim_fiyat || 0).toLocaleString('tr-TR')}</TableCell>
                             <TableCell sx={{ fontWeight: 'bold' }}>₺{pSatis.toLocaleString('tr-TR')}</TableCell>
                             <TableCell className="no-print">₺{pMaliyet.toLocaleString('tr-TR')}</TableCell>
-                            <TableCell className="no-print" sx={{ color: pKar >= 0 ? '#2e7d32' : '#c62828', fontWeight: 'bold' }}>₺{pKar.toLocaleString('tr-TR')}</TableCell>
+                            {karGor && <TableCell className="no-print" sx={{ color: pKar >= 0 ? '#2e7d32' : '#c62828', fontWeight: 'bold' }}>₺{pKar.toLocaleString('tr-TR')}</TableCell>}
                           </TableRow>
                         );
                       })}
@@ -956,9 +958,11 @@ const IsEmriDetayModal = ({ open, data, onClose, onEdit, isMobile }) => {
                   <Paper sx={{ px: 2, py: 1, bgcolor: '#ffebee' }} className="no-print">
                     <Typography variant="body2">Maliyet: <strong>₺{toplamMaliyet.toLocaleString('tr-TR')}</strong></Typography>
                   </Paper>
+                  {karGor && (
                   <Paper sx={{ px: 2, py: 1, bgcolor: kar >= 0 ? '#e8f5e9' : '#ffebee' }} className="no-print">
                     <Typography variant="body2" sx={{ color: kar >= 0 ? '#2e7d32' : '#c62828' }}>Kâr: <strong>₺{kar.toLocaleString('tr-TR')}</strong></Typography>
                   </Paper>
+                  )}
                 </Box>
               </>
             ) : (

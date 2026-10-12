@@ -7,8 +7,10 @@ import BackIcon from '@mui/icons-material/ArrowBack';
 import PrintIcon from '@mui/icons-material/Print';
 import { useReactToPrint } from 'react-to-print';
 import { ikinciElMotorService } from '../services/api';
+import { useKarGor } from '../context/AuthContext';
 
 const MotorDetay = () => {
+  const karGor = useKarGor();
   const isMobile = useMediaQuery(useTheme().breakpoints.down('sm'));
   const { id } = useParams();
   const navigate = useNavigate();
@@ -192,6 +194,7 @@ const MotorDetay = () => {
                 <Typography variant="caption" color="text.secondary">Alış + Noter Alış + Masraflar</Typography>
               </Paper>
             </Grid>
+            {karGor && (
             <Grid size={{ xs: 12, md: 4 }}>
               <Paper sx={{ p: 2, textAlign: 'center', bgcolor: kar >= 0 ? '#e8f5e9' : '#ffebee', borderLeft: `4px solid ${kar >= 0 ? '#2e7d32' : '#C62828'}` }}>
                 <Typography variant="body2" color="text.secondary">NET KÂR</Typography>
@@ -199,6 +202,7 @@ const MotorDetay = () => {
                 <Typography variant="caption" color="text.secondary">Satış - (Alış + Noter Alış + Noter Satış + Masraflar)</Typography>
               </Paper>
             </Grid>
+            )}
           </Grid>
         </Paper>
 

@@ -39,7 +39,7 @@ const MotorStok = () => {
   const canAlis = full || !!user?.alis_fiyati_gor || motorSatis;
   const canMusteri = full || motorSatis || !!user?.musteri_gor;
   const canListe = full || !!user?.liste_fiyati_gor;
-  const canKar = full || !!user?.kar_gor;
+  const canKar = isAdmin; // kâr yalnızca admin'e açık (yatırımcı yalnızca kendi payını görür)
   // Yatırımcı hiçbir operasyonel işlem yapamaz (yalnızca detay görür)
   const canEdit = (isAdmin || !!user?.motor_satis_yetkisi) && !isYatirimci;
   const [motorlar, setMotorlar] = useState([]);
@@ -567,7 +567,7 @@ const MotorStok = () => {
             );
           })()}
 
-          {hizliSatis.motor?.yatirimci_id && (
+          {hizliSatis.motor?.yatirimci_id && canKar && (
             <>
               <Typography variant="subtitle1" fontWeight="bold" sx={{ mt: 3, mb: 1 }}>Yatırımcı</Typography>
               <Grid container spacing={2}>
