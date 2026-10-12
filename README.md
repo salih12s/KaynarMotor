@@ -9,9 +9,9 @@
   <img src="https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white" alt="React 19">
   <img src="https://img.shields.io/badge/Node.js-22-339933?logo=nodedotjs&logoColor=white" alt="Node.js 22">
   <img src="https://img.shields.io/badge/Express-4-000000?logo=express&logoColor=white" alt="Express 4">
-  <img src="https://img.shields.io/badge/PostgreSQL-15-4169E1?logo=postgresql&logoColor=white" alt="PostgreSQL 15">
+  <img src="https://img.shields.io/badge/MariaDB-11-003545?logo=mariadb&logoColor=white" alt="MariaDB 11">
   <img src="https://img.shields.io/badge/MUI-7-007FFF?logo=mui&logoColor=white" alt="MUI 7">
-  <img src="https://img.shields.io/badge/Railway-deploy-0B0D0E?logo=railway&logoColor=white" alt="Railway">
+  <img src="https://img.shields.io/badge/Hostinger-deploy-673DE6?logo=hostinger&logoColor=white" alt="Hostinger">
 </p>
 
 <p align="center">
@@ -28,7 +28,7 @@ Kaynar Motor is a production dealership ERP and digital showroom integrating mot
 
 ### My Contribution
 
-I developed the React interface, Node.js/Express API, PostgreSQL data model, authentication and permission system, reporting tools, barcode and QR workflows, public showroom integration, and Railway deployment.
+I developed the React interface, Node.js/Express API, MariaDB data model (migrated from PostgreSQL with a verified, test-covered data migration), authentication and permission system, reporting tools, barcode and QR workflows, public showroom integration, and Hostinger deployment.
 
 ### Engineering Challenges
 
@@ -177,12 +177,12 @@ kim tarafından ne zaman yapıldığını kaydeden aktivite logu.
 |---|---|
 | **Frontend** | React 19, React Router 7, Material UI 7, Axios, date-fns, jsbarcode, qrcode, react-to-print |
 | **Backend** | Node.js 22, Express 4, JSON Web Token, bcryptjs, helmet, express-rate-limit |
-| **Veritabanı** | PostgreSQL 15 — ORM kullanılmadan, `pg` ile doğrudan parametreli SQL |
-| **Altyapı** | Railway (nixpacks), Heroku uyumlu `Procfile` |
+| **Veritabanı** | MariaDB 11 — ORM kullanılmadan, `mysql2` ile doğrudan parametreli SQL (PostgreSQL uyum katmanı: `backend/config/db.js`) |
+| **Altyapı** | Hostinger Node.js barındırma (tek uygulama + MariaDB); eski Railway yapılandırması `nixpacks.toml` / `Procfile` içinde duruyor |
 
 ## Mimari
 
-Backend ve frontend tek repoda (monorepo) durur. Production'da tek bir Railway servisi olarak
+Backend ve frontend tek repoda (monorepo) durur. Production'da tek bir Node.js uygulaması olarak
 çalışır: Express hem `/api` uçlarını hem de React build'ini aynı domain'den servis eder.
 
 ### Sistem görünümü
@@ -196,7 +196,7 @@ flowchart TB
     personel(["<b>Personel · Admin</b><br/>modül yetkisine göre"])
     yatirimci(["<b>Yatırımcı</b><br/>yalnızca kendi motorları"])
 
-    subgraph railway["Railway · tek servis"]
+    subgraph railway["Hostinger · tek Node uygulaması"]
         direction TB
 
         subgraph spa["React 19 SPA"]
@@ -220,7 +220,7 @@ flowchart TB
             end
         end
 
-        db[("<b>PostgreSQL 15</b><br/>19 tablo · FK + index<br/>ORM yok · parametreli SQL")]
+        db[("<b>MariaDB 11</b><br/>20 tablo · FK + index<br/>ORM yok · parametreli SQL")]
         init["<b>initDb.js</b><br/>açılışta şema + migration<br/>DB hazır değilse yeniden dener"]
     end
 
@@ -276,7 +276,7 @@ sequenceDiagram
     participant P as Panel (React)
     participant M as Middleware zinciri
     participant R as routes/isEmirleri.js
-    participant DB as PostgreSQL
+    participant DB as MariaDB
 
     U->>P: Yeni iş emri: müşteri, plaka, parçalar
     P->>M: POST /api/is-emirleri · Authorization: Bearer JWT
@@ -330,13 +330,13 @@ flowchart LR
 - **Şema kod içinde yönetilir.** ORM yoktur. Tablolar ve migration'lar `config/initDb.js` içinde `CREATE TABLE IF NOT EXISTS` ve kademeli `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` ile tanımlanır. Sunucu her açılışta şemayı eksiksiz hâle getirir, bu da deploy'u tek adıma indirir.
 - **Yetkilendirme sunucu tarafındadır.** Arayüzdeki route guard'lar yalnızca gezinmeyi düzenler; asıl kontrol `backend/middleware/yetki.js` içindedir ve API'ye bağlıdır. Hassas alanlar (kâr, alış fiyatı, müşteri bilgisi) yetkisi olmayan kullanıcının yanıtından sunucuda temizlenir. Gizleme arayüzde değil, veri katmanında yapılır.
 - **Okuma serbest, yazma yetkili.** Stok gibi birçok ekranın aradığı uçlarda GET istekleri açıktır, POST/PUT/PATCH/DELETE ise modül yetkisine bağlıdır (`yazmaYetkisi`).
-- **Veritabanına dayanıklı başlangıç.** Backend veritabanı henüz hazır değilken de ayağa kalkar (`/api/health` yanıt verir) ve bağlantıyı artan gecikmelerle yeniden dener. Bu, Railway'deki soğuk başlatma senaryolarına karşı dayanıklılık sağlar.
+- **Veritabanına dayanıklı başlangıç.** Backend veritabanı henüz hazır değilken de ayağa kalkar (`/api/health` yanıt verir) ve bağlantıyı artan gecikmelerle yeniden dener. Bu, barındırmadaki soğuk başlatma senaryolarına karşı dayanıklılık sağlar.
 - **Para ve stok işlemleri transaction içindedir.** Çok adımlı yazma işlemleri (iş emri + parçalar + stok düşümü) tek transaction'da yürür. Fiş numarası üretimi advisory lock ile serileştirilir.
 - **Denetim izi.** Giriş/çıkış ve başarısız giriş denemeleri (IP ile), kayıt/onay işlemleri, iş emri ve motor satışının oluşturma/güncelleme/silme adımları, aksesuar ve e-ticaret satışları, işlemi yapan kullanıcıyla birlikte `aktivite_log` tablosuna yazılır.
 
 ## Kurulum
 
-**Gereksinimler:** Node.js 20+ ve PostgreSQL 14+
+**Gereksinimler:** Node.js 20+ ve MariaDB 10.5+ (11.8 ile denendi; `INSERT ... RETURNING` ve `SEQUENCE` gerekir)
 
 ```bash
 git clone https://github.com/salih12s/KaynarMotorCRM.git
@@ -359,7 +359,7 @@ cp frontend/.env.example frontend/.env
 |---|---|
 | `NODE_ENV` | `development` veya `production` |
 | `PORT` | Sunucu portu (varsayılan `5100`) |
-| `DATABASE_URL` | Tek parça bağlantı adresi (verilirse `DB_*` yerine kullanılır) |
+| `DATABASE_URL` | Tek parça bağlantı adresi, `mysql://kullanici:sifre@host:3306/veritabani` (verilirse `DB_*` yerine kullanılır) |
 | `DB_HOST` `DB_PORT` `DB_NAME` `DB_USER` `DB_PASSWORD` | Ayrı ayrı bağlantı bilgileri |
 | `JWT_SECRET` | JWT imzalama anahtarı |
 | `FRONTEND_URL` | Ek CORS origin'i. Frontend backend tarafından servis edildiğinde gerekmez; yalnızca farklı bir alan adından istek atılacaksa tanımlanır. `development` modunda tüm origin'lere izin verilir |
@@ -414,7 +414,7 @@ KaynarMotorCRM/
 │   │   ├── yetki.js             # Modül ve rol bazlı yetkilendirme
 │   │   └── rateLimit.js         # Kimlik doğrulama uçlarında hız sınırlama
 │   ├── config/
-│   │   ├── db.js                # PostgreSQL bağlantı havuzu
+│   │   ├── db.js                # MariaDB bağlantı havuzu (node-pg uyumlu query/connect arayüzü)
 │   │   ├── initDb.js            # Şema, migration'lar ve index'ler
 │   │   ├── activityLogger.js    # Aktivite/audit kaydı
 │   │   └── musteriHelper.js     # Otomatik müşteri eşleştirme
@@ -491,15 +491,18 @@ route'lar JWT ile korunur.
 
 ## Deploy
 
-Railway üzerinde `nixpacks.toml` ile derlenir:
+Hostinger'a hazır paket tek komutla üretilir:
 
-1. `frontend`: bağımlılıklar + production build
-2. `backend`: bağımlılıklar
-3. Başlangıç: `cd backend && node server.js`
+```bash
+npm run package:hostinger   # deploy/hostinger/kaynarmotor-hostinger.zip
+```
 
-Production'da `NODE_ENV=production` ayarlanır; backend `frontend/build` klasörünü statik
-olarak serve eder ve SPA route'larını `index.html`'e yönlendirir. Heroku tarzı dağıtım
-için `Procfile` de mevcuttur.
+Sunucu tek dosyaya (`dist/main.cjs`, esbuild) paketlenir, arayüz `dist/public` içine derlenir ve
+Express ikisini de aynı adresten sunar (`/api` + SPA). Ayrıntılı adımlar, ortam değişkenleri ve
+geçiş kılavuzu: [docs/HOSTINGER.md](docs/HOSTINGER.md).
+
+Eski Railway/nixpacks yapılandırması (`nixpacks.toml`, `railway.json`, `Procfile`) geçiş tamamlanana
+kadar depoda kalır.
 
 ## Lisans
 
