@@ -4,6 +4,8 @@ const router = express.Router();
 router.param('id', require('../middleware/idDogrula').idParam);
 const { pool } = require('../config/db');
 const { logAktivite, ISLEM_TIPLERI } = require('../config/activityLogger');
+const { upsertMusteri } = require('../config/musteriHelper');
+const { adetCoz, hataYanitla } = require('../config/dogrula');
 
 const emptyToNull = (value) => (value === '' || value === undefined) ? null : value;
 const emptyToZero = (value) => {
@@ -111,24 +113,8 @@ router.post('/', async (req, res) => {
     const fisNoResult = await client.query('SELECT COALESCE(MAX(fis_no), 0) + 1 AS next_fis_no FROM is_emirleri');
     const fisNo = Number(fisNoResult.rows[0].next_fis_no);
 
-    // Müşteri oluştur/güncelle (telefon bazlı)
-    let musteriId = null;
-    if (telefon) {
-      const existingMusteri = await client.query('SELECT id FROM musteriler WHERE telefon = $1', [telefon]);
-      if (existingMusteri.rows.length > 0) {
-        musteriId = existingMusteri.rows[0].id;
-        await client.query(
-          'UPDATE musteriler SET ad_soyad = $1, adres = $2, updated_at = CURRENT_TIMESTAMP WHERE id = $3',
-          [musteri_ad_soyad, adres, musteriId]
-        );
-      } else {
-        const newMusteri = await client.query(
-          'INSERT INTO musteriler (ad_soyad, adres, telefon) VALUES ($1, $2, $3) RETURNING id',
-          [musteri_ad_soyad, adres, telefon]
-        );
-        musteriId = newMusteri.rows[0].id;
-      }
-    }
+    // Müşteriyi bul/oluştur (mevcut kayıt ezilmez, yalnızca boş alanlar dolar; aynı transaction'da)
+    const musteriId = telefon ? await upsertMusteri(musteri_ad_soyad, telefon, adres, client) : null;
 
     // İş emri INSERT
     const isEmriResult = await client.query(
@@ -150,7 +136,7 @@ router.post('/', async (req, res) => {
     let toplamMaliyet = 0;
     if (parcalar && parcalar.length > 0) {
       for (const parca of parcalar) {
-        const adet = emptyToZero(parca.adet) || 1;
+        const adet = adetCoz(parca.adet);
         const birimFiyat = emptyToZero(parca.birim_fiyat);
         const maliyet = emptyToZero(parca.maliyet);
         const parcaToplamFiyat = adet * birimFiyat;
@@ -188,9 +174,8 @@ router.post('/', async (req, res) => {
     const parcalarResult = await pool.query('SELECT * FROM parcalar WHERE is_emri_id = $1 ORDER BY id', [isEmriId]);
     res.status(201).json({ ...fullResult.rows[0], parcalar: parcalarResult.rows });
   } catch (error) {
-    await client.query('ROLLBACK');
-    console.error('İş emri oluşturma hatası:', error);
-    res.status(500).json({ message: 'Sunucu hatası' });
+    await client.query('ROLLBACK').catch(() => {});
+    hataYanitla(res, error, 'İş emri oluşturma hatası:');
   } finally {
     client.release();
   }
@@ -226,26 +211,20 @@ router.put('/:id', async (req, res) => {
       tamamlamaTarihi = new Date();
     }
 
-    // Müşteri güncelle
-    if (telefon) {
-      const existingMusteri = await client.query('SELECT id FROM musteriler WHERE telefon = $1', [telefon]);
-      if (existingMusteri.rows.length > 0) {
-        await client.query('UPDATE musteriler SET ad_soyad = $1, adres = $2, updated_at = CURRENT_TIMESTAMP WHERE id = $3',
-          [musteri_ad_soyad, adres, existingMusteri.rows[0].id]);
-      }
-    }
+    // Müşteriyi bul/oluştur (mevcut kayıt ezilmez, yalnızca boş alanlar dolar)
+    const musteriId = telefon ? await upsertMusteri(musteri_ad_soyad, telefon, adres, client) : null;
 
     await client.query(
       `UPDATE is_emirleri SET
         musteri_ad_soyad=$1, adres=$2, telefon=$3, km=$4, model_tip=$5, marka=$6,
         aciklama=$7, ariza_sikayetler=$8, tahmini_teslim_tarihi=$9, tahmini_toplam_ucret=$10,
         durum=$11, odeme_detaylari=$12, teslim_alan_ad_soyad=$13, teslim_eden_teknisyen=$14,
-        teslim_tarihi=$15, tamamlama_tarihi=COALESCE($16, tamamlama_tarihi), kalan_odeme=$18, plaka=$19,
+        teslim_tarihi=$15, tamamlama_tarihi=COALESCE($16, tamamlama_tarihi), kalan_odeme=$18, plaka=$19, musteri_id=COALESCE($20, musteri_id),
         updated_at=CURRENT_TIMESTAMP WHERE id=$17`,
       [musteri_ad_soyad, adres, telefon, emptyToZero(km), model_tip, marka,
        aciklama, ariza_sikayetler, emptyToNull(tahmini_teslim_tarihi), emptyToZero(tahmini_toplam_ucret),
        durum, odeme_detaylari, teslim_alan_ad_soyad, teslim_eden_teknisyen,
-       emptyToNull(teslim_tarihi), tamamlamaTarihi, req.params.id, emptyToZero(kalan_odeme), emptyToNull(plaka)]
+       emptyToNull(teslim_tarihi), tamamlamaTarihi, req.params.id, emptyToZero(kalan_odeme), emptyToNull(plaka), musteriId]
     );
 
     // Parçaları yeniden oluştur — önce eski parçaların yedek parça stok düşümünü geri al
@@ -257,7 +236,7 @@ router.put('/:id', async (req, res) => {
     let toplamMaliyet = 0;
     if (parcalar && parcalar.length > 0) {
       for (const parca of parcalar) {
-        const adet = emptyToZero(parca.adet) || 1;
+        const adet = adetCoz(parca.adet);
         const birimFiyat = emptyToZero(parca.birim_fiyat);
         const maliyet = emptyToZero(parca.maliyet);
         const parcaToplamFiyat = adet * birimFiyat;
@@ -294,9 +273,8 @@ router.put('/:id', async (req, res) => {
     const parcalarResult = await pool.query('SELECT * FROM parcalar WHERE is_emri_id = $1 ORDER BY id', [req.params.id]);
     res.json({ ...fullResult.rows[0], parcalar: parcalarResult.rows });
   } catch (error) {
-    await client.query('ROLLBACK');
-    console.error('İş emri güncelleme hatası:', error);
-    res.status(500).json({ message: 'Sunucu hatası' });
+    await client.query('ROLLBACK').catch(() => {});
+    hataYanitla(res, error, 'İş emri güncelleme hatası:');
   } finally {
     client.release();
   }

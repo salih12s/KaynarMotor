@@ -128,7 +128,7 @@ const AksesuarStok = () => {
         const parts = line.split('\t').map(p => p.trim());
         return { stok_kodu: parts[0] || '', stok_adi: parts[1] || '', alis_fiyati: parts[2] || 0, satis_fiyati: parts[3] || 0, giren_miktar: parts[4] || 0 };
       });
-      await aksesuarStokService.bulkImport(items);
+      await aksesuarStokService.topluEkle(items);
       setImportDialog(false);
       setImportText('');
       loadData();

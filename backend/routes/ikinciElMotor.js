@@ -332,7 +332,19 @@ router.delete('/:id', async (req, res) => {
     if (req.user.rol !== 'admin') {
       return res.status(403).json({ message: 'Silme yetkiniz yok' });
     }
-    await pool.query('DELETE FROM ikinci_el_motorlar WHERE id = $1', [req.params.id]);
+    // Bağlı vitrin ilanı yetim kalmasın: yayından kaldır ve bağlantıyı kopar (stok_motor_id'nin FK'si yok)
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      await client.query('UPDATE vitrin_urunleri SET stok_motor_id = NULL, yayinda = FALSE, updated_at = CURRENT_TIMESTAMP WHERE stok_motor_id = $1', [req.params.id]);
+      await client.query('DELETE FROM ikinci_el_motorlar WHERE id = $1', [req.params.id]);
+      await client.query('COMMIT');
+    } catch (e) {
+      await client.query('ROLLBACK').catch(() => {});
+      throw e;
+    } finally {
+      client.release();
+    }
     await logAktivite({
       kullanici_id: req.user.id, kullanici_adi: req.user.kullanici_adi,
       islem_tipi: ISLEM_TIPLERI.MOTOR_SATIS_SIL,

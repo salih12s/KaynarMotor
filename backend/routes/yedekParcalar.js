@@ -3,6 +3,7 @@ const router = express.Router();
 router.param('id', require('../middleware/idDogrula').idParam);
 const { pool } = require('../config/db');
 const { orderByText } = require('../config/sqlText');
+const { adetCoz, hataYanitla } = require('../config/dogrula');
 
 const emptyToZero = (v) => { if (v === '' || v === undefined || v === null) return 0; const n = Number(v); return isNaN(n) ? 0 : n; };
 
@@ -51,7 +52,7 @@ router.post('/', async (req, res) => {
   try {
     await client.query('BEGIN');
     const { urun_adi, alis_fiyati, satis_fiyati, musteri_adi, musteri_telefon, kalan_odeme, stok_id, adet } = req.body;
-    const satisAdet = emptyToZero(adet) || 1;
+    const satisAdet = adetCoz(adet);
     const result = await client.query(
       'INSERT INTO yedek_parcalar (urun_adi, alis_fiyati, satis_fiyati, musteri_adi, musteri_telefon, kalan_odeme, stok_id, adet) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
       [urun_adi, emptyToZero(alis_fiyati), emptyToZero(satis_fiyati), musteri_adi || null, musteri_telefon || null, emptyToZero(kalan_odeme), stok_id || null, satisAdet]
@@ -61,8 +62,8 @@ router.post('/', async (req, res) => {
     await client.query('COMMIT');
     res.status(201).json(result.rows[0]);
   } catch (error) {
-    await client.query('ROLLBACK');
-    res.status(500).json({ message: 'Sunucu hatası' });
+    await client.query('ROLLBACK').catch(() => {});
+    hataYanitla(res, error, 'Yedek parça satış hatası:');
   } finally {
     client.release();
   }
@@ -80,7 +81,7 @@ router.put('/:id', async (req, res) => {
     }
 
     const { urun_adi, alis_fiyati, satis_fiyati, musteri_adi, musteri_telefon, kalan_odeme, stok_id, adet } = req.body;
-    const satisAdet = emptyToZero(adet) || 1;
+    const satisAdet = adetCoz(adet);
     const result = await client.query(
       'UPDATE yedek_parcalar SET urun_adi=$1, alis_fiyati=$2, satis_fiyati=$3, musteri_adi=$4, musteri_telefon=$5, kalan_odeme=$7, stok_id=$8, adet=$9, updated_at=CURRENT_TIMESTAMP WHERE id=$6 RETURNING *',
       [urun_adi, emptyToZero(alis_fiyati), emptyToZero(satis_fiyati), musteri_adi || null, musteri_telefon || null, req.params.id, emptyToZero(kalan_odeme), stok_id || null, satisAdet]
@@ -93,8 +94,8 @@ router.put('/:id', async (req, res) => {
     await client.query('COMMIT');
     res.json(result.rows[0]);
   } catch (error) {
-    await client.query('ROLLBACK');
-    res.status(500).json({ message: 'Sunucu hatası' });
+    await client.query('ROLLBACK').catch(() => {});
+    hataYanitla(res, error, 'Yedek parça güncelleme hatası:');
   } finally {
     client.release();
   }

@@ -70,6 +70,7 @@ router.get('/barkod/:kod', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     const { stok_kodu, stok_adi, marka, giren_miktar, birimi, alis_fiyati, satis_fiyati, platform, beden, renk, kategori } = req.body;
+    if (!String(stok_kodu || '').trim() || !String(stok_adi || '').trim()) return res.status(400).json({ message: 'Stok kodu ve stok adı zorunludur' });
     const mevcut = parseInt(giren_miktar) || 0;
     const envanter = mevcut * (parseFloat(satis_fiyati) || 0);
 
@@ -89,15 +90,19 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const { stok_kodu, stok_adi, marka, giren_miktar, birimi, alis_fiyati, satis_fiyati, platform, beden, renk, kategori } = req.body;
+    if (!String(stok_kodu || '').trim() || !String(stok_adi || '').trim()) return res.status(400).json({ message: 'Stok kodu ve stok adı zorunludur' });
     const giren = parseInt(giren_miktar) || 0;
-    const mevcut = giren;
-    const envanter = mevcut * (parseFloat(satis_fiyati) || 0);
+    if (giren < 0) return res.status(400).json({ message: 'Giren miktar negatif olamaz' });
 
+    // mevcut = giren − çıkan. Eskiden mevcut = giren yazılıyordu: yalnızca fiyat düzeltince bile o ana kadarki
+    // satışlar stoğa geri dönüyordu. Çıkan miktar satışlardan gelir ve bu uçta değiştirilmez.
     const result = await pool.query(
-      `UPDATE aksesuar_stok SET stok_kodu=$1, stok_adi=$2, marka=$3, giren_miktar=$4, mevcut=$5,
-       birimi=$6, alis_fiyati=$7, satis_fiyati=$8, envanter_degeri=$9, platform=$10, beden=$11, renk=$12, kategori=$13, updated_at=CURRENT_TIMESTAMP
-       WHERE id=$14 RETURNING *`,
-      [stok_kodu, stok_adi, marka || null, giren, mevcut, birimi || 'Adet', parseFloat(alis_fiyati) || 0, parseFloat(satis_fiyati) || 0, envanter, platform || null, beden || null, renk || null, kategori || null, req.params.id]
+      `UPDATE aksesuar_stok SET stok_kodu=$1, stok_adi=$2, marka=$3, giren_miktar=$4,
+       envanter_degeri=GREATEST($4 - IFNULL(cikan_miktar, 0), 0) * $7,
+       mevcut=$4 - IFNULL(cikan_miktar, 0),
+       birimi=$5, alis_fiyati=$6, satis_fiyati=$7, platform=$8, beden=$9, renk=$10, kategori=$11, updated_at=CURRENT_TIMESTAMP
+       WHERE id=$12 RETURNING *`,
+      [stok_kodu, stok_adi, marka || null, giren, birimi || 'Adet', parseFloat(alis_fiyati) || 0, parseFloat(satis_fiyati) || 0, platform || null, beden || null, renk || null, kategori || null, req.params.id]
     );
     if (result.rows.length === 0) return res.status(404).json({ message: 'Stok bulunamadı' });
     res.json(result.rows[0]);
@@ -123,16 +128,22 @@ router.post('/toplu', async (req, res) => {
     const { stoklar } = req.body;
     if (!stoklar || !Array.isArray(stoklar)) return res.status(400).json({ message: 'Stok listesi gerekli' });
 
+    const gecersiz = stoklar.map((s, i) => (!String((s && s.stok_kodu) || '').trim() || !String((s && s.stok_adi) || '').trim() ? i + 1 : null)).filter(Boolean);
+    if (gecersiz.length) return res.status(400).json({ message: `Stok kodu ve adı boş olamaz (satır: ${gecersiz.slice(0, 10).join(', ')})` });
+
     let eklenen = 0;
     for (const stok of stoklar) {
       const mevcut = parseInt(stok.giren_miktar) || 0;
       const envanter = mevcut * (parseFloat(stok.satis_fiyati) || 0);
+      // Var olan koda tekrar aktarım: çıkan (satılan) miktar korunur → mevcut = giren − çıkan; boş marka mevcut markayı silmez
       await pool.query(
         `INSERT INTO aksesuar_stok (stok_kodu, stok_adi, marka, giren_miktar, mevcut, birimi, alis_fiyati, satis_fiyati, envanter_degeri)
          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
          ON DUPLICATE KEY UPDATE
-           stok_adi=VALUES(stok_adi), marka=VALUES(marka), giren_miktar=VALUES(giren_miktar), mevcut=VALUES(mevcut),
-           alis_fiyati=VALUES(alis_fiyati), satis_fiyati=VALUES(satis_fiyati), envanter_degeri=VALUES(envanter_degeri),
+           stok_adi=VALUES(stok_adi), marka=COALESCE(VALUES(marka), marka), giren_miktar=VALUES(giren_miktar),
+           mevcut=VALUES(giren_miktar) - IFNULL(cikan_miktar, 0),
+           alis_fiyati=VALUES(alis_fiyati), satis_fiyati=VALUES(satis_fiyati),
+           envanter_degeri=GREATEST(VALUES(giren_miktar) - IFNULL(cikan_miktar, 0), 0) * VALUES(satis_fiyati),
            updated_at=CURRENT_TIMESTAMP(6)`,
         [stok.stok_kodu, stok.stok_adi, stok.marka || null, mevcut, mevcut, stok.birimi || 'Adet',
          parseFloat(stok.alis_fiyati) || 0, parseFloat(stok.satis_fiyati) || 0, envanter]

@@ -2,6 +2,7 @@ require('dotenv').config({ path: require('path').resolve(__dirname, '../.env') }
 require('dotenv').config();
 
 const express = require('express');
+require('./config/asyncHata'); // async işleyicide fırlatılan hata istemciyi yanıtsız bırakmasın (500 dönsün)
 const cors = require('cors');
 const helmet = require('helmet');
 const path = require('path');
@@ -171,6 +172,9 @@ if (process.env.NODE_ENV === 'production') {
 app.use((err, req, res, next) => {
   if (res.headersSent) return next(err);
   // İstemci kaynaklı hatalar (bozuk JSON, büyük gövde, reddedilen origin) 500 değildir ve yığın izi gerektirmez.
+  if (err && err.istemciHatasi) {
+    return res.status(err.status || 400).json({ message: err.message });
+  }
   if (err && err.type === 'entity.too.large') {
     return res.status(413).json({ message: 'Gönderilen veri boyutu çok büyük' });
   }

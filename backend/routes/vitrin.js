@@ -36,8 +36,10 @@ const paketAsimi = async (...metinler) => {
   const sinir = (await maxPaket()) - 1024 * 1024; // sorgunun geri kalanı için pay
   return metinler.some((m) => typeof m === 'string' && Buffer.byteLength(m) > sinir) ? sinir : null;
 };
+// sinir base64 metnin bayt sınırıdır; kullanıcıya HAM dosya boyutunu söyle (base64 dosyayı ~%33 şişirir)
+const hamMb = (sinir) => Math.max(1, Math.floor((sinir * 0.75) / 1048576));
 const cokBuyukYanit = (res, sinir) =>
-  res.status(413).json({ message: `Dosya çok büyük (en fazla ${Math.floor(sinir / 1048576)} MB yüklenebilir)` });
+  res.status(413).json({ message: `Dosya çok büyük (en fazla ~${hamMb(sinir)} MB yüklenebilir)` });
 
 // İzin verilen medya türleri. MIME istemciden geldiği için allowlist ŞARTTIR: aksi hâlde "text/html" gibi
 // bir tür yüklenip aynı kaynaktan (origin) sunulur ve yönetici o bağlantıyı açınca betik çalışır (XSS).
@@ -95,6 +97,13 @@ module.exports = (authenticateToken, isAdmin) => {
   };
 
   // ---------- PUBLIC ----------
+
+  // GET /yukleme-siniri - yönetim ekranı, dosya seçilir seçilmez (sunucuya göndermeden) uyarı verebilsin diye.
+  // Sınır veritabanının max_allowed_packet değerine bağlıdır; değer HAM dosya boyutu (MB) olarak döner.
+  router.get('/yukleme-siniri', ...vitrinWrite, async (req, res) => {
+    const paket = (await maxPaket()) - 1024 * 1024;
+    res.json({ video_mb: Math.max(1, Math.min(hamMb(paket), 85)) });
+  });
 
   // GET /segmentler - dinamik segment listesi
   router.get('/segmentler', async (req, res) => {

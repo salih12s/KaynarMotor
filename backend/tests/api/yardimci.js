@@ -58,6 +58,27 @@ async function sunucuBaslat() {
   return { url, api, admin, durdur: () => cocuk.kill() };
 }
 
+// Veritabanına ULAŞAMAYAN bir sunucu (kapalı porta bağlanır). DB kopunca uçların yanıt verip vermediğini sınar.
+async function dbsizSunucuBaslat() {
+  baglantiKorumasi();
+  const port = await bosPort();
+  const kapaliDbPort = await bosPort(); // boş port = orada dinleyen yok
+  const jwtSirri = process.env.JWT_SECRET || 'api-test-jwt-sirri';
+  const cocuk = spawn(process.execPath, ['server.js'], {
+    cwd: BACKEND,
+    env: { ...process.env, PORT: String(port), NODE_ENV: 'test', JWT_SECRET: jwtSirri, DB_PORT: String(kapaliDbPort) },
+    stdio: 'ignore',
+  });
+  const url = `http://127.0.0.1:${port}`;
+  for (let i = 0; i < 60; i++) {
+    try { if ((await fetch(url + '/api/health')).ok) break; } catch { /* henüz dinlemiyor */ }
+    await bekle(250);
+  }
+  const jwt = require(path.join(BACKEND, 'node_modules', 'jsonwebtoken'));
+  const token = jwt.sign({ id: 1, rol: 'admin', kullanici_adi: 'admin', ad_soyad: 'Admin' }, jwtSirri);
+  return { url, api: istemci(url), token, durdur: () => cocuk.kill() };
+}
+
 // fetch üzerine ince sarmalayıcı: { durum, govde (JSON ya da metin), basliklar }
 function istemci(url) {
   return async (yontem, yol, govde, token, ek = {}) => {
@@ -90,4 +111,4 @@ async function kullaniciOlustur(api, admin, ad, rol, yetkiler = {}) {
   return { id: k.govde.id, token: g.govde.token };
 }
 
-module.exports = { sunucuBaslat, istemci, hamIstek, kullaniciOlustur, baglantiKorumasi };
+module.exports = { sunucuBaslat, dbsizSunucuBaslat, istemci, hamIstek, kullaniciOlustur, baglantiKorumasi };

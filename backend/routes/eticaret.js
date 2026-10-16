@@ -4,6 +4,7 @@ router.param('id', require('../middleware/idDogrula').idParam);
 const { pool } = require('../config/db');
 const { logAktivite, ISLEM_TIPLERI } = require('../config/activityLogger');
 const { orderByText } = require('../config/sqlText');
+const { adetCoz, bosuNull, hataYanitla } = require('../config/dogrula');
 
 const emptyToZero = (v) => { if (v === '' || v === undefined || v === null) return 0; const n = Number(v); return isNaN(n) ? 0 : n; };
 
@@ -186,7 +187,7 @@ router.post('/', async (req, res) => {
     await client.query('BEGIN');
     const { stok_id, platform_id, urun_adi, alis_fiyati, satis_fiyati, komisyon_orani, kdv_orani, kargo_ucreti, adet, tarih } = req.body;
 
-    const miktar = emptyToZero(adet) || 1;
+    const miktar = adetCoz(adet);
     const alis = emptyToZero(alis_fiyati);
     const satis = emptyToZero(satis_fiyati);
     const komisyon = emptyToZero(komisyon_orani);
@@ -206,7 +207,7 @@ router.post('/', async (req, res) => {
     const result = await client.query(
       `INSERT INTO eticaret_satislar (stok_id, platform_id, urun_adi, alis_fiyati, satis_fiyati, komisyon_orani, komisyon_tutari, kdv_orani, kargo_ucreti, kar, adet, tarih)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING *`,
-      [stok_id, platform_id, urun_adi, alis, satis, komisyon, komisyonTutari, kdv, kargo, kar, miktar, tarih || new Date()]
+      [bosuNull(stok_id), bosuNull(platform_id), urun_adi, alis, satis, komisyon, komisyonTutari, kdv, kargo, kar, miktar, tarih || new Date()]
     );
 
     // Stoktan düş
@@ -238,9 +239,8 @@ router.post('/', async (req, res) => {
     `, [result.rows[0].id]);
     res.status(201).json(full.rows[0]);
   } catch (error) {
-    await client.query('ROLLBACK');
-    console.error('E-ticaret satış hatası:', error);
-    res.status(500).json({ message: 'Sunucu hatası' });
+    await client.query('ROLLBACK').catch(() => {});
+    hataYanitla(res, error, 'E-ticaret satış hatası:');
   } finally {
     client.release();
   }
@@ -269,7 +269,7 @@ router.put('/:id', async (req, res) => {
     }
 
     const { stok_id, platform_id, urun_adi, alis_fiyati, satis_fiyati, komisyon_orani, kdv_orani, kargo_ucreti, adet, tarih } = req.body;
-    const miktar = emptyToZero(adet) || 1;
+    const miktar = adetCoz(adet);
     const alis = emptyToZero(alis_fiyati);
     const satis = emptyToZero(satis_fiyati);
     const komisyon = emptyToZero(komisyon_orani);
@@ -290,7 +290,7 @@ router.put('/:id', async (req, res) => {
       `UPDATE eticaret_satislar SET stok_id=$1, platform_id=$2, urun_adi=$3, alis_fiyati=$4,
        satis_fiyati=$5, komisyon_orani=$6, komisyon_tutari=$7, kdv_orani=$8, kargo_ucreti=$9,
        kar=$10, adet=$11, tarih=$12, updated_at=CURRENT_TIMESTAMP WHERE id=$13`,
-      [stok_id, platform_id, urun_adi, alis, satis, komisyon, komisyonTutari, kdv, kargo, kar, miktar, tarih, req.params.id]
+      [bosuNull(stok_id), bosuNull(platform_id), urun_adi, alis, satis, komisyon, komisyonTutari, kdv, kargo, kar, miktar, tarih, req.params.id]
     );
 
     // Yeni stoktan düş
@@ -314,8 +314,8 @@ router.put('/:id', async (req, res) => {
     `, [req.params.id]);
     res.json(full.rows[0]);
   } catch (error) {
-    await client.query('ROLLBACK');
-    res.status(500).json({ message: 'Sunucu hatası' });
+    await client.query('ROLLBACK').catch(() => {});
+    hataYanitla(res, error, 'E-ticaret satış güncelleme hatası:');
   } finally {
     client.release();
   }

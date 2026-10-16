@@ -143,11 +143,21 @@ router.put('/:id', isAdmin, async (req, res) => {
 
 // DELETE /:id - Müşteri sil [ADMIN]
 router.delete('/:id', isAdmin, async (req, res) => {
+  const client = await pool.connect();
   try {
-    await pool.query('DELETE FROM musteriler WHERE id = $1', [req.params.id]);
+    await client.query('BEGIN');
+    // İş emirleri müşterinin ad/telefon/adresini kendi üzerinde de taşır: bağlantıyı boşaltıp kayıtları KORU
+    // (eskiden FK yüzünden "Sunucu hatası" veriyor ve müşteri silinemiyordu)
+    await client.query('UPDATE is_emirleri SET musteri_id = NULL WHERE musteri_id = $1', [req.params.id]);
+    await client.query('DELETE FROM musteriler WHERE id = $1', [req.params.id]);
+    await client.query('COMMIT');
     res.json({ message: 'Müşteri silindi' });
   } catch (error) {
+    await client.query('ROLLBACK').catch(() => {});
+    console.error('Müşteri silme hatası:', error);
     res.status(500).json({ message: 'Sunucu hatası' });
+  } finally {
+    client.release();
   }
 });
 

@@ -176,9 +176,23 @@ router.delete('/users/:id', authenticateToken, isAdmin, async (req, res) => {
     if (parseInt(req.params.id) === req.user.id) {
       return res.status(400).json({ message: 'Kendinizi silemezsiniz' });
     }
-    await pool.query('DELETE FROM kullanicilar WHERE id = $1', [req.params.id]);
+    // Kullanıcının oluşturduğu iş emirleri KORUNUR (oluşturan adı olusturan_kisi kolonunda durur); yalnızca
+    // kullanıcıya bağlantı boşaltılır. Eskiden FK yüzünden "Sunucu hatası" veriyor ve kullanıcı silinemiyordu.
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      await client.query('UPDATE is_emirleri SET olusturan_kullanici_id = NULL WHERE olusturan_kullanici_id = $1', [req.params.id]);
+      await client.query('DELETE FROM kullanicilar WHERE id = $1', [req.params.id]);
+      await client.query('COMMIT');
+    } catch (e) {
+      await client.query('ROLLBACK').catch(() => {});
+      throw e;
+    } finally {
+      client.release();
+    }
     res.json({ message: 'Kullanıcı silindi' });
   } catch (error) {
+    console.error('Kullanıcı silme hatası:', error);
     res.status(500).json({ message: 'Sunucu hatası' });
   }
 });

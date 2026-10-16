@@ -5,6 +5,7 @@ const { pool } = require('../config/db');
 const { logAktivite, ISLEM_TIPLERI } = require('../config/activityLogger');
 const { upsertMusteri } = require('../config/musteriHelper');
 const { parcalariEkle } = require('../config/altKayitlar');
+const { adetCoz, hataYanitla } = require('../config/dogrula');
 
 const emptyToZero = (v) => { if (v === '' || v === undefined || v === null) return 0; const n = Number(v); return isNaN(n) ? 0 : n; };
 
@@ -90,12 +91,13 @@ router.post('/', async (req, res) => {
     const { ad_soyad, telefon, odeme_sekli, aciklama, durum, odeme_detaylari, kalan_odeme, satis_tarihi, parcalar, indirim } = req.body;
     const olusturan_kisi = req.user?.ad_soyad || req.user?.kullanici_adi || null;
 
+    // Adet doğrulaması + tutarlılık: toplamlar, kaydedilen satır ve stok düşümü AYNI adedi kullanır
+    // (eskiden boş adet toplamda 0, kayıtta 1 sayılıyordu)
+    const satirlar = (Array.isArray(parcalar) ? parcalar : []).map((p) => ({ ...p, adet: adetCoz(p.adet) }));
     let toplamMaliyet = 0, brutSatis = 0;
-    if (parcalar && parcalar.length > 0) {
-      for (const p of parcalar) {
-        toplamMaliyet += emptyToZero(p.adet) * emptyToZero(p.maliyet);
-        brutSatis += emptyToZero(p.adet) * emptyToZero(p.satis_fiyati);
-      }
+    for (const p of satirlar) {
+      toplamMaliyet += p.adet * emptyToZero(p.maliyet);
+      brutSatis += p.adet * emptyToZero(p.satis_fiyati);
     }
     // İndirim: ürün toplamından (ve dolayısıyla kârdan) düşülür. toplam_satis NET (indirim sonrası) saklanır.
     const indirimTutar = Math.min(emptyToZero(indirim), brutSatis);
@@ -110,16 +112,14 @@ router.post('/', async (req, res) => {
     );
     const aksesuarId = result.rows[0].id;
 
-    if (parcalar && parcalar.length > 0) {
-      for (const p of parcalar) {
-        await client.query(
-          'INSERT INTO aksesuar_parcalar (aksesuar_id, urun_adi, adet, maliyet, satis_fiyati) VALUES ($1,$2,$3,$4,$5)',
-          [aksesuarId, p.urun_adi, emptyToZero(p.adet) || 1, emptyToZero(p.maliyet), emptyToZero(p.satis_fiyati)]
-        );
-        // Tamamlandıysa stoktan düş
-        if (durum === 'tamamlandi' && p.urun_adi) {
-          await aksesuarStokAyarla(client, p.urun_adi, p.adet, 1);
-        }
+    for (const p of satirlar) {
+      await client.query(
+        'INSERT INTO aksesuar_parcalar (aksesuar_id, urun_adi, adet, maliyet, satis_fiyati) VALUES ($1,$2,$3,$4,$5)',
+        [aksesuarId, p.urun_adi, p.adet, emptyToZero(p.maliyet), emptyToZero(p.satis_fiyati)]
+      );
+      // Tamamlandıysa stoktan düş
+      if (durum === 'tamamlandi' && p.urun_adi) {
+        await aksesuarStokAyarla(client, p.urun_adi, p.adet, 1);
       }
     }
 
@@ -134,9 +134,8 @@ router.post('/', async (req, res) => {
     const parcalarResult = await pool.query('SELECT * FROM aksesuar_parcalar WHERE aksesuar_id = $1 ORDER BY id', [aksesuarId]);
     res.status(201).json({ ...full.rows[0], parcalar: parcalarResult.rows });
   } catch (error) {
-    await client.query('ROLLBACK');
-    console.error('Aksesuar oluşturma hatası:', error);
-    res.status(500).json({ message: 'Sunucu hatası' });
+    await client.query('ROLLBACK').catch(() => {});
+    hataYanitla(res, error, 'Aksesuar oluşturma hatası:');
   } finally {
     client.release();
   }
@@ -153,6 +152,7 @@ router.put('/:id', async (req, res) => {
     const eskiDurum = existing.rows[0].durum;
 
     const { ad_soyad, telefon, odeme_sekli, aciklama, durum, odeme_detaylari, kalan_odeme, satis_tarihi, parcalar, indirim } = req.body;
+    const satirlar = (Array.isArray(parcalar) ? parcalar : []).map((p) => ({ ...p, adet: adetCoz(p.adet) })); // doğrulama, hiçbir şey değişmeden ÖNCE
 
     // Eski durum tamamlandi ise stokları geri ekle
     if (eskiDurum === 'tamamlandi') {
@@ -168,19 +168,16 @@ router.put('/:id', async (req, res) => {
     await client.query('DELETE FROM aksesuar_parcalar WHERE aksesuar_id = $1', [req.params.id]);
 
     let toplamMaliyet = 0, brutSatis = 0;
-    if (parcalar && parcalar.length > 0) {
-      for (const p of parcalar) {
-        const adet = emptyToZero(p.adet) || 1;
-        toplamMaliyet += adet * emptyToZero(p.maliyet);
-        brutSatis += adet * emptyToZero(p.satis_fiyati);
-        await client.query(
-          'INSERT INTO aksesuar_parcalar (aksesuar_id, urun_adi, adet, maliyet, satis_fiyati) VALUES ($1,$2,$3,$4,$5)',
-          [req.params.id, p.urun_adi, adet, emptyToZero(p.maliyet), emptyToZero(p.satis_fiyati)]
-        );
-        // Yeni durum tamamlandi ise stoktan düş
-        if (durum === 'tamamlandi' && p.urun_adi) {
-          await aksesuarStokAyarla(client, p.urun_adi, adet, 1);
-        }
+    for (const p of satirlar) {
+      toplamMaliyet += p.adet * emptyToZero(p.maliyet);
+      brutSatis += p.adet * emptyToZero(p.satis_fiyati);
+      await client.query(
+        'INSERT INTO aksesuar_parcalar (aksesuar_id, urun_adi, adet, maliyet, satis_fiyati) VALUES ($1,$2,$3,$4,$5)',
+        [req.params.id, p.urun_adi, p.adet, emptyToZero(p.maliyet), emptyToZero(p.satis_fiyati)]
+      );
+      // Yeni durum tamamlandi ise stoktan düş
+      if (durum === 'tamamlandi' && p.urun_adi) {
+        await aksesuarStokAyarla(client, p.urun_adi, p.adet, 1);
       }
     }
 
@@ -206,9 +203,8 @@ router.put('/:id', async (req, res) => {
     const parcalarResult = await pool.query('SELECT * FROM aksesuar_parcalar WHERE aksesuar_id = $1 ORDER BY id', [req.params.id]);
     res.json({ ...full.rows[0], parcalar: parcalarResult.rows });
   } catch (error) {
-    await client.query('ROLLBACK');
-    console.error('Aksesuar güncelleme hatası:', error);
-    res.status(500).json({ message: 'Sunucu hatası' });
+    await client.query('ROLLBACK').catch(() => {});
+    hataYanitla(res, error, 'Aksesuar güncelleme hatası:');
   } finally {
     client.release();
   }

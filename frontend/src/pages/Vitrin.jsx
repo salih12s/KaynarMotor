@@ -136,6 +136,7 @@ const Vitrin = () => {
   const [videoVar, setVideoVar] = useState(false);
   const [videoSil, setVideoSil] = useState(false);
   const [videoYukleniyor, setVideoYukleniyor] = useState(false);
+  const [videoLimitMb, setVideoLimitMb] = useState(40); // sunucudan öğrenilir (veritabanı paket sınırına bağlı)
 
   // iletişim dialog
   const [iletDlg, setIletDlg] = useState(false);
@@ -191,6 +192,9 @@ const Vitrin = () => {
   useEffect(() => { loadUrunler(); }, [loadUrunler]);
   useEffect(() => { loadIletisim(); }, [loadIletisim]);
   useEffect(() => { loadSegmentler(); }, [loadSegmentler]);
+  useEffect(() => {
+    vitrinService.getYuklemeSiniri().then(res => { if (res.data?.video_mb) setVideoLimitMb(res.data.video_mb); }).catch(() => { /* varsayılan sınırda kalır */ });
+  }, []);
   useEffect(() => {
     setSiraTaslaklari(Object.fromEntries(aktifler.map((urun, index) => [urun.id, String(index + 1)])));
   }, [aktifler]);
@@ -291,8 +295,8 @@ const Vitrin = () => {
     const file = (e.target.files || [])[0];
     e.target.value = '';
     if (!file) return;
-    // 120 MB üstü videolar sunucu limitini aşar; kullanıcıyı uyar
-    if (file.size > 110 * 1024 * 1024) { showSnack('Video çok büyük (en fazla ~110 MB). Lütfen sıkıştırın.', 'warning'); return; }
+    // Sunucunun kabul ettiği sınırı (veritabanı paket sınırı) aşan video yüklenmeden uyarılır
+    if (file.size > videoLimitMb * 1024 * 1024) { showSnack(`Video çok büyük (en fazla ~${videoLimitMb} MB). Lütfen sıkıştırın.`, 'warning'); return; }
     setVideoYukleniyor(true);
     const reader = new FileReader();
     reader.onload = () => { setVideoFile(reader.result); setVideoAdi(file.name); setVideoSil(false); setVideoYukleniyor(false); };
@@ -849,7 +853,7 @@ const Vitrin = () => {
                 </Button>
               )}
               <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
-                MP4/WebM önerilir, en fazla ~110 MB. Yüklenen video ilan detayında oynatılır.
+                MP4/WebM önerilir, en fazla ~{videoLimitMb} MB. Yüklenen video ilan detayında oynatılır.
               </Typography>
             </Box>
 
