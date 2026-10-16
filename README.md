@@ -177,7 +177,7 @@ kim tarafından ne zaman yapıldığını kaydeden aktivite logu.
 |---|---|
 | **Frontend** | React 19, React Router 7, Material UI 7, Axios, date-fns, jsbarcode, qrcode, react-to-print |
 | **Backend** | Node.js 22, Express 4, JSON Web Token, bcryptjs, helmet, express-rate-limit |
-| **Veritabanı** | MariaDB 11 — ORM kullanılmadan, `mysql2` ile doğrudan parametreli SQL (PostgreSQL uyum katmanı: `backend/config/db.js`) |
+| **Veritabanı** | MariaDB 11 — ORM kullanılmadan, `mysql2` ile doğrudan parametreli SQL (PostgreSQL uyum katmanı: `backend/core/db.js`) |
 | **Altyapı** | Hostinger Node.js barındırma (tek uygulama + MariaDB); eski Railway yapılandırması `nixpacks.toml` / `Procfile` içinde duruyor |
 
 ## Mimari
@@ -275,7 +275,7 @@ sequenceDiagram
     actor U as Servis personeli
     participant P as Panel (React)
     participant M as Middleware zinciri
-    participant R as routes/isEmirleri.js
+    participant R as modules/servis/isEmirleri.routes.js
     participant DB as MariaDB
 
     U->>P: Yeni iş emri: müşteri, plaka, parçalar
@@ -327,8 +327,8 @@ flowchart LR
 
 ### Tasarım kararları
 
-- **Şema kod içinde yönetilir.** ORM yoktur. Tablolar ve migration'lar `config/initDb.js` içinde `CREATE TABLE IF NOT EXISTS` ve kademeli `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` ile tanımlanır. Sunucu her açılışta şemayı eksiksiz hâle getirir, bu da deploy'u tek adıma indirir.
-- **Yetkilendirme sunucu tarafındadır.** Arayüzdeki route guard'lar yalnızca gezinmeyi düzenler; asıl kontrol `backend/middleware/yetki.js` içindedir ve API'ye bağlıdır. Hassas alanlar (kâr, alış fiyatı, müşteri bilgisi) yetkisi olmayan kullanıcının yanıtından sunucuda temizlenir. Gizleme arayüzde değil, veri katmanında yapılır.
+- **Şema kod içinde yönetilir.** ORM yoktur. Tablolar ve migration'lar `core/initDb.js` içinde `CREATE TABLE IF NOT EXISTS` ve kademeli `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` ile tanımlanır. Sunucu her açılışta şemayı eksiksiz hâle getirir, bu da deploy'u tek adıma indirir.
+- **Yetkilendirme sunucu tarafındadır.** Arayüzdeki route guard'lar yalnızca gezinmeyi düzenler; asıl kontrol `backend/core/middleware/yetki.js` içindedir ve API'ye bağlıdır. Hassas alanlar (kâr, alış fiyatı, müşteri bilgisi) yetkisi olmayan kullanıcının yanıtından sunucuda temizlenir. Gizleme arayüzde değil, veri katmanında yapılır.
 - **Okuma serbest, yazma yetkili.** Stok gibi birçok ekranın aradığı uçlarda GET istekleri açıktır, POST/PUT/PATCH/DELETE ise modül yetkisine bağlıdır (`yazmaYetkisi`).
 - **Veritabanına dayanıklı başlangıç.** Backend veritabanı henüz hazır değilken de ayağa kalkar (`/api/health` yanıt verir) ve bağlantıyı artan gecikmelerle yeniden dener. Bu, barındırmadaki soğuk başlatma senaryolarına karşı dayanıklılık sağlar.
 - **Para ve stok işlemleri transaction içindedir.** Çok adımlı yazma işlemleri (iş emri + parçalar + stok düşümü) tek transaction'da yürür. Fiş numarası üretimi advisory lock ile serileştirilir.
@@ -409,24 +409,44 @@ ve TC bilgileri uydurmadır.
 KaynarMotorCRM/
 ├── backend/
 │   ├── server.js                # Express app, CORS, route mount, DB init
-│   ├── middleware/
-│   │   ├── auth.js              # JWT doğrulama, admin kontrolü
-│   │   ├── yetki.js             # Modül ve rol bazlı yetkilendirme
-│   │   └── rateLimit.js         # Kimlik doğrulama uçlarında hız sınırlama
-│   ├── config/
+│   ├── core/                    # Altyapı: hiçbir iş alanına bağlı değil
 │   │   ├── db.js                # MariaDB bağlantı havuzu (node-pg uyumlu query/connect arayüzü)
 │   │   ├── initDb.js            # Şema, migration'lar ve index'ler
+│   │   ├── sqlParams.js         # $1 parametreli SQL → MariaDB uyumu
+│   │   ├── dogrula.js           # İstek doğrulama (adet, şifre, hata yanıtı)
 │   │   ├── activityLogger.js    # Aktivite/audit kaydı
-│   │   └── musteriHelper.js     # Otomatik müşteri eşleştirme
-│   ├── routes/                  # 13 route dosyası
-│   └── scripts/                 # Tek seferlik veri aktarım script'leri
+│   │   ├── denetimKaydi.js      # Yazma isteklerini otomatik günlüğe yazan ara katman
+│   │   └── middleware/          # auth (JWT), yetki (modül/rol), rateLimit, idDogrula
+│   ├── shared/                  # Modüller arası ortak iş yardımcıları (stok hareketi, alt kayıtlar)
+│   ├── modules/                 # İş alanları; ilişkili uçlar aynı klasörde
+│   │   ├── auth/                # giriş, kayıt, kullanıcı ve yetki yönetimi
+│   │   ├── musteriler/          # müşteri uçları + otomatik müşteri eşleştirme
+│   │   ├── servis/              # iş emirleri + servis geçmişi (QR)
+│   │   ├── aksesuar/            # aksesuar satışı + aksesuar stoğu
+│   │   ├── yedek-parca/         # yedek parça satışı + yedek parça stoğu
+│   │   ├── motor/               # ikinci el motor + satış belgeleri
+│   │   ├── eticaret/            # pazaryeri satışları + komisyon hesabı
+│   │   ├── vitrin/              # herkese açık vitrin ve yönetimi
+│   │   └── raporlar/            # raporlar + veresiye
+│   ├── tests/                   # unit / integration / api / parity / smoke
+│   └── scripts/                 # Tek seferlik veri aktarım script'leri (--onayliyorum ister)
 ├── frontend/
 │   └── src/
-│       ├── components/          # Layout — role göre şekillenen menü
-│       ├── context/             # AuthContext, ThemeContext
-│       ├── pages/               # 23 sayfa
-│       ├── services/api.js      # Axios katmanı ve oturum yönetimi
-│       └── App.jsx              # Route tanımları ve guard'lar
+│       ├── app/                 # App (route tanımları ve guard'lar), Layout, ThemeContext
+│       ├── features/            # Her iş alanı kendi ekranları, API çağrıları ve yardımcılarıyla
+│       │   ├── auth/            # Login, Kullanıcılar, Yetkilendirme, AuthContext, authApi
+│       │   ├── musteriler/
+│       │   ├── servis/          # İş emirleri, form, detay, servis geçmişi, yazdırma
+│       │   ├── aksesuar/        # Satış + stok
+│       │   ├── yedek-parca/     # Satış + stok
+│       │   ├── motor/           # İkinci el, motor stok, detay, belge arşivi, satış belgeleri
+│       │   ├── eticaret/        # E-ticaret ekranı + komisyon hesabı (testli)
+│       │   ├── vitrin/          # yonetim/ (admin) ve magaza/ (herkese açık)
+│       │   ├── taksit/
+│       │   └── raporlar/        # Raporlar + Veresiye
+│       └── shared/
+│           ├── api/istemci.js   # Axios örneği ve oturum yönetimi (özellik API'leri bunu kullanır)
+│           └── utils/           # htmlKacis, tarih, sonIstek
 └── docs/
     ├── demo/                    # Uçtan uca demo kayıtları (GIF)
     └── screenshots/             # Ekran görüntüleri

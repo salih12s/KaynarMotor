@@ -1,0 +1,706 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { sonIstek } from '../../shared/utils/sonIstek';
+import { bugunYerel } from '../../shared/utils/tarih';
+import {
+  Box, Paper, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
+  Button, IconButton, TextField, Dialog, DialogTitle, DialogContent, DialogActions, Alert, Grid, Chip, InputAdornment, Divider, MenuItem, Checkbox, FormControlLabel, Autocomplete, useTheme, useMediaQuery
+} from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import SearchIcon from '@mui/icons-material/Search';
+import ViewIcon from '@mui/icons-material/Visibility';
+import CloseIcon from '@mui/icons-material/Close';
+import PrintIcon from '@mui/icons-material/Print';
+import FileDownloadIcon from '@mui/icons-material/FileDownload';
+import { useReactToPrint } from 'react-to-print';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { ikinciElMotorService } from './motorApi';
+import { musteriService } from '../musteriler/musteriApi';
+import { authService } from '../auth/authApi';
+import { BelgeBolumu, BekleyenBelgeler, bekleyenBelgeleriYukle } from './SatisBelgeleri';
+import { useAuth } from '../auth/AuthContext';
+
+// Hızlı yazarken eski aramanın yanıtı yeniyi ezmesin
+const sonAra = sonIstek();
+
+const IkinciElMotor = () => {
+  const isMobile = useMediaQuery(useTheme().breakpoints.down('sm'));
+  const { user } = useAuth();
+  const isAdmin = user?.rol === 'admin';
+  // Motor Satış yetkilisi satış/müşteri/geçmişi/alış fiyatını görür ve düzenler; yalnızca kâr admindedir
+  const canAlis = isAdmin || !!user?.alis_fiyati_gor || !!user?.motor_satis_yetkisi;
+  const canKar = isAdmin; // kâr ve yatırımcı payı yalnızca admin'e açık
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [motorlar, setMotorlar] = useState([]);
+  const [dialog, setDialog] = useState({ open: false, data: null });
+  const [detayModal, setDetayModal] = useState({ open: false, data: null });
+  const printRef = useRef();
+  const [formData, setFormData] = useState({
+    plaka: '', marka: '', model: '', km: '', yil: '',
+    alis_fiyati: '', satis_fiyati: '', noter_alis: '', noter_satis: '', masraflar: '',
+    alici_adi: '', alici_tc: '', alici_telefon: '', alici_adres: '', aciklama: '',
+    satici_adi: '', satici_tc: '',
+    komisyoncu_adi: '', komisyoncu_telefon: '', komisyoncu_tutari: '',
+    durum: 'stokta', odeme_sekli: 'nakit', stok_tipi: 'sahip',
+    kalan_odeme: '', odeme_tamamlandi: true, fatura_kesildi: false, yevmiye_no: '',
+    satis_tarihi: bugunYerel(),
+    yatirimci_id: '', yatirimci_kar: '', yatirimci_adi: ''
+  });
+  const [error, setError] = useState('');
+  // Yeni satışta seçilen, kayıt sonrası yüklenecek belgeler
+  const [bekleyenBelgeler, setBekleyenBelgeler] = useState([]);
+  const [kaydediliyor, setKaydediliyor] = useState(false);
+  const [stats, setStats] = useState({});
+  const [stokMotorlar, setStokMotorlar] = useState([]);
+  const [selectedStokId, setSelectedStokId] = useState(null);
+  const [musteriOptions, setMusteriOptions] = useState([]);
+  const [yatirimciMap, setYatirimciMap] = useState({}); // id -> ad_soyad (ibarede isim göstermek için)
+
+  const searchMusteri = async (query) => {
+    if (!query || query.length < 2) { setMusteriOptions([]); return; }
+    try { const res = await sonAra(musteriService.search(query)); if (res) setMusteriOptions(res.data); } catch { setMusteriOptions([]); }
+  };
+
+  const loadData = async () => {
+    try {
+      const [motorRes, statsRes] = await Promise.all([ikinciElMotorService.getAll(), ikinciElMotorService.getStats()]);
+      const allMotors = motorRes.data;
+      const satisMotorlar = allMotors.filter(m => m.durum === 'tamamlandi');
+      setMotorlar(satisMotorlar);
+      setStats(statsRes.data);
+      setStokMotorlar(allMotors.filter(m => m.durum === 'stokta' || m.durum === 'kapora'));
+    } catch {}
+  };
+
+  useEffect(() => { loadData(); }, []);
+
+  // Yatırımcı isimlerini yükle (yetki yoksa sessiz geç — ibare yine "Yatırımcı Motoru" gösterir)
+  useEffect(() => {
+    authService.getYatirimcilar()
+      .then(res => { const map = {}; res.data.forEach(y => { map[y.id] = y.ad_soyad; }); setYatirimciMap(map); })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    const id = location.state?.openDetailId;
+    if (!id) return;
+    (async () => {
+      try { const res = await ikinciElMotorService.getById(id); setDetayModal({ open: true, data: res.data }); } catch {}
+    })();
+    navigate(location.pathname, { replace: true, state: {} });
+  }, [location.state]);
+
+  const openDialog = (motor = null) => {
+    setError('');
+    setSelectedStokId(null);
+    setBekleyenBelgeler([]);
+    setFormData(motor ? {
+      plaka: motor.plaka || '', marka: motor.marka || '', model: motor.model || '',
+      km: motor.km || '', yil: motor.yil || '',
+      alis_fiyati: motor.alis_fiyati || '', satis_fiyati: motor.satis_fiyati || '',
+      noter_alis: motor.noter_alis || '', noter_satis: motor.noter_satis || '',
+      masraflar: motor.masraflar || '',
+      alici_adi: motor.alici_adi || '', alici_tc: motor.alici_tc || '',
+      alici_telefon: motor.alici_telefon || '', alici_adres: motor.alici_adres || '',
+      aciklama: motor.aciklama || '',
+      satici_adi: motor.satici_adi || '', satici_tc: motor.satici_tc || '',
+      komisyoncu_adi: motor.komisyoncu_adi || '', komisyoncu_telefon: motor.komisyoncu_telefon || '', komisyoncu_tutari: motor.komisyoncu_tutari || '',
+      durum: motor.durum || 'tamamlandi', odeme_sekli: motor.odeme_sekli || 'nakit',
+      kalan_odeme: motor.kalan_odeme || '', odeme_tamamlandi: !parseFloat(motor.kalan_odeme || 0),
+      fatura_kesildi: motor.fatura_kesildi || false,
+      yevmiye_no: motor.yevmiye_no || '',
+      tarih: motor.tarih ? new Date(motor.tarih).toISOString().split('T')[0] : '',
+      satis_tarihi: motor.satis_tarihi ? new Date(motor.satis_tarihi).toISOString().split('T')[0] : '',
+      yatirimci_id: motor.yatirimci_id || '', yatirimci_kar: motor.yatirimci_kar || '', yatirimci_adi: motor.yatirimci_adi || ''
+    } : {
+      plaka: '', marka: '', model: '', km: '', yil: '',
+      alis_fiyati: '', satis_fiyati: '', noter_alis: '', noter_satis: '', masraflar: '',
+      alici_adi: '', alici_tc: '', alici_telefon: '', alici_adres: '', aciklama: '',
+      satici_adi: '', satici_tc: '',
+      komisyoncu_adi: '', komisyoncu_telefon: '', komisyoncu_tutari: '',
+      durum: 'tamamlandi', odeme_sekli: 'nakit',
+      kalan_odeme: '', odeme_tamamlandi: true, fatura_kesildi: false, yevmiye_no: '',
+      tarih: '', satis_tarihi: bugunYerel(),
+      yatirimci_id: '', yatirimci_kar: '', yatirimci_adi: ''
+    });
+    setDialog({ open: true, data: motor });
+  };
+
+  const handleSave = async () => {
+    setError('');
+    setKaydediliyor(true);
+    try {
+      const payload = { ...formData, kalan_odeme: formData.odeme_tamamlandi ? 0 : (formData.kalan_odeme || 0) };
+      delete payload.odeme_tamamlandi;
+      let motorId;
+      if (dialog.data) {
+        await ikinciElMotorService.update(dialog.data.id, payload);
+        motorId = dialog.data.id;
+      } else if (selectedStokId) {
+        // Stoktan seçilen motor - güncelle ve eski_kayit kaldır
+        await ikinciElMotorService.update(selectedStokId, { ...payload, eski_kayit: false });
+        motorId = selectedStokId;
+      } else {
+        const res = await ikinciElMotorService.create(payload);
+        motorId = res.data.id;
+      }
+      // Satış kaydedildi; diyalogda seçilen belgeler şimdi bu satışa yüklenir
+      const belgeHatalari = bekleyenBelgeler.length ? await bekleyenBelgeleriYukle(motorId, bekleyenBelgeler) : [];
+      setDialog({ open: false, data: null });
+      setSelectedStokId(null);
+      setBekleyenBelgeler([]);
+      loadData();
+      if (belgeHatalari.length) {
+        alert(`Satış kaydedildi ancak şu belgeler yüklenemedi:\n${belgeHatalari.join('\n')}\n\nSatışın detayından tekrar ekleyebilirsiniz.`);
+      }
+    } catch (err) { setError(err.response?.data?.message || 'Hata oluştu'); }
+    setKaydediliyor(false);
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Bu kaydı silmek istediğinizden emin misiniz?')) return;
+    try { await ikinciElMotorService.delete(id); loadData(); } catch (err) { alert(err.response?.data?.message || 'Hata'); }
+  };
+
+  const f = formData;
+  const canliKar = (Number(f.satis_fiyati) || 0) - (Number(f.alis_fiyati) || 0) - (Number(f.masraflar) || 0) - (Number(f.komisyoncu_tutari) || 0);
+
+  // Telefon numarasına göre müşteri bilgilerini otomatik doldur
+  const autofillByPhone = async (telefon, target) => {
+    const tel = (telefon || '').replace(/\D/g, '');
+    if (!tel || tel.length < 7) return;
+    try {
+      const res = await musteriService.searchByPhone(tel);
+      const m = res.data;
+      if (!m) return;
+      setFormData(prev => {
+        if (target === 'alici') {
+          return { ...prev,
+            alici_adi: prev.alici_adi || m.ad_soyad || '',
+            alici_adres: prev.alici_adres || m.adres || ''
+          };
+        }
+        if (target === 'komisyoncu') {
+          return { ...prev, komisyoncu_adi: prev.komisyoncu_adi || m.ad_soyad || '' };
+        }
+        return prev;
+      });
+    } catch {}
+  };
+
+  const [search, setSearch] = useState('');
+  const [tarihBaslangic, setTarihBaslangic] = useState('');
+  const [tarihBitis, setTarihBitis] = useState('');
+  const filteredMotorlar = motorlar.filter(m => {
+    // Tarih filtresi
+    if (tarihBaslangic) {
+      const mTarih = (m.satis_tarihi || m.tarih) ? (m.satis_tarihi || m.tarih).split('T')[0] : '';
+      if (mTarih < tarihBaslangic) return false;
+    }
+    if (tarihBitis) {
+      const mTarih = (m.satis_tarihi || m.tarih) ? (m.satis_tarihi || m.tarih).split('T')[0] : '';
+      if (mTarih > tarihBitis) return false;
+    }
+    return (m.plaka || '').toLowerCase().includes(search.toLowerCase()) ||
+      (m.marka || '').toLowerCase().includes(search.toLowerCase()) ||
+      (m.model || '').toLowerCase().includes(search.toLowerCase()) ||
+      (m.alici_adi || '').toLowerCase().includes(search.toLowerCase()) ||
+      (m.satici_adi || '').toLowerCase().includes(search.toLowerCase());
+  }).sort((a, b) => {
+    const da = (a.satis_tarihi || a.tarih) ? new Date(a.satis_tarihi || a.tarih).getTime() : 0;
+    const db = (b.satis_tarihi || b.tarih) ? new Date(b.satis_tarihi || b.tarih).getTime() : 0;
+    return db - da;
+  });
+
+  const statChips = [
+    { label: `Toplam: ${motorlar.length}`, color: '#C62828', bg: '#ffebee' },
+    { label: `Satış: ₺${parseFloat(stats.toplam_satis_tutari || 0).toLocaleString('tr-TR')}`, color: '#C62828', bg: '#ffebee' },
+    ...(canKar ? [{ label: `Kâr: ₺${parseFloat(stats.toplam_kar || 0).toLocaleString('tr-TR')}`, color: '#C62828', bg: '#ffebee' }] : []),
+  ];
+
+  const exportToExcel = () => {
+    const formatDate = (d) => d ? new Date(d).toLocaleDateString('tr-TR') : '';
+    const num = (v) => parseFloat(v || 0).toLocaleString('tr-TR');
+    const headers = ['Plaka', 'Marka', 'Model', 'Yıl', 'KM',
+      ...(canAlis ? ['Alım (₺)'] : []), 'Satış (₺)', 'Noter Alış (₺)', 'Noter Satış (₺)',
+      ...(canKar ? ['Kâr (₺)'] : []), 'Satıcı', 'Alıcı', 'Alıcı Tel', 'Ödeme Şekli', 'Yevmiye No', 'Satış Tarihi'];
+    const escape = (v) => String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const rowsHtml = filteredMotorlar.map(m => {
+      const cells = [
+        m.plaka || '', m.marka || '', m.model || '', m.yil || '',
+        m.km ? Number(m.km).toLocaleString('tr-TR') : '',
+        ...(canAlis ? [num(m.alis_fiyati)] : []), num(m.satis_fiyati), num(m.noter_alis), num(m.noter_satis),
+        ...(canKar ? [num(m.kar)] : []),
+        m.satici_adi || '', m.alici_adi || '', m.alici_telefon || '',
+        m.odeme_sekli || '', m.yevmiye_no || '', formatDate(m.satis_tarihi || m.tarih)
+      ];
+      return '<tr>' + cells.map(c => `<td style="border:1px solid #555;padding:8px;font-size:12px;">${escape(c)}</td>`).join('') + '</tr>';
+    }).join('');
+    const headerHtml = '<tr>' + headers.map(h => `<th style="border:1px solid #333;background:#C62828;color:#fff;padding:10px;font-size:13px;text-align:center;">${escape(h)}</th>`).join('') + '</tr>';
+    const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>Motor Satış</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table style="border-collapse:collapse;font-family:Arial;">${headerHtml}${rowsHtml}</table></body></html>`;
+    const blob = new Blob(['\ufeff' + html], { type: 'application/vnd.ms-excel;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const today = bugunYerel();
+    a.href = url; a.download = `Motor_Satis_${today}.xls`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  return (
+    <Box>
+      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2, alignItems: 'center' }}>
+        {statChips.map((c, i) => (
+          <Chip key={i} label={c.label} sx={{ bgcolor: c.bg, color: c.color, fontWeight: 'bold', fontSize: '0.8rem', borderLeft: `4px solid ${c.color}` }} />
+        ))}
+        <Box sx={{ flexGrow: 1 }} />
+        <Button variant="outlined" size="large" startIcon={<FileDownloadIcon />} onClick={exportToExcel} sx={{ mr: 1, color: '#1B5E20', borderColor: '#1B5E20', '&:hover': { borderColor: '#1B5E20', bgcolor: '#E8F5E9' } }}>Excel'e Aktar</Button>
+        <Button variant="contained" size="large" startIcon={<AddIcon />} onClick={() => openDialog()} sx={{ bgcolor: '#C62828', '&:hover': { bgcolor: '#b71c1c' } }}>Motor Satış</Button>
+      </Box>
+
+      <Paper sx={{ p: 2, mb: 2 }}>
+        <Grid container spacing={2} alignItems="center">
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <TextField size="small" fullWidth placeholder="Plaka, marka, model veya satıcı adı ile ara..." value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon /></InputAdornment> }} />
+          </Grid>
+          <Grid size={{ xs: 6, sm: 3 }}>
+            <TextField size="small" fullWidth label="Başlangıç" type="date" value={tarihBaslangic}
+              onChange={(e) => setTarihBaslangic(e.target.value)} InputLabelProps={{ shrink: true }} />
+          </Grid>
+          <Grid size={{ xs: 6, sm: 3 }}>
+            <TextField size="small" fullWidth label="Bitiş" type="date" value={tarihBitis}
+              onChange={(e) => setTarihBitis(e.target.value)} InputLabelProps={{ shrink: true }} />
+          </Grid>
+        </Grid>
+      </Paper>
+
+      {isMobile ? (
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+          {filteredMotorlar.length === 0 && <Alert severity="info">Kayıt yok</Alert>}
+          {filteredMotorlar.map(m => {
+            const formatDate = (d) => d ? new Date(d).toLocaleDateString('tr-TR') : '-';
+            return (
+              <Paper key={m.id} sx={{ p: 1.5 }} onClick={async () => { try { const res = await ikinciElMotorService.getById(m.id); setDetayModal({ open: true, data: res.data }); } catch {} }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
+                  <Typography variant="subtitle2" fontWeight="bold">{m.plaka}</Typography>
+                  <Typography variant="caption" color="text.secondary">{formatDate(m.satis_tarihi || m.tarih)}</Typography>
+                </Box>
+                <Typography variant="body2">{m.marka} {m.model} {m.yil ? `(${m.yil})` : ''}</Typography>
+                <Typography variant="body2" color="text.secondary">{m.alici_adi || '-'} • {m.km ? Number(m.km).toLocaleString('tr-TR') + ' km' : ''}</Typography>
+                <Box sx={{ display: 'flex', gap: 2, mt: 0.5 }}>
+                  {canAlis && <Typography variant="body2">Alım: <strong>₺{parseFloat(m.alis_fiyati || 0).toLocaleString('tr-TR')}</strong></Typography>}
+                <Typography variant="body2">Satış: <strong>₺{parseFloat(m.satis_fiyati || 0).toLocaleString('tr-TR')}</strong></Typography>
+              </Box>
+              <Box sx={{ display: 'flex', gap: 2, mt: 0.5 }}>
+                <Typography variant="body2">Noter Alış: <strong>₺{parseFloat(m.noter_alis || 0).toLocaleString('tr-TR')}</strong></Typography>
+                <Typography variant="body2">Noter Satış: <strong>₺{parseFloat(m.noter_satis || 0).toLocaleString('tr-TR')}</strong></Typography>
+                {canKar && <Typography variant="body2" sx={{ color: parseFloat(m.kar || 0) >= 0 ? 'green' : 'red' }}>Kâr: <strong>₺{parseFloat(m.kar || 0).toLocaleString('tr-TR')}</strong></Typography>}
+                </Box>
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 0.5 }} onClick={e => e.stopPropagation()}>
+                  <IconButton size="small" color="info" onClick={() => openDialog(m)}><EditIcon /></IconButton>
+                  {isAdmin && <IconButton size="small" color="error" onClick={() => handleDelete(m.id)}><DeleteIcon /></IconButton>}
+                </Box>
+              </Paper>
+            );
+          })}
+        </Box>
+      ) : (
+      <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
+        <Table size="small" sx={{ '& td, & th': { px: 0.75, py: 0.6, fontSize: '0.78rem', whiteSpace: 'nowrap' } }}>
+          <TableHead>
+            <TableRow sx={{ bgcolor: '#C62828' }}>
+              {['Plaka', 'Marka', 'Model', 'Yıl', 'KM',
+                ...(canAlis ? ['Alım (₺)'] : []), 'Satış (₺)', 'Noter Alış (₺)', 'Noter Satış (₺)',
+                ...(canKar ? ['Kâr (₺)'] : []), 'Alıcı', 'Satış Tarihi', 'İşlemler'].map(h => (
+                <TableCell key={h} sx={{ color: 'white', fontWeight: 'bold' }}>{h}</TableCell>
+              ))}
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {filteredMotorlar.map(m => {
+              const formatDate = (d) => d ? new Date(d).toLocaleDateString('tr-TR') : '-';
+              return (
+                <TableRow key={m.id} hover>
+                  <TableCell><strong>{m.plaka}</strong></TableCell>
+                  <TableCell>{m.marka || '-'}</TableCell>
+                  <TableCell>{m.model || '-'}</TableCell>
+                  <TableCell>{m.yil || '-'}</TableCell>
+                  <TableCell>{m.km ? Number(m.km).toLocaleString('tr-TR') : '-'}</TableCell>
+                  {canAlis && <TableCell>{parseFloat(m.alis_fiyati || 0).toLocaleString('tr-TR')}</TableCell>}
+                  <TableCell>{parseFloat(m.satis_fiyati || 0).toLocaleString('tr-TR')}</TableCell>
+                  <TableCell>{parseFloat(m.noter_alis || 0).toLocaleString('tr-TR')}</TableCell>
+                  <TableCell>{parseFloat(m.noter_satis || 0).toLocaleString('tr-TR')}</TableCell>
+                  {canKar && <TableCell sx={{ fontWeight: 'bold', color: parseFloat(m.kar || 0) >= 0 ? 'green' : 'red' }}>{parseFloat(m.kar || 0).toLocaleString('tr-TR')}</TableCell>}
+                  <TableCell>{m.alici_adi || '-'}</TableCell>
+                  <TableCell>{formatDate(m.satis_tarihi || m.tarih)}</TableCell>
+                  <TableCell>
+                    <IconButton size="small" color="primary" onClick={async () => { try { const res = await ikinciElMotorService.getById(m.id); setDetayModal({ open: true, data: res.data }); } catch {} }}><ViewIcon /></IconButton>
+                    <IconButton size="small" color="info" onClick={() => openDialog(m)}><EditIcon /></IconButton>
+                    {isAdmin && <IconButton size="small" color="error" onClick={() => handleDelete(m.id)}><DeleteIcon /></IconButton>}
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+            {filteredMotorlar.length === 0 && <TableRow><TableCell colSpan={11 + (canAlis ? 1 : 0) + (canKar ? 1 : 0)} align="center">Kayıt yok</TableCell></TableRow>}
+          </TableBody>
+        </Table>
+      </TableContainer>
+      )}
+
+      <Dialog open={dialog.open} onClose={() => setDialog({ open: false, data: null })} maxWidth="md" fullWidth fullScreen={isMobile}>
+        <DialogTitle>{dialog.data ? 'Motor Düzenle' : 'Yeni Motor Satış'}</DialogTitle>
+        <DialogContent>
+          {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+          {f.yatirimci_id && (
+            <Alert severity="info" icon={false} sx={{ mb: 2, bgcolor: '#e3f2fd', border: '1px solid #90caf9' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                <Chip label="YATIRIMCI MOTORU" color="primary" size="small" sx={{ fontWeight: 700 }} />
+                <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                  Bu motor bir yatırımcıya ait{(yatirimciMap[f.yatirimci_id] || f.yatirimci_adi) ? `: ${yatirimciMap[f.yatirimci_id] || f.yatirimci_adi}` : ''}.{canKar ? ' Satışta yatırımcı kârını aşağıdan girin.' : ''}
+                </Typography>
+              </Box>
+            </Alert>
+          )}
+          <Typography variant="subtitle1" fontWeight="bold" sx={{ mt: 2, mb: 1 }}>Motor Bilgileri</Typography>
+          <Grid container spacing={2}>
+            <Grid size={{ xs: 12, md: 4 }}>
+              <Autocomplete
+                freeSolo
+                options={stokMotorlar.map(m => m.plaka)}
+                value={f.plaka}
+                onInputChange={(e, val) => setFormData({ ...f, plaka: (val || '').toUpperCase() })}
+                onChange={(e, val) => {
+                  if (val) {
+                    const motor = stokMotorlar.find(m => m.plaka === val);
+                    if (motor) {
+                      setSelectedStokId(motor.id);
+                      setFormData({
+                        ...f,
+                        plaka: motor.plaka, marka: motor.marka || '', model: motor.model || '',
+                        km: motor.km || '', yil: motor.yil || '',
+                        alis_fiyati: motor.alis_fiyati || '', noter_alis: motor.noter_alis || '',
+                        satici_adi: motor.satici_adi || '', satici_tc: motor.satici_tc || '',
+                        tarih: motor.tarih ? new Date(motor.tarih).toISOString().split('T')[0] : '',
+                        durum: 'tamamlandi',
+                        yatirimci_id: motor.yatirimci_id || '', yatirimci_kar: motor.yatirimci_kar || '',
+                        yatirimci_adi: motor.yatirimci_adi || ''
+                      });
+                    } else {
+                      setSelectedStokId(null);
+                    }
+                  }
+                }}
+                renderInput={(params) => <TextField {...params} fullWidth label="Plaka" required />}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, md: 4 }}><TextField fullWidth label="Marka" value={f.marka} onChange={e => setFormData({ ...f, marka: e.target.value })} required /></Grid>
+            <Grid size={{ xs: 12, md: 4 }}><TextField fullWidth label="Model" value={f.model} onChange={e => setFormData({ ...f, model: e.target.value })} /></Grid>
+            <Grid size={{ xs: 12, md: 3 }}><TextField fullWidth label="Yıl" type="number" value={f.yil} onChange={e => setFormData({ ...f, yil: e.target.value })} /></Grid>
+            <Grid size={{ xs: 12, md: 3 }}><TextField fullWidth label="KM" type="number" value={f.km} onChange={e => setFormData({ ...f, km: e.target.value })} /></Grid>
+            <Grid size={{ xs: 12, md: 3 }}>
+              <TextField select fullWidth label="Durum" value={f.durum} onChange={e => setFormData({ ...f, durum: e.target.value })}
+                sx={{ '& .MuiInputBase-root': { bgcolor: f.durum === 'tamamlandi' ? '#e8f5e9' : f.durum === 'kapora' ? '#fff3e0' : f.durum === 'devir_bekliyor' ? '#f3e5f5' : f.durum === 'perte' ? '#ffebee' : 'inherit' } }}>
+                <MenuItem value="stokta">Stokta</MenuItem>
+                <MenuItem value="kapora">Kapora</MenuItem>
+                <MenuItem value="devir_bekliyor">Devir Bekliyor</MenuItem>
+                <MenuItem value="tamamlandi">Tamamlandı</MenuItem>
+                <MenuItem value="perte">Perte</MenuItem>
+              </TextField>
+            </Grid>
+            <Grid size={{ xs: 12, md: 4 }}>
+              <TextField select fullWidth label="Ödeme Şekli" value={f.odeme_sekli} onChange={e => setFormData({ ...f, odeme_sekli: e.target.value })}>
+                <MenuItem value="nakit">Nakit</MenuItem>
+                <MenuItem value="kredi_karti">Kredi Kartı</MenuItem>
+                <MenuItem value="havale">Havale/EFT</MenuItem>
+                <MenuItem value="taksit">Taksit</MenuItem>
+              </TextField>
+            </Grid>
+            <Grid size={{ xs: 12, md: 4 }}>
+              <TextField fullWidth label="Alım Tarihi" type="date" value={f.tarih} onChange={e => setFormData({ ...f, tarih: e.target.value })} InputLabelProps={{ shrink: true }} />
+            </Grid>
+            <Grid size={{ xs: 12, md: 4 }}>
+              <TextField fullWidth label="Satış Tarihi" type="date" value={f.satis_tarihi} onChange={e => setFormData({ ...f, satis_tarihi: e.target.value })} InputLabelProps={{ shrink: true }} />
+            </Grid>
+            <Grid size={{ xs: 12, md: 4 }}>
+              <TextField fullWidth label="Yevmiye No" value={f.yevmiye_no} onChange={e => setFormData({ ...f, yevmiye_no: e.target.value })} />
+            </Grid>
+            <Grid size={{ xs: 12, md: 4 }}>
+              <FormControlLabel control={<Checkbox checked={f.fatura_kesildi} onChange={e => setFormData({ ...f, fatura_kesildi: e.target.checked })} />} label="Fatura Kesildi" />
+            </Grid>
+          </Grid>
+
+          <Typography variant="subtitle1" fontWeight="bold" sx={{ mt: 3, mb: 1 }}>Fiyat Bilgileri</Typography>
+          <Grid container spacing={2}>
+            {canAlis && <Grid size={{ xs: 12, md: 4 }}><TextField fullWidth label="Alış Fiyatı (₺)" type="number" value={f.alis_fiyati} onChange={e => setFormData({ ...f, alis_fiyati: e.target.value })} /></Grid>}
+            <Grid size={{ xs: 12, md: 4 }}><TextField fullWidth label="Satış Fiyatı (₺)" type="number" value={f.satis_fiyati} onChange={e => setFormData({ ...f, satis_fiyati: e.target.value })} /></Grid>
+            <Grid size={{ xs: 12, md: 4 }}><TextField fullWidth label="Masraflar (₺)" type="number" value={f.masraflar} onChange={e => setFormData({ ...f, masraflar: e.target.value })} helperText="Tamir, bakım, sigorta vb." /></Grid>
+            <Grid size={{ xs: 12, md: 6 }}><TextField fullWidth label="Noter Alış (₺)" type="number" value={f.noter_alis} onChange={e => setFormData({ ...f, noter_alis: e.target.value })} /></Grid>
+            <Grid size={{ xs: 12, md: 6 }}><TextField fullWidth label="Noter Satış (₺)" type="number" value={f.noter_satis} onChange={e => setFormData({ ...f, noter_satis: e.target.value })} /></Grid>
+            {f.yatirimci_id && canKar && (
+              <Grid size={{ xs: 12, md: 6 }}>
+                <TextField fullWidth label="Yatırımcı Kârı (₺)" type="number" value={f.yatirimci_kar}
+                  onChange={e => setFormData({ ...f, yatirimci_kar: e.target.value })}
+                  helperText="Yatırımcıya verilecek tutar; kalanı işletme kârıdır."
+                  sx={{ '& .MuiInputBase-root': { bgcolor: '#e3f2fd' } }}
+                  InputProps={{ startAdornment: <InputAdornment position="start">₺</InputAdornment> }} />
+              </Grid>
+            )}
+          </Grid>
+          {canKar && (
+            <Paper sx={{ p: 2, mt: 2, bgcolor: canliKar >= 0 ? '#e8f5e9' : '#ffebee', textAlign: 'center' }}>
+              <Typography variant="h6" sx={{ color: canliKar >= 0 ? 'green' : 'red' }}>
+                Net Kâr: <strong>{canliKar.toLocaleString('tr-TR')} ₺</strong>
+              </Typography>
+              <Typography variant="caption" color="text.secondary">Kâr = Satış - (Alış + Masraflar + Komisyoncu Tutarı)</Typography>
+              {f.yatirimci_id ? (
+                <Box sx={{ mt: 1, pt: 1, borderTop: '1px dashed #bbb', display: 'flex', justifyContent: 'center', gap: 3, flexWrap: 'wrap' }}>
+                  <Typography variant="body2">Yatırımcı Kârı: <strong style={{ color: '#1565C0' }}>{(Number(f.yatirimci_kar) || 0).toLocaleString('tr-TR')} ₺</strong></Typography>
+                  <Typography variant="body2">Benim Kârım: <strong style={{ color: '#2e7d32' }}>{(canliKar - (Number(f.yatirimci_kar) || 0)).toLocaleString('tr-TR')} ₺</strong></Typography>
+                </Box>
+              ) : null}
+            </Paper>
+          )}
+
+          <Typography variant="subtitle1" fontWeight="bold" sx={{ mt: 3, mb: 1 }}>Satıcı Bilgileri</Typography>
+          <Grid container spacing={2}>
+            <Grid size={{ xs: 12, md: 6 }}>
+              <Autocomplete freeSolo options={musteriOptions}
+                getOptionLabel={(o) => typeof o === 'string' ? o : o.ad_soyad}
+                inputValue={f.satici_adi} onInputChange={(e, val) => { setFormData({ ...f, satici_adi: val }); searchMusteri(val); }}
+                onChange={(e, val) => { if (val && typeof val === 'object') { setFormData({ ...f, satici_adi: val.ad_soyad }); } }}
+                renderInput={(params) => <TextField {...params} fullWidth label="Satıcı Ad Soyad" />}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, md: 6 }}><TextField fullWidth label="Satıcı TC No" value={f.satici_tc} onChange={e => setFormData({ ...f, satici_tc: e.target.value })} /></Grid>
+          </Grid>
+
+          <Typography variant="subtitle1" fontWeight="bold" sx={{ mt: 3, mb: 1 }}>Alıcı Bilgileri</Typography>
+          <Grid container spacing={2}>
+            <Grid size={{ xs: 12, md: 3 }}>
+              <Autocomplete freeSolo options={musteriOptions}
+                getOptionLabel={(o) => typeof o === 'string' ? o : o.ad_soyad}
+                inputValue={f.alici_adi} onInputChange={(e, val) => { setFormData({ ...f, alici_adi: val }); searchMusteri(val); }}
+                onChange={(e, val) => { if (val && typeof val === 'object') { setFormData({ ...f, alici_adi: val.ad_soyad, alici_telefon: val.telefon || f.alici_telefon, alici_adres: val.adres || f.alici_adres }); } }}
+                renderInput={(params) => <TextField {...params} fullWidth label="Ad Soyad" />}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, md: 3 }}><TextField fullWidth label="TC No" value={f.alici_tc} onChange={e => setFormData({ ...f, alici_tc: e.target.value })} /></Grid>
+            <Grid size={{ xs: 12, md: 3 }}><TextField fullWidth label="Telefon" value={f.alici_telefon}
+              onChange={e => {
+                const v = e.target.value;
+                setFormData({ ...f, alici_telefon: v });
+                if ((v || '').replace(/\D/g, '').length >= 10) autofillByPhone(v, 'alici');
+              }}
+              onBlur={e => autofillByPhone(e.target.value, 'alici')} /></Grid>
+            <Grid size={{ xs: 12, md: 3 }}><TextField fullWidth label="Adres" value={f.alici_adres} onChange={e => setFormData({ ...f, alici_adres: e.target.value })} /></Grid>
+          </Grid>
+
+          <Typography variant="subtitle1" fontWeight="bold" sx={{ mt: 3, mb: 1 }}>Komisyoncu Bilgileri <Typography component="span" variant="caption" color="text.secondary">(opsiyonel)</Typography></Typography>
+          <Grid container spacing={2}>
+            <Grid size={{ xs: 12, md: 4 }}>
+              <TextField fullWidth label="Komisyoncu Ad Soyad" value={f.komisyoncu_adi} onChange={e => setFormData({ ...f, komisyoncu_adi: e.target.value })} />
+            </Grid>
+            <Grid size={{ xs: 12, md: 4 }}>
+              <TextField fullWidth label="Komisyoncu Telefon" value={f.komisyoncu_telefon}
+                onChange={e => {
+                  const v = e.target.value;
+                  setFormData({ ...f, komisyoncu_telefon: v });
+                  if ((v || '').replace(/\D/g, '').length >= 10) autofillByPhone(v, 'komisyoncu');
+                }}
+                onBlur={e => autofillByPhone(e.target.value, 'komisyoncu')} />
+            </Grid>
+            <Grid size={{ xs: 12, md: 4 }}>
+              <TextField fullWidth label="Komisyoncu Tutarı (₺)" type="number" value={f.komisyoncu_tutari} onChange={e => setFormData({ ...f, komisyoncu_tutari: e.target.value })} helperText="Masraf olarak net kârdan düşülür" />
+            </Grid>
+          </Grid>
+
+          <Typography variant="subtitle1" fontWeight="bold" sx={{ mt: 3, mb: 1 }}>Kalan Ödeme</Typography>
+          <Grid container spacing={2} alignItems="center">
+            <Grid size={{ xs: 12, md: 4 }}>
+              <FormControlLabel
+                control={<Checkbox checked={f.odeme_tamamlandi} onChange={e => setFormData({ ...f, odeme_tamamlandi: e.target.checked, kalan_odeme: e.target.checked ? '' : f.kalan_odeme })} />}
+                label="Ödeme Tamamlandı"
+              />
+            </Grid>
+            {!f.odeme_tamamlandi && (
+              <Grid size={{ xs: 12, md: 4 }}>
+                <TextField fullWidth label="Kalan Ödeme (₺)" type="number" value={f.kalan_odeme} onChange={e => setFormData({ ...f, kalan_odeme: e.target.value })} />
+              </Grid>
+            )}
+          </Grid>
+          <Grid container spacing={2} sx={{ mt: 1 }}>
+            <Grid size={{ xs: 12 }}><TextField fullWidth label="Açıklama" value={f.aciklama} onChange={e => setFormData({ ...f, aciklama: e.target.value })} multiline rows={2} /></Grid>
+          </Grid>
+
+          {/* Belgeler: kayıtlı satışta anında yüklenir; yeni satışta seçilir, kaydedince yüklenir */}
+          {dialog.data
+            ? <BelgeBolumu key={dialog.data.id} motorId={dialog.data.id} />
+            : <BekleyenBelgeler dosyalar={bekleyenBelgeler} setDosyalar={setBekleyenBelgeler} disabled={kaydediliyor} />}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDialog({ open: false, data: null })} disabled={kaydediliyor}>İptal</Button>
+          <Button variant="contained" onClick={handleSave} disabled={kaydediliyor}>
+            {kaydediliyor ? 'Kaydediliyor…' : dialog.data ? 'Güncelle' : 'Kaydet'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Motor Detay Modal */}
+      <MotorDetayModal open={detayModal.open} data={detayModal.data} onClose={() => setDetayModal({ open: false, data: null })} printRef={printRef} isMobile={isMobile} canAlis={canAlis} canKar={canKar} />
+    </Box>
+  );
+};
+
+const MotorDetayModal = ({ open, data, onClose, printRef, isMobile, canAlis, canKar }) => {
+  const handlePrint = useReactToPrint({ contentRef: printRef });
+  if (!data) return null;
+
+  const formatTL = (v) => parseFloat(v || 0).toLocaleString('tr-TR', { minimumFractionDigits: 0 });
+  const formatDate = (d) => d ? new Date(d).toLocaleDateString('tr-TR') : '-';
+  const alis = parseFloat(data.alis_fiyati || 0);
+  const satis = parseFloat(data.satis_fiyati || 0);
+  const noterAlis = parseFloat(data.noter_alis || 0);
+  const noterSatis = parseFloat(data.noter_satis || 0);
+  const masraflar = parseFloat(data.masraflar || 0);
+  const toplamMaliyet = alis + masraflar;
+  const kar = parseFloat(data.kar || 0);
+
+  const InfoRow = ({ label, value }) => (
+    <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 0.3 }}>
+      <Typography variant="body2" color="text.secondary">{label}:</Typography>
+      <Typography variant="body2" fontWeight="500">{value || '-'}</Typography>
+    </Box>
+  );
+
+  return (
+    <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth fullScreen={isMobile}>
+      <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1, pb: 1 }}>
+        <Typography variant="h6" fontWeight="bold" sx={{ flexGrow: 1 }}>Motor Detay</Typography>
+        <Button startIcon={<PrintIcon />} variant="contained" size="small" onClick={handlePrint} sx={{ bgcolor: '#C62828', '&:hover': { bgcolor: '#b71c1c' }, mr: 1 }}>Yazdır</Button>
+        <IconButton onClick={onClose}><CloseIcon /></IconButton>
+      </DialogTitle>
+      <DialogContent dividers>
+        <Box ref={printRef} sx={{ p: 1 }}>
+          <Grid container spacing={3} sx={{ mb: 3 }}>
+            <Grid size={{ xs: 12, md: 6 }}>
+              <Typography variant="subtitle1" fontWeight="bold" color="primary" gutterBottom>🏍️ Motor Bilgileri</Typography>
+              <Divider sx={{ mb: 1 }} />
+              <InfoRow label="Plaka" value={data.plaka} />
+              <InfoRow label="Marka" value={data.marka} />
+              <InfoRow label="Model" value={data.model} />
+              <InfoRow label="Yıl" value={data.yil} />
+              <InfoRow label="KM" value={data.km ? Number(data.km).toLocaleString('tr-TR') : null} />
+              <InfoRow label="Alım Tarihi" value={formatDate(data.tarih)} />
+              <InfoRow label="Satış Tarihi" value={formatDate(data.satis_tarihi)} />
+              <InfoRow label="Durum" value={data.durum === 'stokta' ? 'Stokta' : data.durum === 'kapora' ? 'Kapora' : data.durum === 'depo_serviste' ? 'Depo/Serviste' : data.durum === 'devir_bekliyor' ? 'Devir Bekliyor' : data.durum === 'tamamlandi' ? 'Tamamlandı' : data.durum === 'perte' ? 'Perte' : data.durum} />
+              <InfoRow label="Stok Tipi" value={data.stok_tipi === 'konsinye' ? 'Konsinye' : 'Sahip'} />
+              <InfoRow label="Ödeme Şekli" value={data.odeme_sekli || 'Nakit'} />
+              <InfoRow label="Fatura" value={data.fatura_kesildi ? 'Kesildi ✓' : 'Kesilmedi'} />
+              {data.yevmiye_no && <InfoRow label="Yevmiye No" value={data.yevmiye_no} />}
+            </Grid>
+            <Grid size={{ xs: 12, md: 6 }}>
+              <Typography variant="subtitle1" fontWeight="bold" color="primary" gutterBottom>🏪 Satıcı (Alım) Bilgileri</Typography>
+              <Divider sx={{ mb: 1 }} />
+              <InfoRow label="İsim Soyisim" value={data.satici_adi} />
+              <InfoRow label="TC Kimlik" value={data.satici_tc} />
+              <InfoRow label="Alım Tarihi" value={formatDate(data.tarih)} />
+              {canAlis && <InfoRow label="Alış Bedeli" value={noterAlis ? `₺${formatTL(noterAlis)}` : null} />}
+            </Grid>
+          </Grid>
+
+          {(data.alici_adi || data.alici_tc) && (
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="subtitle1" fontWeight="bold" color="primary" gutterBottom>👤 Alıcı (Satım) Bilgileri</Typography>
+              <Divider sx={{ mb: 1 }} />
+              <Grid container spacing={3}>
+                <Grid size={{ xs: 12, md: 3 }}><InfoRow label="İsim Soyisim" value={data.alici_adi} /></Grid>
+                <Grid size={{ xs: 12, md: 3 }}><InfoRow label="TC Kimlik" value={data.alici_tc} /></Grid>
+                <Grid size={{ xs: 12, md: 3 }}><InfoRow label="Telefon" value={data.alici_telefon} /></Grid>
+                <Grid size={{ xs: 12, md: 3 }}><InfoRow label="Kalan Ödeme" value={parseFloat(data.kalan_odeme || 0) > 0 ? `₺${parseFloat(data.kalan_odeme).toLocaleString('tr-TR')}` : 'Tamamlandı ✓'} /></Grid>
+              </Grid>
+            </Box>
+          )}
+
+          {data.komisyoncu_adi && (
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="subtitle1" fontWeight="bold" color="primary" gutterBottom>🤝 Komisyoncu</Typography>
+              <Divider sx={{ mb: 1 }} />
+              <Grid container spacing={3}>
+                <Grid size={{ xs: 12, md: 4 }}><InfoRow label="Ad Soyad" value={data.komisyoncu_adi} /></Grid>
+                <Grid size={{ xs: 12, md: 4 }}><InfoRow label="Telefon" value={data.komisyoncu_telefon} /></Grid>
+                <Grid size={{ xs: 12, md: 4 }}><InfoRow label="Tutar" value={`₺${parseFloat(data.komisyoncu_tutari || 0).toLocaleString('tr-TR')}`} /></Grid>
+              </Grid>
+            </Box>
+          )}
+
+          {canAlis && <>
+          <Typography variant="subtitle1" fontWeight="bold" color="primary" gutterBottom>💰 Finansal Detaylar</Typography>
+          <Divider sx={{ mb: 2 }} />
+          <Grid container spacing={2} sx={{ mb: 2 }}>
+            <Grid size={{ xs: 6, md: 3 }}>
+              <Paper sx={{ p: 1.5, textAlign: 'center', bgcolor: '#ffebee', borderLeft: '4px solid #C62828' }}>
+                <Typography variant="caption" color="text.secondary">Alış</Typography>
+                <Typography fontWeight="bold" sx={{ color: '#C62828' }}>₺{formatTL(alis)}</Typography>
+              </Paper>
+            </Grid>
+            <Grid size={{ xs: 6, md: 3 }}>
+              <Paper sx={{ p: 1.5, textAlign: 'center', bgcolor: '#ffebee', borderLeft: '4px solid #C62828' }}>
+                <Typography variant="caption" color="text.secondary">Satış</Typography>
+                <Typography fontWeight="bold" sx={{ color: '#C62828' }}>₺{formatTL(satis)}</Typography>
+              </Paper>
+            </Grid>
+            <Grid size={{ xs: 6, md: 3 }}>
+              <Paper sx={{ p: 1.5, textAlign: 'center', bgcolor: '#fce4ec', borderLeft: '4px solid #c62828' }}>
+                <Typography variant="caption" color="text.secondary">Noter Alış</Typography>
+                <Typography fontWeight="bold" sx={{ color: '#c62828' }}>₺{formatTL(noterAlis)}</Typography>
+              </Paper>
+            </Grid>
+            <Grid size={{ xs: 6, md: 3 }}>
+              <Paper sx={{ p: 1.5, textAlign: 'center', bgcolor: '#fce4ec', borderLeft: '4px solid #c62828' }}>
+                <Typography variant="caption" color="text.secondary">Noter Satış</Typography>
+                <Typography fontWeight="bold" sx={{ color: '#c62828' }}>₺{formatTL(noterSatis)}</Typography>
+              </Paper>
+            </Grid>
+            <Grid size={{ xs: 6, md: canKar ? 4 : 6 }}>
+              <Paper sx={{ p: 1.5, textAlign: 'center', bgcolor: '#ffebee', borderLeft: '4px solid #C62828' }}>
+                <Typography variant="caption" color="text.secondary">Masraflar</Typography>
+                <Typography fontWeight="bold" sx={{ color: '#C62828' }}>₺{formatTL(masraflar)}</Typography>
+              </Paper>
+            </Grid>
+            <Grid size={{ xs: 6, md: canKar ? 4 : 6 }}>
+              <Paper sx={{ p: 1.5, textAlign: 'center', bgcolor: '#ffebee', borderLeft: '4px solid #C62828' }}>
+                <Typography variant="caption" color="text.secondary">Toplam Maliyet</Typography>
+                <Typography fontWeight="bold" sx={{ color: '#C62828' }}>₺{formatTL(toplamMaliyet)}</Typography>
+              </Paper>
+            </Grid>
+            {canKar && (
+              <Grid size={{ xs: 12, md: 4 }}>
+                <Paper sx={{ p: 1.5, textAlign: 'center', bgcolor: kar >= 0 ? '#e8f5e9' : '#ffebee', borderLeft: `4px solid ${kar >= 0 ? '#2e7d32' : '#C62828'}` }}>
+                  <Typography variant="caption" color="text.secondary">NET KÂR</Typography>
+                  <Typography variant="h6" fontWeight="bold" sx={{ color: kar >= 0 ? '#2e7d32' : '#C62828' }}>₺{formatTL(kar)}</Typography>
+                </Paper>
+              </Grid>
+            )}
+          </Grid>
+          </>}
+
+          {data.aciklama && (
+            <>
+              <Typography variant="subtitle1" fontWeight="bold" color="primary" gutterBottom>📝 Açıklama</Typography>
+              <Divider sx={{ mb: 1 }} />
+              <Typography>{data.aciklama}</Typography>
+            </>
+          )}
+        </Box>
+        {/* Belgeler yazdırma alanının (printRef) dışında: çıktıya girmez */}
+        <BelgeBolumu key={data.id} motorId={data.id} />
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+export default IkinciElMotor;

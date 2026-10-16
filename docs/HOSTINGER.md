@@ -8,9 +8,9 @@ DNS, ortam değişkeni yok).
 
 | Parça | Durum | Nerede |
 |---|---|---|
-| MariaDB uyum katmanı (`$1` parametreleri, `RETURNING`, UTC, transaction) | ✅ | `backend/config/db.js`, `sqlParams.js` |
-| MariaDB şeması (canlı PostgreSQL şemasından üretildi) | ✅ | `backend/config/initDb.js` |
-| Tüm route'ların çevirisi (PostgreSQL'e özgü ~60 sorgu) | ✅ | `backend/routes/*` |
+| MariaDB uyum katmanı (`$1` parametreleri, `RETURNING`, UTC, transaction) | ✅ | `backend/core/db.js`, `sqlParams.js` |
+| MariaDB şeması (canlı PostgreSQL şemasından üretildi) | ✅ | `backend/core/initDb.js` |
+| Tüm route'ların çevirisi (PostgreSQL'e özgü ~60 sorgu) | ✅ | `backend/modules/*` |
 | Canlı veriyi yükleme + doğrulama aracı | ✅ | `backend/scripts/mariadb/yedektenYukle.js` |
 | Tek dosya sunucu + arayüz paketi | ✅ | `npm run package:hostinger` |
 | Örnek veri (`npm run seed`) MariaDB'de | ✅ | `backend/scripts/seedLocal.js` |
@@ -100,7 +100,7 @@ Gizli bilgiler (`.env.mariadb.*`, `.env.pg.ref`, canlı yedek) git dışındadı
 
 ## 6. MariaDB'ye geçişte bilinen davranış farkları (ve nedenleri)
 
-- **Geçersiz kayıt numarası:** `/api/.../abc` ya da `5abc` artık **400** döner (`middleware/idDogrula.js`). Eskiden
+- **Geçersiz kayıt numarası:** `/api/.../abc` ya da `5abc` artık **400** döner (`core/middleware/idDogrula.js`). Eskiden
   PostgreSQL 500 veriyordu; MariaDB `5abc`'yi sessizce `5` yapıp başka kaydı etkileyebilirdi.
 - **Eşit sıralama anahtarlı satırların sırası:** SQL'de garanti değildi. Aynı tarihli kayıtlar arasında PostgreSQL
   fiziksel sırayı, MariaDB id sırasını izler. Sıralama kuralının kendisi (tarihe göre azalan) testle doğrulanır.

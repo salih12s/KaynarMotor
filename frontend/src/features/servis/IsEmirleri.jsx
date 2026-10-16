@@ -1,0 +1,950 @@
+import React, { useState, useEffect } from 'react';
+import { sonIstek } from '../../shared/utils/sonIstek';
+import { useNavigate, useLocation } from 'react-router-dom';
+import {
+  Box, Paper, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
+  Button, Chip, IconButton, TextField, MenuItem, InputAdornment, Dialog, DialogTitle, DialogContent,
+  DialogActions, Grid, Alert, Divider, Autocomplete, useTheme, useMediaQuery
+} from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
+import ViewIcon from '@mui/icons-material/Visibility';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import SearchIcon from '@mui/icons-material/Search';
+import CloseIcon from '@mui/icons-material/Close';
+import SaveIcon from '@mui/icons-material/Save';
+import PrintIcon from '@mui/icons-material/Print';
+import QrIcon from '@mui/icons-material/QrCode2';
+import { Checkbox, FormControlLabel } from '@mui/material';
+import { isEmriService, servisGecmisiService } from './servisApi';
+import { musteriService } from '../musteriler/musteriApi';
+import { authService } from '../auth/authApi';
+import { aksesuarStokService } from '../aksesuar/aksesuarApi';
+import { yedekParcaStokService } from '../yedek-parca/yedekParcaApi';
+import { useAuth, useKarGor } from '../auth/AuthContext';
+import QRCode from 'qrcode';
+import { isEmriYazdirHtml } from './isEmriYazdir';
+
+// Hızlı yazarken eski aramanın yanıtı yeniyi ezmesin
+const sonAra = sonIstek();
+const sonStokAra = sonIstek();
+
+// Motorun üzerine yapıştırılacak servis geçmişi QR etiketi — müşteri okutunca
+// sadece o plakanın servis geçmişini gösteren halka açık sayfa açılır.
+const printServisQr = async (plaka) => {
+  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => (
+    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+  ));
+  const temiz = esc(String(plaka || '').trim().toUpperCase());
+  if (!temiz) {
+    alert('Bu iş emrinde plaka kayıtlı değil. QR oluşturmak için önce plaka girin.');
+    return;
+  }
+  try {
+    const res = await servisGecmisiService.getQrToken(temiz);
+    const url = `${window.location.origin}/s/${res.data.token}`;
+    const dataUrl = await QRCode.toDataURL(url, { margin: 1, width: 400, errorCorrectionLevel: 'M' });
+    const win = window.open('', '_blank', 'width=420,height=340');
+    if (!win) {
+      alert('Yazdırma penceresi açılamadı. Tarayıcı pop-up engelleyicisini kapatın.');
+      return;
+    }
+    win.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Servis QR - ${temiz}</title>
+      <style>
+        @page { size: 58mm 40mm; margin: 1mm; }
+        * { box-sizing: border-box; }
+        body { font-family: Arial, Helvetica, sans-serif; margin: 0; padding: 4px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .qr img { width: 30mm; height: 30mm; display: block; }
+        .info { text-align: center; }
+        .marka { font-size: 11px; font-weight: bold; letter-spacing: 0.5px; }
+        .plaka { font-size: 16px; font-weight: bold; margin: 3px 0; border: 1.5px solid #000; border-radius: 4px; padding: 2px 6px; display: inline-block; }
+        .not { font-size: 8.5px; line-height: 1.25; }
+      </style></head><body>
+        <div class="qr"><img src="${dataUrl}" alt="QR" /></div>
+        <div class="info">
+          <div class="marka">KAYNAR MOTOR</div>
+          <div class="plaka">${temiz}</div>
+          <div class="not">Servis geçmişiniz için<br/>QR kodu okutun</div>
+        </div>
+        <script>window.onload=function(){window.focus();window.print();window.onafterprint=function(){window.close();};setTimeout(function(){window.close();},800);};</script>
+      </body></html>`);
+    win.document.close();
+  } catch (err) {
+    alert(err.response?.data?.message || 'QR oluşturulamadı');
+  }
+};
+
+const IsEmirleri = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { user } = useAuth();
+  const karGor = useKarGor();
+  const isMobile = useMediaQuery(useTheme().breakpoints.down('sm'));
+  const [isEmirleri, setIsEmirleri] = useState([]);
+  const [search, setSearch] = useState('');
+  const [durumFilter, setDurumFilter] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+
+  // Modal state
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editId, setEditId] = useState(null);
+  const [formData, setFormData] = useState({
+    musteri_ad_soyad: '', telefon: '', adres: '', km: '', marka: '', model_tip: '', plaka: '',
+    tahmini_teslim_tarihi: '', tahmini_toplam_ucret: '',
+    ariza_sikayetler: '', aciklama: '', odeme_detaylari: '', durum: 'beklemede',
+    teslim_alan_ad_soyad: '', teslim_eden_teknisyen: '', teslim_tarihi: '',
+    kalan_odeme: '', odeme_tamamlandi: true
+  });
+  const [parcalar, setParcalar] = useState([]);
+  const [newParca, setNewParca] = useState({ parca_kodu: '', takilan_parca: '', adet: 1, birim_fiyat: 0, maliyet: 0 });
+  const [stokOptions, setStokOptions] = useState([]);
+  const [error, setError] = useState('');
+  const [musteriOptions, setMusteriOptions] = useState([]);
+
+  // Detay modal state
+  const [detayModal, setDetayModal] = useState({ open: false, data: null });
+  const [kullanicilar, setKullanicilar] = useState([]);
+
+  const loadData = async () => {
+    try {
+      const params = {};
+      if (durumFilter) params.durum = durumFilter;
+      const res = await isEmriService.getAll(params);
+      setIsEmirleri(res.data);
+    } catch (err) { console.error(err); }
+  };
+
+  useEffect(() => {
+    loadData();
+    authService.getPersonelListesi().then(r => {
+      setKullanicilar(r.data || []);
+    }).catch(() => {});
+  }, [durumFilter]);
+
+  useEffect(() => {
+    const id = location.state?.openDetailId;
+    if (!id) return;
+    (async () => {
+      try { const res = await isEmriService.getById(id); setDetayModal({ open: true, data: res.data }); } catch {}
+    })();
+    navigate(location.pathname, { replace: true, state: {} });
+  }, [location.state]);
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Bu iş emrini silmek istediğinizden emin misiniz?')) return;
+    try { await isEmriService.delete(id); loadData(); } catch (err) { alert(err.response?.data?.message || 'Silme hatası'); }
+  };
+
+  const filtered = isEmirleri.filter(ie => {
+    const matchSearch = !search || 
+      (ie.musteri_ad_soyad?.toLowerCase() || '').includes(search.toLowerCase()) ||
+      (ie.fis_no?.toString() || '').includes(search) ||
+      (ie.telefon || '').includes(search) ||
+      (ie.marka?.toLowerCase() || '').includes(search.toLowerCase());
+    const tarih = (ie.created_at || ie.tarih || '').split('T')[0];
+    const matchStart = !startDate || tarih >= startDate;
+    const matchEnd = !endDate || tarih <= endDate;
+    return matchSearch && matchStart && matchEnd;
+  });
+
+  const durumRenk = (d) => {
+    if (d === 'tamamlandi') return 'success';
+    if (d === 'devam_ediyor') return 'info';
+    return 'warning';
+  };
+  const durumLabel = (d) => {
+    if (d === 'tamamlandi') return 'Tamam';
+    if (d === 'devam_ediyor') return 'İşlemde';
+    return 'Bekl.';
+  };
+  const formatDate = (d) => d ? new Date(d).toLocaleDateString('tr-TR') : '';
+
+  const totalCount = isEmirleri.length;
+  const todayCount = isEmirleri.filter(ie => {
+    const d = new Date(ie.created_at || ie.tarih);
+    const today = new Date();
+    return d.toDateString() === today.toDateString();
+  }).length;
+  const beklemedeCnt = isEmirleri.filter(ie => ie.durum === 'beklemede').length;
+  const islemdeCnt = isEmirleri.filter(ie => ie.durum === 'devam_ediyor').length;
+  const tamamlandiCnt = isEmirleri.filter(ie => ie.durum === 'tamamlandi').length;
+  const toplamTutar = isEmirleri.reduce((t, ie) => t + parseFloat(ie.gercek_toplam_ucret || 0), 0);
+  const toplamKar = isEmirleri.reduce((t, ie) => t + parseFloat(ie.kar || 0), 0);
+
+  const statChips = [
+    { label: `Toplam: ${totalCount}`, color: '#C62828', bg: '#ffebee' },
+    { label: `Bugün: ${todayCount}`, color: '#C62828', bg: '#ffebee' },
+    { label: `Beklemede: ${beklemedeCnt}`, color: '#C62828', bg: '#ffebee' },
+    { label: `İşlemde: ${islemdeCnt}`, color: '#C62828', bg: '#ffebee' },
+    { label: `Ödeme Bekl.: 0`, color: '#C62828', bg: '#ffebee' },
+    { label: `Tamamlandı: ${tamamlandiCnt}`, color: '#C62828', bg: '#ffebee' },
+    { label: `İptal: 0`, color: '#C62828', bg: '#ffebee' },
+    { label: `₺${toplamTutar.toLocaleString('tr-TR')}`, color: '#C62828', bg: '#ffebee' },
+    ...(karGor ? [{ label: `Kar: ₺${toplamKar.toLocaleString('tr-TR')}`, color: '#C62828', bg: '#ffebee' }] : []),
+  ];
+
+  // Modal functions
+  const openModal = () => {
+    setEditId(null);
+    setFormData({
+      musteri_ad_soyad: '', telefon: '', adres: '', km: '', marka: '', model_tip: '', plaka: '',
+      tahmini_teslim_tarihi: '', tahmini_toplam_ucret: '',
+      ariza_sikayetler: '', aciklama: '', odeme_detaylari: '', durum: 'beklemede',
+      teslim_alan_ad_soyad: '', teslim_eden_teknisyen: '', teslim_tarihi: '',
+      kalan_odeme: '', odeme_tamamlandi: true
+    });
+    setParcalar([]);
+    setNewParca({ parca_kodu: '', takilan_parca: '', adet: 1, birim_fiyat: 0, maliyet: 0 });
+    setStokOptions([]);
+    setError('');
+    setModalOpen(true);
+  };
+
+  const openEditModal = async (id) => {
+    setError('');
+    try {
+      const res = await isEmriService.getById(id);
+      const d = res.data;
+      setEditId(id);
+      setFormData({
+        musteri_ad_soyad: d.musteri_ad_soyad || '', telefon: d.telefon || '', adres: d.adres || '',
+        km: d.km || '', marka: d.marka || '', model_tip: d.model_tip || '', plaka: d.plaka || '',
+        tahmini_teslim_tarihi: d.tahmini_teslim_tarihi ? new Date(d.tahmini_teslim_tarihi).toLocaleDateString('en-CA') : '',
+        tahmini_toplam_ucret: d.tahmini_toplam_ucret || '',
+        ariza_sikayetler: d.ariza_sikayetler || '', aciklama: d.aciklama || '',
+        odeme_detaylari: d.odeme_detaylari || '', durum: d.durum || 'beklemede',
+        teslim_alan_ad_soyad: d.teslim_alan_ad_soyad || d.olusturan_kisi || '',
+        teslim_eden_teknisyen: d.teslim_eden_teknisyen || d.olusturan_kisi || '',
+        teslim_tarihi: d.teslim_tarihi ? new Date(d.teslim_tarihi).toLocaleDateString('en-CA') : '',
+        kalan_odeme: d.kalan_odeme || '', odeme_tamamlandi: !parseFloat(d.kalan_odeme || 0)
+      });
+      setParcalar(d.parcalar || []);
+      setNewParca({ parca_kodu: '', takilan_parca: '', adet: 1, birim_fiyat: 0, maliyet: 0 });
+      setStokOptions([]);
+      setModalOpen(true);
+    } catch { setError('İş emri yüklenemedi'); }
+  };
+
+  const addParca = () => {
+    if (!newParca.takilan_parca.trim()) return;
+    setParcalar([...parcalar, { ...newParca }]);
+    setNewParca({ parca_kodu: '', takilan_parca: '', adet: 1, birim_fiyat: 0, maliyet: 0 });
+    setStokOptions([]);
+  };
+
+  const removeParca = (index) => setParcalar(parcalar.filter((_, i) => i !== index));
+
+  // Aksesuar ve yedek parça stoğundan parça ara (isim, marka veya stok kodu/barkod ile)
+  const handleStokSearch = async (q) => {
+    if (!q || q.trim().length < 2) { sonStokAra.iptal(); setStokOptions([]); return; }
+    try {
+      const sonuc = await sonStokAra(Promise.all([
+        aksesuarStokService.search(q.trim()).catch(() => ({ data: [] })),
+        yedekParcaStokService.search(q.trim()).catch(() => ({ data: [] })),
+      ]));
+      if (!sonuc) return;
+      const [aks, yedek] = sonuc;
+      setStokOptions([
+        ...(aks.data || []).map(s => ({ ...s, stok_kaynak: 'Aksesuar Stok' })),
+        ...(yedek.data || []).map(s => ({ ...s, stok_kaynak: 'Yedek Parça Stok' })),
+      ]);
+    } catch {}
+  };
+
+  // Stok kaydını parça alanlarına doldur
+  const selectStok = (stok) => {
+    setNewParca({
+      parca_kodu: stok.stok_kodu || '',
+      takilan_parca: stok.stok_adi || '',
+      adet: 1,
+      birim_fiyat: stok.satis_fiyati || 0,
+      maliyet: stok.alis_fiyati || 0,
+    });
+    setStokOptions([]);
+  };
+
+  // Barkod okutulduğunda (Enter ile) stok kodundan tam eşleşme bul
+  // Yedek parça barkodları 9 ile başlar; önce olası kaynağa, bulunamazsa diğerine bakılır.
+  const handleParcaKeyDown = async (e) => {
+    if (e.key !== 'Enter') return;
+    const kod = (newParca.takilan_parca || '').trim();
+    if (!kod) return;
+    const kaynaklar = kod.startsWith('9')
+      ? [yedekParcaStokService, aksesuarStokService]
+      : [aksesuarStokService, yedekParcaStokService];
+    for (const servis of kaynaklar) {
+      try {
+        const res = await servis.getByBarkod(kod);
+        if (res.data) { e.preventDefault(); selectStok(res.data); return; }
+      } catch {}
+    }
+  };
+
+  const handleMusteriSearch = async (query) => {
+    if (query.length < 2) return;
+    try { const res = await sonAra(musteriService.search(query)); if (res) setMusteriOptions(res.data); } catch {}
+  };
+
+  const handleMusteriSelect = (musteri) => {
+    if (musteri) {
+      setFormData({ ...formData, musteri_ad_soyad: musteri.ad_soyad || '', telefon: musteri.telefon || '', adres: musteri.adres || '' });
+    }
+  };
+
+  const handleSave = async () => {
+    setError('');
+    if (!formData.musteri_ad_soyad.trim()) { setError('Ad Soyad zorunlu'); return; }
+    try {
+      const payload = { ...formData, parcalar, kalan_odeme: formData.odeme_tamamlandi ? 0 : (formData.kalan_odeme || 0) };
+      delete payload.odeme_tamamlandi;
+      if (editId) {
+        await isEmriService.update(editId, payload);
+      } else {
+        await isEmriService.create(payload);
+      }
+      setModalOpen(false);
+      setEditId(null);
+      loadData();
+    } catch (err) { setError(err.response?.data?.message || 'Kaydetme hatası'); }
+  };
+
+  return (
+    <Box>
+      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2, alignItems: 'center' }}>
+        {statChips.map((c, i) => (
+          <Chip key={i} label={c.label} sx={{ bgcolor: c.bg, color: c.color, fontWeight: 'bold', fontSize: '0.8rem', borderLeft: `4px solid ${c.color}` }} />
+        ))}
+        <Box sx={{ flexGrow: 1 }} />
+        <Button variant="contained" size="large" startIcon={<AddIcon />} onClick={openModal}>Yeni İş Emri</Button>
+      </Box>
+
+      <Paper sx={{ p: 2, mb: 2 }}>
+        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
+          <TextField size="small" placeholder="Ara (Müşteri, Fiş No, Marka,...)" value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon /></InputAdornment> }}
+            sx={{ minWidth: { xs: '100%', sm: 250 } }} />
+          <TextField select size="small" value={durumFilter} onChange={(e) => setDurumFilter(e.target.value)}
+            sx={{ minWidth: { xs: '100%', sm: 150 } }} label="Durum">
+            <MenuItem value="">Tümü</MenuItem>
+            <MenuItem value="beklemede">Beklemede</MenuItem>
+            <MenuItem value="devam_ediyor">Devam Ediyor</MenuItem>
+            <MenuItem value="tamamlandi">Tamamlandı</MenuItem>
+          </TextField>
+          <TextField size="small" label="Başlangıç" type="date" value={startDate} onChange={e => setStartDate(e.target.value)} InputLabelProps={{ shrink: true }} />
+          <TextField size="small" label="Bitiş" type="date" value={endDate} onChange={e => setEndDate(e.target.value)} InputLabelProps={{ shrink: true }} />
+        </Box>
+      </Paper>
+
+      {isMobile ? (
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+          {filtered.length === 0 && <Alert severity="info">Kayıt bulunamadı</Alert>}
+          {filtered.map(ie => {
+            const toplam = parseFloat(ie.gercek_toplam_ucret || 0);
+            const kar = parseFloat(ie.kar || 0);
+            return (
+              <Paper key={ie.id} sx={{ p: 1.5 }} onClick={async () => { try { const res = await isEmriService.getById(ie.id); setDetayModal({ open: true, data: res.data }); } catch {} }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
+                  <Typography variant="subtitle2" sx={{ color: '#C62828', fontWeight: 'bold' }}>#{ie.fis_no}</Typography>
+                  <Chip label={durumLabel(ie.durum)} size="small" color={durumRenk(ie.durum)} sx={{ height: 20, fontSize: '0.7rem' }} />
+                </Box>
+                <Typography variant="body2" fontWeight="bold">{ie.musteri_ad_soyad}</Typography>
+                <Typography variant="body2" color="text.secondary">{ie.marka} {ie.model_tip} • {ie.telefon || '-'}</Typography>
+                <Typography variant="body2" color="text.secondary">{formatDate(ie.created_at || ie.tarih)} • {ie.teslim_eden_teknisyen || ie.teslim_alan_ad_soyad || ie.olusturan_kisi || '-'}</Typography>
+                <Box sx={{ display: 'flex', gap: 2, mt: 0.5 }}>
+                  <Typography variant="body2">Toplam: <strong>₺{toplam.toLocaleString('tr-TR')}</strong></Typography>
+                  {karGor && <Typography variant="body2" sx={{ color: kar >= 0 ? '#2e7d32' : '#c62828' }}>Kâr: <strong>₺{kar.toLocaleString('tr-TR')}</strong></Typography>}
+                </Box>
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 0.5 }} onClick={e => e.stopPropagation()}>
+                  <IconButton size="small" sx={{ color: '#C62828' }} onClick={async () => { try { const res = await isEmriService.getById(ie.id); printIsEmri(res.data); } catch {} }}><PrintIcon /></IconButton>
+                  {ie.plaka && (
+                    <IconButton size="small" sx={{ color: '#1a1a1a' }} onClick={() => printServisQr(ie.plaka)} title="Servis Geçmişi QR Yazdır"><QrIcon /></IconButton>
+                  )}
+                  <IconButton size="small" color="info" onClick={() => openEditModal(ie.id)}><EditIcon /></IconButton>
+                  {user?.rol === 'admin' && <IconButton size="small" color="error" onClick={() => handleDelete(ie.id)}><DeleteIcon /></IconButton>}
+                </Box>
+              </Paper>
+            );
+          })}
+        </Box>
+      ) : (
+      <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
+        <Table size="small" sx={{ '& td, & th': { px: 0.75, py: 0.55, fontSize: '0.76rem' } }}>
+          <TableHead>
+            <TableRow sx={{ bgcolor: 'primary.main' }}>
+              {['Fiş No', 'Müşteri', 'Araç', 'Telefon', 'Tarih/Durum', 'Personel', 'Arıza', 'Toplam', 'Maliyet', ...(karGor ? ['Kar'] : []), 'İşlemler'].map(h => (
+                <TableCell key={h} sx={{ color: 'white', fontWeight: 'bold', whiteSpace: 'nowrap' }}>{h}</TableCell>
+              ))}
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {filtered.map(ie => {
+              const toplam = parseFloat(ie.gercek_toplam_ucret || 0);
+              const maliyet = parseFloat(ie.toplam_maliyet || 0);
+              const kar = parseFloat(ie.kar || 0);
+              return (
+                <TableRow key={ie.id} hover>
+                  <TableCell sx={{ color: '#C62828', fontWeight: 'bold' }}>{ie.fis_no}</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold' }}>{ie.musteri_ad_soyad}</TableCell>
+                  <TableCell>{ie.marka} {ie.model_tip}</TableCell>
+                  <TableCell>{ie.telefon}</TableCell>
+                  <TableCell>
+                    <Typography variant="body2" fontSize="0.8rem">{formatDate(ie.created_at || ie.tarih)}</Typography>
+                    <Chip label={durumLabel(ie.durum)} size="small" color={durumRenk(ie.durum)}
+                      sx={{ height: 20, fontSize: '0.7rem', mt: 0.3 }} />
+                  </TableCell>
+                  <TableCell>{ie.teslim_eden_teknisyen || ie.teslim_alan_ad_soyad || ie.olusturan_kisi || '-'}</TableCell>
+                  <TableCell sx={{ maxWidth: 150, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={ie.ariza_sikayetler || ''}>{ie.ariza_sikayetler || '-'}</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold' }}>₺{toplam.toLocaleString('tr-TR')}</TableCell>
+                  <TableCell sx={{ color: '#C62828' }}>₺{maliyet.toLocaleString('tr-TR')}</TableCell>
+                  {karGor && <TableCell sx={{ color: kar >= 0 ? '#2e7d32' : '#c62828', fontWeight: 'bold' }}>₺{kar.toLocaleString('tr-TR')}</TableCell>}
+                  <TableCell sx={{ whiteSpace: 'nowrap' }}>
+                    <IconButton size="small" color="primary" onClick={async () => { try { const res = await isEmriService.getById(ie.id); setDetayModal({ open: true, data: res.data }); } catch {} }}><ViewIcon /></IconButton>
+                    <IconButton size="small" sx={{ color: '#C62828' }} onClick={async () => { try { const res = await isEmriService.getById(ie.id); printIsEmri(res.data); } catch {} }}><PrintIcon /></IconButton>
+                    {ie.plaka && (
+                      <IconButton size="small" sx={{ color: '#1a1a1a' }} onClick={() => printServisQr(ie.plaka)} title="Servis Geçmişi QR Yazdır"><QrIcon /></IconButton>
+                    )}
+                    <IconButton size="small" color="info" onClick={() => openEditModal(ie.id)}><EditIcon /></IconButton>
+                    {user?.rol === 'admin' && (
+                      <IconButton size="small" color="error" onClick={() => handleDelete(ie.id)}><DeleteIcon /></IconButton>
+                    )}
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+            {filtered.length === 0 && (
+              <TableRow><TableCell colSpan={11} align="center">Kayıt bulunamadı</TableCell></TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
+      )}
+
+      {/* Yeni İş Emri Modal */}
+      <Dialog open={modalOpen} onClose={() => { setModalOpen(false); setEditId(null); }} maxWidth="lg" fullWidth fullScreen={isMobile}>
+        <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1, pb: 1 }}>
+          <Box sx={{ width: 36, height: 36, borderRadius: 1, bgcolor: 'primary.main', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 18 }}>📋</Box>
+          <Typography variant="h6" fontWeight="bold">{editId ? 'İş Emri Düzenle' : 'Yeni İş Emri'}</Typography>
+          <Box sx={{ flexGrow: 1 }} />
+          <IconButton onClick={() => { setModalOpen(false); setEditId(null); }}><CloseIcon /></IconButton>
+        </DialogTitle>
+        <DialogContent dividers>
+          {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+          <Grid container spacing={3}>
+            {/* Sol: Müşteri + Araç + Arıza */}
+            <Grid size={{ xs: 12, md: 6 }}>
+              <Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+                👤 Müşteri Bilgileri
+              </Typography>
+              <Grid container spacing={2}>
+                <Grid size={{ xs: 6 }}>
+                  <TextField fullWidth size="small" label="Ad Soyad *" value={formData.musteri_ad_soyad}
+                    onChange={e => setFormData({ ...formData, musteri_ad_soyad: e.target.value })} />
+                </Grid>
+                <Grid size={{ xs: 6 }} sx={{ position: 'relative' }}>
+                  <TextField fullWidth size="small" label="Telefon" value={formData.telefon}
+                    onChange={async e => {
+                      const v = e.target.value;
+                      setFormData(prev => ({ ...prev, telefon: v }));
+                      handleMusteriSearch(v);
+                      const tel = (v || '').replace(/\D/g, '');
+                      if (tel.length < 10) return;
+                      try {
+                        const res = await musteriService.searchByPhone(tel);
+                        const m = res.data;
+                        if (m) setFormData(prev => ({
+                          ...prev,
+                          musteri_ad_soyad: prev.musteri_ad_soyad || m.ad_soyad || '',
+                          adres: prev.adres || m.adres || ''
+                        }));
+                      } catch {}
+                    }}
+                    onBlur={async e => {
+                      const tel = (e.target.value || '').replace(/\D/g, '');
+                      if (!tel || tel.length < 7) return;
+                      try {
+                        const res = await musteriService.searchByPhone(tel);
+                        const m = res.data;
+                        if (m) setFormData(prev => ({
+                          ...prev,
+                          musteri_ad_soyad: prev.musteri_ad_soyad || m.ad_soyad || '',
+                          adres: prev.adres || m.adres || ''
+                        }));
+                      } catch {}
+                    }} />
+                  {musteriOptions.length > 0 && formData.telefon.length >= 2 && (
+                    <Paper sx={{ position: 'absolute', zIndex: 10, left: 16, right: 0, maxHeight: 200, overflow: 'auto', boxShadow: 3, bgcolor: 'white' }}>
+                      {musteriOptions.map(m => (
+                        <Box key={m.id} sx={{ p: 1, cursor: 'pointer', '&:hover': { bgcolor: '#f5f5f5' }, borderBottom: '1px solid #eee' }}
+                          onClick={() => { handleMusteriSelect(m); setMusteriOptions([]); }}>
+                          <Typography variant="body2"><strong>{m.telefon}</strong> - {m.ad_soyad}</Typography>
+                        </Box>
+                      ))}
+                    </Paper>
+                  )}
+                </Grid>
+                <Grid size={{ xs: 6 }}>
+                  <TextField fullWidth size="small" label="KM" value={formData.km}
+                    onChange={e => setFormData({ ...formData, km: e.target.value })}
+                    InputProps={{ endAdornment: <InputAdornment position="end">km</InputAdornment> }} />
+                </Grid>
+                <Grid size={{ xs: 6 }}>
+                  <TextField fullWidth size="small" label="Adres" value={formData.adres}
+                    onChange={e => setFormData({ ...formData, adres: e.target.value })} />
+                </Grid>
+              </Grid>
+
+              <Typography variant="subtitle1" fontWeight="bold" sx={{ mt: 3, mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+                🏍️ Araç Bilgileri
+              </Typography>
+              <Grid container spacing={2}>
+                <Grid size={{ xs: 6, sm: 3 }}>
+                  <TextField fullWidth size="small" label="Plaka" value={formData.plaka}
+                    onChange={e => setFormData({ ...formData, plaka: e.target.value.toUpperCase() })} />
+                </Grid>
+                <Grid size={{ xs: 6, sm: 3 }}>
+                  <TextField fullWidth size="small" label="Marka" value={formData.marka}
+                    onChange={e => setFormData({ ...formData, marka: e.target.value })} />
+                </Grid>
+                <Grid size={{ xs: 6, sm: 3 }}>
+                  <TextField fullWidth size="small" label="Model/Tip" value={formData.model_tip}
+                    onChange={e => setFormData({ ...formData, model_tip: e.target.value })} />
+                </Grid>
+                <Grid size={{ xs: 6, sm: 3 }}>
+                  <TextField select fullWidth size="small" label="Durum" value={formData.durum}
+                    onChange={e => setFormData({ ...formData, durum: e.target.value })}>
+                    <MenuItem value="beklemede">Beklemede</MenuItem>
+                    <MenuItem value="devam_ediyor">Devam Ediyor</MenuItem>
+                    <MenuItem value="tamamlandi">Tamamlandı</MenuItem>
+                  </TextField>
+                </Grid>
+                <Grid size={{ xs: 6 }}>
+                  <TextField fullWidth size="small" type="date" label="Tahmini Teslim" value={formData.tahmini_teslim_tarihi}
+                    onChange={e => setFormData({ ...formData, tahmini_teslim_tarihi: e.target.value })} InputLabelProps={{ shrink: true }} />
+                </Grid>
+                <Grid size={{ xs: 6 }}>
+                  <TextField fullWidth size="small" label="Tahmini Ücret" type="number" value={formData.tahmini_toplam_ucret}
+                    onChange={e => setFormData({ ...formData, tahmini_toplam_ucret: e.target.value })}
+                    InputProps={{ startAdornment: <InputAdornment position="start">₺</InputAdornment> }} />
+                </Grid>
+              </Grid>
+
+              <Typography variant="subtitle1" fontWeight="bold" sx={{ mt: 3, mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+                🔧 Arıza ve Açıklama
+              </Typography>
+              <Grid container spacing={2}>
+                <Grid size={{ xs: 6 }}>
+                  <TextField fullWidth size="small" label="Arıza / Şikayetler" multiline rows={2} value={formData.ariza_sikayetler}
+                    onChange={e => setFormData({ ...formData, ariza_sikayetler: e.target.value })} />
+                </Grid>
+                <Grid size={{ xs: 6 }}>
+                  <TextField fullWidth size="small" label="Ek Açıklama" multiline rows={2} value={formData.aciklama}
+                    onChange={e => setFormData({ ...formData, aciklama: e.target.value })} />
+                </Grid>
+              </Grid>
+            </Grid>
+
+            {/* Sağ: Parçalar + Ödeme */}
+            <Grid size={{ xs: 12, md: 6 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                <Typography variant="subtitle1" fontWeight="bold" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  📋 Parçalar ve İşçilik
+                </Typography>
+                <Chip label={`${parcalar.length} parça`} size="small" color="primary" variant="outlined" />
+              </Box>
+              <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
+                <Autocomplete
+                  freeSolo
+                  options={stokOptions}
+                  filterOptions={(x) => x}
+                  groupBy={(o) => o.stok_kaynak || ''}
+                  inputValue={newParca.takilan_parca}
+                  getOptionLabel={(o) => typeof o === 'string' ? o : (o.stok_adi || '')}
+                  onInputChange={(e, v, reason) => {
+                    if (reason === 'reset') return;
+                    setNewParca(prev => ({ ...prev, takilan_parca: v, parca_kodu: '' }));
+                    handleStokSearch(v);
+                  }}
+                  onChange={(e, v) => { if (v && typeof v === 'object') selectStok(v); }}
+                  renderOption={(props, o) => (
+                    <Box component="li" {...props} key={`${o.stok_kaynak}-${o.id}`}>
+                      <Box sx={{ width: '100%' }}>
+                        <Typography variant="body2" fontWeight="bold">{o.stok_adi}</Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          Kod: {o.stok_kodu} • Stok: {o.mevcut ?? 0} • Satış: ₺{parseFloat(o.satis_fiyati || 0).toLocaleString('tr-TR')}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  )}
+                  renderInput={(params) => (
+                    <TextField {...params} size="small" label="Takılan Parça / İşçilik (ara veya barkod okut)"
+                      onKeyDown={handleParcaKeyDown} />
+                  )}
+                  sx={{ mb: 1.5 }}
+                />
+                {newParca.parca_kodu && (
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+                    Stok kodu: <strong>{newParca.parca_kodu}</strong>
+                  </Typography>
+                )}
+                <Grid container spacing={2}>
+                  <Grid size={{ xs: 4 }}>
+                    <TextField fullWidth size="small" label="Adet" type="number" value={newParca.adet}
+                      onChange={e => setNewParca({ ...newParca, adet: e.target.value })} />
+                  </Grid>
+                  <Grid size={{ xs: 4 }}>
+                    <TextField fullWidth size="small" label="Satış Fiyatı (₺)" type="number" value={newParca.birim_fiyat}
+                      onChange={e => setNewParca({ ...newParca, birim_fiyat: e.target.value })}
+                      InputProps={{ startAdornment: <InputAdornment position="start">₺</InputAdornment> }} />
+                  </Grid>
+                  <Grid size={{ xs: 4 }}>
+                    <TextField fullWidth size="small" label="Maliyet Fiyatı (₺)" type="number" value={newParca.maliyet}
+                      onChange={e => setNewParca({ ...newParca, maliyet: e.target.value })}
+                      InputProps={{ startAdornment: <InputAdornment position="start">₺</InputAdornment> }} />
+                  </Grid>
+                </Grid>
+                <Button fullWidth variant="contained" startIcon={<AddIcon />} onClick={addParca} sx={{ mt: 1.5 }}>Parça Ekle</Button>
+              </Paper>
+
+              {parcalar.length > 0 ? (
+                isMobile ? (
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                  {parcalar.map((p, i) => {
+                    const pSatis = (Number(p.adet) || 0) * (Number(p.birim_fiyat) || 0);
+                    const pMaliyet = (Number(p.adet) || 0) * (Number(p.maliyet) || 0);
+                    const pKar = pSatis - pMaliyet;
+                    return (
+                      <Paper key={i} variant="outlined" sx={{ p: 1.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Box sx={{ flex: 1 }}>
+                          <Typography variant="body2" fontWeight="bold">{p.takilan_parca}</Typography>
+                          <Typography variant="caption" color="text.secondary">Adet: {p.adet} • Satış: ₺{pSatis.toLocaleString('tr-TR')} • Maliyet: ₺{pMaliyet.toLocaleString('tr-TR')}</Typography>
+                          {karGor && <Typography variant="caption" sx={{ display: 'block', color: pKar >= 0 ? '#2e7d32' : '#c62828', fontWeight: 'bold' }}>Kâr: ₺{pKar.toLocaleString('tr-TR')}</Typography>}
+                        </Box>
+                        <IconButton size="small" color="error" onClick={() => removeParca(i)}><CloseIcon fontSize="small" /></IconButton>
+                      </Paper>
+                    );
+                  })}
+                </Box>
+                ) : (
+                <TableContainer component={Paper} variant="outlined" sx={{ mb: 2, overflowX: 'auto' }}>
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow>
+                        <TableCell sx={{ fontWeight: 'bold' }}>Parça</TableCell>
+                        <TableCell sx={{ fontWeight: 'bold' }} align="center">Adet</TableCell>
+                        <TableCell sx={{ fontWeight: 'bold' }} align="right">Satış</TableCell>
+                        <TableCell sx={{ fontWeight: 'bold' }} align="right">Maliyet</TableCell>
+                        {karGor && <TableCell sx={{ fontWeight: 'bold' }} align="right">Kâr</TableCell>}
+                        <TableCell sx={{ fontWeight: 'bold' }} align="center">Sil</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {parcalar.map((p, i) => {
+                        const pSatis = (Number(p.adet) || 0) * (Number(p.birim_fiyat) || 0);
+                        const pMaliyet = (Number(p.adet) || 0) * (Number(p.maliyet) || 0);
+                        const pKar = pSatis - pMaliyet;
+                        return (
+                          <TableRow key={i}>
+                            <TableCell>{p.takilan_parca}</TableCell>
+                            <TableCell align="center">{p.adet}</TableCell>
+                            <TableCell align="right">₺{pSatis.toLocaleString('tr-TR')}</TableCell>
+                            <TableCell align="right">₺{pMaliyet.toLocaleString('tr-TR')}</TableCell>
+                            {karGor && <TableCell align="right" sx={{ color: pKar >= 0 ? '#2e7d32' : '#c62828', fontWeight: 'bold' }}>₺{pKar.toLocaleString('tr-TR')}</TableCell>}
+                            <TableCell align="center">
+                              <IconButton size="small" color="error" onClick={() => removeParca(i)}><CloseIcon fontSize="small" /></IconButton>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+                )
+              ) : (
+                <Paper variant="outlined" sx={{ p: 3, textAlign: 'center', color: 'text.secondary', mb: 2 }}>
+                  Henüz parça eklenmedi
+                </Paper>
+              )}
+
+              <Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+                📋 Ödeme Detayları
+              </Typography>
+              <TextField fullWidth size="small" placeholder="Örn: Nakit, Kart..." value={formData.odeme_detaylari}
+                onChange={e => setFormData({ ...formData, odeme_detaylari: e.target.value })} multiline rows={2} />
+
+              <Typography variant="subtitle1" fontWeight="bold" sx={{ mt: 2, mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+                💰 Kalan Ödeme
+              </Typography>
+              <Paper variant="outlined" sx={{ p: 1.5, bgcolor: formData.odeme_tamamlandi ? '#e8f5e9' : '#fff3e0' }}>
+                <Grid container spacing={2} alignItems="center">
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <FormControlLabel
+                      control={<Checkbox checked={formData.odeme_tamamlandi} onChange={e => setFormData({ ...formData, odeme_tamamlandi: e.target.checked, kalan_odeme: e.target.checked ? '' : formData.kalan_odeme })} />}
+                      label="Ödeme Tamamlandı"
+                    />
+                  </Grid>
+                  {!formData.odeme_tamamlandi && (
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                      <TextField fullWidth size="small" label="Kalan Ödeme (₺)" type="number" value={formData.kalan_odeme}
+                        onChange={e => setFormData({ ...formData, kalan_odeme: e.target.value })} />
+                    </Grid>
+                  )}
+                </Grid>
+                {!formData.odeme_tamamlandi && (
+                  <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                    Bu kayıt Veresiye sayfasında listelenecektir.
+                  </Typography>
+                )}
+              </Paper>
+
+              {editId && (
+                <>
+                  <Typography variant="subtitle1" fontWeight="bold" sx={{ mt: 2, mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+                    📅 Teslim Bilgileri
+                  </Typography>
+                  <Grid container spacing={2}>
+                    <Grid size={{ xs: 6 }}>
+                      <TextField fullWidth size="small" label="Teslim Tarihi" type="date" value={formData.teslim_tarihi}
+                        onChange={e => setFormData({ ...formData, teslim_tarihi: e.target.value })} InputLabelProps={{ shrink: true }} />
+                    </Grid>
+                    <Grid size={{ xs: 6 }}>
+                      <TextField select fullWidth size="small" label="Teslim Alan" value={formData.teslim_alan_ad_soyad}
+                        onChange={e => setFormData({ ...formData, teslim_alan_ad_soyad: e.target.value })}>
+                        <MenuItem value="">Seçiniz</MenuItem>
+                        {kullanicilar.map(k => <MenuItem key={k.id} value={k.ad_soyad}>{k.ad_soyad}</MenuItem>)}
+                      </TextField>
+                    </Grid>
+                    <Grid size={{ xs: 12 }}>
+                      <TextField select fullWidth size="small" label="Teslim Eden Teknisyen" value={formData.teslim_eden_teknisyen}
+                        onChange={e => setFormData({ ...formData, teslim_eden_teknisyen: e.target.value })}>
+                        <MenuItem value="">Seçiniz</MenuItem>
+                        {kullanicilar.map(k => <MenuItem key={k.id} value={k.ad_soyad}>{k.ad_soyad}</MenuItem>)}
+                      </TextField>
+                    </Grid>
+                  </Grid>
+                </>
+              )}
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, py: 2 }}>
+          <Button variant="outlined" color="error" onClick={() => { setModalOpen(false); setEditId(null); }}>İptal</Button>
+          <Button variant="contained" startIcon={<SaveIcon />} onClick={handleSave}>{editId ? 'Güncelle' : 'Kaydet'}</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* İş Emri Detay Modal */}
+      <IsEmriDetayModal open={detayModal.open} data={detayModal.data} onClose={() => setDetayModal({ open: false, data: null })} onEdit={openEditModal} isMobile={isMobile} />
+    </Box>
+  );
+};
+
+const printIsEmri = (data) => {
+  if (!data) return;
+  const win = window.open('', '_blank', 'width=900,height=700');
+  if (!win) {
+    alert('Yazdırma penceresi açılamadı. Tarayıcı pop-up engelleyicisini kapatın.');
+    return;
+  }
+  win.document.write(isEmriYazdirHtml(data));
+  win.document.close();
+  win.focus();
+  win.print();
+};
+
+const IsEmriDetayModal = ({ open, data, onClose, onEdit, isMobile }) => {
+  const karGor = useKarGor();
+  if (!data) return null;
+
+  const parcalar = data.parcalar || [];
+  const toplamFiyat = parcalar.reduce((t, p) => t + parseFloat(p.toplam_fiyat || 0), 0);
+  const toplamMaliyet = parcalar.reduce((t, p) => t + (Number(p.adet) || 0) * (Number(p.maliyet) || 0), 0);
+  const kar = toplamFiyat - toplamMaliyet;
+  const formatDate = (d) => d ? new Date(d).toLocaleDateString('tr-TR') : '-';
+  const durumLabel = (d) => d === 'tamamlandi' ? 'Tamamlandı' : d === 'devam_ediyor' ? 'Devam Ediyor' : 'Beklemede';
+  const durumRenk = (d) => d === 'tamamlandi' ? 'success' : d === 'devam_ediyor' ? 'info' : 'warning';
+
+  const InfoRow = ({ label, value }) => (
+    <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 0.3 }}>
+      <Typography variant="body2" color="text.secondary">{label}:</Typography>
+      <Typography variant="body2" fontWeight="500">{value || '-'}</Typography>
+    </Box>
+  );
+
+  return (
+    <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth fullScreen={isMobile}>
+      <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1, pb: 1 }}>
+        <Typography variant="h6" fontWeight="bold" sx={{ flexGrow: 1 }}>İş Emri #{data.fis_no}</Typography>
+        <Button size="small" variant="outlined" startIcon={<EditIcon />} onClick={() => { onClose(); onEdit(data.id); }} sx={{ mr: 1 }}>Düzenle</Button>
+        {data.plaka && (
+          <Button size="small" variant="outlined" startIcon={<QrIcon />} onClick={() => printServisQr(data.plaka)} sx={{ mr: 1 }}>Servis QR</Button>
+        )}
+        <Button size="small" variant="contained" startIcon={<PrintIcon />} onClick={() => printIsEmri(data)} sx={{ mr: 1 }}>Yazdır</Button>
+        <IconButton onClick={onClose}><CloseIcon /></IconButton>
+      </DialogTitle>
+      <DialogContent dividers>
+        <Box sx={{ p: 1 }}>
+          <Grid container spacing={3} sx={{ mb: 3 }}>
+            <Grid size={{ xs: 12, md: 4 }}>
+              <Typography variant="subtitle1" fontWeight="bold" color="primary" gutterBottom>👤 Müşteri Bilgileri</Typography>
+              <Divider sx={{ mb: 1 }} />
+              <InfoRow label="Ad Soyad" value={data.musteri_ad_soyad} />
+              <InfoRow label="Telefon" value={data.telefon} />
+              <InfoRow label="Adres" value={data.adres} />
+              <InfoRow label="KM" value={data.km} />
+            </Grid>
+            <Grid size={{ xs: 12, md: 4 }}>
+              <Typography variant="subtitle1" fontWeight="bold" color="primary" gutterBottom>🏍️ Araç Bilgileri</Typography>
+              <Divider sx={{ mb: 1 }} />
+              <InfoRow label="Fiş No" value={`#${data.fis_no}`} />
+              <InfoRow label="Plaka" value={data.plaka} />
+              <InfoRow label="Marka" value={data.marka} />
+              <InfoRow label="Model/Tip" value={data.model_tip} />
+              <Box sx={{ mt: 1 }}><Chip label={durumLabel(data.durum)} color={durumRenk(data.durum)} size="small" /></Box>
+            </Grid>
+            <Grid size={{ xs: 12, md: 4 }}>
+              <Typography variant="subtitle1" fontWeight="bold" color="primary" gutterBottom>📅 Tarih ve Teslim</Typography>
+              <Divider sx={{ mb: 1 }} />
+              <InfoRow label="Oluşturma" value={formatDate(data.created_at)} />
+              <InfoRow label="Tahmini Teslim" value={formatDate(data.tahmini_teslim_tarihi)} />
+              <InfoRow label="Teslim Tarihi" value={formatDate(data.teslim_tarihi)} />
+              <InfoRow label="Teslim Alan" value={data.teslim_alan_ad_soyad} />
+              <InfoRow label="Teslim Eden" value={data.teslim_eden_teknisyen} />
+              <InfoRow label="Kaydı Açan" value={data.olusturan_kisi} />
+            </Grid>
+          </Grid>
+
+          <Grid container spacing={3} sx={{ mb: 3 }}>
+            <Grid size={{ xs: 12, md: 6 }}>
+              <Paper sx={{ p: 2 }}>
+                <Typography variant="subtitle1" fontWeight="bold" color="primary" gutterBottom>🔧 Arıza / Şikayetler</Typography>
+                <Divider sx={{ mb: 1 }} />
+                <Typography>{data.ariza_sikayetler || 'Belirtilmemiş'}</Typography>
+              </Paper>
+            </Grid>
+            <Grid size={{ xs: 12, md: 6 }}>
+              <Paper sx={{ p: 2 }}>
+                <Typography variant="subtitle1" fontWeight="bold" color="primary" gutterBottom>📝 Açıklama</Typography>
+                <Divider sx={{ mb: 1 }} />
+                <Typography>{data.aciklama || 'Belirtilmemiş'}</Typography>
+              </Paper>
+            </Grid>
+          </Grid>
+
+          <Paper sx={{ p: 2, mb: 3 }}>
+            <Typography variant="subtitle1" fontWeight="bold" color="primary" gutterBottom>📋 Parçalar ve İşçilik</Typography>
+            <Divider sx={{ mb: 1 }} />
+            {parcalar.length > 0 ? (
+              <>
+                {isMobile ? (
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                  {parcalar.map((p, i) => {
+                    const pSatis = parseFloat(p.toplam_fiyat || 0);
+                    const pMaliyet = (Number(p.adet) || 0) * (Number(p.maliyet) || 0);
+                    const pKar = pSatis - pMaliyet;
+                    return (
+                      <Paper key={i} variant="outlined" sx={{ p: 1.5 }}>
+                        <Typography variant="body2" fontWeight="bold">{p.takilan_parca}</Typography>
+                        <Typography variant="caption" color="text.secondary">Adet: {p.adet} • Birim: ₺{parseFloat(p.birim_fiyat || 0).toLocaleString('tr-TR')} • Toplam: ₺{pSatis.toLocaleString('tr-TR')}</Typography>
+                        <Typography variant="caption" className="no-print" sx={{ display: 'block' }}>Maliyet: ₺{pMaliyet.toLocaleString('tr-TR')}{karGor && <> • <span style={{ color: pKar >= 0 ? '#2e7d32' : '#c62828', fontWeight: 'bold' }}>Kâr: ₺{pKar.toLocaleString('tr-TR')}</span></>}</Typography>
+                      </Paper>
+                    );
+                  })}
+                </Box>
+                ) : (
+                <TableContainer sx={{ overflowX: 'auto' }}>
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow sx={{ bgcolor: '#f5f5f5' }}>
+                        {['Takılan Parça', 'Adet', 'Birim Fiyat', 'Toplam'].map(h => (
+                          <TableCell key={h} sx={{ fontWeight: 'bold' }}>{h}</TableCell>
+                        ))}
+                        <TableCell sx={{ fontWeight: 'bold' }} className="no-print">Maliyet</TableCell>
+                        {karGor && <TableCell sx={{ fontWeight: 'bold' }} className="no-print">Kâr</TableCell>}
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {parcalar.map((p, i) => {
+                        const pSatis = parseFloat(p.toplam_fiyat || 0);
+                        const pMaliyet = (Number(p.adet) || 0) * (Number(p.maliyet) || 0);
+                        const pKar = pSatis - pMaliyet;
+                        return (
+                          <TableRow key={i}>
+                            <TableCell>{p.takilan_parca}</TableCell>
+                            <TableCell>{p.adet}</TableCell>
+                            <TableCell>₺{parseFloat(p.birim_fiyat || 0).toLocaleString('tr-TR')}</TableCell>
+                            <TableCell sx={{ fontWeight: 'bold' }}>₺{pSatis.toLocaleString('tr-TR')}</TableCell>
+                            <TableCell className="no-print">₺{pMaliyet.toLocaleString('tr-TR')}</TableCell>
+                            {karGor && <TableCell className="no-print" sx={{ color: pKar >= 0 ? '#2e7d32' : '#c62828', fontWeight: 'bold' }}>₺{pKar.toLocaleString('tr-TR')}</TableCell>}
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+                )}
+                <Box sx={{ mt: 2, display: 'flex', gap: 3, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                  <Paper sx={{ px: 2, py: 1, bgcolor: '#ffebee' }}>
+                    <Typography variant="body2">Toplam: <strong>₺{toplamFiyat.toLocaleString('tr-TR')}</strong></Typography>
+                  </Paper>
+                  <Paper sx={{ px: 2, py: 1, bgcolor: '#ffebee' }} className="no-print">
+                    <Typography variant="body2">Maliyet: <strong>₺{toplamMaliyet.toLocaleString('tr-TR')}</strong></Typography>
+                  </Paper>
+                  {karGor && (
+                  <Paper sx={{ px: 2, py: 1, bgcolor: kar >= 0 ? '#e8f5e9' : '#ffebee' }} className="no-print">
+                    <Typography variant="body2" sx={{ color: kar >= 0 ? '#2e7d32' : '#c62828' }}>Kâr: <strong>₺{kar.toLocaleString('tr-TR')}</strong></Typography>
+                  </Paper>
+                  )}
+                </Box>
+              </>
+            ) : (
+              <Typography color="text.secondary" textAlign="center" py={2}>Parça kaydı yok</Typography>
+            )}
+          </Paper>
+
+          {data.odeme_detaylari && (
+            <Paper sx={{ p: 2, mb: 2 }}>
+              <Typography variant="subtitle1" fontWeight="bold" color="primary" gutterBottom>💳 Ödeme Detayları</Typography>
+              <Divider sx={{ mb: 1 }} />
+              <Typography>{data.odeme_detaylari}</Typography>
+            </Paper>
+          )}
+
+          {/* Ödeme Durumu */}
+          {(() => {
+            const kalan = parseFloat(data.kalan_odeme || 0);
+            const toplam = parseFloat(data.gercek_toplam_ucret || data.tahmini_toplam_ucret || 0);
+            const odenen = Math.max(0, toplam - kalan);
+            return (
+              <Paper sx={{ p: 2, bgcolor: kalan > 0 ? '#fff3e0' : '#e8f5e9', borderLeft: `4px solid ${kalan > 0 ? '#ed6c02' : '#2e7d32'}` }}>
+                <Typography variant="subtitle1" fontWeight="bold" sx={{ color: kalan > 0 ? '#ed6c02' : '#2e7d32' }} gutterBottom>
+                  {kalan > 0 ? '⚠️ Kalan Ödeme' : '✓ Ödeme Tamamlandı'}
+                </Typography>
+                <Divider sx={{ mb: 1 }} />
+                <Grid container spacing={2}>
+                  <Grid size={{ xs: 4 }}>
+                    <Typography variant="caption" color="text.secondary">Toplam Tutar</Typography>
+                    <Typography fontWeight="bold">₺{toplam.toLocaleString('tr-TR')}</Typography>
+                  </Grid>
+                  <Grid size={{ xs: 4 }}>
+                    <Typography variant="caption" color="text.secondary">Ödenen</Typography>
+                    <Typography fontWeight="bold" sx={{ color: '#2e7d32' }}>₺{odenen.toLocaleString('tr-TR')}</Typography>
+                  </Grid>
+                  <Grid size={{ xs: 4 }}>
+                    <Typography variant="caption" color="text.secondary">Kalan Borç</Typography>
+                    <Typography fontWeight="bold" sx={{ color: kalan > 0 ? '#C62828' : '#2e7d32' }}>
+                      {kalan > 0 ? `₺${kalan.toLocaleString('tr-TR')}` : 'Tamamlandı'}
+                    </Typography>
+                  </Grid>
+                </Grid>
+              </Paper>
+            );
+          })()}
+        </Box>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+export default IsEmirleri;
