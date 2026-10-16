@@ -7,6 +7,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const path = require('path');
 const fs = require('fs');
+const { denetimKaydi } = require('./config/denetimKaydi');
 const { initializeDatabase } = require('./config/initDb');
 const { pool } = require('./config/db');
 
@@ -112,19 +113,20 @@ const servisGecmisiRoutes = require('./routes/servisGecmisi');
 app.use('/api/auth', authRoutes);
 // Müşteri: arama uçları tüm modüllerdeki formlar tarafından kullanılır,
 // yönetim uçları admin'e kısıtlıdır — kural route dosyası içinde uygulanır.
-app.use('/api/musteriler', authenticateToken, kariGizle, musteriRoutes);
+app.use('/api/musteriler', denetimKaydi('musteriler'), authenticateToken, kariGizle, musteriRoutes);
 app.use('/api/is-emirleri', authenticateToken, kariGizle, modulYetkisi('servis_yetkisi'), isEmriRoutes);
 app.use('/api/aksesuarlar', authenticateToken, kariGizle, modulYetkisi('aksesuar_yetkisi'), aksesuarRoutes);
-app.use('/api/aksesuar-stok', authenticateToken, yazmaYetkisi('aksesuar_stok_yetkisi'), aksesuarStokRoutes);
+app.use('/api/aksesuar-stok', denetimKaydi('aksesuar_stok'), authenticateToken, yazmaYetkisi('aksesuar_stok_yetkisi'), aksesuarStokRoutes);
 app.use('/api/ikinci-el-motor', authenticateToken, kariGizle, motorYazmaYetkisi, ikinciElMotorRoutes);
 // Satış belgeleri (sözleşme vb.): yetki kontrolü route dosyasında; yükleme gövdesi ham ikili (express.raw)
 app.use('/api/satis-belgeleri', authenticateToken, satisBelgeRoutes);
 app.use('/api/eticaret', authenticateToken, kariGizle, modulYetkisi('eticaret_yetkisi'), eticaretRoutes);
-app.use('/api/yedek-parcalar', authenticateToken, modulYetkisi('yedek_parca_yetkisi'), yedekParcaRoutes);
-app.use('/api/yedek-parca-stok', authenticateToken, yazmaYetkisi('yedek_parca_yetkisi'), yedekParcaStokRoutes);
+app.use('/api/yedek-parcalar', denetimKaydi('yedek_parcalar'), authenticateToken, modulYetkisi('yedek_parca_yetkisi'), yedekParcaRoutes);
+app.use('/api/yedek-parca-stok', denetimKaydi('yedek_parca_stok'), authenticateToken, yazmaYetkisi('yedek_parca_yetkisi'), yedekParcaStokRoutes);
 app.use('/api/raporlar', authenticateToken, kariGizle, rolYetkisi('admin', 'yatirimci'), raporRoutes);
 app.use('/api/veresiye', authenticateToken, rolYetkisi('admin'), veresiyeRoutes);
 // Vitrin: public + admin uçları karışık; auth route içinde uygulanır
+app.use('/api/vitrin', denetimKaydi('vitrin_urunleri'));
 app.use('/api/vitrin', vitrinRoutes(authenticateToken, isAdmin));
 // Müşteri servis geçmişi (QR ile erişilen halka açık sayfa) — token bazlı, auth gerektirmez
 app.use('/api/servis-gecmisi', servisGecmisiRoutes);

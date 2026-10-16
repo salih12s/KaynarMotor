@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { sonIstek } from '../utils/sonIstek';
+import { bugunYerel } from '../utils/tarih';
 import {
   Box, Paper, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   Button, IconButton, TextField, Dialog, DialogTitle, DialogContent, DialogActions, Alert, Grid, Chip, InputAdornment, Divider, MenuItem, Checkbox, FormControlLabel, Autocomplete, useTheme, useMediaQuery
@@ -16,6 +18,9 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { ikinciElMotorService, musteriService, authService } from '../services/api';
 import { BelgeBolumu, BekleyenBelgeler, bekleyenBelgeleriYukle } from '../components/SatisBelgeleri';
 import { useAuth } from '../context/AuthContext';
+
+// Hızlı yazarken eski aramanın yanıtı yeniyi ezmesin
+const sonAra = sonIstek();
 
 const IkinciElMotor = () => {
   const isMobile = useMediaQuery(useTheme().breakpoints.down('sm'));
@@ -38,7 +43,7 @@ const IkinciElMotor = () => {
     komisyoncu_adi: '', komisyoncu_telefon: '', komisyoncu_tutari: '',
     durum: 'stokta', odeme_sekli: 'nakit', stok_tipi: 'sahip',
     kalan_odeme: '', odeme_tamamlandi: true, fatura_kesildi: false, yevmiye_no: '',
-    satis_tarihi: new Date().toISOString().split('T')[0],
+    satis_tarihi: bugunYerel(),
     yatirimci_id: '', yatirimci_kar: '', yatirimci_adi: ''
   });
   const [error, setError] = useState('');
@@ -53,7 +58,7 @@ const IkinciElMotor = () => {
 
   const searchMusteri = async (query) => {
     if (!query || query.length < 2) { setMusteriOptions([]); return; }
-    try { const res = await musteriService.search(query); setMusteriOptions(res.data); } catch { setMusteriOptions([]); }
+    try { const res = await sonAra(musteriService.search(query)); if (res) setMusteriOptions(res.data); } catch { setMusteriOptions([]); }
   };
 
   const loadData = async () => {
@@ -115,7 +120,7 @@ const IkinciElMotor = () => {
       komisyoncu_adi: '', komisyoncu_telefon: '', komisyoncu_tutari: '',
       durum: 'tamamlandi', odeme_sekli: 'nakit',
       kalan_odeme: '', odeme_tamamlandi: true, fatura_kesildi: false, yevmiye_no: '',
-      tarih: '', satis_tarihi: new Date().toISOString().split('T')[0],
+      tarih: '', satis_tarihi: bugunYerel(),
       yatirimci_id: '', yatirimci_kar: '', yatirimci_adi: ''
     });
     setDialog({ open: true, data: motor });
@@ -236,7 +241,7 @@ const IkinciElMotor = () => {
     const blob = new Blob(['\ufeff' + html], { type: 'application/vnd.ms-excel;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    const today = new Date().toISOString().split('T')[0];
+    const today = bugunYerel();
     a.href = url; a.download = `Motor_Satis_${today}.xls`;
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     URL.revokeObjectURL(url);

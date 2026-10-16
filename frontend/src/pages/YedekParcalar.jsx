@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { sonIstek } from '../utils/sonIstek';
 import {
   Box, Paper, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   Button, IconButton, TextField, Dialog, DialogTitle, DialogContent, DialogActions, Alert, Grid, Chip, InputAdornment, Checkbox, FormControlLabel, Autocomplete, useTheme, useMediaQuery
@@ -10,6 +11,9 @@ import SearchIcon from '@mui/icons-material/Search';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { yedekParcaService, yedekParcaStokService, musteriService } from '../services/api';
 import { useKarGor } from '../context/AuthContext';
+
+// Hızlı yazarken eski aramanın yanıtı yeniyi ezmesin
+const sonAra = sonIstek();
 
 const YedekParcalar = () => {
   const karGor = useKarGor();
@@ -49,7 +53,14 @@ const YedekParcalar = () => {
     setError('');
     setStokOptions([]);
     setStokInput('');
-    setSeciliStok(null);
+    // Stoğa bağlı kayıt düzenlenirken birim fiyatlar kayıttan türetilir (kayıtta toplam tutar saklanır):
+    // adet değişince fiyatlar yeniden hesaplanabilsin; eskiden seciliStok null olduğu için hesap hiç çalışmıyordu.
+    const kayitAdet = Math.max(Number(parca?.adet) || 1, 1);
+    setSeciliStok(parca?.stok_id ? {
+      id: parca.stok_id, stok_adi: parca.urun_adi,
+      alis_fiyati: parseFloat(parca.alis_fiyati || 0) / kayitAdet,
+      satis_fiyati: parseFloat(parca.satis_fiyati || 0) / kayitAdet,
+    } : null);
     setFormData(parca ? {
       urun_adi: parca.urun_adi || '', alis_fiyati: parca.alis_fiyati || '', satis_fiyati: parca.satis_fiyati || '',
       musteri_adi: parca.musteri_adi || '', musteri_telefon: parca.musteri_telefon || '',
@@ -61,8 +72,8 @@ const YedekParcalar = () => {
 
   // Yedek parça stoğundan ara (ad, marka veya barkod ile)
   const handleStokSearch = async (q) => {
-    if (!q || q.trim().length < 2) { setStokOptions([]); return; }
-    try { const res = await yedekParcaStokService.search(q.trim()); setStokOptions(res.data || []); } catch {}
+    if (!q || q.trim().length < 2) { sonAra.iptal(); setStokOptions([]); return; }
+    try { const res = await sonAra(yedekParcaStokService.search(q.trim())); if (res) setStokOptions(res.data || []); } catch {}
   };
 
   // Stok ürününü satışa bağla: ürün adı ve fiyatlar otomatik dolar, kaydedilince stoktan düşer
@@ -245,7 +256,7 @@ const YedekParcalar = () => {
               {formData.stok_id && (
                 <Chip size="small" sx={{ mt: 1, bgcolor: '#e8f5e9', color: '#2e7d32', fontWeight: 'bold' }}
                   label={seciliStok
-                    ? `Stoğa bağlı: ${seciliStok.stok_adi} (Mevcut: ${seciliStok.mevcut || 0}) — kaydedilince stoktan düşer`
+                    ? `Stoğa bağlı: ${seciliStok.stok_adi}${seciliStok.mevcut !== undefined ? ` (Mevcut: ${seciliStok.mevcut || 0})` : ""} — kaydedilince stoktan düşer`
                     : 'Stoğa bağlı satış — kaydedilince stoktan düşer'}
                   onDelete={stokBagKaldir} />
               )}

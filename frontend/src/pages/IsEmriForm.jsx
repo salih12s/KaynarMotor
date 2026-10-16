@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { sonIstek } from '../utils/sonIstek';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   Box, Paper, Typography, TextField, Button, Grid, MenuItem, IconButton, Table, TableBody,
@@ -9,6 +10,9 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import BackIcon from '@mui/icons-material/ArrowBack';
 import { isEmriService, musteriService } from '../services/api';
 import { useKarGor } from '../context/AuthContext';
+
+// Hızlı yazarken eski aramanın yanıtı yeniyi ezmesin
+const sonAra = sonIstek();
 
 const IsEmriForm = () => {
   const karGor = useKarGor();
@@ -65,8 +69,8 @@ const IsEmriForm = () => {
   const handleMusteriSearch = async (query) => {
     if (query.length < 2) return;
     try {
-      const res = await musteriService.search(query);
-      setMusteriOptions(res.data);
+      const res = await sonAra(musteriService.search(query));
+      if (res) setMusteriOptions(res.data);
     } catch {}
   };
 
@@ -80,16 +84,18 @@ const IsEmriForm = () => {
     setParcalar([...parcalar, { parca_kodu: '', takilan_parca: '', adet: 1, birim_fiyat: 0, maliyet: 0 }]);
   };
 
-  const updateParca = (index, field, value) => {
-    const updated = [...parcalar];
-    updated[index][field] = value;
-    if (field === 'adet' || field === 'birim_fiyat') {
-      updated[index].toplam_fiyat = (Number(updated[index].adet) || 0) * (Number(updated[index].birim_fiyat) || 0);
-    }
-    setParcalar(updated);
-  };
+  // Satırlar DEĞİŞTİRİLMEZ: her güncelleme yeni nesne üretir (eski kopya üzerine yazma ve gecikmeli render hatalarını önler)
+  const updateParca = (index, field, value) =>
+    setParcalar(prev => prev.map((p, i) => {
+      if (i !== index) return p;
+      const yeni = { ...p, [field]: value };
+      if (field === 'adet' || field === 'birim_fiyat') {
+        yeni.toplam_fiyat = (Number(yeni.adet) || 0) * (Number(yeni.birim_fiyat) || 0);
+      }
+      return yeni;
+    }));
 
-  const removeParca = (index) => setParcalar(parcalar.filter((_, i) => i !== index));
+  const removeParca = (index) => setParcalar(prev => prev.filter((_, i) => i !== index));
 
   const toplamFiyat = parcalar.reduce((t, p) => t + (Number(p.adet) || 0) * (Number(p.birim_fiyat) || 0), 0);
   const toplamMaliyet = parcalar.reduce((t, p) => t + (Number(p.adet) || 0) * (Number(p.maliyet) || 0), 0);

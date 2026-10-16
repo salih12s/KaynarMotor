@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { sonIstek } from '../utils/sonIstek';
 import {
   Box, Paper, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   Button, IconButton, TextField, Dialog, DialogTitle, DialogContent, DialogActions, Alert, Grid, Chip, InputAdornment, MenuItem, useTheme, useMediaQuery
@@ -11,6 +12,9 @@ import SearchIcon from '@mui/icons-material/Search';
 import PrintIcon from '@mui/icons-material/Print';
 import { aksesuarStokService } from '../services/api';
 import JsBarcode from 'jsbarcode';
+
+// Hızlı yazarken eski aramanın yanıtı yeniyi ezmesin
+const sonAra = sonIstek();
 
 const BEDEN_OPTIONS = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
 const KATEGORI_OPTIONS = ['Aksesuar', 'Demir', 'Tank Ped', 'Yedek Parça', 'Ekipman', 'Sticker'];
@@ -76,8 +80,8 @@ const AksesuarStok = () => {
   useEffect(() => { loadData(); }, []);
 
   const handleSearch = async () => {
-    if (!search.trim()) return loadData();
-    try { const res = await aksesuarStokService.search(search); setStoklar(res.data); } catch {}
+    if (!search.trim()) { sonAra.iptal(); return loadData(); }
+    try { const res = await sonAra(aksesuarStokService.search(search)); if (res) setStoklar(res.data); } catch {}
   };
 
   useEffect(() => { const t = setTimeout(handleSearch, 300); return () => clearTimeout(t); }, [search]);

@@ -1,3 +1,4 @@
+require('./_koruma'); // emniyet kilidi: --onayliyorum olmadan çalışmaz
 const { pool } = require('../config/db');
 
 // NOT: Tek seferlik veri aktarim script'idir. Asagidaki kayitlar tamamen

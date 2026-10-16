@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { sonIstek } from '../utils/sonIstek';
 import {
   Box, Paper, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   Button, IconButton, TextField, Dialog, DialogTitle, DialogContent, DialogActions, Alert,
@@ -11,6 +12,9 @@ import SearchIcon from '@mui/icons-material/Search';
 import ViewIcon from '@mui/icons-material/Visibility';
 import CloseIcon from '@mui/icons-material/Close';
 import { musteriService } from '../services/api';
+
+// Hızlı yazarken eski aramanın yanıtı yeniyi ezmesin
+const sonAra = sonIstek();
 
 const Musteriler = () => {
   const isMobile = useMediaQuery(useTheme().breakpoints.down('sm'));
@@ -35,8 +39,8 @@ const Musteriler = () => {
   useEffect(() => { loadData(); }, []);
 
   const handleSearch = async () => {
-    if (!search.trim()) return loadData();
-    try { const res = await musteriService.search(search); setMusteriler(res.data); } catch {}
+    if (!search.trim()) { sonAra.iptal(); return loadData(); }
+    try { const res = await sonAra(musteriService.search(search)); if (res) setMusteriler(res.data); } catch {}
   };
 
   useEffect(() => {

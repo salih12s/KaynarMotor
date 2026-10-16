@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { sonIstek } from '../utils/sonIstek';
+import { bugunYerel } from '../utils/tarih';
 import {
   Box, Paper, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   Button, IconButton, Chip, Dialog, DialogTitle, DialogContent, DialogActions,
@@ -14,6 +16,9 @@ import { useKarGor } from '../context/AuthContext';
 import ScannerIcon from '@mui/icons-material/QrCodeScanner';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { aksesuarService, aksesuarStokService, musteriService } from '../services/api';
+
+// Hızlı yazarken eski aramanın yanıtı yeniyi ezmesin
+const sonAra = sonIstek();
 
 const Aksesuarlar = () => {
   const isMobile = useMediaQuery(useTheme().breakpoints.down('sm'));
@@ -36,7 +41,7 @@ const Aksesuarlar = () => {
 
   const searchMusteri = async (query) => {
     if (!query || query.length < 2) { setMusteriOptions([]); return; }
-    try { const res = await musteriService.search(query); setMusteriOptions(res.data); } catch { setMusteriOptions([]); }
+    try { const res = await sonAra(musteriService.search(query)); if (res) setMusteriOptions(res.data); } catch { setMusteriOptions([]); }
   };
 
   const loadData = async () => {
@@ -72,7 +77,7 @@ const Aksesuarlar = () => {
         setParcalar(d.parcalar || []);
       } catch { setError('Yükleme hatası'); }
     } else {
-      setFormData({ ad_soyad: '', telefon: '', odeme_sekli: '', aciklama: '', durum: 'beklemede', odeme_detaylari: '', satis_tarihi: new Date().toISOString().split('T')[0], kalan_odeme: '', odeme_tamamlandi: true, indirim: '' });
+      setFormData({ ad_soyad: '', telefon: '', odeme_sekli: '', aciklama: '', durum: 'beklemede', odeme_detaylari: '', satis_tarihi: bugunYerel(), kalan_odeme: '', odeme_tamamlandi: true, indirim: '' });
       setParcalar([]);
     }
     setDialog({ open: true, data: satis });

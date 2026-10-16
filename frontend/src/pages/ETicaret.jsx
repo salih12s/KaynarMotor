@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { bugunYerel } from '../utils/tarih';
 import {
   Box, Paper, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   Button, IconButton, TextField, Dialog, DialogTitle, DialogContent, DialogActions, Alert,
@@ -69,7 +70,7 @@ const ETicaret = () => {
         adet: satis.adet || 1, tarih: satis.tarih ? satis.tarih.split('T')[0] : ''
       });
     } else {
-      setSatisForm({ stok_id: '', platform_id: '', urun_adi: '', alis_fiyati: '', satis_fiyati: '', komisyon_orani: '', kdv_orani: '20', kargo_ucreti: '0', adet: 1, tarih: new Date().toISOString().split('T')[0] });
+      setSatisForm({ stok_id: '', platform_id: '', urun_adi: '', alis_fiyati: '', satis_fiyati: '', komisyon_orani: '', kdv_orani: '20', kargo_ucreti: '0', adet: 1, tarih: bugunYerel() });
     }
     setSatisDialog({ open: true, data: satis });
   };

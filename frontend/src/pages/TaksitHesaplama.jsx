@@ -43,11 +43,14 @@ export const ParaInput = ({ value, onChange, label, helperText, ...props }) => (
   />
 );
 
+// Makul üst sınır: paylaşım linki (/taksit/:fiyat) herkesçe değiştirilebildiğinden, absürt tutarlar "işletme teklifi" gibi görünmesin
+export const MAKS_NAKIT = 10000000;
+
 // Nakit fiyattan (peşinat düşülerek) taksit tablosunu hesaplar
 export const hesaplaTaksit = (nakit, pesinat = 0) => {
   const n = parseFloat(nakit);
   const p = parseFloat(pesinat) || 0;
-  if (!n || n <= 0) return null;
+  if (!n || n <= 0 || n > MAKS_NAKIT) return null;
   const kalan = n - p;
   if (kalan <= 0) return null;
   return ORANLAR.map(o => { const toplam = kalan / o.oran; return { ay: o.ay, toplam, aylik: toplam / o.ay }; });

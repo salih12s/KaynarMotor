@@ -1,3 +1,4 @@
+require('./_koruma'); // emniyet kilidi: --onayliyorum olmadan çalışmaz
 const { pool } = require('../config/db');
 
 async function run() {

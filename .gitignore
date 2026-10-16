@@ -28,3 +28,6 @@ backend/scripts/seed-gorseller/
 
 # Hostinger yayin paketi (npm run package:hostinger)
 deploy/
+
+# Yerel MCP ayari (tokenlar icerebilir)
+.mcp.json

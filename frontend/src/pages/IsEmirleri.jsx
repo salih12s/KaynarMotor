@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { sonIstek } from '../utils/sonIstek';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Box, Paper, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
@@ -19,6 +20,10 @@ import { isEmriService, musteriService, authService, aksesuarStokService, yedekP
 import { useAuth, useKarGor } from '../context/AuthContext';
 import QRCode from 'qrcode';
 import { isEmriYazdirHtml } from '../utils/isEmriYazdir';
+
+// Hızlı yazarken eski aramanın yanıtı yeniyi ezmesin
+const sonAra = sonIstek();
+const sonStokAra = sonIstek();
 
 // Motorun üzerine yapıştırılacak servis geçmişi QR etiketi — müşteri okutunca
 // sadece o plakanın servis geçmişini gösteren halka açık sayfa açılır.
@@ -228,12 +233,14 @@ const IsEmirleri = () => {
 
   // Aksesuar ve yedek parça stoğundan parça ara (isim, marka veya stok kodu/barkod ile)
   const handleStokSearch = async (q) => {
-    if (!q || q.trim().length < 2) { setStokOptions([]); return; }
+    if (!q || q.trim().length < 2) { sonStokAra.iptal(); setStokOptions([]); return; }
     try {
-      const [aks, yedek] = await Promise.all([
+      const sonuc = await sonStokAra(Promise.all([
         aksesuarStokService.search(q.trim()).catch(() => ({ data: [] })),
         yedekParcaStokService.search(q.trim()).catch(() => ({ data: [] })),
-      ]);
+      ]));
+      if (!sonuc) return;
+      const [aks, yedek] = sonuc;
       setStokOptions([
         ...(aks.data || []).map(s => ({ ...s, stok_kaynak: 'Aksesuar Stok' })),
         ...(yedek.data || []).map(s => ({ ...s, stok_kaynak: 'Yedek Parça Stok' })),
@@ -272,7 +279,7 @@ const IsEmirleri = () => {
 
   const handleMusteriSearch = async (query) => {
     if (query.length < 2) return;
-    try { const res = await musteriService.search(query); setMusteriOptions(res.data); } catch {}
+    try { const res = await sonAra(musteriService.search(query)); if (res) setMusteriOptions(res.data); } catch {}
   };
 
   const handleMusteriSelect = (musteri) => {

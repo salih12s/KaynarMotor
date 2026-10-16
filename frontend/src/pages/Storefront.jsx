@@ -25,6 +25,7 @@ import { hesaplaTaksit, TaksitTablo, ParaInput, paraToNumber, fmtTL } from './Ta
 import {
   VitrinTema, VitrinAcikTema, RENK, YAZI, ODAK, IlanKarti, IlanIskelet, ilanIzgarasi, iletisimKisileri, KisiDugmeleri, KisiSessiz
 } from '../components/VitrinOrtak';
+import { sonIstek } from '../utils/sonIstek';
 
 const RED = '#C62828';
 
@@ -132,6 +133,9 @@ const TaksitHesaplaDialogIc = ({ open, onClose, isMobile }) => {
 // Pencere açık zeminli hazır bir ekran olduğu için sayfanın koyu temasından ayrı, açık temayla gösterilir
 const TaksitHesaplaDialog = (props) => <VitrinAcikTema><TaksitHesaplaDialogIc {...props} /></VitrinAcikTema>;
 
+// Filtre hızlı değişirken eski isteğin yanıtı yenisinin üzerine yazmasın
+const sonUrun = sonIstek();
+
 const Storefront = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -190,7 +194,8 @@ const Storefront = () => {
         if (kmMax) params.km_max = kmMax;
       }
       // İsimle arama (q) sunucuya gitmez: yüklenen liste üzerinde anında, Türkçe karakter farkı gözetmeden süzülür
-      const res = await vitrinService.getAll(params);
+      const res = await sonUrun(vitrinService.getAll(params));
+      if (!res) return; // filtre bu arada değişti: eski yanıt yok sayılır, yükleniyor göstergesini yeni istek kapatır
       setUrunler(res.data);
     } catch { setUrunler([]); }
     setLoading(false);

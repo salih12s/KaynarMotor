@@ -8,7 +8,12 @@ import ViewIcon from '@mui/icons-material/Visibility';
 import { raporService, aksesuarStokService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { hesaplaKomisyon, detectPlatform } from '../utils/komisyon';
+import { sonIstek } from '../utils/sonIstek';
 
+
+// Tarih aralığı hızlı değişirken eski isteğin yanıtı yenisini ezmesin
+const sonRapor = sonIstek();
+const sonFisKar = sonIstek();
 
 // Yatırımcı kendi raporu görünümü
 const YatirimciRapor = ({ isMobile }) => {
@@ -204,7 +209,8 @@ const Raporlar = () => {
     setLoading(true);
     setError('');
     try {
-      const res = await raporService.getAralik(baslangic, bitis);
+      const res = await sonRapor(raporService.getAralik(baslangic, bitis));
+      if (!res) return; // tarih aralığı bu arada değişti: eski yanıt yok sayılır
       setRapor(res.data);
     } catch (err) {
       setError('Rapor yüklenirken hata oluştu');
@@ -217,7 +223,8 @@ const Raporlar = () => {
     setLoading(true);
     setError('');
     try {
-      const res = await raporService.getFisKar(baslangic, bitis);
+      const res = await sonFisKar(raporService.getFisKar(baslangic, bitis));
+      if (!res) return;
       setFisKar(res.data);
     } catch (err) {
       setError('Fiş kâr verileri yüklenirken hata oluştu');

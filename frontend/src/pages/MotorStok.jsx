@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { sonIstek } from '../utils/sonIstek';
+import { bugunYerel } from '../utils/tarih';
 import {
   Box, Paper, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   Button, IconButton, TextField, Dialog, DialogTitle, DialogContent, DialogActions, Alert, Grid, Chip, InputAdornment, Divider, MenuItem, Tooltip, Autocomplete, Checkbox, FormControlLabel, useTheme, useMediaQuery
@@ -16,6 +18,9 @@ import { ikinciElMotorService, musteriService, authService } from '../services/a
 import { SEGMENTLER } from './Vitrin';
 import { BelgeBolumu, BekleyenBelgeler, bekleyenBelgeleriYukle } from '../components/SatisBelgeleri';
 import { useAuth } from '../context/AuthContext';
+
+// Hızlı yazarken eski aramanın yanıtı yeniyi ezmesin
+const sonAra = sonIstek();
 
 // Ödeme dağılımı JSON'unu güvenle diziye çevirir
 const parseOdeme = (v) => {
@@ -51,7 +56,7 @@ const MotorStok = () => {
     plaka: '', marka: '', model: '', yil: '', km: '',
     alis_fiyati: '', noter_alis: '', masraflar: '', liste_fiyati: '',
     satici_adi: '', satici_tc: '',
-    durum: 'stokta', stok_tipi: 'sahip', aciklama: '', tarih: new Date().toISOString().split('T')[0],
+    durum: 'stokta', stok_tipi: 'sahip', aciklama: '', tarih: bugunYerel(),
     fatura_kesildi: false,
     yatirimci: false, yatirimci_id: '', yatirimci_kar_orani: '',
     vitrin_baslik: '', vitrin_aciklama: '', vitrin_segment: '', vitrin_cc: '', vitrin_hasar: ''
@@ -67,7 +72,7 @@ const MotorStok = () => {
   const [hizliForm, setHizliForm] = useState({
     satis_fiyati: '', noter_satis: '', masraflar: '',
     alici_adi: '', alici_tc: '', alici_telefon: '', alici_adres: '',
-    yevmiye_no: '', satis_tarihi: new Date().toISOString().split('T')[0], yatirimci_kar: ''
+    yevmiye_no: '', satis_tarihi: bugunYerel(), yatirimci_kar: ''
   });
   const [musteriOptions, setMusteriOptions] = useState([]);
   // Parçalı ödeme dağılımı (hızlı satış için)
@@ -77,7 +82,7 @@ const MotorStok = () => {
 
   const searchMusteri = async (query) => {
     if (!query || query.length < 2) { setMusteriOptions([]); return; }
-    try { const res = await musteriService.search(query); setMusteriOptions(res.data); } catch { setMusteriOptions([]); }
+    try { const res = await sonAra(musteriService.search(query)); if (res) setMusteriOptions(res.data); } catch { setMusteriOptions([]); }
   };
 
   const loadData = async () => {
@@ -102,7 +107,7 @@ const MotorStok = () => {
       masraflar: motor.masraflar || '', liste_fiyati: motor.liste_fiyati || '',
       satici_adi: motor.satici_adi || '', satici_tc: motor.satici_tc || '',
       durum: motor.durum || 'stokta', stok_tipi: motor.stok_tipi || 'sahip',
-      aciklama: motor.aciklama || '', tarih: motor.tarih ? new Date(motor.tarih).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+      aciklama: motor.aciklama || '', tarih: motor.tarih ? new Date(motor.tarih).toISOString().split('T')[0] : bugunYerel(),
       fatura_kesildi: motor.fatura_kesildi || false,
       yatirimci: !!motor.yatirimci_id, yatirimci_id: motor.yatirimci_id || '', yatirimci_kar_orani: motor.yatirimci_kar_orani || '',
       vitrin_baslik: motor.vitrin_baslik || '', vitrin_aciklama: motor.vitrin_aciklama || '', vitrin_segment: motor.vitrin_segment || '', vitrin_cc: motor.vitrin_cc || '', vitrin_hasar: motor.vitrin_hasar || ''
@@ -110,7 +115,7 @@ const MotorStok = () => {
       plaka: '', marka: '', model: '', yil: '', km: '',
       alis_fiyati: '', noter_alis: '', masraflar: '', liste_fiyati: '',
       satici_adi: '', satici_tc: '',
-      durum: 'stokta', stok_tipi: 'sahip', aciklama: '', tarih: new Date().toISOString().split('T')[0],
+      durum: 'stokta', stok_tipi: 'sahip', aciklama: '', tarih: bugunYerel(),
       fatura_kesildi: false,
       yatirimci: false, yatirimci_id: '', yatirimci_kar_orani: '',
     vitrin_baslik: '', vitrin_aciklama: '', vitrin_segment: '', vitrin_cc: '', vitrin_hasar: ''
@@ -149,7 +154,7 @@ const MotorStok = () => {
     setHizliForm({
       satis_fiyati: '', noter_satis: '', masraflar: motor.masraflar || '',
       alici_adi: '', alici_tc: '', alici_telefon: '', alici_adres: '',
-      yevmiye_no: '', satis_tarihi: new Date().toISOString().split('T')[0],
+      yevmiye_no: '', satis_tarihi: bugunYerel(),
       yatirimci_kar: motor.yatirimci_kar || ''
     });
     setOdemeKalemleri(parseOdeme(motor.odeme_detaylari));

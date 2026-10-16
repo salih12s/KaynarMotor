@@ -1,3 +1,4 @@
+require('./_koruma'); // emniyet kilidi: --onayliyorum olmadan çalışmaz
 require('dotenv').config({ path: require('path').resolve(__dirname, '../../.env') });
 const { pool } = require('../config/db');
 
