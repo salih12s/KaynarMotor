@@ -1,7 +1,7 @@
 /**
  * railwayYedekAl.js ile alınan yedeği (NDJSON + _sema.json) bir veritabanına yükler ve
  * yüklemeyi doğrular. İki hedef desteklenir:
- *   --hedef mariadb   (varsayılan) MariaDB; şema config/initDb.js ile kurulur
+ *   --hedef mariadb   (varsayılan) MariaDB; şema core/initDb.js ile kurulur
  *   --hedef pg        PostgreSQL; şema depodaki ESKİ initDb ile önceden kurulmuş olmalı
  *                     (karşılaştırma testi için yerel referans veritabanı)
  *
@@ -192,9 +192,9 @@ async function yukle() {
   if (hedef === 'mariadb') {
     // Şemayı depodaki initDb ile kur (yoksa); varsayılan satırlar aşağıda boşaltılır.
     process.env.NODE_ENV = process.env.NODE_ENV || 'development';
-    const { initializeDatabase } = require('../../config/initDb');
+    const { initializeDatabase } = require('../../core/initDb');
     await initializeDatabase();
-    const { pool } = require('../../config/db');
+    const { pool } = require('../../core/db');
     await pool.end();
     db = await mariadbBaglan();
     calistir = (sql, p) => db.execute(sql, p);

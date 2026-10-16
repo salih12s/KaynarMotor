@@ -1,5 +1,5 @@
 require('./_koruma'); // emniyet kilidi: --onayliyorum olmadan çalışmaz
-const { pool } = require('../config/db');
+const { pool } = require('../core/db');
 
 (async () => {
   // Delete tamamlandi duplicates where the same plaka already has a non-tamamlandi record

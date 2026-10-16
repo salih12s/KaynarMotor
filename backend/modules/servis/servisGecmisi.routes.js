@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { pool } = require('../config/db');
+const { pool } = require('../../core/db');
 
 // Müşteriye açık servis geçmişi — QR token ile erişilir, giriş gerektirmez.
 // Sadece o plakaya ait servis kayıtları döner: tarih, yapılan işlemler ve toplam tutar.

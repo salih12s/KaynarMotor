@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
-router.param('id', require('../middleware/idDogrula').idParam);
-const { pool, isUniqueViolation } = require('../config/db');
-const { orderByText } = require('../config/sqlText');
+router.param('id', require('../../core/middleware/idDogrula').idParam);
+const { pool, isUniqueViolation } = require('../../core/db');
+const { orderByText } = require('../../core/sqlText');
 
 // Yedek parça barkodları aksesuardan ayırt edilebilsin diye 9 ile başlar (13 hane)
 const ILK_KOD = '9000000000001';

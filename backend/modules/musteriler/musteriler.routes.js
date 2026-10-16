@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
-router.param('id', require('../middleware/idDogrula').idParam);
-const { pool } = require('../config/db');
-const { isAdmin } = require('../middleware/auth');
-const { orderByText } = require('../config/sqlText');
+router.param('id', require('../../core/middleware/idDogrula').idParam);
+const { pool } = require('../../core/db');
+const { isAdmin } = require('../../core/middleware/auth');
+const { orderByText } = require('../../core/sqlText');
 
 /*
  * Yetkilendirme notu:
@@ -110,7 +110,7 @@ router.get('/:id', isAdmin, async (req, res) => {
 });
 
 // POST / - Müşteri ekle [ADMIN]
-// Not: Diğer modüller müşteri kaydını config/musteriHelper.js içindeki upsertMusteri
+// Not: Diğer modüller müşteri kaydını modules/musteriler/musteriHelper.js içindeki upsertMusteri
 // üzerinden otomatik oluşturur; bu uç yalnızca müşteri yönetim ekranı içindir.
 router.post('/', isAdmin, async (req, res) => {
   try {

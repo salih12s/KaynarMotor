@@ -2,14 +2,14 @@ require('dotenv').config({ path: require('path').resolve(__dirname, '../.env') }
 require('dotenv').config();
 
 const express = require('express');
-require('./config/asyncHata'); // async işleyicide fırlatılan hata istemciyi yanıtsız bırakmasın (500 dönsün)
+require('./core/asyncHata'); // async işleyicide fırlatılan hata istemciyi yanıtsız bırakmasın (500 dönsün)
 const cors = require('cors');
 const helmet = require('helmet');
 const path = require('path');
 const fs = require('fs');
-const { denetimKaydi } = require('./config/denetimKaydi');
-const { initializeDatabase } = require('./config/initDb');
-const { pool } = require('./config/db');
+const { denetimKaydi } = require('./core/denetimKaydi');
+const { initializeDatabase } = require('./core/initDb');
+const { pool } = require('./core/db');
 
 const app = express();
 const PORT = process.env.PORT || 5100;
@@ -70,11 +70,11 @@ app.use(helmet({
   crossOriginOpenerPolicy: false,
 }));
 
-// Kimlik doğrulama ve yetkilendirme middleware'leri (bkz. middleware/)
-const { authenticateToken, isAdmin } = require('./middleware/auth');
+// Kimlik doğrulama ve yetkilendirme middleware'leri (bkz. core/middleware/)
+const { authenticateToken, isAdmin } = require('./core/middleware/auth');
 const {
   modulYetkisi, yazmaYetkisi, rolYetkisi, motorYazmaYetkisi, vitrinYetkili, kariGizle
-} = require('./middleware/yetki');
+} = require('./core/middleware/yetki');
 
 // Gövde limiti: yüksek limit yalnızca vitrin yükleme uçlarında gerekli (görsel/video base64, 120 MB).
 // Bu devasa gövde KİMLİK DOĞRULANMADAN okunursa yetkisiz biri sunucu belleğini şişirebilir. Bu yüzden
@@ -91,25 +91,25 @@ app.use('/api/vitrin', express.json({ limit: '120mb' }));
 app.use(express.json({ limit: '10mb' }));
 
 // Routes
-const authRoutes = require('./routes/auth');
-const musteriRoutes = require('./routes/musteriler');
-const isEmriRoutes = require('./routes/isEmirleri');
-const aksesuarRoutes = require('./routes/aksesuarlar');
-const aksesuarStokRoutes = require('./routes/aksesuarStok');
-const ikinciElMotorRoutes = require('./routes/ikinciElMotor');
-const satisBelgeRoutes = require('./routes/satisBelgeleri');
-const eticaretRoutes = require('./routes/eticaret');
-const yedekParcaRoutes = require('./routes/yedekParcalar');
-const yedekParcaStokRoutes = require('./routes/yedekParcaStok');
-const raporRoutes = require('./routes/raporlar');
-const veresiyeRoutes = require('./routes/veresiye');
-const vitrinRoutes = require('./routes/vitrin');
-const servisGecmisiRoutes = require('./routes/servisGecmisi');
+const authRoutes = require('./modules/auth/auth.routes');
+const musteriRoutes = require('./modules/musteriler/musteriler.routes');
+const isEmriRoutes = require('./modules/servis/isEmirleri.routes');
+const aksesuarRoutes = require('./modules/aksesuar/aksesuarlar.routes');
+const aksesuarStokRoutes = require('./modules/aksesuar/aksesuarStok.routes');
+const ikinciElMotorRoutes = require('./modules/motor/ikinciElMotor.routes');
+const satisBelgeRoutes = require('./modules/motor/satisBelgeleri.routes');
+const eticaretRoutes = require('./modules/eticaret/eticaret.routes');
+const yedekParcaRoutes = require('./modules/yedek-parca/yedekParcalar.routes');
+const yedekParcaStokRoutes = require('./modules/yedek-parca/yedekParcaStok.routes');
+const raporRoutes = require('./modules/raporlar/raporlar.routes');
+const veresiyeRoutes = require('./modules/raporlar/veresiye.routes');
+const vitrinRoutes = require('./modules/vitrin/vitrin.routes');
+const servisGecmisiRoutes = require('./modules/servis/servisGecmisi.routes');
 
 // Yetkilendirme kuralları frontend/src/App.jsx içindeki route guard'larıyla birebir
 // eşleşecek şekilde seçilmiştir. Bazı uçlar sahibi olmadıkları ekranlar tarafından da
 // OKUMA amaçlı kullanıldığından (ör. stok araması servis/e-ticaret/rapor ekranlarında),
-// bu uçlarda yalnızca yazma işlemleri yetkiye bağlanır — bkz. middleware/yetki.js.
+// bu uçlarda yalnızca yazma işlemleri yetkiye bağlanır — bkz. core/middleware/yetki.js.
 app.use('/api/auth', authRoutes);
 // Müşteri: arama uçları tüm modüllerdeki formlar tarafından kullanılır,
 // yönetim uçları admin'e kısıtlıdır — kural route dosyası içinde uygulanır.

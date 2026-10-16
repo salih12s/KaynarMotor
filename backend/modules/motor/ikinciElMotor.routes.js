@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
-router.param('id', require('../middleware/idDogrula').idParam);
-const { pool } = require('../config/db');
-const { logAktivite, ISLEM_TIPLERI } = require('../config/activityLogger');
-const { upsertMusteri } = require('../config/musteriHelper');
+router.param('id', require('../../core/middleware/idDogrula').idParam);
+const { pool } = require('../../core/db');
+const { logAktivite, ISLEM_TIPLERI } = require('../../core/activityLogger');
+const { upsertMusteri } = require('../musteriler/musteriHelper');
 
 const emptyToZero = (v) => { if (v === '' || v === undefined || v === null) return 0; const n = Number(v); return isNaN(n) ? 0 : n; };
 // Parçalı ödeme dağılımını JSON string olarak normalize eder

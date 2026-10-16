@@ -1,16 +1,16 @@
 const express = require('express');
 const router = express.Router();
-router.param('id', require('../middleware/idDogrula').idParam);
-const { pool } = require('../config/db');
-const { logAktivite, ISLEM_TIPLERI } = require('../config/activityLogger');
-const { orderByText } = require('../config/sqlText');
-const { adetCoz, bosuNull, hataYanitla } = require('../config/dogrula');
-const { stokAyarla } = require('../config/stok');
-const { hesaplaKomisyon, detectPlatform } = require('../config/komisyon');
+router.param('id', require('../../core/middleware/idDogrula').idParam);
+const { pool } = require('../../core/db');
+const { logAktivite, ISLEM_TIPLERI } = require('../../core/activityLogger');
+const { orderByText } = require('../../core/sqlText');
+const { adetCoz, bosuNull, hataYanitla } = require('../../core/dogrula');
+const { stokAyarla } = require('../../shared/stok');
+const { hesaplaKomisyon, detectPlatform } = require('./komisyon');
 
 const emptyToZero = (v) => { if (v === '' || v === undefined || v === null) return 0; const n = Number(v); return isNaN(n) ? 0 : n; };
 
-// Komisyon/kâr formülü config/komisyon.js içindedir (arayüzdeki kopyasıyla aynı test vektörlerinden geçer).
+// Komisyon/kâr formülü modules/eticaret/komisyon.js içindedir (arayüzdeki kopyasıyla aynı test vektörlerinden geçer).
 
 // ============ PLATFORMLAR ============
 

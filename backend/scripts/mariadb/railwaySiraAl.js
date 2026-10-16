@@ -3,7 +3,7 @@
  * benzersiz değerler, canlının `ORDER BY` sırasıyla yazılır (_sira.json, yedek klasörüne).
  *
  * Neden: MariaDB'de sıralama kuralı farklıdır. MariaDB tarafındaki ORDER BY ifadesinin
- * (config/sqlText.js orderByText) canlıyla aynı sırayı verdiği bu "kehanet" dosyasına karşı
+ * (core/sqlText.js orderByText) canlıyla aynı sırayı verdiği bu "kehanet" dosyasına karşı
  * ölçülür; yerel PostgreSQL'in sıralama kuralı canlıdan farklı olabileceği için ona güvenilmez.
  *
  * SALT-OKUNUR (BEGIN READ ONLY). Çıktı gerçek müşteri verisi içerir, depo dışındadır.

@@ -24,7 +24,7 @@ const logBul = async (tablo, hedefId, tip) => {
 
 before(async () => {
   s = await sunucuBaslat(); api = s.api; admin = s.admin;
-  pool = require('../../config/db').pool;
+  pool = require('../../core/db').pool;
 });
 after(async () => { if (s) s.durdur(); if (pool) await pool.end(); });
 

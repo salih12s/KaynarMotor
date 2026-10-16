@@ -1,6 +1,6 @@
 require('./_koruma'); // emniyet kilidi: --onayliyorum olmadan çalışmaz
 require('dotenv').config({ path: require('path').resolve(__dirname, '../../.env') });
-const { pool } = require('../config/db');
+const { pool } = require('../core/db');
 
 // plaka -> fatura_kesildi (true=1, false=0)
 // Aynı plaka birden fazla varsa sırayla işlenir

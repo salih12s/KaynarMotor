@@ -171,7 +171,7 @@ describe('#2 vitrin medya türleri', () => {
   });
 
   it('veritabanında kalmış eski kötü MIME\'lı kayıt sunulmaz (404)', async () => {
-    const { pool } = require('../../config/db');
+    const { pool } = require('../../core/db');
     const olustur = await api('POST', '/api/vitrin', ilan({ baslik: `f1 eski ${SON}` }), pVitrin.token);
     const ekle = await pool.query('INSERT INTO vitrin_gorseller (urun_id, data, sira) VALUES ($1, $2, 0)', [olustur.govde.id, HTML]);
     const g = await fetch(`${s.url}/api/vitrin/gorsel/${ekle.insertId}`);

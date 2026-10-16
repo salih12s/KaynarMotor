@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const { pool } = require('../config/db');
-const { parcalariEkle } = require('../config/altKayitlar');
+const { pool } = require('../../core/db');
+const { parcalariEkle } = require('../../shared/altKayitlar');
 
 // GET / - Tüm açık borçları (kalan_odeme > 0) tek bir listede döndür
 router.get('/', async (req, res) => {

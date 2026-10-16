@@ -1,12 +1,12 @@
 const express = require('express');
 const router = express.Router();
-router.param('id', require('../middleware/idDogrula').idParam);
-const { pool } = require('../config/db');
-const { logAktivite, ISLEM_TIPLERI } = require('../config/activityLogger');
-const { upsertMusteri } = require('../config/musteriHelper');
-const { parcalariEkle } = require('../config/altKayitlar');
-const { adetCoz, hataYanitla } = require('../config/dogrula');
-const { stokAyarla } = require('../config/stok');
+router.param('id', require('../../core/middleware/idDogrula').idParam);
+const { pool } = require('../../core/db');
+const { logAktivite, ISLEM_TIPLERI } = require('../../core/activityLogger');
+const { upsertMusteri } = require('../musteriler/musteriHelper');
+const { parcalariEkle } = require('../../shared/altKayitlar');
+const { adetCoz, hataYanitla } = require('../../core/dogrula');
+const { stokAyarla } = require('../../shared/stok');
 
 const emptyToZero = (v) => { if (v === '' || v === undefined || v === null) return 0; const n = Number(v); return isNaN(n) ? 0 : n; };
 
@@ -25,7 +25,7 @@ const stokIdCoz = async (client, stokId, urunAdi) => {
   return adla.rows.length > 0 ? adla.rows[0].id : null;
 };
 
-// yon: 1 stoktan düş, -1 geri ekle. Stok eksiye düşebilir (config/stok.js).
+// yon: 1 stoktan düş, -1 geri ekle. Stok eksiye düşebilir (shared/stok.js).
 const aksesuarStokAyarla = async (client, { stokId, urunAdi }, adet, yon) => {
   const miktar = (emptyToZero(adet) || 1) * yon;
   if (!miktar) return;

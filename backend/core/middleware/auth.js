@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const { pool } = require('../config/db');
+const { pool } = require('../db');
 
 /*
  * Kimlik doğrulama.
@@ -55,7 +55,7 @@ const authenticateToken = async (req, res, next) => {
   if (!yuk) {
     return res.status(403).json({ message: 'Geçersiz veya süresi dolmuş token', code: 'TOKEN_INVALID' });
   }
-  // Veritabanı hatası fırlatırsa merkezi hata işleyicisi 500 döner (config/asyncHata.js)
+  // Veritabanı hatası fırlatırsa merkezi hata işleyicisi 500 döner (core/asyncHata.js)
   const kullanici = await kullaniciGetir(Number(yuk.id));
   if (!kullanici || kullanici.onay_durumu !== 'onaylandi') {
     return res.status(401).json({ message: 'Oturumunuz geçersiz. Lütfen yeniden giriş yapın.', code: 'TOKEN_INVALID' });

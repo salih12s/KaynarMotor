@@ -1,4 +1,4 @@
-const { pool } = require('./db');
+const { pool } = require('../../core/db');
 
 /*
  * Satış/servis kayıtlarından müşteri kaydını otomatik oluşturur ya da bulur.

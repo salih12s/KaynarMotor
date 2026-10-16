@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { hesaplaKomisyon, detectPlatform } = require('../../config/komisyon');
+const { hesaplaKomisyon, detectPlatform } = require('../../modules/eticaret/komisyon');
 
 // Aynı test vektörleri frontend/src/utils/komisyon.test.js içinde de bulunur: iki kopya aynı sonucu vermelidir.
 // Elle hesap (Trendyol, satış 1000, alış 500, komisyon %10, kargo 0):

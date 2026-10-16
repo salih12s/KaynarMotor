@@ -1,12 +1,12 @@
 const express = require('express');
 const crypto = require('crypto');
 const router = express.Router();
-router.param('id', require('../middleware/idDogrula').idParam);
-const { pool } = require('../config/db');
-const { logAktivite, ISLEM_TIPLERI } = require('../config/activityLogger');
-const { upsertMusteri } = require('../config/musteriHelper');
-const { adetCoz, hataYanitla } = require('../config/dogrula');
-const { stokAyarla } = require('../config/stok');
+router.param('id', require('../../core/middleware/idDogrula').idParam);
+const { pool } = require('../../core/db');
+const { logAktivite, ISLEM_TIPLERI } = require('../../core/activityLogger');
+const { upsertMusteri } = require('../musteriler/musteriHelper');
+const { adetCoz, hataYanitla } = require('../../core/dogrula');
+const { stokAyarla } = require('../../shared/stok');
 
 const emptyToNull = (value) => (value === '' || value === undefined) ? null : value;
 const emptyToZero = (value) => {
@@ -17,7 +17,7 @@ const emptyToZero = (value) => {
 
 // İş emri parçalarından yedek parça stoğuna bağlı olanları ayarla (yon: 1 stoktan düş, -1 geri ekle).
 // parca_kodu yedek_parca_stok'ta yoksa (ör. aksesuar stok kodu veya serbest metin) sorgu hiçbir satırı etkilemez.
-// Stok eksiye düşebilir, iade tam geri verir (config/stok.js).
+// Stok eksiye düşebilir, iade tam geri verir (shared/stok.js).
 const yedekParcaStokAyarla = async (client, parcalar, yon) => {
   for (const parca of parcalar || []) {
     const kod = String(parca.parca_kodu || '').trim();

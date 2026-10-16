@@ -1,8 +1,8 @@
 const express = require('express');
 const path = require('path');
 const router = express.Router();
-const { pool, maxPaket, paketHatasi } = require('../config/db');
-const { logAktivite, ISLEM_TIPLERI } = require('../config/activityLogger');
+const { pool, maxPaket, paketHatasi } = require('../../core/db');
+const { logAktivite, ISLEM_TIPLERI } = require('../../core/activityLogger');
 
 const MAX_BOYUT = 10 * 1024 * 1024; // dosya başına 10 MB
 const MAX_ADET = 30; // satış başına

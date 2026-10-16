@@ -1,7 +1,7 @@
 require('./_koruma'); // emniyet kilidi: --onayliyorum olmadan çalışmaz
 require('dotenv').config({ path: require('path').resolve(__dirname, '../../.env') });
 require('dotenv').config();
-const { pool } = require('../config/db');
+const { pool } = require('../core/db');
 
 (async () => {
   try {

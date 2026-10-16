@@ -1,14 +1,14 @@
 const express = require('express');
 const router = express.Router();
-router.param('id', require('../middleware/idDogrula').idParam);
-const { pool } = require('../config/db');
-const { orderByText } = require('../config/sqlText');
-const { adetCoz, hataYanitla } = require('../config/dogrula');
-const { stokAyarla: stokDuzenle } = require('../config/stok');
+router.param('id', require('../../core/middleware/idDogrula').idParam);
+const { pool } = require('../../core/db');
+const { orderByText } = require('../../core/sqlText');
+const { adetCoz, hataYanitla } = require('../../core/dogrula');
+const { stokAyarla: stokDuzenle } = require('../../shared/stok');
 
 const emptyToZero = (v) => { if (v === '' || v === undefined || v === null) return 0; const n = Number(v); return isNaN(n) ? 0 : n; };
 
-// Satış stok kaydına bağlıysa yedek parça stoğunu ayarla (yon: 1 düş, -1 geri ekle). Stok eksiye düşebilir (config/stok.js).
+// Satış stok kaydına bağlıysa yedek parça stoğunu ayarla (yon: 1 düş, -1 geri ekle). Stok eksiye düşebilir (shared/stok.js).
 const stokAyarla = async (client, stokId, adet, yon) => {
   if (!stokId || !adet) return;
   await stokDuzenle(client, 'yedek_parca_stok', 'id = $2', stokId, adet * yon);

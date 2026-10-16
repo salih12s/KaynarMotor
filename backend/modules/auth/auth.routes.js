@@ -1,14 +1,14 @@
 const express = require('express');
 const router = express.Router();
-router.param('id', require('../middleware/idDogrula').idParam);
+router.param('id', require('../../core/middleware/idDogrula').idParam);
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { pool } = require('../config/db');
-const { logAktivite, ISLEM_TIPLERI } = require('../config/activityLogger');
-const { authenticateToken, isAdmin, kullaniciOnbellegiTemizle } = require('../middleware/auth');
-const { sifreSorunu } = require('../config/dogrula');
-const { girisLimiti, kayitLimiti } = require('../middleware/rateLimit');
-const { orderByText } = require('../config/sqlText');
+const { pool } = require('../../core/db');
+const { logAktivite, ISLEM_TIPLERI } = require('../../core/activityLogger');
+const { authenticateToken, isAdmin, kullaniciOnbellegiTemizle } = require('../../core/middleware/auth');
+const { sifreSorunu } = require('../../core/dogrula');
+const { girisLimiti, kayitLimiti } = require('../../core/middleware/rateLimit');
+const { orderByText } = require('../../core/sqlText');
 
 // Kullanıcı yokken de bcrypt çalıştırmak için (yanıt süresinden kullanıcı adı sızmasın)
 const SAHTE_OZET = bcrypt.hashSync('sahte-sifre-zaman-esitleme', 10);
@@ -72,7 +72,7 @@ router.post('/login', girisLimiti, async (req, res) => {
       return res.status(403).json({ message: 'Hesabınız henüz onaylanmadı' });
     }
 
-    // Token yalnızca kimliği taşır; rol ve yetkiler her istekte veritabanından okunur (middleware/auth.js)
+    // Token yalnızca kimliği taşır; rol ve yetkiler her istekte veritabanından okunur (core/middleware/auth.js)
     const token = jwt.sign({ id: user.id, kullanici_adi: user.kullanici_adi }, process.env.JWT_SECRET, { expiresIn: '24h', algorithm: 'HS256' });
 
     await logAktivite({ kullanici_id: user.id, kullanici_adi, islem_tipi: ISLEM_TIPLERI.LOGIN, islem_detay: 'Giriş yapıldı', ip_adresi: req.ip });

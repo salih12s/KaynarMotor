@@ -1,7 +1,7 @@
 require('./_koruma'); // emniyet kilidi: --onayliyorum olmadan çalışmaz
 const fs = require('fs');
 const path = require('path');
-const { pool } = require('../config/db');
+const { pool } = require('../core/db');
 
 function parseTurkishNumber(val) {
   if (!val || val === '0₺' || val === '0') return 0;

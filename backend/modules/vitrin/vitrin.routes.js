@@ -1,8 +1,8 @@
 const express = require('express');
-const { pool, maxPaket, paketHatasi } = require('../config/db');
-const { orderByText } = require('../config/sqlText');
-const { opsiyonelKullanici } = require('../middleware/auth');
-const { vitrinYetkili } = require('../middleware/yetki');
+const { pool, maxPaket, paketHatasi } = require('../../core/db');
+const { orderByText } = require('../../core/sqlText');
+const { opsiyonelKullanici } = require('../../core/middleware/auth');
+const { vitrinYetkili } = require('../../core/middleware/yetki');
 
 // Geçerli kategoriler
 const KATEGORILER = ['motor', 'aksesuar', 'yedek_parca', 'bakim_servis', 'nakliye', 'sigorta'];
@@ -92,10 +92,10 @@ const parseDataUrl = (data, izinli) => {
 
 module.exports = (authenticateToken, isAdmin) => {
   const router = express.Router();
-  router.param('id', require('../middleware/idDogrula').idParam);
+  router.param('id', require('../../core/middleware/idDogrula').idParam);
   const admin = [authenticateToken, isAdmin];
 
-  // Vitrin yazma yetkisi: admin VEYA motor/aksesuar vitrin yetkisi olan personel (middleware/yetki.js)
+  // Vitrin yazma yetkisi: admin VEYA motor/aksesuar vitrin yetkisi olan personel (core/middleware/yetki.js)
   const vitrinWrite = [authenticateToken, vitrinYetkili];
   // Personel yalnızca izinli olduğu kategoriyi yönetebilir (admin hepsini)
   const kategoriYetkiliMi = (user, kategori) => {

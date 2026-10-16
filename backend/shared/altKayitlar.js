@@ -1,5 +1,5 @@
-const { pool } = require('./db');
-const { jsonSatir, pgJsonZaman, grupla } = require('./sqlText');
+const { pool } = require('../core/db');
+const { jsonSatir, pgJsonZaman, grupla } = require('../core/sqlText');
 
 /**
  * PostgreSQL'deki `json_agg(...)` alt sorgularının karşılığı: alt kayıtlar (ör. iş emrinin

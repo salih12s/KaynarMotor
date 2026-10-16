@@ -40,9 +40,15 @@ fs.mkdirSync(dist, { recursive: true });
 
 // 1) Sözdizimi denetimi: hatalı kod pakete girmesin.
 console.log('\n> sunucu sözdizimi denetimi');
-for (const klasor of ['config', 'middleware', 'routes']) {
-  for (const dosya of fs.readdirSync(path.join(backend, klasor)).filter((f) => f.endsWith('.js'))) {
-    const r = spawnSync(process.execPath, ['--check', path.join(backend, klasor, dosya)], { stdio: 'inherit' });
+// core/, shared/ ve modules/ altındaki her .js dosyası (iç içe klasörler dahil) denetlenir.
+const sunucuJsDosyalari = (klasor) => fs.readdirSync(klasor, { withFileTypes: true }).flatMap((e) => {
+  const yol = path.join(klasor, e.name);
+  if (e.isDirectory()) return sunucuJsDosyalari(yol);
+  return e.name.endsWith('.js') ? [yol] : [];
+});
+for (const klasor of ['core', 'shared', 'modules']) {
+  for (const dosya of sunucuJsDosyalari(path.join(backend, klasor))) {
+    const r = spawnSync(process.execPath, ['--check', dosya], { stdio: 'inherit' });
     if (r.status !== 0) process.exit(1);
   }
 }

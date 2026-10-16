@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
-router.param('id', require('../middleware/idDogrula').idParam);
-const { pool, isUniqueViolation } = require('../config/db');
-const { orderByText } = require('../config/sqlText');
+router.param('id', require('../../core/middleware/idDogrula').idParam);
+const { pool, isUniqueViolation } = require('../../core/db');
+const { orderByText } = require('../../core/sqlText');
 
 // GET /next-stok-kodu - Sonraki otomatik stok kodu
 router.get('/next-stok-kodu', async (req, res) => {

@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const { pool } = require('../config/db');
-const { orderByText } = require('../config/sqlText');
-const { parcalariEkle } = require('../config/altKayitlar');
+const { pool } = require('../../core/db');
+const { orderByText } = require('../../core/sqlText');
+const { parcalariEkle } = require('../../shared/altKayitlar');
 
 // Yatırımcıların genel raporlara erişimini engelle (sadece kendi raporlarını görebilir)
 const engelleYatirimci = (req, res, next) => {
