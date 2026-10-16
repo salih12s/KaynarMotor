@@ -6,37 +6,35 @@ const { logAktivite, ISLEM_TIPLERI } = require('../config/activityLogger');
 const { upsertMusteri } = require('../config/musteriHelper');
 const { parcalariEkle } = require('../config/altKayitlar');
 const { adetCoz, hataYanitla } = require('../config/dogrula');
+const { stokAyarla } = require('../config/stok');
 
 const emptyToZero = (v) => { if (v === '' || v === undefined || v === null) return 0; const n = Number(v); return isNaN(n) ? 0 : n; };
 
-// Aksesuar stoğunu ürün adına göre ayarlar (yon: 1 stoktan düş, -1 geri ekle).
-//
-// Stok, ürün ADIYLA eşlenir; aksesuar satış akışı baştan sona ad üzerinden çalıştığı ve
-// aksesuar_parcalar tablosunda stok id'si tutulmadığı için bu bağ korunmuştur.
-// stok_adi UNIQUE olmadığından, aynı adlı birden fazla kayıt varsa eskiden UPDATE
-// hepsini birden güncelliyordu; alt sorgu ile artık tek ve deterministik satır güncellenir.
-// mevcut/cikan_miktar GREATEST ile 0'ın altına düşürülmez.
-// MariaDB SET atamalarını soldan sağa, GÜNCELLENMİŞ değerlerle çalıştırır (PostgreSQL hepsini
-// eski değerle hesaplar): envanter_degeri, mevcut'tan ÖNCE yazılmalıdır. IFNULL: PostgreSQL'in
-// GREATEST'i NULL'ı yok sayar, MariaDB'inki NULL döner.
-const aksesuarStokAyarla = async (client, urunAdi, adet, yon) => {
-  const ad = String(urunAdi || '').trim();
-  const miktar = (emptyToZero(adet) || 1) * yon;
-  if (!ad || !miktar) return;
-  const sonuc = await client.query(
-    `UPDATE aksesuar_stok SET
-       cikan_miktar = GREATEST(IFNULL(cikan_miktar + $1, 0), 0),
-       envanter_degeri = GREATEST(IFNULL(mevcut - $1, 0), 0) * satis_fiyati,
-       mevcut = GREATEST(IFNULL(mevcut - $1, 0), 0),
-       updated_at = CURRENT_TIMESTAMP
-     WHERE id = (SELECT id FROM aksesuar_stok WHERE stok_adi = $2 ORDER BY id LIMIT 1)`,
-    [miktar, ad]
-  );
-  // Serbest metinle girilmiş ürünler stokta bulunmayabilir; bu beklenen bir durumdur,
-  // ancak sessiz kalmak yerine iz bırakılır.
-  if (sonuc.rowCount === 0) {
-    console.warn(`Aksesuar stok eşleşmedi, stok güncellenmedi: "${ad}"`);
+// Aksesuar satış satırı mümkünse stok kaydına ID ile bağlanır (aksesuar_parcalar.stok_id): stok yeniden adlandırılsa ya da
+// aynı adlı birden fazla kayıt olsa da iade doğru stoğa gider. ID'si olmayan eski satırlar ve serbest metin için ada göre
+// eşleşme sürer (aynı adlı birden fazla kayıt varsa deterministik olarak en düşük id).
+const stokIdCoz = async (client, stokId, urunAdi) => {
+  const id = Number(stokId);
+  if (Number.isInteger(id) && id > 0) {
+    const varMi = await client.query('SELECT id FROM aksesuar_stok WHERE id = $1', [id]);
+    if (varMi.rows.length > 0) return id;
   }
+  const ad = String(urunAdi || '').trim();
+  if (!ad) return null;
+  const adla = await client.query('SELECT id FROM aksesuar_stok WHERE stok_adi = $1 ORDER BY id LIMIT 1', [ad]);
+  return adla.rows.length > 0 ? adla.rows[0].id : null;
+};
+
+// yon: 1 stoktan düş, -1 geri ekle. Stok eksiye düşebilir (config/stok.js).
+const aksesuarStokAyarla = async (client, { stokId, urunAdi }, adet, yon) => {
+  const miktar = (emptyToZero(adet) || 1) * yon;
+  if (!miktar) return;
+  const hedef = stokId ? Number(stokId) : await stokIdCoz(client, null, urunAdi); // ID yoksa (eski satır): ada göre
+  if (!hedef) {
+    if (urunAdi) console.warn(`Aksesuar stok eşleşmedi, stok güncellenmedi: "${urunAdi}"`);
+    return;
+  }
+  await stokAyarla(client, 'aksesuar_stok', 'id = $2', hedef, miktar);
 };
 
 // GET /stats/genel - İstatistikler
@@ -65,7 +63,7 @@ router.get('/', async (req, res) => {
     // Parçalar ayrı sorguyla çekilip birleştirilir (PostgreSQL'deki json_agg karşılığı).
     // json_agg(ap.*) tüm parça kolonlarını verir.
     res.json(await parcalariEkle(result.rows, 'aksesuar_parcalar', 'aksesuar_id',
-      ['id', 'urun_adi', 'adet', 'maliyet', 'satis_fiyati', 'created_at'], ['maliyet', 'satis_fiyati'], { anahtariTut: true }));
+      ['id', 'stok_id', 'urun_adi', 'adet', 'maliyet', 'satis_fiyati', 'created_at'], ['maliyet', 'satis_fiyati'], { anahtariTut: true }));
   } catch (error) {
     res.status(500).json({ message: 'Sunucu hatası' });
   }
@@ -113,14 +111,13 @@ router.post('/', async (req, res) => {
     const aksesuarId = result.rows[0].id;
 
     for (const p of satirlar) {
+      const stokId = await stokIdCoz(client, p.stok_id, p.urun_adi);
       await client.query(
-        'INSERT INTO aksesuar_parcalar (aksesuar_id, urun_adi, adet, maliyet, satis_fiyati) VALUES ($1,$2,$3,$4,$5)',
-        [aksesuarId, p.urun_adi, p.adet, emptyToZero(p.maliyet), emptyToZero(p.satis_fiyati)]
+        'INSERT INTO aksesuar_parcalar (aksesuar_id, stok_id, urun_adi, adet, maliyet, satis_fiyati) VALUES ($1,$2,$3,$4,$5,$6)',
+        [aksesuarId, stokId, p.urun_adi, p.adet, emptyToZero(p.maliyet), emptyToZero(p.satis_fiyati)]
       );
       // Tamamlandıysa stoktan düş
-      if (durum === 'tamamlandi' && p.urun_adi) {
-        await aksesuarStokAyarla(client, p.urun_adi, p.adet, 1);
-      }
+      if (durum === 'tamamlandi') await aksesuarStokAyarla(client, { stokId, urunAdi: p.urun_adi }, p.adet, 1);
     }
 
     await client.query('COMMIT');
@@ -158,9 +155,7 @@ router.put('/:id', async (req, res) => {
     if (eskiDurum === 'tamamlandi') {
       const eskiParcalar = await client.query('SELECT * FROM aksesuar_parcalar WHERE aksesuar_id = $1', [req.params.id]);
       for (const p of eskiParcalar.rows) {
-        if (p.urun_adi) {
-          await aksesuarStokAyarla(client, p.urun_adi, p.adet, -1);
-        }
+        await aksesuarStokAyarla(client, { stokId: p.stok_id, urunAdi: p.urun_adi }, p.adet, -1);
       }
     }
 
@@ -171,14 +166,13 @@ router.put('/:id', async (req, res) => {
     for (const p of satirlar) {
       toplamMaliyet += p.adet * emptyToZero(p.maliyet);
       brutSatis += p.adet * emptyToZero(p.satis_fiyati);
+      const stokId = await stokIdCoz(client, p.stok_id, p.urun_adi);
       await client.query(
-        'INSERT INTO aksesuar_parcalar (aksesuar_id, urun_adi, adet, maliyet, satis_fiyati) VALUES ($1,$2,$3,$4,$5)',
-        [req.params.id, p.urun_adi, p.adet, emptyToZero(p.maliyet), emptyToZero(p.satis_fiyati)]
+        'INSERT INTO aksesuar_parcalar (aksesuar_id, stok_id, urun_adi, adet, maliyet, satis_fiyati) VALUES ($1,$2,$3,$4,$5,$6)',
+        [req.params.id, stokId, p.urun_adi, p.adet, emptyToZero(p.maliyet), emptyToZero(p.satis_fiyati)]
       );
       // Yeni durum tamamlandi ise stoktan düş
-      if (durum === 'tamamlandi' && p.urun_adi) {
-        await aksesuarStokAyarla(client, p.urun_adi, p.adet, 1);
-      }
+      if (durum === 'tamamlandi') await aksesuarStokAyarla(client, { stokId, urunAdi: p.urun_adi }, p.adet, 1);
     }
 
     // İndirim: ürün toplamından (ve kârdan) düşülür. toplam_satis NET saklanır.
@@ -219,9 +213,7 @@ router.delete('/:id', async (req, res) => {
     if (existing.rows.length > 0 && existing.rows[0].durum === 'tamamlandi') {
       const parcalar = await client.query('SELECT * FROM aksesuar_parcalar WHERE aksesuar_id = $1', [req.params.id]);
       for (const p of parcalar.rows) {
-        if (p.urun_adi) {
-          await aksesuarStokAyarla(client, p.urun_adi, p.adet, -1);
-        }
+        await aksesuarStokAyarla(client, { stokId: p.stok_id, urunAdi: p.urun_adi }, p.adet, -1);
       }
     }
     await client.query('DELETE FROM aksesuarlar WHERE id = $1', [req.params.id]);

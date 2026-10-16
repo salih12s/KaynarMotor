@@ -78,18 +78,19 @@ const Aksesuarlar = () => {
     setDialog({ open: true, data: satis });
   };
 
-  const addParca = () => setParcalar([...parcalar, { urun_adi: '', adet: 1, maliyet: 0, satis_fiyati: 0 }]);
+  const addParca = () => setParcalar(prev => [...prev, { stok_id: null, urun_adi: '', adet: 1, maliyet: 0, satis_fiyati: 0 }]);
 
   // Barkod okutulduğunda ürünü otomatik ekle / adedini artır
   const addOrIncrementStok = (stok) => {
     setParcalar(prev => {
-      const idx = prev.findIndex(p => p.urun_adi === stok.stok_adi);
+      const idx = prev.findIndex(p => (p.stok_id ? p.stok_id === stok.id : p.urun_adi === stok.stok_adi));
       if (idx >= 0) {
         const updated = [...prev];
         updated[idx] = { ...updated[idx], adet: (Number(updated[idx].adet) || 0) + 1 };
         return updated;
       }
       return [...prev, {
+        stok_id: stok.id ?? null,
         urun_adi: stok.stok_adi,
         adet: 1,
         maliyet: parseFloat(stok.alis_fiyati || 0),
@@ -119,20 +120,21 @@ const Aksesuarlar = () => {
     setBarkodInput('');
   };
 
-  const updateParca = (i, field, value) => {
-    const updated = [...parcalar];
-    updated[i][field] = value;
-    if (field === 'urun_adi') {
-      const found = stokOptions.find(s => s.stok_adi === value);
-      if (found) {
-        updated[i].maliyet = parseFloat(found.alis_fiyati || 0);
-        updated[i].satis_fiyati = parseFloat(found.satis_fiyati || 0);
-      }
-    }
-    setParcalar(updated);
-  };
+  // Satırlar DEĞİŞTİRİLMEZ (yeni nesne üretilir): React önceki durumu doğru karşılaştırır, hızlı art arda girişte eski kopya ezilmez
+  const updateParca = (i, field, value) =>
+    setParcalar(prev => prev.map((p, idx) => (idx === i ? { ...p, [field]: value } : p)));
 
-  const removeParca = (i) => setParcalar(parcalar.filter((_, idx) => idx !== i));
+  // Stok seçildiğinde satır stok kaydına ID ile bağlanır (aynı adlı kayıtlar karışmaz) ve fiyatlar stoktan gelir
+  const secStok = (i, stok) =>
+    setParcalar(prev => prev.map((p, idx) => {
+      if (idx !== i) return p;
+      if (!stok) return { ...p, stok_id: null, urun_adi: '' };
+      return { ...p, stok_id: stok.id ?? null, urun_adi: stok.stok_adi, maliyet: parseFloat(stok.alis_fiyati || 0), satis_fiyati: parseFloat(stok.satis_fiyati || 0) };
+    }));
+
+  const stokDegeri = (p) => stokOptions.find(s => (p.stok_id ? s.id === p.stok_id : s.stok_adi === p.urun_adi)) || null;
+
+  const removeParca = (i) => setParcalar(prev => prev.filter((_, idx) => idx !== i));
 
   const toplamSatis = parcalar.reduce((t, p) => t + (Number(p.adet) || 0) * (Number(p.satis_fiyati) || 0), 0);
   const toplamMaliyet = parcalar.reduce((t, p) => t + (Number(p.adet) || 0) * (Number(p.maliyet) || 0), 0);
@@ -352,10 +354,10 @@ const Aksesuarlar = () => {
                   </Box>
                   <Autocomplete size="small" options={stokOptions}
                     getOptionLabel={(option) => typeof option === 'string' ? option : `${option.stok_adi} (Stok: ${option.mevcut})`}
-                    value={stokOptions.find(s => s.stok_adi === p.urun_adi) || null}
-                    onChange={(_, newValue) => updateParca(i, 'urun_adi', newValue?.stok_adi || '')}
+                    value={stokDegeri(p)}
+                    onChange={(_, newValue) => secStok(i, newValue)}
                     renderInput={(params) => <TextField {...params} placeholder="Ürün ara..." label="Ürün" />}
-                    isOptionEqualToValue={(option, value) => option.stok_adi === value.stok_adi}
+                    isOptionEqualToValue={(option, value) => option.id === value.id}
                     sx={{ mb: 1 }} />
                   <Grid container spacing={1}>
                     <Grid size={4}><TextField fullWidth size="small" type="number" label="Adet" value={p.adet} onChange={e => updateParca(i, 'adet', e.target.value)} /></Grid>
@@ -380,11 +382,11 @@ const Aksesuarlar = () => {
                           size="small"
                           options={stokOptions}
                           getOptionLabel={(option) => typeof option === 'string' ? option : `${option.stok_adi} (Stok: ${option.mevcut})`}
-                          value={stokOptions.find(s => s.stok_adi === p.urun_adi) || null}
-                          onChange={(_, newValue) => updateParca(i, 'urun_adi', newValue?.stok_adi || '')}
+                          value={stokDegeri(p)}
+                          onChange={(_, newValue) => secStok(i, newValue)}
                           renderInput={(params) => <TextField {...params} placeholder="Ürün ara..." />}
                           sx={{ minWidth: 200 }}
-                          isOptionEqualToValue={(option, value) => option.stok_adi === value.stok_adi}
+                          isOptionEqualToValue={(option, value) => option.id === value.id}
                         />
                       </TableCell>
                       <TableCell><TextField size="small" type="number" value={p.adet} onChange={e => updateParca(i, 'adet', e.target.value)} sx={{ width: 80 }} /></TableCell>

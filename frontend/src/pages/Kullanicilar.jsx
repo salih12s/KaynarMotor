@@ -7,6 +7,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
+import LockResetIcon from '@mui/icons-material/LockReset';
 import { authService } from '../services/api';
 
 const Kullanicilar = () => {
@@ -16,6 +17,8 @@ const Kullanicilar = () => {
   const [deleteDialog, setDeleteDialog] = useState({ open: false, user: null });
   const [createDialog, setCreateDialog] = useState(false);
   const [createForm, setCreateForm] = useState({ kullanici_adi: '', sifre: '', ad_soyad: '', rol: 'yatirimci' });
+  const [sifreDialog, setSifreDialog] = useState({ open: false, user: null, sifre: '' });
+  const [bilgi, setBilgi] = useState('');
 
   const loadUsers = async () => {
     try {
@@ -31,12 +34,24 @@ const Kullanicilar = () => {
     if (!createForm.kullanici_adi || !createForm.sifre || !createForm.ad_soyad) {
       setError('Tüm alanlar zorunludur'); return;
     }
+    if (createForm.sifre.length < 6) { setError('Şifre en az 6 karakter olmalıdır'); return; }
     try {
       await authService.createUser(createForm);
       setCreateDialog(false);
       setCreateForm({ kullanici_adi: '', sifre: '', ad_soyad: '', rol: 'yatirimci' });
       loadUsers();
     } catch (err) { setError(err.response?.data?.message || 'Oluşturma hatası'); }
+  };
+
+  // Şifreler artık saklanmaz ve gösterilemez: unutan kullanıcıya yönetici yeni şifre belirler
+  const handleSifreSifirla = async () => {
+    setError('');
+    if (sifreDialog.sifre.length < 6) { setError('Şifre en az 6 karakter olmalıdır'); return; }
+    try {
+      await authService.setSifre(sifreDialog.user.id, sifreDialog.sifre);
+      setBilgi(`${sifreDialog.user.ad_soyad} için şifre güncellendi. Yeni şifreyi kullanıcıya iletin.`);
+      setSifreDialog({ open: false, user: null, sifre: '' });
+    } catch (err) { setError(err.response?.data?.message || 'Şifre güncellenemedi'); }
   };
 
   const handleApprove = async (id) => {
@@ -69,7 +84,8 @@ const Kullanicilar = () => {
           Kullanıcı / Yatırımcı Ekle
         </Button>
       </Box>
-      {error && <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')}>{error}</Alert>}
+      {error && !sifreDialog.open && !createDialog && <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')}>{error}</Alert>}
+      {bilgi && <Alert severity="success" sx={{ mb: 2 }} onClose={() => setBilgi('')}>{bilgi}</Alert>}
       <Alert severity="info" sx={{ mb: 2 }}>Personel yetkilerini (Motor Satış, Servis, Aksesuar, vb.) <strong>Yetkilendirme</strong> sayfasından ayarlayabilirsiniz.</Alert>
 
       {isMobile ? (
@@ -83,7 +99,7 @@ const Kullanicilar = () => {
                   <Chip label={user.onay_durumu} size="small" color={durumRenk(user.onay_durumu)} sx={{ height: 20, fontSize: '0.7rem' }} />
                 </Box>
               </Box>
-              <Typography variant="body2" color="text.secondary">{user.kullanici_adi} • {user.plain_sifre || '***'}</Typography>
+              <Typography variant="body2" color="text.secondary">{user.kullanici_adi}</Typography>
               <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 0.5 }}>
                 {user.onay_durumu === 'beklemede' && (
                   <>
@@ -91,6 +107,7 @@ const Kullanicilar = () => {
                     <IconButton color="error" size="small" onClick={() => handleReject(user.id)}><CloseIcon /></IconButton>
                   </>
                 )}
+                <IconButton size="small" title="Şifre sıfırla" onClick={() => { setError(''); setBilgi(''); setSifreDialog({ open: true, user, sifre: '' }); }}><LockResetIcon /></IconButton>
                 {user.rol !== 'admin' && (
                   <IconButton color="error" size="small" onClick={() => setDeleteDialog({ open: true, user })}><DeleteIcon /></IconButton>
                 )}
@@ -103,7 +120,7 @@ const Kullanicilar = () => {
         <Table>
           <TableHead>
             <TableRow sx={{ bgcolor: 'primary.main' }}>
-              {['Ad Soyad', 'Kullanıcı Adı', 'Şifre', 'Rol', 'Durum', 'İşlemler'].map(h => (
+              {['Ad Soyad', 'Kullanıcı Adı', 'Rol', 'Durum', 'İşlemler'].map(h => (
                 <TableCell key={h} sx={{ color: 'white', fontWeight: 'bold', whiteSpace: 'nowrap', px: 1 }}>{h}</TableCell>
               ))}
             </TableRow>
@@ -113,7 +130,6 @@ const Kullanicilar = () => {
               <TableRow key={user.id} hover>
                 <TableCell>{user.ad_soyad}</TableCell>
                 <TableCell>{user.kullanici_adi}</TableCell>
-                <TableCell>{user.plain_sifre || '***'}</TableCell>
                 <TableCell><Chip label={user.rol} size="small" color={user.rol === 'admin' ? 'primary' : 'default'} /></TableCell>
                 <TableCell><Chip label={user.onay_durumu} size="small" color={durumRenk(user.onay_durumu)} /></TableCell>
                 <TableCell>
@@ -123,6 +139,7 @@ const Kullanicilar = () => {
                       <IconButton color="error" size="small" onClick={() => handleReject(user.id)}><CloseIcon /></IconButton>
                     </>
                   )}
+                  <IconButton size="small" title="Şifre sıfırla" onClick={() => { setError(''); setBilgi(''); setSifreDialog({ open: true, user, sifre: '' }); }}><LockResetIcon /></IconButton>
                   {user.rol !== 'admin' && (
                     <IconButton color="error" size="small" onClick={() => setDeleteDialog({ open: true, user })}><DeleteIcon /></IconButton>
                   )}
@@ -145,6 +162,20 @@ const Kullanicilar = () => {
         </DialogActions>
       </Dialog>
 
+      <Dialog open={sifreDialog.open} onClose={() => setSifreDialog({ open: false, user: null, sifre: '' })} maxWidth="xs" fullWidth fullScreen={isMobile}>
+        <DialogTitle>Şifre Sıfırla</DialogTitle>
+        <DialogContent>
+          {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+          <Typography sx={{ mb: 2 }}><strong>{sifreDialog.user?.ad_soyad}</strong> için yeni şifre belirleyin. Eski şifre görüntülenemez.</Typography>
+          <TextField fullWidth label="Yeni şifre (en az 6 karakter)" type="password" autoComplete="new-password" value={sifreDialog.sifre}
+            onChange={e => setSifreDialog({ ...sifreDialog, sifre: e.target.value })} />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setSifreDialog({ open: false, user: null, sifre: '' })}>İptal</Button>
+          <Button variant="contained" onClick={handleSifreSifirla}>Kaydet</Button>
+        </DialogActions>
+      </Dialog>
+
       <Dialog open={createDialog} onClose={() => setCreateDialog(false)} maxWidth="sm" fullWidth fullScreen={isMobile}>
         <DialogTitle>Yeni Kullanıcı / Yatırımcı Ekle</DialogTitle>
         <DialogContent>
@@ -159,7 +190,7 @@ const Kullanicilar = () => {
             </Grid>
             <Grid size={{ xs: 12 }}><TextField fullWidth label="Ad Soyad" value={createForm.ad_soyad} onChange={e => setCreateForm({ ...createForm, ad_soyad: e.target.value })} required /></Grid>
             <Grid size={{ xs: 12, sm: 6 }}><TextField fullWidth label="Kullanıcı Adı" value={createForm.kullanici_adi} onChange={e => setCreateForm({ ...createForm, kullanici_adi: e.target.value })} required /></Grid>
-            <Grid size={{ xs: 12, sm: 6 }}><TextField fullWidth label="Şifre" value={createForm.sifre} onChange={e => setCreateForm({ ...createForm, sifre: e.target.value })} required /></Grid>
+            <Grid size={{ xs: 12, sm: 6 }}><TextField fullWidth label="Şifre (en az 6 karakter)" type="password" autoComplete="new-password" value={createForm.sifre} onChange={e => setCreateForm({ ...createForm, sifre: e.target.value })} required /></Grid>
           </Grid>
           <Alert severity="info" sx={{ mt: 2 }}>
             Yatırımcılar giriş yapınca sadece kendi motorlarını ve raporlarını görür. Personel yetkileri oluşturduktan sonra tabloda ve Yetkilendirme ekranında ayarlanabilir.

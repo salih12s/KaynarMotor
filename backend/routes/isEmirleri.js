@@ -6,6 +6,7 @@ const { pool } = require('../config/db');
 const { logAktivite, ISLEM_TIPLERI } = require('../config/activityLogger');
 const { upsertMusteri } = require('../config/musteriHelper');
 const { adetCoz, hataYanitla } = require('../config/dogrula');
+const { stokAyarla } = require('../config/stok');
 
 const emptyToNull = (value) => (value === '' || value === undefined) ? null : value;
 const emptyToZero = (value) => {
@@ -14,25 +15,14 @@ const emptyToZero = (value) => {
   return isNaN(num) ? 0 : num;
 };
 
-// İş emri parçalarından yedek parça stoğuna bağlı olanları ayarla (yon: 1 stoktan düş, -1 geri ekle)
+// İş emri parçalarından yedek parça stoğuna bağlı olanları ayarla (yon: 1 stoktan düş, -1 geri ekle).
 // parca_kodu yedek_parca_stok'ta yoksa (ör. aksesuar stok kodu veya serbest metin) sorgu hiçbir satırı etkilemez.
+// Stok eksiye düşebilir, iade tam geri verir (config/stok.js).
 const yedekParcaStokAyarla = async (client, parcalar, yon) => {
   for (const parca of parcalar || []) {
     const kod = String(parca.parca_kodu || '').trim();
     if (!kod) continue;
-    const miktar = (emptyToZero(parca.adet) || 1) * yon;
-    // GREATEST: stok 0'ın altına düşmez (miktar negatifken, yani geri eklemede, etkisizdir).
-    // MariaDB SET atamalarını soldan sağa, GÜNCELLENMİŞ değerlerle çalıştırır (PostgreSQL hepsini
-    // eski değerle hesaplar): envanter_degeri, mevcut'tan ÖNCE yazılmalıdır. IFNULL: PostgreSQL'in
-    // GREATEST'i NULL'ı yok sayar, MariaDB'inki NULL döner.
-    await client.query(
-      `UPDATE yedek_parca_stok SET
-         cikan_miktar = GREATEST(IFNULL(cikan_miktar + $1, 0), 0),
-         envanter_degeri = GREATEST(IFNULL(mevcut - $1, 0), 0) * satis_fiyati,
-         mevcut = GREATEST(IFNULL(mevcut - $1, 0), 0),
-         updated_at = CURRENT_TIMESTAMP WHERE stok_kodu = $2`,
-      [miktar, kod]
-    );
+    await stokAyarla(client, 'yedek_parca_stok', 'stok_kodu = $2', kod, (emptyToZero(parca.adet) || 1) * yon);
   }
 };
 

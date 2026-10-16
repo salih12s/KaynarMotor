@@ -897,8 +897,8 @@ const Vitrin = () => {
 
             <Stack direction="row" spacing={2} flexWrap="wrap">
               <FormControlLabel
-                control={<Switch checked={form.yayinda} onChange={e => setForm({ ...form, yayinda: e.target.checked })} />}
-                label="Sitede yayınla"
+                control={<Switch checked={form.yayinda} disabled={!isAdmin} onChange={e => setForm({ ...form, yayinda: e.target.checked })} />}
+                label={isAdmin ? 'Sitede yayınla' : 'Sitede yayınla (yalnızca yönetici değiştirebilir)'}
               />
               <FormControlLabel
                 control={<Switch color="warning" checked={!!form.one_cikan} onChange={e => setForm({ ...form, one_cikan: e.target.checked })} />}

@@ -5,17 +5,23 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { pool } = require('../config/db');
 const { logAktivite, ISLEM_TIPLERI } = require('../config/activityLogger');
-const { authenticateToken, isAdmin } = require('../middleware/auth');
+const { authenticateToken, isAdmin, kullaniciOnbellegiTemizle } = require('../middleware/auth');
+const { sifreSorunu } = require('../config/dogrula');
 const { girisLimiti, kayitLimiti } = require('../middleware/rateLimit');
 const { orderByText } = require('../config/sqlText');
+
+// Kullanıcı yokken de bcrypt çalıştırmak için (yanıt süresinden kullanıcı adı sızmasın)
+const SAHTE_OZET = bcrypt.hashSync('sahte-sifre-zaman-esitleme', 10);
 
 // POST /register
 router.post('/register', kayitLimiti, async (req, res) => {
   try {
-    const { kullanici_adi, sifre, ad_soyad } = req.body;
-    if (!kullanici_adi || !sifre || !ad_soyad) {
+    const { kullanici_adi, sifre, ad_soyad } = req.body || {};
+    if (typeof kullanici_adi !== 'string' || typeof ad_soyad !== 'string' || !kullanici_adi.trim() || !ad_soyad.trim() || !sifre) {
       return res.status(400).json({ message: 'Tüm alanlar zorunludur' });
     }
+    const sifreHatasi = sifreSorunu(sifre);
+    if (sifreHatasi) return res.status(400).json({ message: sifreHatasi });
 
     const existing = await pool.query('SELECT id FROM kullanicilar WHERE kullanici_adi = $1', [kullanici_adi]);
     if (existing.rows.length > 0) {
@@ -24,9 +30,9 @@ router.post('/register', kayitLimiti, async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(sifre, 10);
     const result = await pool.query(
-      `INSERT INTO kullanicilar (kullanici_adi, sifre, plain_sifre, ad_soyad)
-       VALUES ($1, $2, $3, $4) RETURNING id, kullanici_adi, ad_soyad, rol, onay_durumu`,
-      [kullanici_adi, hashedPassword, sifre, ad_soyad]
+      `INSERT INTO kullanicilar (kullanici_adi, sifre, ad_soyad)
+       VALUES ($1, $2, $3) RETURNING id, kullanici_adi, ad_soyad, rol, onay_durumu`,
+      [kullanici_adi, hashedPassword, ad_soyad]
     );
 
     await logAktivite({
@@ -47,37 +53,27 @@ router.post('/register', kayitLimiti, async (req, res) => {
 // POST /login
 router.post('/login', girisLimiti, async (req, res) => {
   try {
-    const { kullanici_adi, sifre } = req.body;
-    const result = await pool.query('SELECT * FROM kullanicilar WHERE kullanici_adi = $1', [kullanici_adi]);
-
-    if (result.rows.length === 0) {
-      await logAktivite({ kullanici_adi, islem_tipi: ISLEM_TIPLERI.LOGIN_FAILED, islem_detay: 'Kullanıcı bulunamadı', ip_adresi: req.ip });
+    const { kullanici_adi, sifre } = req.body || {};
+    // Tür denetimi: { $ne: 1 } gibi nesne/dizi gönderilirse sorguya ve bcrypt'e hiç girmez (eskiden 500 veriyordu)
+    if (typeof kullanici_adi !== 'string' || typeof sifre !== 'string') {
       return res.status(401).json({ message: 'Geçersiz kullanıcı adı veya şifre' });
     }
-
+    const result = await pool.query('SELECT * FROM kullanicilar WHERE kullanici_adi = $1', [kullanici_adi]);
     const user = result.rows[0];
 
+    // Şifre HER ZAMAN doğrulanır (kullanıcı yoksa sahte özetle): yanıt ve süre, kullanıcı adının var olup olmadığını ve
+    // hesabın onay durumunu şifreyi bilmeyen birine sızdırmaz. "Henüz onaylanmadı" yalnızca DOĞRU şifre için gösterilir.
+    const isValid = await bcrypt.compare(sifre, user ? user.sifre : SAHTE_OZET);
+    if (!user || !isValid) {
+      await logAktivite({ kullanici_id: user ? user.id : undefined, kullanici_adi, islem_tipi: ISLEM_TIPLERI.LOGIN_FAILED, islem_detay: user ? 'Yanlış şifre' : 'Kullanıcı bulunamadı', ip_adresi: req.ip });
+      return res.status(401).json({ message: 'Geçersiz kullanıcı adı veya şifre' });
+    }
     if (user.onay_durumu !== 'onaylandi') {
       return res.status(403).json({ message: 'Hesabınız henüz onaylanmadı' });
     }
 
-    const isValid = await bcrypt.compare(sifre, user.sifre);
-    if (!isValid) {
-      await logAktivite({ kullanici_id: user.id, kullanici_adi, islem_tipi: ISLEM_TIPLERI.LOGIN_FAILED, islem_detay: 'Yanlış şifre', ip_adresi: req.ip });
-      return res.status(401).json({ message: 'Geçersiz kullanıcı adı veya şifre' });
-    }
-
-    const tokenPayload = {
-      id: user.id, kullanici_adi: user.kullanici_adi, rol: user.rol, ad_soyad: user.ad_soyad,
-      aksesuar_yetkisi: user.aksesuar_yetkisi, motor_satis_yetkisi: user.motor_satis_yetkisi,
-      eticaret_yetkisi: user.eticaret_yetkisi, servis_yetkisi: user.servis_yetkisi,
-      aksesuar_stok_yetkisi: user.aksesuar_stok_yetkisi, yedek_parca_yetkisi: user.yedek_parca_yetkisi,
-      motor_vitrin_yetkisi: user.motor_vitrin_yetkisi, aksesuar_vitrin_yetkisi: user.aksesuar_vitrin_yetkisi,
-      liste_fiyati_gor: user.liste_fiyati_gor, alis_fiyati_gor: user.alis_fiyati_gor,
-      satis_fiyati_gor: user.satis_fiyati_gor, kar_gor: user.kar_gor,
-      musteri_gor: user.musteri_gor, satis_gecmisi_gor: user.satis_gecmisi_gor
-    };
-    const token = jwt.sign(tokenPayload, process.env.JWT_SECRET, { expiresIn: '24h' });
+    // Token yalnızca kimliği taşır; rol ve yetkiler her istekte veritabanından okunur (middleware/auth.js)
+    const token = jwt.sign({ id: user.id, kullanici_adi: user.kullanici_adi }, process.env.JWT_SECRET, { expiresIn: '24h', algorithm: 'HS256' });
 
     await logAktivite({ kullanici_id: user.id, kullanici_adi, islem_tipi: ISLEM_TIPLERI.LOGIN, islem_detay: 'Giriş yapıldı', ip_adresi: req.ip });
 
@@ -140,7 +136,7 @@ router.get('/personel-listesi', authenticateToken, async (req, res) => {
 router.get('/users', authenticateToken, isAdmin, async (req, res) => {
   try {
     const result = await pool.query(
-      'SELECT id, kullanici_adi, ad_soyad, rol, onay_durumu, aksesuar_yetkisi, motor_satis_yetkisi, eticaret_yetkisi, servis_yetkisi, aksesuar_stok_yetkisi, yedek_parca_yetkisi, motor_vitrin_yetkisi, aksesuar_vitrin_yetkisi, liste_fiyati_gor, alis_fiyati_gor, satis_fiyati_gor, kar_gor, musteri_gor, satis_gecmisi_gor, plain_sifre, created_at FROM kullanicilar ORDER BY created_at DESC'
+      'SELECT id, kullanici_adi, ad_soyad, rol, onay_durumu, aksesuar_yetkisi, motor_satis_yetkisi, eticaret_yetkisi, servis_yetkisi, aksesuar_stok_yetkisi, yedek_parca_yetkisi, motor_vitrin_yetkisi, aksesuar_vitrin_yetkisi, liste_fiyati_gor, alis_fiyati_gor, satis_fiyati_gor, kar_gor, musteri_gor, satis_gecmisi_gor, created_at FROM kullanicilar ORDER BY created_at DESC'
     );
     res.json(result.rows);
   } catch (error) {
@@ -152,6 +148,7 @@ router.get('/users', authenticateToken, isAdmin, async (req, res) => {
 router.patch('/users/:id/approve', authenticateToken, isAdmin, async (req, res) => {
   try {
     await pool.query("UPDATE kullanicilar SET onay_durumu = 'onaylandi' WHERE id = $1", [req.params.id]);
+    kullaniciOnbellegiTemizle(req.params.id);
     await logAktivite({ kullanici_id: req.user.id, kullanici_adi: req.user.kullanici_adi, islem_tipi: ISLEM_TIPLERI.APPROVE, islem_detay: `Kullanıcı #${req.params.id} onaylandı`, hedef_tablo: 'kullanicilar', hedef_id: parseInt(req.params.id) });
     res.json({ message: 'Kullanıcı onaylandı' });
   } catch (error) {
@@ -163,6 +160,7 @@ router.patch('/users/:id/approve', authenticateToken, isAdmin, async (req, res) 
 router.patch('/users/:id/reject', authenticateToken, isAdmin, async (req, res) => {
   try {
     await pool.query("UPDATE kullanicilar SET onay_durumu = 'reddedildi' WHERE id = $1", [req.params.id]);
+    kullaniciOnbellegiTemizle(req.params.id); // reddedilen kullanıcının açık oturumu hemen geçersiz olur
     await logAktivite({ kullanici_id: req.user.id, kullanici_adi: req.user.kullanici_adi, islem_tipi: ISLEM_TIPLERI.REJECT, islem_detay: `Kullanıcı #${req.params.id} reddedildi`, hedef_tablo: 'kullanicilar', hedef_id: parseInt(req.params.id) });
     res.json({ message: 'Kullanıcı reddedildi' });
   } catch (error) {
@@ -190,6 +188,7 @@ router.delete('/users/:id', authenticateToken, isAdmin, async (req, res) => {
     } finally {
       client.release();
     }
+    kullaniciOnbellegiTemizle(req.params.id); // silinen kullanıcının token'ı hemen geçersiz olur
     res.json({ message: 'Kullanıcı silindi' });
   } catch (error) {
     console.error('Kullanıcı silme hatası:', error);
@@ -197,79 +196,17 @@ router.delete('/users/:id', authenticateToken, isAdmin, async (req, res) => {
   }
 });
 
-// PATCH /users/:id/aksesuar-yetkisi [ADMIN]
-router.patch('/users/:id/aksesuar-yetkisi', authenticateToken, isAdmin, async (req, res) => {
-  try {
-    const { aksesuar_yetkisi } = req.body;
-    await pool.query('UPDATE kullanicilar SET aksesuar_yetkisi = $1 WHERE id = $2', [aksesuar_yetkisi, req.params.id]);
-    res.json({ message: 'Aksesuar yetkisi güncellendi' });
-  } catch (error) {
-    res.status(500).json({ message: 'Sunucu hatası' });
-  }
-});
-
-// PATCH /users/:id/motor-satis-yetkisi [ADMIN]
-router.patch('/users/:id/motor-satis-yetkisi', authenticateToken, isAdmin, async (req, res) => {
-  try {
-    const { motor_satis_yetkisi } = req.body;
-    await pool.query('UPDATE kullanicilar SET motor_satis_yetkisi = $1 WHERE id = $2', [motor_satis_yetkisi, req.params.id]);
-    res.json({ message: 'Motor satış yetkisi güncellendi' });
-  } catch (error) {
-    res.status(500).json({ message: 'Sunucu hatası' });
-  }
-});
-
-// PATCH /users/:id/eticaret-yetkisi [ADMIN]
-router.patch('/users/:id/eticaret-yetkisi', authenticateToken, isAdmin, async (req, res) => {
-  try {
-    const { eticaret_yetkisi } = req.body;
-    await pool.query('UPDATE kullanicilar SET eticaret_yetkisi = $1 WHERE id = $2', [eticaret_yetkisi, req.params.id]);
-    res.json({ message: 'E-ticaret yetkisi güncellendi' });
-  } catch (error) {
-    res.status(500).json({ message: 'Sunucu hatası' });
-  }
-});
-
-// PATCH /users/:id/servis-yetkisi [ADMIN]
-router.patch('/users/:id/servis-yetkisi', authenticateToken, isAdmin, async (req, res) => {
-  try {
-    const { servis_yetkisi } = req.body;
-    await pool.query('UPDATE kullanicilar SET servis_yetkisi = $1 WHERE id = $2', [servis_yetkisi, req.params.id]);
-    res.json({ message: 'Servis yetkisi güncellendi' });
-  } catch (error) {
-    res.status(500).json({ message: 'Sunucu hatası' });
-  }
-});
-
-// PATCH /users/:id/aksesuar-stok-yetkisi [ADMIN]
-router.patch('/users/:id/aksesuar-stok-yetkisi', authenticateToken, isAdmin, async (req, res) => {
-  try {
-    const { aksesuar_stok_yetkisi } = req.body;
-    await pool.query('UPDATE kullanicilar SET aksesuar_stok_yetkisi = $1 WHERE id = $2', [aksesuar_stok_yetkisi, req.params.id]);
-    res.json({ message: 'Aksesuar stok yetkisi güncellendi' });
-  } catch (error) {
-    res.status(500).json({ message: 'Sunucu hatası' });
-  }
-});
-
-// PATCH /users/:id/yedek-parca-yetkisi [ADMIN]
-router.patch('/users/:id/yedek-parca-yetkisi', authenticateToken, isAdmin, async (req, res) => {
-  try {
-    const { yedek_parca_yetkisi } = req.body;
-    await pool.query('UPDATE kullanicilar SET yedek_parca_yetkisi = $1 WHERE id = $2', [yedek_parca_yetkisi, req.params.id]);
-    res.json({ message: 'Yedek parça yetkisi güncellendi' });
-  } catch (error) {
-    res.status(500).json({ message: 'Sunucu hatası' });
-  }
-});
+// (Eski tek alanlı /users/:id/*-yetkisi uçları kaldırıldı: arayüz yalnızca PATCH /users/:id/yetkiler kullanıyor.)
 
 // POST /users [ADMIN] - Kullanıcı / yatırımcı oluştur
 router.post('/users', authenticateToken, isAdmin, async (req, res) => {
   try {
-    const { kullanici_adi, sifre, ad_soyad, rol } = req.body;
-    if (!kullanici_adi || !sifre || !ad_soyad) {
+    const { kullanici_adi, sifre, ad_soyad, rol } = req.body || {};
+    if (typeof kullanici_adi !== 'string' || typeof ad_soyad !== 'string' || !kullanici_adi.trim() || !ad_soyad.trim() || !sifre) {
       return res.status(400).json({ message: 'Kullanıcı adı, şifre ve ad soyad zorunludur' });
     }
+    const sifreHatasi = sifreSorunu(sifre);
+    if (sifreHatasi) return res.status(400).json({ message: sifreHatasi });
     const gecerliRoller = ['personel', 'yatirimci', 'muhasebeci'];
     const yeniRol = gecerliRoller.includes(rol) ? rol : 'personel';
 
@@ -280,10 +217,10 @@ router.post('/users', authenticateToken, isAdmin, async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(sifre, 10);
     const result = await pool.query(
-      `INSERT INTO kullanicilar (kullanici_adi, sifre, plain_sifre, ad_soyad, rol, onay_durumu)
-       VALUES ($1, $2, $3, $4, $5, 'onaylandi')
+      `INSERT INTO kullanicilar (kullanici_adi, sifre, ad_soyad, rol, onay_durumu)
+       VALUES ($1, $2, $3, $4, 'onaylandi')
        RETURNING id, kullanici_adi, ad_soyad, rol, onay_durumu`,
-      [kullanici_adi, hashedPassword, sifre, ad_soyad, yeniRol]
+      [kullanici_adi, hashedPassword, ad_soyad, yeniRol]
     );
 
     await logAktivite({
@@ -298,6 +235,23 @@ router.post('/users', authenticateToken, isAdmin, async (req, res) => {
     console.error('Kullanıcı oluşturma hatası:', error);
     res.status(500).json({ message: 'Sunucu hatası' });
   }
+});
+
+// PATCH /users/:id/sifre [ADMIN] - Şifre sıfırla. Şifreler artık düz metin SAKLANMAZ ve gösterilemez; unutan
+// kullanıcıya yönetici yeni bir şifre belirler.
+router.patch('/users/:id/sifre', authenticateToken, isAdmin, async (req, res) => {
+  const { sifre } = req.body || {};
+  const sorun = sifreSorunu(sifre);
+  if (sorun) return res.status(400).json({ message: sorun });
+  const hash = await bcrypt.hash(sifre, 10);
+  const sonuc = await pool.query('UPDATE kullanicilar SET sifre = $1 WHERE id = $2', [hash, req.params.id]);
+  if (sonuc.rowCount === 0) return res.status(404).json({ message: 'Kullanıcı bulunamadı' });
+  await logAktivite({
+    kullanici_id: req.user.id, kullanici_adi: req.user.kullanici_adi,
+    islem_tipi: ISLEM_TIPLERI.UPDATE, islem_detay: `Kullanıcı #${req.params.id} şifresi sıfırlandı`,
+    hedef_tablo: 'kullanicilar', hedef_id: parseInt(req.params.id)
+  });
+  res.json({ message: 'Şifre güncellendi' });
 });
 
 // GET /yatirimcilar - Yatırımcı listesi (motor stok ekranı için)
@@ -335,6 +289,7 @@ router.patch('/users/:id/yetkiler', authenticateToken, isAdmin, async (req, res)
     }
     params.push(req.params.id);
     await pool.query(`UPDATE kullanicilar SET ${setParts.join(', ')} WHERE id = $${params.length}`, params);
+    kullaniciOnbellegiTemizle(req.params.id); // yetki değişikliği (alma ve verme) anında uygulanır
 
     await logAktivite({
       kullanici_id: req.user.id, kullanici_adi: req.user.kullanici_adi,

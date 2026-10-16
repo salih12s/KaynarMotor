@@ -53,6 +53,16 @@ const dataUrlMime = (data) => {
 };
 const medyaGecerli = (data, izinli) => izinli.includes(dataUrlMime(data));
 
+// Ödeme linki ve video linki yalnızca http(s) olabilir: "javascript:", "data:", "ftp:" gibi şemalar ya da şemasız metin reddedilir
+const HTTP_URL = /^https?:\/\/\S+$/i;
+const baglantiHatasi = (rubik, video) => {
+  for (const [ad, deger] of [['Ödeme linki', rubik], ['Video linki', video]]) {
+    if (deger === undefined || deger === null || deger === '') continue;
+    if (typeof deger !== 'string' || (deger.trim() && !HTTP_URL.test(deger.trim()))) return `${ad} http:// veya https:// ile başlamalıdır`;
+  }
+  return null;
+};
+
 // Yazma uçlarında: geçersiz medya varsa kullanıcıya gösterilecek hata, yoksa null
 const medyaHatasi = (gorseller, video) => {
   if (Array.isArray(gorseller) && gorseller.some((g) => !medyaGecerli(g, IZINLI_GORSEL))) {
@@ -317,7 +327,7 @@ module.exports = (authenticateToken, isAdmin) => {
       if (result.rows.length === 0) return res.status(404).json({ message: 'Kayıt bulunamadı' });
       // Yayından kaldırılmış ilan herkese açık değildir: yalnızca vitrin yetkilisi (düzenleme ekranı) görebilir.
       if (!result.rows[0].yayinda) {
-        const u = opsiyonelKullanici(req);
+        const u = await opsiyonelKullanici(req);
         if (!u || !(u.rol === 'admin' || u.motor_vitrin_yetkisi || u.aksesuar_vitrin_yetkisi)) {
           return res.status(404).json({ message: 'Kayıt bulunamadı' });
         }
@@ -481,7 +491,7 @@ module.exports = (authenticateToken, isAdmin) => {
       if (!kategoriYetkiliMi(req.user, kategori)) return res.status(403).json({ message: 'Bu kategori için vitrin yetkiniz yok' });
       if (!baslik) return res.status(400).json({ message: 'Başlık zorunlu' });
       if (kategori === 'motor' && !segment) return res.status(400).json({ message: 'Motor ilanı için segment zorunlu' });
-      const medyaSorunu = medyaHatasi(gorseller, video);
+      const medyaSorunu = medyaHatasi(gorseller, video) || baglantiHatasi(rubik_link, video_url);
       if (medyaSorunu) return res.status(400).json({ message: medyaSorunu });
 
       const asim = await paketAsimi(video, ...(Array.isArray(gorseller) ? gorseller : []));
@@ -538,14 +548,15 @@ module.exports = (authenticateToken, isAdmin) => {
         one_cikan, stok_motor_id, rubik_link, hasar_kaydi, motor_durumu
       } = req.body;
 
-      const mevcut = await client.query('SELECT id, kategori FROM vitrin_urunleri WHERE id = $1', [req.params.id]);
+      const adminMi = req.user.rol === 'admin';
+      const mevcut = await client.query('SELECT id, kategori, yayinda, siralama FROM vitrin_urunleri WHERE id = $1', [req.params.id]);
       if (mevcut.rows.length === 0) return res.status(404).json({ message: 'Kayıt bulunamadı' });
       // Hem mevcut kaydın hem hedef kategorinin yetkisi olmalı (personel kapsam dışına çıkamaz)
       if (!kategoriYetkiliMi(req.user, mevcut.rows[0].kategori) || !kategoriYetkiliMi(req.user, kategori)) {
         return res.status(403).json({ message: 'Bu kategori için vitrin yetkiniz yok' });
       }
       if (kategori === 'motor' && !segment) return res.status(400).json({ message: 'Motor ilanı için segment zorunlu' });
-      const medyaSorunu = medyaHatasi(gorseller, video);
+      const medyaSorunu = medyaHatasi(gorseller, video) || baglantiHatasi(rubik_link, video_url);
       if (medyaSorunu) return res.status(400).json({ message: medyaSorunu });
 
       const asim = await paketAsimi(video, ...(Array.isArray(gorseller) ? gorseller : []));
@@ -561,7 +572,9 @@ module.exports = (authenticateToken, isAdmin) => {
          WHERE id=$17`,
         [kategori, baslik, emptyToNull(aciklama), numOrNull(fiyat) || 0, emptyToNull(video_url),
          emptyToNull(marka), emptyToNull(model), numOrNull(yil), emptyToNull(segment),
-         numOrNull(motor_cc), numOrNull(km), yayinda !== false, numOrNull(siralama) || 0,
+         numOrNull(motor_cc), numOrNull(km),
+         // Yayın durumu ve sıra yalnızca admin tarafından değişir (PATCH /yayin ve /sira uçlarıyla aynı kural)
+         adminMi ? yayinda !== false : mevcut.rows[0].yayinda, adminMi ? (numOrNull(siralama) || 0) : mevcut.rows[0].siralama,
          one_cikan === true, numOrNull(stok_motor_id), emptyToNull(rubik_link), req.params.id, emptyToNull(hasar_kaydi), motorDurumu(kategori, motor_durumu)]
       );
 

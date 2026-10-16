@@ -7,73 +7,8 @@ import {
 import ViewIcon from '@mui/icons-material/Visibility';
 import { raporService, aksesuarStokService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { hesaplaKomisyon, detectPlatform } from '../utils/komisyon';
 
-// Platform tipi algılama
-const detectPlatform = (platformAdi) => {
-  if (!platformAdi) return 'trendyol';
-  const name = platformAdi.toLowerCase();
-  if (name.includes('hepsiburada') || name.includes('hepsi burada') || name.includes('hb')) return 'hepsiburada';
-  if (name.includes('n11')) return 'n11';
-  if (name.includes('shoppier') || name.includes('shopier')) return 'shoppier';
-  return 'trendyol';
-};
-
-// Komisyon hesaplama (ETicaret ile senkron)
-const hesaplaKomisyon = (satisFiyati, alisFiyati, komisyonOrani, kdvOrani, kargoUcreti, adet, platformTipi = 'trendyol') => {
-  const satis = Number(satisFiyati) || 0;
-  const alis = Number(alisFiyati) || 0;
-  const komisyon = Number(komisyonOrani) || 0;
-  const kdv = Number(kdvOrani) || 20;
-  const kargo = Number(kargoUcreti) || 0;
-  const miktar = Number(adet) || 1;
-  const kdvHaricSatis = satis / (1 + kdv / 100);
-  const kdvHaricAlis = alis / (1 + kdv / 100);
-  const kdvHaricKargo = kargo / (1 + kdv / 100);
-  const satistanKDV = satis - kdvHaricSatis;
-  const alisKDV = alis - kdvHaricAlis;
-  const kargoKDV = kargo - kdvHaricKargo;
-  let komisyonTutari, komisyonKDV, hizmetBedeli, hizmetKDV, stopaj;
-  let odemeBedeli = 0, islemBedeli = 0, odemIslemKDV = 0;
-  let pazarlamaHizmet = 0, pazarlamaHizmetKDV = 0;
-  if (platformTipi === 'hepsiburada') {
-    const netKomisyon = satis * komisyon / 100;
-    komisyonTutari = netKomisyon * (1 + kdv / 100);
-    komisyonKDV = komisyonTutari - komisyonTutari / (1 + kdv / 100);
-    odemeBedeli = satis * 0.0096;
-    islemBedeli = satis * 0.00315;
-    odemIslemKDV = (odemeBedeli + islemBedeli) - (odemeBedeli + islemBedeli) / (1 + kdv / 100);
-    hizmetBedeli = odemeBedeli + islemBedeli;
-    hizmetKDV = odemIslemKDV;
-    stopaj = kdvHaricSatis * 0.01;
-  } else if (platformTipi === 'n11') {
-    komisyonTutari = satis * komisyon / 100;
-    komisyonKDV = komisyonTutari - komisyonTutari / (1 + kdv / 100);
-    pazarlamaHizmet = satis * 0.01258;
-    pazarlamaHizmetKDV = pazarlamaHizmet - pazarlamaHizmet / (1 + kdv / 100);
-    hizmetBedeli = pazarlamaHizmet;
-    hizmetKDV = pazarlamaHizmetKDV;
-    stopaj = kdvHaricSatis * 0.01;
-  } else if (platformTipi === 'shoppier') {
-    komisyonTutari = satis * komisyon / 100;
-    komisyonKDV = komisyonTutari - komisyonTutari / (1 + kdv / 100);
-    hizmetBedeli = 0; hizmetKDV = 0; stopaj = 0;
-  } else {
-    komisyonTutari = satis * komisyon / 100;
-    komisyonKDV = komisyonTutari - komisyonTutari / (1 + kdv / 100);
-    hizmetBedeli = satis * 0.00347;
-    hizmetKDV = hizmetBedeli - hizmetBedeli / (1 + kdv / 100);
-    const kdvHaricKomisyon = komisyonTutari / (1 + kdv / 100);
-    stopaj = kdvHaricKomisyon * 0.077;
-  }
-  const odenecekKDV = satistanKDV - alisKDV - kargoKDV - komisyonKDV - hizmetKDV;
-  const netKar = satis - alis - kargo - komisyonTutari - hizmetBedeli - stopaj - odenecekKDV;
-  const r = (v) => Math.round(v * 100) / 100;
-  return {
-    netKar: r(netKar * miktar),
-    komisyonTutari: r(komisyonTutari * miktar),
-    toplamKomisyon: r((komisyonTutari + hizmetBedeli + stopaj) * miktar),
-  };
-};
 
 // Yatırımcı kendi raporu görünümü
 const YatirimciRapor = ({ isMobile }) => {

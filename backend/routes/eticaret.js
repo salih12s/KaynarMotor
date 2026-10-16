@@ -5,72 +5,12 @@ const { pool } = require('../config/db');
 const { logAktivite, ISLEM_TIPLERI } = require('../config/activityLogger');
 const { orderByText } = require('../config/sqlText');
 const { adetCoz, bosuNull, hataYanitla } = require('../config/dogrula');
+const { stokAyarla } = require('../config/stok');
+const { hesaplaKomisyon, detectPlatform } = require('../config/komisyon');
 
 const emptyToZero = (v) => { if (v === '' || v === undefined || v === null) return 0; const n = Number(v); return isNaN(n) ? 0 : n; };
 
-const detectPlatform = (platformAdi) => {
-  if (!platformAdi) return 'trendyol';
-  const name = platformAdi.toLowerCase();
-  if (name.includes('hepsiburada') || name.includes('hepsi burada') || name.includes('hb')) return 'hepsiburada';
-  if (name.includes('n11')) return 'n11';
-  if (name.includes('shoppier') || name.includes('shopier')) return 'shoppier';
-  return 'trendyol';
-};
-
-const hesaplaKomisyon = (satisFiyati, alisFiyati, komisyonOrani, kdvOrani, kargoUcreti, adet, platformTipi) => {
-  const satis = Number(satisFiyati) || 0;
-  const alis = Number(alisFiyati) || 0;
-  const komisyon = Number(komisyonOrani) || 0;
-  const kdv = Number(kdvOrani) || 20;
-  const kargo = Number(kargoUcreti) || 0;
-  const miktar = Number(adet) || 1;
-
-  const kdvHaricSatis = satis / (1 + kdv / 100);
-  const kdvHaricAlis = alis / (1 + kdv / 100);
-  const kdvHaricKargo = kargo / (1 + kdv / 100);
-  const satistanKDV = satis - kdvHaricSatis;
-  const alisKDV = alis - kdvHaricAlis;
-  const kargoKDV = kargo - kdvHaricKargo;
-
-  let komisyonTutari, komisyonKDV, hizmetBedeli, hizmetKDV, stopaj;
-
-  if (platformTipi === 'hepsiburada') {
-    const netKomisyon = satis * komisyon / 100;
-    komisyonTutari = netKomisyon * (1 + kdv / 100);
-    komisyonKDV = komisyonTutari - komisyonTutari / (1 + kdv / 100);
-    const odemeBedeli = satis * 0.0096;
-    const islemBedeli = satis * 0.00315;
-    hizmetBedeli = odemeBedeli + islemBedeli;
-    hizmetKDV = hizmetBedeli - hizmetBedeli / (1 + kdv / 100);
-    stopaj = kdvHaricSatis * 0.01;
-  } else if (platformTipi === 'n11') {
-    komisyonTutari = satis * komisyon / 100;
-    komisyonKDV = komisyonTutari - komisyonTutari / (1 + kdv / 100);
-    hizmetBedeli = satis * 0.01258;
-    hizmetKDV = hizmetBedeli - hizmetBedeli / (1 + kdv / 100);
-    stopaj = kdvHaricSatis * 0.01;
-  } else if (platformTipi === 'shoppier') {
-    komisyonTutari = satis * komisyon / 100;
-    komisyonKDV = komisyonTutari - komisyonTutari / (1 + kdv / 100);
-    hizmetBedeli = 0;
-    hizmetKDV = 0;
-    stopaj = 0;
-  } else {
-    komisyonTutari = satis * komisyon / 100;
-    komisyonKDV = komisyonTutari - komisyonTutari / (1 + kdv / 100);
-    hizmetBedeli = satis * 0.00347;
-    hizmetKDV = hizmetBedeli - hizmetBedeli / (1 + kdv / 100);
-    const kdvHaricKomisyon = komisyonTutari / (1 + kdv / 100);
-    stopaj = kdvHaricKomisyon * 0.077;
-  }
-
-  const toplamKomisyon = komisyonTutari + hizmetBedeli + stopaj;
-  const odenecekKDV = satistanKDV - alisKDV - kargoKDV - komisyonKDV - hizmetKDV;
-  const netKar = satis - alis - kargo - komisyonTutari - hizmetBedeli - stopaj - odenecekKDV;
-
-  const r = (v) => Math.round(v * 100) / 100;
-  return { komisyonTutari: r(komisyonTutari * miktar), toplamKesinti: r(toplamKomisyon * miktar), netKar: r(netKar * miktar) };
-};
+// Komisyon/kâr formülü config/komisyon.js içindedir (arayüzdeki kopyasıyla aynı test vektörlerinden geçer).
 
 // ============ PLATFORMLAR ============
 
@@ -212,15 +152,7 @@ router.post('/', async (req, res) => {
 
     // Stoktan düş
     if (stok_id) {
-      await client.query(
-        // envanter_degeri, mevcut'tan ÖNCE yazılır: MariaDB SET atamalarını soldan sağa, güncellenmiş
-        // değerlerle çalıştırır (PostgreSQL hepsini eski değerle hesaplar).
-        `UPDATE aksesuar_stok SET cikan_miktar = cikan_miktar + $1,
-         envanter_degeri = GREATEST(mevcut - $1, 0) * satis_fiyati,
-         mevcut = GREATEST(mevcut - $1, 0),
-         updated_at = CURRENT_TIMESTAMP WHERE id = $2`,
-        [miktar, stok_id]
-      );
+      await stokAyarla(client, 'aksesuar_stok', 'id = $2', stok_id, miktar);
     }
 
     await client.query('COMMIT');
@@ -258,14 +190,7 @@ router.put('/:id', async (req, res) => {
 
     // Eski stok geri ekle
     if (eski.stok_id) {
-      await client.query(
-        // envanter_degeri, mevcut'tan ÖNCE yazılır (bkz. yukarıdaki not).
-        `UPDATE aksesuar_stok SET cikan_miktar = GREATEST(cikan_miktar - $1, 0),
-         envanter_degeri = (mevcut + $1) * satis_fiyati,
-         mevcut = mevcut + $1,
-         updated_at = CURRENT_TIMESTAMP WHERE id = $2`,
-        [eski.adet, eski.stok_id]
-      );
+      await stokAyarla(client, 'aksesuar_stok', 'id = $2', eski.stok_id, -eski.adet);
     }
 
     const { stok_id, platform_id, urun_adi, alis_fiyati, satis_fiyati, komisyon_orani, kdv_orani, kargo_ucreti, adet, tarih } = req.body;
@@ -295,15 +220,7 @@ router.put('/:id', async (req, res) => {
 
     // Yeni stoktan düş
     if (stok_id) {
-      await client.query(
-        // envanter_degeri, mevcut'tan ÖNCE yazılır: MariaDB SET atamalarını soldan sağa, güncellenmiş
-        // değerlerle çalıştırır (PostgreSQL hepsini eski değerle hesaplar).
-        `UPDATE aksesuar_stok SET cikan_miktar = cikan_miktar + $1,
-         envanter_degeri = GREATEST(mevcut - $1, 0) * satis_fiyati,
-         mevcut = GREATEST(mevcut - $1, 0),
-         updated_at = CURRENT_TIMESTAMP WHERE id = $2`,
-        [miktar, stok_id]
-      );
+      await stokAyarla(client, 'aksesuar_stok', 'id = $2', stok_id, miktar);
     }
 
     await client.query('COMMIT');
@@ -328,14 +245,7 @@ router.delete('/:id', async (req, res) => {
     await client.query('BEGIN');
     const existing = await client.query('SELECT * FROM eticaret_satislar WHERE id = $1', [req.params.id]);
     if (existing.rows.length > 0 && existing.rows[0].stok_id) {
-      await client.query(
-        // envanter_degeri, mevcut'tan ÖNCE yazılır (bkz. yukarıdaki not).
-        `UPDATE aksesuar_stok SET cikan_miktar = GREATEST(cikan_miktar - $1, 0),
-         envanter_degeri = (mevcut + $1) * satis_fiyati,
-         mevcut = mevcut + $1,
-         updated_at = CURRENT_TIMESTAMP WHERE id = $2`,
-        [existing.rows[0].adet, existing.rows[0].stok_id]
-      );
+      await stokAyarla(client, 'aksesuar_stok', 'id = $2', existing.rows[0].stok_id, -existing.rows[0].adet);
     }
     await client.query('DELETE FROM eticaret_satislar WHERE id = $1', [req.params.id]);
     await client.query('COMMIT');

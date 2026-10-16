@@ -23,6 +23,13 @@ const adetCoz = (deger, varsayilan = 1) => {
 // Formlar boş alanı '' olarak gönderir; tamsayı/FK kolonuna '' yazılamaz (katı SQL modunda hata) → NULL
 const bosuNull = (deger) => (deger === '' || deger === undefined ? null : deger);
 
+// Şifre kuralı: metin, 6–128 karakter. Sorun varsa kullanıcıya gösterilecek mesajı, yoksa null döndürür.
+const sifreSorunu = (sifre) => {
+  if (typeof sifre !== 'string' || sifre.length < 6) return 'Şifre en az 6 karakter olmalıdır';
+  if (sifre.length > 128) return 'Şifre en fazla 128 karakter olabilir';
+  return null;
+};
+
 // catch içinde: istemci hatasıysa 4xx + mesaj, değilse günlüğe yaz ve 500
 const hataYanitla = (res, hata, baglam) => {
   if (hata && hata.istemciHatasi) return res.status(hata.status).json({ message: hata.message });
@@ -30,4 +37,4 @@ const hataYanitla = (res, hata, baglam) => {
   return res.status(500).json({ message: 'Sunucu hatası' });
 };
 
-module.exports = { GecersizIstek, adetCoz, bosuNull, hataYanitla };
+module.exports = { GecersizIstek, adetCoz, bosuNull, sifreSorunu, hataYanitla };

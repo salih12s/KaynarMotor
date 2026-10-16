@@ -263,6 +263,10 @@ router.get('/personeller', engelleYatirimci, async (req, res) => {
   }
 });
 
+// Yatırımcı raporunun taşıdığı alanlar: alıcı/satıcı kimliği (TC, adres, telefon), ödeme ayrıntıları ve komisyoncu bilgisi
+// YOKTUR (KVKK). Rapor ekranı yalnızca bu alanları kullanır.
+const YATIRIMCI_RAPOR_KOLONLARI = 'id, plaka, marka, model, yil, km, durum, stok_tipi, tarih, created_at, alis_fiyati, liste_fiyati, satis_fiyati, satis_tarihi, tamamlama_tarihi, yatirimci_id, yatirimci_kar';
+
 // GET /yatirimci-rapor - Yatırımcının kendi stok/satış/kâr raporu
 // Yatırımcı kendi verisini görür; admin ?yatirimci_id ile herhangi birini görebilir
 router.get('/yatirimci-rapor', async (req, res) => {
@@ -281,14 +285,14 @@ router.get('/yatirimci-rapor', async (req, res) => {
 
     // Stoktaki motorlar (satılmamış)
     const stoktakiler = await pool.query(
-      `SELECT * FROM ikinci_el_motorlar
+      `SELECT ${YATIRIMCI_RAPOR_KOLONLARI} FROM ikinci_el_motorlar
        WHERE yatirimci_id = $1 AND durum <> 'tamamlandi'
        ORDER BY created_at DESC`,
       [yatirimciId]
     );
 
     // Satılan motorlar (tarih filtresi opsiyonel)
-    let satisQuery = `SELECT * FROM ikinci_el_motorlar
+    let satisQuery = `SELECT ${YATIRIMCI_RAPOR_KOLONLARI} FROM ikinci_el_motorlar
        WHERE yatirimci_id = $1 AND durum = 'tamamlandi'`;
     const satisParams = [yatirimciId];
     if (baslangic) { satisParams.push(baslangic); satisQuery += ` AND DATE(COALESCE(satis_tarihi, tamamlama_tarihi)) >= $${satisParams.length}`; }

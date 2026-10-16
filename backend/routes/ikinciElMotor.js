@@ -13,6 +13,14 @@ const normalizeOdeme = (v) => {
   try { return JSON.stringify(v); } catch { return null; }
 };
 
+// Personelin görebileceği motor alanları (allowlist). Gruplar ilgili yetkiyle açılır.
+const MOTOR_TEMEL = ['id', 'plaka', 'marka', 'model', 'yil', 'km', 'durum', 'stok_tipi', 'tarih', 'created_at', 'updated_at', 'fatura_kesildi',
+  'vitrin_baslik', 'vitrin_aciklama', 'vitrin_segment', 'vitrin_cc', 'vitrin_hasar'];
+const MOTOR_ALIS = ['alis_fiyati', 'noter_alis', 'masraflar'];
+const MOTOR_SATIS = ['satis_fiyati', 'noter_satis', 'kalan_odeme', 'odeme_detaylari', 'odeme_sekli', 'satis_tarihi', 'tamamlama_tarihi', 'yevmiye_no', 'aciklama'];
+const MOTOR_MUSTERI = ['alici_adi', 'alici_tc', 'alici_telefon', 'alici_adres', 'satici_adi', 'satici_tc',
+  'komisyoncu_adi', 'komisyoncu_telefon', 'komisyoncu_tutari'];
+
 // Bir motor kaydını kullanıcının yetkisine göre temizler (hassas alanları gizler)
 const sanitizeMotor = (row, user) => {
   if (!row) return row;
@@ -36,19 +44,18 @@ const sanitizeMotor = (row, user) => {
     };
   }
 
-  const m = { ...row };
-  // Motor Satış yetkisi; satış fiyatı, alış fiyatı, müşteri bilgisi ve satış geçmişini kapsar (Kâr HARİÇ — yalnızca admin; kar_gor bayrağı da bunu açmaz)
-  const ms = !!user.motor_satis_yetkisi;
-  // Yalnızca "Kâr" admine özeldir. Alış fiyatı, noter alış/satış ve satış fiyatı motor satış yetkisinde görünür/düzenlenebilir.
-  if (!(user.alis_fiyati_gor || ms)) { m.alis_fiyati = null; }
-  if (!(user.satis_fiyati_gor || ms)) { m.satis_fiyati = null; m.noter_satis = null; m.noter_alis = null; }
-  m.kar = null; m.yatirimci_kar = null; m.yatirimci_kar_orani = null; // kâr yalnızca admin'e açık (kar_gor bayrağı artık bir şey açmaz)
-  if (!(user.musteri_gor || ms)) {
-    m.alici_adi = null; m.alici_tc = null; m.alici_telefon = null; m.alici_adres = null;
-    m.satici_adi = null; m.satici_tc = null;
-    m.komisyoncu_adi = null; m.komisyoncu_telefon = null; m.komisyoncu_tutari = null;
-  }
-  if (!user.liste_fiyati_gor) m.liste_fiyati = null;
+  // Personel: ALLOWLIST. Listede olmayan (ör. ileride eklenecek) bir kolon varsayılan olarak GİZLİDİR.
+  // Kâr ve yatırımcı alanları (kar, yatirimci_*) hiçbir yetkiyle personele açılmaz: yalnızca admin (ve kendi payı için yatırımcı).
+  const ms = !!user.motor_satis_yetkisi; // Motor Satış yetkisi alış/satış fiyatı, müşteri ve satış geçmişini kapsar
+  const izinli = [
+    ...MOTOR_TEMEL,
+    ...(user.alis_fiyati_gor || ms ? MOTOR_ALIS : []),
+    ...(user.satis_fiyati_gor || ms ? MOTOR_SATIS : []),
+    ...(user.musteri_gor || ms ? MOTOR_MUSTERI : []),
+    ...(user.liste_fiyati_gor ? ['liste_fiyati'] : []),
+  ];
+  const m = {};
+  for (const alan of izinli) if (alan in row) m[alan] = row[alan];
   return m;
 };
 
@@ -131,6 +138,10 @@ router.get('/:id', async (req, res) => {
     if (req.user.rol === 'yatirimci' && !req.user.liste_fiyati_gor && row.yatirimci_id !== req.user.id) {
       return res.status(403).json({ message: 'Bu kayda erişim yetkiniz yok' });
     }
+    // Satılmış motor: listeyle AYNI kural (eskiden liste gizliyor ama id ile erişim açıktı)
+    if (req.user.rol !== 'admin' && req.user.rol !== 'yatirimci' && !req.user.satis_gecmisi_gor && !req.user.motor_satis_yetkisi && row.durum === 'tamamlandi') {
+      return res.status(404).json({ message: 'Kayıt bulunamadı' });
+    }
     res.json(sanitizeMotor(row, req.user));
   } catch (error) {
     res.status(500).json({ message: 'Sunucu hatası' });
@@ -159,9 +170,10 @@ router.post('/', async (req, res) => {
     const komisyonTutar = emptyToZero(komisyoncu_tutari);
     const kar = satis - alis - masraf - komisyonTutar;
     const odemeDetay = normalizeOdeme(odeme_detaylari);
-    const yatirimciId = yatirimci_id ? parseInt(yatirimci_id) : null;
+    // Yatırımcı ataması ve yatırımcı kârı YALNIZCA admin tarafından yapılır (PUT'taki canKar kuralıyla aynı);
+    // başkasının gönderdiği değer yok sayılır. Kâr satış esnasında elle (tutar olarak) girilir, işletme kârından düşer.
+    const yatirimciId = req.user.rol === 'admin' && yatirimci_id ? parseInt(yatirimci_id) : null;
     const yatirimciOran = yatirimciId ? emptyToZero(yatirimci_kar_orani) : 0;
-    // Yatırımcı kârı artık satış esnasında elle (tutar olarak) girilir; komisyoncu gibi işletme kârından düşer
     const yatirimciKar = yatirimciId ? emptyToZero(yatirimci_kar) : 0;
     const listeFiyati = emptyToZero(liste_fiyati);
     const tamamlamaTarihi = durum === 'tamamlandi' ? new Date() : null;

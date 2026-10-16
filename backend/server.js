@@ -80,9 +80,10 @@ const {
 // vitrinde GET dışındaki her istek önce doğrulanır ve vitrin yetkisi aranır; gövde ondan SONRA okunur.
 // Vitrin gövde ayrıştırıcısı genel limitten ÖNCE gelmeli; gövde bir kez ayrıştırıldığında
 // express.json sonraki çağrıda devreye girmez.
-const vitrinYazmaKapisi = (req, res, next) => {
+const vitrinYazmaKapisi = async (req, res, next) => {
   if (req.method === 'GET' || req.method === 'HEAD' || req.method === 'OPTIONS') return next();
-  authenticateToken(req, res, () => vitrinYetkili(req, res, next));
+  // await: authenticateToken artık veritabanına gider; hata (ör. DB kapalı) merkezi hata işleyicisine ulaşmalı
+  await authenticateToken(req, res, () => vitrinYetkili(req, res, next));
 };
 app.use('/api/vitrin', vitrinYazmaKapisi);
 app.use('/api/vitrin', express.json({ limit: '120mb' }));

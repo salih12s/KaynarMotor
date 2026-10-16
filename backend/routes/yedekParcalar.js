@@ -4,25 +4,14 @@ router.param('id', require('../middleware/idDogrula').idParam);
 const { pool } = require('../config/db');
 const { orderByText } = require('../config/sqlText');
 const { adetCoz, hataYanitla } = require('../config/dogrula');
+const { stokAyarla: stokDuzenle } = require('../config/stok');
 
 const emptyToZero = (v) => { if (v === '' || v === undefined || v === null) return 0; const n = Number(v); return isNaN(n) ? 0 : n; };
 
-// Satış stok kaydına bağlıysa yedek parça stoğunu ayarla (yon: -1 düş, +1 geri ekle)
+// Satış stok kaydına bağlıysa yedek parça stoğunu ayarla (yon: 1 düş, -1 geri ekle). Stok eksiye düşebilir (config/stok.js).
 const stokAyarla = async (client, stokId, adet, yon) => {
   if (!stokId || !adet) return;
-  const miktar = adet * yon;
-  // GREATEST: stok 0'ın altına düşmez (miktar negatifken, yani geri eklemede, etkisizdir).
-  // MariaDB SET atamalarını soldan sağa, GÜNCELLENMİŞ değerlerle çalıştırır (PostgreSQL hepsini
-  // eski değerle hesaplar): envanter_degeri, mevcut'tan ÖNCE yazılmalıdır. IFNULL: PostgreSQL'in
-  // GREATEST'i NULL'ı yok sayar, MariaDB'inki NULL döner.
-  await client.query(
-    `UPDATE yedek_parca_stok SET
-       cikan_miktar = GREATEST(IFNULL(cikan_miktar + $1, 0), 0),
-       envanter_degeri = GREATEST(IFNULL(mevcut - $1, 0), 0) * satis_fiyati,
-       mevcut = GREATEST(IFNULL(mevcut - $1, 0), 0),
-       updated_at = CURRENT_TIMESTAMP WHERE id = $2`,
-    [miktar, stokId]
-  );
+  await stokDuzenle(client, 'yedek_parca_stok', 'id = $2', stokId, adet * yon);
 };
 
 // GET /

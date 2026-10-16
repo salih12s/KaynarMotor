@@ -435,7 +435,13 @@ const INDEKSLER = [
 ];
 
 // Sonradan eklenen kolonlar buraya yazılır (ör. 'ALTER TABLE x ADD COLUMN IF NOT EXISTS y INT').
-const MIGRATIONS = [];
+const MIGRATIONS = [
+  // Aksesuar satış satırı stok kaydına ID ile bağlanır (stok yeniden adlandırılsa da iade doğru stoğa gider)
+  'ALTER TABLE aksesuar_parcalar ADD COLUMN IF NOT EXISTS stok_id INT NULL',
+  'ALTER TABLE aksesuar_parcalar ADD CONSTRAINT aksesuar_parcalar_stok_fk FOREIGN KEY IF NOT EXISTS (stok_id) REFERENCES aksesuar_stok(id) ON DELETE SET NULL',
+  // Düz metin şifreler artık saklanmıyor/gösterilmiyor: önceden kalmış olanları temizle (kolon geri dönüş için duruyor)
+  'UPDATE kullanicilar SET plain_sifre = NULL WHERE plain_sifre IS NOT NULL',
+];
 
 const initializeDatabase = async () => {
   const client = await pool.connect();
@@ -455,9 +461,9 @@ const initializeDatabase = async () => {
       if (initialPassword) {
         const hashedPassword = await bcrypt.hash(initialPassword, 10);
         await client.query(
-          `INSERT INTO kullanicilar (kullanici_adi, sifre, plain_sifre, ad_soyad, rol, onay_durumu)
-           VALUES ('admin', $1, $2, 'Admin', 'admin', 'onaylandi')`,
-          [hashedPassword, initialPassword]
+          `INSERT INTO kullanicilar (kullanici_adi, sifre, ad_soyad, rol, onay_durumu)
+           VALUES ('admin', $1, 'Admin', 'admin', 'onaylandi')`,
+          [hashedPassword]
         );
         console.log('Varsayılan admin oluşturuldu (kullanıcı adı: admin)');
       } else {
