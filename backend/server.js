@@ -53,7 +53,7 @@ app.use(cors({
     // FRONTEND_URL ortam değişkenini o adrese ayarlayın; aşağıdaki log hangi
     // origin'in reddedildiğini gösterir.
     console.warn(`CORS reddedildi: ${origin} (izin vermek için FRONTEND_URL ayarlayın)`);
-    callback(new Error('CORS policy violation'));
+    callback(Object.assign(new Error('CORS policy violation'), { status: 403 }));
   },
   credentials: true
 }));
@@ -68,17 +68,24 @@ app.use(helmet({
   crossOriginOpenerPolicy: false,
 }));
 
-// Gövde limiti: yüksek limit yalnızca vitrin yükleme uçlarında gerekli.
-// Bu satır genel limitten ÖNCE gelmeli; gövde bir kez ayrıştırıldığında
-// express.json sonraki çağrıda devreye girmez.
-app.use('/api/vitrin', express.json({ limit: '120mb' }));
-app.use(express.json({ limit: '10mb' }));
-
 // Kimlik doğrulama ve yetkilendirme middleware'leri (bkz. middleware/)
 const { authenticateToken, isAdmin } = require('./middleware/auth');
 const {
-  modulYetkisi, yazmaYetkisi, rolYetkisi, motorYazmaYetkisi, kariGizle
+  modulYetkisi, yazmaYetkisi, rolYetkisi, motorYazmaYetkisi, vitrinYetkili, kariGizle
 } = require('./middleware/yetki');
+
+// Gövde limiti: yüksek limit yalnızca vitrin yükleme uçlarında gerekli (görsel/video base64, 120 MB).
+// Bu devasa gövde KİMLİK DOĞRULANMADAN okunursa yetkisiz biri sunucu belleğini şişirebilir. Bu yüzden
+// vitrinde GET dışındaki her istek önce doğrulanır ve vitrin yetkisi aranır; gövde ondan SONRA okunur.
+// Vitrin gövde ayrıştırıcısı genel limitten ÖNCE gelmeli; gövde bir kez ayrıştırıldığında
+// express.json sonraki çağrıda devreye girmez.
+const vitrinYazmaKapisi = (req, res, next) => {
+  if (req.method === 'GET' || req.method === 'HEAD' || req.method === 'OPTIONS') return next();
+  authenticateToken(req, res, () => vitrinYetkili(req, res, next));
+};
+app.use('/api/vitrin', vitrinYazmaKapisi);
+app.use('/api/vitrin', express.json({ limit: '120mb' }));
+app.use(express.json({ limit: '10mb' }));
 
 // Routes
 const authRoutes = require('./routes/auth');
@@ -162,11 +169,21 @@ if (process.env.NODE_ENV === 'production') {
 // (stack trace) sızdırılmaz, ayrıntı yalnızca sunucu loguna yazılır.
 // eslint-disable-next-line no-unused-vars -- Express hata middleware'i 4 argüman ister
 app.use((err, req, res, next) => {
-  console.error('Yakalanmayan hata:', err);
   if (res.headersSent) return next(err);
+  // İstemci kaynaklı hatalar (bozuk JSON, büyük gövde, reddedilen origin) 500 değildir ve yığın izi gerektirmez.
   if (err && err.type === 'entity.too.large') {
     return res.status(413).json({ message: 'Gönderilen veri boyutu çok büyük' });
   }
+  if (err && err.type === 'entity.parse.failed') {
+    return res.status(400).json({ message: 'Geçersiz istek gövdesi (JSON okunamadı)' });
+  }
+  if (err && err.message === 'CORS policy violation') {
+    return res.status(403).json({ message: 'Bu adresten erişime izin verilmiyor' });
+  }
+  if (err && Number.isInteger(err.status) && err.status >= 400 && err.status < 500) {
+    return res.status(err.status).json({ message: 'Geçersiz istek' });
+  }
+  console.error('Yakalanmayan hata:', err);
   res.status(500).json({ message: 'Sunucu hatası' });
 });
 

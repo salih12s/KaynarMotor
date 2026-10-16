@@ -1,6 +1,8 @@
 const express = require('express');
 const { pool, maxPaket, paketHatasi } = require('../config/db');
 const { orderByText } = require('../config/sqlText');
+const { opsiyonelKullanici } = require('../middleware/auth');
+const { vitrinYetkili } = require('../middleware/yetki');
 
 // Geçerli kategoriler
 const KATEGORILER = ['motor', 'aksesuar', 'yedek_parca', 'bakim_servis', 'nakliye', 'sigorta'];
@@ -37,11 +39,42 @@ const paketAsimi = async (...metinler) => {
 const cokBuyukYanit = (res, sinir) =>
   res.status(413).json({ message: `Dosya çok büyük (en fazla ${Math.floor(sinir / 1048576)} MB yüklenebilir)` });
 
-// base64 data URL'i { mime, buffer } olarak çözer
-const parseDataUrl = (data) => {
+// İzin verilen medya türleri. MIME istemciden geldiği için allowlist ŞARTTIR: aksi hâlde "text/html" gibi
+// bir tür yüklenip aynı kaynaktan (origin) sunulur ve yönetici o bağlantıyı açınca betik çalışır (XSS).
+const IZINLI_GORSEL = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+const IZINLI_VIDEO = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime'];
+
+// Data URL'in MIME türünü base64'ü ÇÖZMEDEN okur (büyük video için ucuz doğrulama)
+const dataUrlMime = (data) => {
+  const m = typeof data === 'string' ? /^data:([^;,]+);base64,/.exec(data) : null;
+  return m ? m[1].toLowerCase() : null;
+};
+const medyaGecerli = (data, izinli) => izinli.includes(dataUrlMime(data));
+
+// Yazma uçlarında: geçersiz medya varsa kullanıcıya gösterilecek hata, yoksa null
+const medyaHatasi = (gorseller, video) => {
+  if (Array.isArray(gorseller) && gorseller.some((g) => !medyaGecerli(g, IZINLI_GORSEL))) {
+    return 'Görseller yalnızca JPEG, PNG, WebP veya GIF olabilir';
+  }
+  if (typeof video === 'string' && video && !medyaGecerli(video, IZINLI_VIDEO)) {
+    return 'Video yalnızca MP4, WebM, OGG veya MOV olabilir';
+  }
+  return null;
+};
+
+// Sunulan medya betik çalıştıramasın: sniffing kapalı, sandbox'lı CSP
+const medyaBasliklari = (res) => {
+  res.set('X-Content-Type-Options', 'nosniff');
+  res.set('Content-Security-Policy', "default-src 'none'; sandbox");
+};
+
+// base64 data URL'i { mime, buffer } olarak çözer. izinli verilirse MIME bu listede değilse null döner
+// (veritabanında kalmış eski/kötü kayıtlar da sunulmaz).
+const parseDataUrl = (data, izinli) => {
   if (!data || typeof data !== 'string') return null;
   const m = data.match(/^data:([^;]+);base64,(.+)$/);
   if (!m) return null;
+  if (izinli && !izinli.includes(m[1].toLowerCase())) return null;
   return { mime: m[1], buffer: Buffer.from(m[2], 'base64') };
 };
 
@@ -50,12 +83,7 @@ module.exports = (authenticateToken, isAdmin) => {
   router.param('id', require('../middleware/idDogrula').idParam);
   const admin = [authenticateToken, isAdmin];
 
-  // Vitrin yazma yetkisi: admin VEYA motor/aksesuar vitrin yetkisi olan personel
-  const vitrinYetkili = (req, res, next) => {
-    const u = req.user || {};
-    if (u.rol === 'admin' || u.motor_vitrin_yetkisi || u.aksesuar_vitrin_yetkisi) return next();
-    return res.status(403).json({ message: 'Vitrin yönetim yetkiniz yok' });
-  };
+  // Vitrin yazma yetkisi: admin VEYA motor/aksesuar vitrin yetkisi olan personel (middleware/yetki.js)
   const vitrinWrite = [authenticateToken, vitrinYetkili];
   // Personel yalnızca izinli olduğu kategoriyi yönetebilir (admin hepsini)
   const kategoriYetkiliMi = (user, kategori) => {
@@ -90,7 +118,7 @@ module.exports = (authenticateToken, isAdmin) => {
 
   // Ürünün videosunu değiştir (eskiyi sil, yenisini ekle) — transaction client ile çağrılır
   const setVideo = async (client, urunId, videoData) => {
-    const parsed = parseDataUrl(videoData);
+    const parsed = parseDataUrl(videoData, IZINLI_VIDEO);
     if (!parsed) return;
     await client.query('DELETE FROM vitrin_videolar WHERE urun_id = $1', [urunId]);
     const v = await client.query(
@@ -127,8 +155,9 @@ module.exports = (authenticateToken, isAdmin) => {
     try {
       const r = await pool.query('SELECT gorsel FROM vitrin_kategori_iletisim WHERE kategori = $1', [req.params.kategori]);
       if (!r.rows.length || !r.rows[0].gorsel) return res.status(404).send('Görsel bulunamadı');
-      const parsed = parseDataUrl(r.rows[0].gorsel);
+      const parsed = parseDataUrl(r.rows[0].gorsel, IZINLI_GORSEL);
       if (!parsed) return res.status(404).send('Geçersiz görsel');
+      medyaBasliklari(res);
       res.set('Content-Type', parsed.mime);
       res.set('Cache-Control', 'public, max-age=3600');
       res.send(parsed.buffer);
@@ -146,8 +175,9 @@ module.exports = (authenticateToken, isAdmin) => {
       if (req.headers['if-none-match'] === etag) return res.status(304).end();
       const result = await pool.query('SELECT data FROM vitrin_gorseller WHERE id = $1', [req.params.id]);
       if (result.rows.length === 0) return res.status(404).send('Görsel bulunamadı');
-      const parsed = parseDataUrl(result.rows[0].data);
+      const parsed = parseDataUrl(result.rows[0].data, IZINLI_GORSEL);
       if (!parsed) return res.status(404).send('Geçersiz görsel');
+      medyaBasliklari(res);
       res.set('Content-Type', parsed.mime);
       res.send(parsed.buffer);
     } catch (e) {
@@ -164,8 +194,9 @@ module.exports = (authenticateToken, isAdmin) => {
       if (!req.headers.range && req.headers['if-none-match'] === etag) return res.status(304).end();
       const result = await pool.query('SELECT data FROM vitrin_videolar WHERE id = $1', [req.params.id]);
       if (result.rows.length === 0) return res.status(404).send('Video bulunamadı');
-      const parsed = parseDataUrl(result.rows[0].data);
+      const parsed = parseDataUrl(result.rows[0].data, IZINLI_VIDEO);
       if (!parsed) return res.status(404).send('Geçersiz video');
+      medyaBasliklari(res);
       const total = parsed.buffer.length;
       const range = req.headers.range;
 
@@ -201,8 +232,14 @@ module.exports = (authenticateToken, isAdmin) => {
     }
   });
 
+  // hepsi=1 (yayından kaldırılmış/arşiv ilanlar dahil) yalnızca giriş yapmış vitrin yetkililerine açıktır
+  const hepsiKapisi = (req, res, next) => {
+    if (!req.query.hepsi) return next();
+    authenticateToken(req, res, () => vitrinYetkili(req, res, next));
+  };
+
   // GET / - yayında olan ürünler (metadata + kapak_gorsel_id; base64 YOK)
-  router.get('/', async (req, res) => {
+  router.get('/', hepsiKapisi, async (req, res) => {
     try {
       const { kategori, segment, cc_min, cc_max, km_max, marka, q, hepsi, durum } = req.query;
       let query = `
@@ -269,6 +306,13 @@ module.exports = (authenticateToken, isAdmin) => {
                 marka, model, yil, segment, motor_cc, km, motor_durumu, hasar_kaydi, yayinda, siralama, one_cikan, stok_motor_id, rubik_link, created_at
          FROM vitrin_urunleri WHERE id = $1`, [req.params.id]);
       if (result.rows.length === 0) return res.status(404).json({ message: 'Kayıt bulunamadı' });
+      // Yayından kaldırılmış ilan herkese açık değildir: yalnızca vitrin yetkilisi (düzenleme ekranı) görebilir.
+      if (!result.rows[0].yayinda) {
+        const u = opsiyonelKullanici(req);
+        if (!u || !(u.rol === 'admin' || u.motor_vitrin_yetkisi || u.aksesuar_vitrin_yetkisi)) {
+          return res.status(404).json({ message: 'Kayıt bulunamadı' });
+        }
+      }
       const gorseller = await pool.query(
         'SELECT id FROM vitrin_gorseller WHERE urun_id = $1 ORDER BY sira ASC, id ASC', [req.params.id]);
       res.json({ ...result.rows[0], gorsel_idler: gorseller.rows.map(r => r.id) });
@@ -428,6 +472,8 @@ module.exports = (authenticateToken, isAdmin) => {
       if (!kategoriYetkiliMi(req.user, kategori)) return res.status(403).json({ message: 'Bu kategori için vitrin yetkiniz yok' });
       if (!baslik) return res.status(400).json({ message: 'Başlık zorunlu' });
       if (kategori === 'motor' && !segment) return res.status(400).json({ message: 'Motor ilanı için segment zorunlu' });
+      const medyaSorunu = medyaHatasi(gorseller, video);
+      if (medyaSorunu) return res.status(400).json({ message: medyaSorunu });
 
       const asim = await paketAsimi(video, ...(Array.isArray(gorseller) ? gorseller : []));
       if (asim) return cokBuyukYanit(res, asim);
@@ -490,6 +536,8 @@ module.exports = (authenticateToken, isAdmin) => {
         return res.status(403).json({ message: 'Bu kategori için vitrin yetkiniz yok' });
       }
       if (kategori === 'motor' && !segment) return res.status(400).json({ message: 'Motor ilanı için segment zorunlu' });
+      const medyaSorunu = medyaHatasi(gorseller, video);
+      if (medyaSorunu) return res.status(400).json({ message: medyaSorunu });
 
       const asim = await paketAsimi(video, ...(Array.isArray(gorseller) ? gorseller : []));
       if (asim) return cokBuyukYanit(res, asim);
@@ -575,6 +623,9 @@ module.exports = (authenticateToken, isAdmin) => {
       if (!KATEGORILER.includes(kategori)) return res.status(400).json({ message: 'Geçersiz kategori' });
       if (!kategoriYetkiliMi(req.user, kategori)) return res.status(403).json({ message: 'Bu kategori için vitrin yetkiniz yok' });
       const { personel_adi, telefon, personel_adi_2, telefon_2, aciklama, baslik, gorsel, gorsel_sil } = req.body;
+      if (typeof gorsel === 'string' && gorsel && !medyaGecerli(gorsel, IZINLI_GORSEL)) {
+        return res.status(400).json({ message: 'Görsel yalnızca JPEG, PNG, WebP veya GIF olabilir' });
+      }
       const asim = await paketAsimi(gorsel);
       if (asim) return cokBuyukYanit(res, asim);
       await pool.query(

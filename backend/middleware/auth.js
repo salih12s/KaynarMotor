@@ -18,6 +18,14 @@ const authenticateToken = (req, res, next) => {
   });
 };
 
+// Herkese açık uçlarda "giriş yapmış yetkili mi?" sorusu için: token varsa ve geçerliyse kullanıcıyı,
+// yoksa ya da bozuksa null döndürür. Hata fırlatmaz, yanıt yazmaz (açık içerik token olmadan da okunur).
+const opsiyonelKullanici = (req) => {
+  const token = (req.headers['authorization'] || '').split(' ')[1];
+  if (!token) return null;
+  try { return jwt.verify(token, process.env.JWT_SECRET); } catch { return null; }
+};
+
 const isAdmin = (req, res, next) => {
   if (req.user.rol !== 'admin') {
     return res.status(403).json({ message: 'Bu işlem için admin yetkisi gerekli' });
@@ -25,4 +33,4 @@ const isAdmin = (req, res, next) => {
   next();
 };
 
-module.exports = { authenticateToken, isAdmin };
+module.exports = { authenticateToken, isAdmin, opsiyonelKullanici };

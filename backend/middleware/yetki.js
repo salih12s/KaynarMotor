@@ -43,6 +43,14 @@ const yazmaRolu = (...roller) => (req, res, next) => {
   return res.status(403).json({ message: 'Bu işlem için yetkiniz yok' });
 };
 
+// Vitrin yönetimi: admin VEYA motor/aksesuar vitrin yetkisi olan personel.
+// Hem route'ta hem de gövde ayrıştırılmadan önce (server.js) kullanılır.
+const vitrinYetkili = (req, res, next) => {
+  const u = req.user || {};
+  if (u.rol === 'admin' || u.motor_vitrin_yetkisi || u.aksesuar_vitrin_yetkisi) return next();
+  return res.status(403).json({ message: 'Vitrin yönetim yetkiniz yok' });
+};
+
 // Motor kayıtlarında yazma yetkisi.
 // Frontend'deki MotorStokRoute ile aynı kural: admin, yatırımcı veya motor satış
 // yetkisi olan personel. Okuma serbesttir; hassas alanlar zaten ikinciElMotor.js
@@ -83,4 +91,4 @@ const kariGizle = (req, res, next) => {
   next();
 };
 
-module.exports = { modulYetkisi, yazmaYetkisi, rolYetkisi, yazmaRolu, motorYazmaYetkisi, kariGizle, alanlariSil, KAR_ALANLARI, YATIRIMCI_PAYI_ALANLARI };
+module.exports = { modulYetkisi, yazmaYetkisi, rolYetkisi, yazmaRolu, motorYazmaYetkisi, vitrinYetkili, kariGizle, alanlariSil, KAR_ALANLARI, YATIRIMCI_PAYI_ALANLARI };

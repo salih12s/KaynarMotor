@@ -10,7 +10,8 @@
     "seed:gorseller": "node scripts/seedGorselIndir.js",
     "test": "node --test \"tests/unit/*.test.js\"",
     "test:integration": "node --test --test-concurrency=1 \"tests/integration/*.test.js\"",
-    "test:parity": "node --test --test-concurrency=1 \"tests/parity/*.parity.test.js\""
+    "test:parity": "node --test --test-concurrency=1 \"tests/parity/*.parity.test.js\"",
+    "test:api": "node --test --test-concurrency=1 \"tests/api/*.test.js\""
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
