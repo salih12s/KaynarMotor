@@ -331,7 +331,7 @@ flowchart LR
 - **Yetkilendirme sunucu tarafındadır.** Arayüzdeki route guard'lar yalnızca gezinmeyi düzenler; asıl kontrol `backend/core/middleware/yetki.js` içindedir ve API'ye bağlıdır. Hassas alanlar (kâr, alış fiyatı, müşteri bilgisi) yetkisi olmayan kullanıcının yanıtından sunucuda temizlenir. Gizleme arayüzde değil, veri katmanında yapılır.
 - **Okuma serbest, yazma yetkili.** Stok gibi birçok ekranın aradığı uçlarda GET istekleri açıktır, POST/PUT/PATCH/DELETE ise modül yetkisine bağlıdır (`yazmaYetkisi`).
 - **Veritabanına dayanıklı başlangıç.** Backend veritabanı henüz hazır değilken de ayağa kalkar (`/api/health` yanıt verir) ve bağlantıyı artan gecikmelerle yeniden dener. Bu, barındırmadaki soğuk başlatma senaryolarına karşı dayanıklılık sağlar.
-- **Para ve stok işlemleri transaction içindedir.** Çok adımlı yazma işlemleri (iş emri + parçalar + stok düşümü) tek transaction'da yürür. Fiş numarası üretimi advisory lock ile serileştirilir.
+- **Para ve stok işlemleri transaction içindedir.** Çok adımlı yazma işlemleri (iş emri + parçalar + stok düşümü) tek transaction'da yürür. Fiş numarası üretimi tek satırlık bir kilit tablosunda satır kilidiyle (`SELECT … FOR UPDATE`) serileştirilir.
 - **Denetim izi.** Giriş/çıkış ve başarısız giriş denemeleri (IP ile), kayıt/onay işlemleri, iş emri ve motor satışının oluşturma/güncelleme/silme adımları, aksesuar ve e-ticaret satışları, işlemi yapan kullanıcıyla birlikte `aktivite_log` tablosuna yazılır.
 
 ## Kurulum
