@@ -73,7 +73,8 @@ app.use(helmet({
 // Kimlik doğrulama ve yetkilendirme middleware'leri (bkz. core/middleware/)
 const { authenticateToken, isAdmin } = require('./core/middleware/auth');
 const {
-  modulYetkisi, yazmaYetkisi, rolYetkisi, motorYazmaYetkisi, vitrinYetkili, kariGizle
+  modulYetkisi, yazmaYetkisi, rolYetkisi, motorYazmaYetkisi, vitrinYetkili, kariGizle,
+  AKSESUAR_STOK_OKUYANLAR, YEDEK_PARCA_STOK_OKUYANLAR
 } = require('./core/middleware/yetki');
 
 // Gövde limiti: yüksek limit yalnızca vitrin yükleme uçlarında gerekli (görsel/video base64, 120 MB).
@@ -116,13 +117,13 @@ app.use('/api/auth', authRoutes);
 app.use('/api/musteriler', denetimKaydi('musteriler'), authenticateToken, kariGizle, musteriRoutes);
 app.use('/api/is-emirleri', authenticateToken, kariGizle, modulYetkisi('servis_yetkisi'), isEmriRoutes);
 app.use('/api/aksesuarlar', authenticateToken, kariGizle, modulYetkisi('aksesuar_yetkisi'), aksesuarRoutes);
-app.use('/api/aksesuar-stok', denetimKaydi('aksesuar_stok'), authenticateToken, yazmaYetkisi('aksesuar_stok_yetkisi'), aksesuarStokRoutes);
+app.use('/api/aksesuar-stok', denetimKaydi('aksesuar_stok'), authenticateToken, modulYetkisi(...AKSESUAR_STOK_OKUYANLAR), yazmaYetkisi('aksesuar_stok_yetkisi'), aksesuarStokRoutes);
 app.use('/api/ikinci-el-motor', authenticateToken, kariGizle, motorYazmaYetkisi, ikinciElMotorRoutes);
 // Satış belgeleri (sözleşme vb.): yetki kontrolü route dosyasında; yükleme gövdesi ham ikili (express.raw)
 app.use('/api/satis-belgeleri', authenticateToken, satisBelgeRoutes);
 app.use('/api/eticaret', authenticateToken, kariGizle, modulYetkisi('eticaret_yetkisi'), eticaretRoutes);
 app.use('/api/yedek-parcalar', denetimKaydi('yedek_parcalar'), authenticateToken, modulYetkisi('yedek_parca_yetkisi'), yedekParcaRoutes);
-app.use('/api/yedek-parca-stok', denetimKaydi('yedek_parca_stok'), authenticateToken, yazmaYetkisi('yedek_parca_yetkisi'), yedekParcaStokRoutes);
+app.use('/api/yedek-parca-stok', denetimKaydi('yedek_parca_stok'), authenticateToken, modulYetkisi(...YEDEK_PARCA_STOK_OKUYANLAR), yazmaYetkisi('yedek_parca_yetkisi'), yedekParcaStokRoutes);
 app.use('/api/raporlar', authenticateToken, kariGizle, rolYetkisi('admin', 'yatirimci'), raporRoutes);
 app.use('/api/veresiye', authenticateToken, rolYetkisi('admin'), veresiyeRoutes);
 // Vitrin: public + admin uçları karışık; auth route içinde uygulanır

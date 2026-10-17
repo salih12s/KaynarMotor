@@ -144,7 +144,8 @@ router.put('/:id', async (req, res) => {
   try {
     await client.query('BEGIN');
 
-    const existing = await client.query('SELECT * FROM aksesuarlar WHERE id = $1', [req.params.id]);
+    // FOR UPDATE: eşzamanlı düzenleme/silme sıraya girer (kilitsiz okuma eski anlık görüntüyle çalışır)
+    const existing = await client.query('SELECT * FROM aksesuarlar WHERE id = $1 FOR UPDATE', [req.params.id]);
     if (existing.rows.length === 0) { await client.query('ROLLBACK'); return res.status(404).json({ message: 'Bulunamadı' }); }
     const eskiDurum = existing.rows[0].durum;
 
@@ -193,6 +194,8 @@ router.put('/:id', async (req, res) => {
     // Müşteri auto-collect
     if (ad_soyad) await upsertMusteri(ad_soyad, telefon, null);
 
+    await logAktivite({ kullanici_id: req.user.id, kullanici_adi: req.user.kullanici_adi, islem_tipi: ISLEM_TIPLERI.AKSESUAR_GUNCELLE, islem_detay: `Aksesuar satış #${req.params.id} güncellendi`, hedef_tablo: 'aksesuarlar', hedef_id: parseInt(req.params.id) });
+
     const full = await pool.query('SELECT * FROM aksesuarlar WHERE id = $1', [req.params.id]);
     const parcalarResult = await pool.query('SELECT * FROM aksesuar_parcalar WHERE aksesuar_id = $1 ORDER BY id', [req.params.id]);
     res.json({ ...full.rows[0], parcalar: parcalarResult.rows });
@@ -209,7 +212,7 @@ router.delete('/:id', async (req, res) => {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
-    const existing = await client.query('SELECT durum FROM aksesuarlar WHERE id = $1', [req.params.id]);
+    const existing = await client.query('SELECT durum FROM aksesuarlar WHERE id = $1 FOR UPDATE', [req.params.id]);
     if (existing.rows.length > 0 && existing.rows[0].durum === 'tamamlandi') {
       const parcalar = await client.query('SELECT * FROM aksesuar_parcalar WHERE aksesuar_id = $1', [req.params.id]);
       for (const p of parcalar.rows) {
@@ -218,6 +221,10 @@ router.delete('/:id', async (req, res) => {
     }
     await client.query('DELETE FROM aksesuarlar WHERE id = $1', [req.params.id]);
     await client.query('COMMIT');
+    // Para içeren bir satışın silinmesi iz bırakır (olmayan kayıt için günlük yazılmaz)
+    if (existing.rows.length > 0) {
+      await logAktivite({ kullanici_id: req.user.id, kullanici_adi: req.user.kullanici_adi, islem_tipi: ISLEM_TIPLERI.AKSESUAR_SIL, islem_detay: `Aksesuar satış #${req.params.id} silindi`, hedef_tablo: 'aksesuarlar', hedef_id: parseInt(req.params.id) });
+    }
     res.json({ message: 'Aksesuar satışı silindi' });
   } catch (error) {
     await client.query('ROLLBACK');

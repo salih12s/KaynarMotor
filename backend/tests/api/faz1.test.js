@@ -116,14 +116,15 @@ describe('#26/#27 motor PUT: gönderilmeyen alanlar korunur', () => {
     assert.equal(r.durum, 404);
   });
 
-  it('müşteri bilgisi yetkisi olmayan kullanıcı müşteri alanlarını yine değiştiremez', async () => {
-    // motor_satis_yetkisi olmayan ama yazabilen kullanıcı: yatırımcı kendi motorunda
+  it('yatırımcı kendi motorunda bile yazamaz (403); müşteri ve fiyat alanları değişmez', async () => {
+    // Faz 6: yatırımcı motor ekranında salt okunurdur. Eskiden yazabiliyordu ve bu test yalnızca müşteri/fiyat
+    // alanlarının korunduğunu sınıyordu; şimdi yazma isteği tümden reddedilir.
     const yat = await kullaniciOlustur(api, admin, `f1_yat_${SON}`, 'yatirimci');
     const id = await yeniMotor({ plaka: `34K1${SON}`.slice(0, 12), yatirimci_id: yat.id });
     const r = await api('PUT', `/api/ikinci-el-motor/${id}`, { aciklama: 'yatırımcı notu', alici_adi: 'DEĞİŞMEMELİ', satis_fiyati: 1 }, yat.token);
-    assert.equal(r.durum, 200);
+    assert.equal(r.durum, 403);
     const m = await motorGetir(id);
-    assert.equal(m.aciklama, 'yatırımcı notu');
+    assert.equal(m.aciklama, 'ilk not');
     assert.equal(m.alici_adi, 'Ali Veli');
     assert.equal(num(m.satis_fiyati), 150000);
   });

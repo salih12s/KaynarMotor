@@ -63,7 +63,8 @@ router.put('/:id', async (req, res) => {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
-    const existing = await client.query('SELECT stok_id, adet FROM yedek_parcalar WHERE id = $1', [req.params.id]);
+    // FOR UPDATE: eşzamanlı düzenleme/silme sıraya girer (kilitsiz okuma eski anlık görüntüyle çalışır)
+    const existing = await client.query('SELECT stok_id, adet FROM yedek_parcalar WHERE id = $1 FOR UPDATE', [req.params.id]);
     if (existing.rows.length === 0) {
       await client.query('ROLLBACK');
       return res.status(404).json({ message: 'Yedek parça bulunamadı' });
@@ -95,7 +96,7 @@ router.delete('/:id', async (req, res) => {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
-    const existing = await client.query('SELECT stok_id, adet FROM yedek_parcalar WHERE id = $1', [req.params.id]);
+    const existing = await client.query('SELECT stok_id, adet FROM yedek_parcalar WHERE id = $1 FOR UPDATE', [req.params.id]);
     await client.query('DELETE FROM yedek_parcalar WHERE id = $1', [req.params.id]);
     // Satış silinince stok geri eklenir
     if (existing.rows.length > 0) {

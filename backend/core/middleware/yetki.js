@@ -51,16 +51,23 @@ const vitrinYetkili = (req, res, next) => {
   return res.status(403).json({ message: 'Vitrin yönetim yetkiniz yok' });
 };
 
-// Motor kayıtlarında yazma yetkisi.
-// Frontend'deki MotorStokRoute ile aynı kural: admin, yatırımcı veya motor satış
-// yetkisi olan personel. Okuma serbesttir; hassas alanlar zaten ikinciElMotor.js
-// içindeki sanitizeMotor() tarafından kullanıcının yetkisine göre gizlenir.
+// Motor kayıtlarında yazma yetkisi: admin veya motor satış yetkisi olan personel.
+// Yatırımcı motor ekranında SALT OKUNURDUR (arayüzde de düzenleme yok): eskiden POST/PUT geçiyordu, yatırımcı
+// kendi motorunun durumunu/plakasını değiştirebiliyor ve sahipsiz motor kaydı açabiliyordu.
+// Okuma serbesttir; hassas alanlar zaten ikinciElMotor.js içindeki sanitizeMotor() tarafından gizlenir.
 const motorYazmaYetkisi = (req, res, next) => {
   if (!YAZMA_METODLARI.includes(req.method)) return next();
-  if (req.user.rol === 'admin' || req.user.rol === 'yatirimci') return next();
-  if (req.user.motor_satis_yetkisi) return next();
+  if (req.user.rol === 'admin') return next();
+  if (req.user.rol !== 'yatirimci' && req.user.motor_satis_yetkisi) return next();
   return res.status(403).json({ message: 'Bu işlem için yetkiniz yok' });
 };
+
+// Okuma uçlarını hangi yetkililerin kullandığı (ekran bağımlılıklarından): bu listeler dışındaki hesaplar
+// (yatırımcı, muhasebeci, yetkisiz personel) müşteri dizinini ve stok maliyetlerini okuyamaz.
+// Yeni bir ekran bu uçları kullanacaksa yetkisini buraya ekleyin.
+const MUSTERI_ARAYANLAR = ['servis_yetkisi', 'aksesuar_yetkisi', 'motor_satis_yetkisi', 'yedek_parca_yetkisi'];
+const AKSESUAR_STOK_OKUYANLAR = ['aksesuar_yetkisi', 'aksesuar_stok_yetkisi', 'eticaret_yetkisi', 'servis_yetkisi', 'motor_vitrin_yetkisi', 'aksesuar_vitrin_yetkisi'];
+const YEDEK_PARCA_STOK_OKUYANLAR = ['yedek_parca_yetkisi', 'servis_yetkisi'];
 
 // Karlılık bilgisi yalnızca admin'e açıktır. Bu alanlar admin dışındaki herkesin yanıtından,
 // iç içe nesneler ve diziler dahil, silinir. Uç tek tek temizlenmediği için yeni bir uç kâr
@@ -91,4 +98,7 @@ const kariGizle = (req, res, next) => {
   next();
 };
 
-module.exports = { modulYetkisi, yazmaYetkisi, rolYetkisi, yazmaRolu, motorYazmaYetkisi, vitrinYetkili, kariGizle, alanlariSil, KAR_ALANLARI, YATIRIMCI_PAYI_ALANLARI };
+module.exports = {
+  modulYetkisi, yazmaYetkisi, rolYetkisi, yazmaRolu, motorYazmaYetkisi, vitrinYetkili, kariGizle, alanlariSil, KAR_ALANLARI, YATIRIMCI_PAYI_ALANLARI,
+  MUSTERI_ARAYANLAR, AKSESUAR_STOK_OKUYANLAR, YEDEK_PARCA_STOK_OKUYANLAR,
+};

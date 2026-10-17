@@ -3,13 +3,17 @@ const router = express.Router();
 router.param('id', require('../../core/middleware/idDogrula').idParam);
 const { pool } = require('../../core/db');
 const { isAdmin } = require('../../core/middleware/auth');
+const { modulYetkisi, MUSTERI_ARAYANLAR } = require('../../core/middleware/yetki');
 const { orderByText } = require('../../core/sqlText');
+
+// Müşteri dizini kişisel veri (ad, telefon, adres) içerir: yalnız müşteri seçen ekranların yetkilileri arayabilir
+const musteriAra = modulYetkisi(...MUSTERI_ARAYANLAR);
 
 /*
  * Yetkilendirme notu:
- * Arama uçları (/ara, /telefon) bilinçli olarak tüm giriş yapmış kullanıcılara açıktır.
- * Servis, aksesuar, motor ve yedek parça formlarının tamamı müşteri seçmek için bu
- * uçları kullanır; kısıtlanmaları hâlinde bu ekranlar çalışmaz.
+ * Arama uçları (/ara, /telefon) servis, aksesuar, motor satış ve yedek parça yetkililerine açıktır (müşteri seçen
+ * formlar). Yatırımcı, muhasebeci ve yetkisiz hesaplar arayamaz: eskiden her giriş yapmış hesap 2 harfle tüm
+ * müşteri dizinini tarayabiliyordu.
  *
  * Toplu listeleme ve yönetim uçları (liste, detay, ekleme, güncelleme, silme) yalnızca
  * admin'e açıktır — frontend'de /musteriler sayfası da AdminRoute ile korunur.
@@ -27,7 +31,7 @@ router.get('/', isAdmin, async (req, res) => {
 });
 
 // GET /ara/:query - Müşteri ara
-router.get('/ara/:query', async (req, res) => {
+router.get('/ara/:query', musteriAra, async (req, res) => {
   try {
     const searchQuery = `%${req.params.query}%`;
     const result = await pool.query(
@@ -43,7 +47,7 @@ router.get('/ara/:query', async (req, res) => {
 });
 
 // GET /telefon/:telefon - Telefon numarasına göre müşteri bul (son 10 hane ile eşleşme)
-router.get('/telefon/:telefon', async (req, res) => {
+router.get('/telefon/:telefon', musteriAra, async (req, res) => {
   try {
     const raw = (req.params.telefon || '').replace(/\D/g, '');
     if (!raw || raw.length < 7) return res.json(null);

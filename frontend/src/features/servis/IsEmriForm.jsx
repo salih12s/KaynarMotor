@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { sonIstek } from '../../shared/utils/sonIstek';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
@@ -32,6 +32,9 @@ const IsEmriForm = () => {
   const [fisNo, setFisNo] = useState('');
   const [error, setError] = useState('');
   const [musteriOptions, setMusteriOptions] = useState([]);
+  // Çift tıklama koruması: ref aynı olay döngüsünde ikinci tıklamayı hemen engeller (state güncellemesi gecikir)
+  const kaydediliyorRef = useRef(false);
+  const [kaydediliyor, setKaydediliyor] = useState(false);
 
   useEffect(() => {
     if (isEdit) {
@@ -104,6 +107,9 @@ const IsEmriForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (kaydediliyorRef.current) return; // ikinci tıklama: ikinci iş emri ve ikinci stok düşümü oluşmasın
+    kaydediliyorRef.current = true;
+    setKaydediliyor(true);
     setError('');
     try {
       const payload = { ...formData, parcalar, kalan_odeme: formData.odeme_tamamlandi ? 0 : (formData.kalan_odeme || 0) };
@@ -116,6 +122,8 @@ const IsEmriForm = () => {
       navigate('/servis');
     } catch (err) {
       setError(err.response?.data?.message || 'Kaydetme hatası');
+      kaydediliyorRef.current = false; // hata: kullanıcı düzeltip yeniden deneyebilsin
+      setKaydediliyor(false);
     }
   };
 
@@ -294,7 +302,7 @@ const IsEmriForm = () => {
 
         <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
           <Button variant="outlined" onClick={() => navigate(-1)}>İptal</Button>
-          <Button type="submit" variant="contained" size="large">{isEdit ? 'Güncelle' : 'Kaydet'}</Button>
+          <Button type="submit" variant="contained" size="large" disabled={kaydediliyor}>{kaydediliyor ? 'Kaydediliyor…' : (isEdit ? 'Güncelle' : 'Kaydet')}</Button>
         </Box>
       </form>
     </Box>

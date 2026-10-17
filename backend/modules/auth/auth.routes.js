@@ -254,8 +254,9 @@ router.patch('/users/:id/sifre', authenticateToken, isAdmin, async (req, res) =>
   res.json({ message: 'Şifre güncellendi' });
 });
 
-// GET /yatirimcilar - Yatırımcı listesi (motor stok ekranı için)
-router.get('/yatirimcilar', authenticateToken, async (req, res) => {
+// GET /yatirimcilar [ADMIN] - Yatırımcı listesi (yalnız admin'in motor stok formundaki yatırımcı seçimi için;
+// kullanıcı adlarını içerdiği için diğer hesaplara kapalı)
+router.get('/yatirimcilar', authenticateToken, isAdmin, async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT id, ad_soyad, kullanici_adi FROM kullanicilar WHERE rol = 'yatirimci' AND onay_durumu = 'onaylandi' ORDER BY ${orderByText('ad_soyad')}`

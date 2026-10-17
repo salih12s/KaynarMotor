@@ -34,6 +34,8 @@ router.post('/platformlar', async (req, res) => {
       'INSERT INTO eticaret_platformlar (platform_adi, komisyon_orani, kdv_orani, kargo_ucreti) VALUES ($1, $2, $3, $4) RETURNING *',
       [platform_adi.trim(), emptyToZero(komisyon_orani), (kdv_orani !== '' && kdv_orani !== undefined && kdv_orani !== null) ? emptyToZero(kdv_orani) : 20, emptyToZero(kargo_ucreti)]
     );
+    // Platform oranları sonraki satışların kâr hesabını değiştirir: kim ekledi/değiştirdi/sildi kayıt altında olmalı
+    await logAktivite({ kullanici_id: req.user.id, kullanici_adi: req.user.kullanici_adi, islem_tipi: ISLEM_TIPLERI.CREATE, islem_detay: `E-ticaret platformu eklendi: ${platform_adi.trim()}`, hedef_tablo: 'eticaret_platformlar', hedef_id: result.rows[0].id });
     res.status(201).json(result.rows[0]);
   } catch (error) {
     console.error('Platform ekleme hatası:', error);
@@ -52,6 +54,7 @@ router.put('/platformlar/:id', async (req, res) => {
       [platform_adi.trim(), emptyToZero(komisyon_orani), (kdv_orani !== '' && kdv_orani !== undefined && kdv_orani !== null) ? emptyToZero(kdv_orani) : 20, emptyToZero(kargo_ucreti), req.params.id]
     );
     if (result.rows.length === 0) return res.status(404).json({ message: 'Platform bulunamadı' });
+    await logAktivite({ kullanici_id: req.user.id, kullanici_adi: req.user.kullanici_adi, islem_tipi: ISLEM_TIPLERI.UPDATE, islem_detay: `E-ticaret platformu güncellendi: ${platform_adi.trim()}`, hedef_tablo: 'eticaret_platformlar', hedef_id: parseInt(req.params.id) });
     res.json(result.rows[0]);
   } catch (error) {
     console.error('Platform güncelleme hatası:', error);
@@ -63,7 +66,10 @@ router.put('/platformlar/:id', async (req, res) => {
 router.delete('/platformlar/:id', async (req, res) => {
   try {
     if (req.user.rol !== 'admin') return res.status(403).json({ message: 'Admin yetkisi gerekli' });
-    await pool.query('DELETE FROM eticaret_platformlar WHERE id = $1', [req.params.id]);
+    const silinen = await pool.query('DELETE FROM eticaret_platformlar WHERE id = $1', [req.params.id]);
+    if (silinen.rowCount > 0) {
+      await logAktivite({ kullanici_id: req.user.id, kullanici_adi: req.user.kullanici_adi, islem_tipi: ISLEM_TIPLERI.DELETE, islem_detay: `E-ticaret platformu #${req.params.id} silindi`, hedef_tablo: 'eticaret_platformlar', hedef_id: parseInt(req.params.id) });
+    }
     res.json({ message: 'Platform silindi' });
   } catch (error) {
     res.status(500).json({ message: 'Sunucu hatası' });
@@ -184,7 +190,8 @@ router.put('/:id', async (req, res) => {
   try {
     await client.query('BEGIN');
 
-    const existing = await client.query('SELECT * FROM eticaret_satislar WHERE id = $1', [req.params.id]);
+    // FOR UPDATE: eşzamanlı düzenleme/silme sıraya girer (kilitsiz okuma eski anlık görüntüyle çalışır)
+    const existing = await client.query('SELECT * FROM eticaret_satislar WHERE id = $1 FOR UPDATE', [req.params.id]);
     if (existing.rows.length === 0) { await client.query('ROLLBACK'); return res.status(404).json({ message: 'Bulunamadı' }); }
     const eski = existing.rows[0];
 
@@ -225,6 +232,13 @@ router.put('/:id', async (req, res) => {
 
     await client.query('COMMIT');
 
+    await logAktivite({
+      kullanici_id: req.user.id, kullanici_adi: req.user.kullanici_adi,
+      islem_tipi: ISLEM_TIPLERI.ETICARET_SATIS_GUNCELLE,
+      islem_detay: `E-ticaret satış #${req.params.id} güncellendi`,
+      hedef_tablo: 'eticaret_satislar', hedef_id: parseInt(req.params.id)
+    });
+
     const full = await pool.query(`
       SELECT es.*, ep.platform_adi FROM eticaret_satislar es
       LEFT JOIN eticaret_platformlar ep ON es.platform_id = ep.id WHERE es.id = $1
@@ -243,12 +257,20 @@ router.delete('/:id', async (req, res) => {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
-    const existing = await client.query('SELECT * FROM eticaret_satislar WHERE id = $1', [req.params.id]);
+    const existing = await client.query('SELECT * FROM eticaret_satislar WHERE id = $1 FOR UPDATE', [req.params.id]);
     if (existing.rows.length > 0 && existing.rows[0].stok_id) {
       await stokAyarla(client, 'aksesuar_stok', 'id = $2', existing.rows[0].stok_id, -existing.rows[0].adet);
     }
     await client.query('DELETE FROM eticaret_satislar WHERE id = $1', [req.params.id]);
     await client.query('COMMIT');
+    if (existing.rows.length > 0) {
+      await logAktivite({
+        kullanici_id: req.user.id, kullanici_adi: req.user.kullanici_adi,
+        islem_tipi: ISLEM_TIPLERI.ETICARET_SATIS_SIL,
+        islem_detay: `E-ticaret satış #${req.params.id} silindi`,
+        hedef_tablo: 'eticaret_satislar', hedef_id: parseInt(req.params.id)
+      });
+    }
     res.json({ message: 'E-ticaret satışı silindi' });
   } catch (error) {
     await client.query('ROLLBACK');

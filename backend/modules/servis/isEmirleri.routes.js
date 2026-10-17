@@ -110,13 +110,16 @@ router.post('/', async (req, res) => {
     const isEmriResult = await client.query(
       `INSERT INTO is_emirleri (fis_no, musteri_id, musteri_ad_soyad, adres, telefon, km, model_tip, marka,
         aciklama, ariza_sikayetler, tahmini_teslim_tarihi, tahmini_toplam_ucret, durum, odeme_detaylari, kalan_odeme,
-        olusturan_kullanici_id, olusturan_kisi, teslim_eden_teknisyen, plaka)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)
+        olusturan_kullanici_id, olusturan_kisi, teslim_eden_teknisyen, plaka, tamamlama_tarihi)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20)
        RETURNING *`,
       [fisNo, musteriId, musteri_ad_soyad, adres, telefon, emptyToZero(km), model_tip, marka,
        aciklama, ariza_sikayetler, emptyToNull(tahmini_teslim_tarihi), emptyToZero(tahmini_toplam_ucret),
        durum || 'beklemede', odeme_detaylari, emptyToZero(kalan_odeme), req.user.id, req.user.ad_soyad, req.user.ad_soyad,
-       emptyToNull(plaka)]
+       emptyToNull(plaka),
+       // Doğrudan "tamamlandı" açılan iş emri de tamamlama tarihi almalı (PUT ve aksesuar POST'u gibi); aksi halde
+       // günlük rapor ve fiş-kâr raporu (DATE(tamamlama_tarihi)) bu kaydı hiç görmez
+       durum === 'tamamlandi' ? new Date() : null]
     );
 
     const isEmriId = isEmriResult.rows[0].id;
@@ -177,8 +180,10 @@ router.put('/:id', async (req, res) => {
   try {
     await client.query('BEGIN');
 
-    // Tamamlanan iş emrini personel düzenleyemez
-    const existing = await client.query('SELECT durum FROM is_emirleri WHERE id = $1', [req.params.id]);
+    // Tamamlanan iş emrini personel düzenleyemez.
+    // FOR UPDATE: aynı kayda aynı anda gelen ikinci düzenleme birincinin commit'ini bekler ve onun sonucunu görür;
+    // kilitsiz okuma eski anlık görüntüyle çalışır ve ER_CHECKREAD (500) ile düşerdi.
+    const existing = await client.query('SELECT durum FROM is_emirleri WHERE id = $1 FOR UPDATE', [req.params.id]);
     if (existing.rows.length === 0) {
       await client.query('ROLLBACK');
       return res.status(404).json({ message: 'İş emri bulunamadı' });
@@ -292,6 +297,7 @@ router.delete('/:id', async (req, res) => {
   try {
     if (req.user.rol !== 'admin') return res.status(403).json({ message: 'Admin yetkisi gerekli' });
     await client.query('BEGIN');
+    await client.query('SELECT id FROM is_emirleri WHERE id = $1 FOR UPDATE', [req.params.id]); // eşzamanlı silme/düzenleme sıraya girer
     // Silinen iş emrindeki yedek parça stok düşümlerini geri al
     const eskiParcalar = await client.query('SELECT parca_kodu, adet FROM parcalar WHERE is_emri_id = $1', [req.params.id]);
     await yedekParcaStokAyarla(client, eskiParcalar.rows, -1);

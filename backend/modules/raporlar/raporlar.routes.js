@@ -95,7 +95,7 @@ router.get('/aralik', engelleYatirimci, async (req, res) => {
     const aksesuarlarHam = await pool.query(
       `SELECT a.*
        FROM aksesuarlar a
-       WHERE DATE(COALESCE(a.tamamlama_tarihi, a.created_at)) BETWEEN $1 AND $2
+       WHERE a.durum = 'tamamlandi' AND DATE(COALESCE(a.tamamlama_tarihi, a.created_at)) BETWEEN $1 AND $2
        ORDER BY a.created_at DESC`,
       [baslangic, bitis]
     );

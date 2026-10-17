@@ -30,7 +30,16 @@ const sanitizeMotor = (row, user) => {
   //  - liste_fiyati_gor AÇIK ise "vitrin" modundadır: tüm satılık motorları SADECE liste fiyatıyla görür
   //  - kapalı ise kendi motorlarını tam detayıyla görür
   if (user.rol === 'yatirimci') {
-    if (!user.liste_fiyati_gor) return row;
+    // Kendi motoru: mali alanları görür ama alıcı/satıcı/komisyoncu kimliği ve iletişimi (TC, adres, telefon, ad) HİÇBİR
+    // durumda yatırımcıya gitmez (KVKK; yatırımcı raporu da aynı alanları taşımaz).
+    if (!user.liste_fiyati_gor) {
+      return {
+        ...row,
+        alici_adi: null, alici_tc: null, alici_telefon: null, alici_adres: null,
+        satici_adi: null, satici_tc: null,
+        komisyoncu_adi: null, komisyoncu_telefon: null,
+      };
+    }
     return {
       id: row.id, plaka: row.plaka, marka: row.marka, model: row.model,
       yil: row.yil, km: row.km, durum: row.durum, stok_tipi: row.stok_tipi,
