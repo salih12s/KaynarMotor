@@ -35,7 +35,19 @@ function run(label, command, args, options = {}) {
   }
 }
 
-fs.rmSync(out, { recursive: true, force: true });
+// fs.rmSync kullanılmaz: Node 24.4'te yolda "ü" gibi ASCII dışı karakter varsa HATA VERMEDEN silmeden döner
+// (eski derlemeler pakete karışıyordu). Dosyalar tek tek silinir.
+function temizle(yol) {
+  if (!fs.existsSync(yol)) return;
+  for (const ad of fs.readdirSync(yol)) {
+    const k = path.join(yol, ad);
+    if (fs.statSync(k).isDirectory()) temizle(k);
+    else fs.unlinkSync(k);
+  }
+  fs.rmdirSync(yol);
+}
+
+temizle(out);
 fs.mkdirSync(dist, { recursive: true });
 
 // 1) Sözdizimi denetimi: hatalı kod pakete girmesin.
@@ -55,6 +67,8 @@ for (const klasor of ['core', 'shared', 'modules']) {
 run('sunucu sözdizimi (server.js)', process.execPath, ['--check', path.join(backend, 'server.js')], { shell: false });
 
 // 2) Arayüz. Adres göreceli: arayüz ve API aynı sunucudadır. Kabuk değişkeni .env dosyasını ezer.
+// Önceki derlemelerden kalan içerik özetli dosyalar (main.*.js, kaynak haritaları) pakete girmesin.
+temizle(path.join(frontend, 'build'));
 run('arayüz derlemesi', 'npx', ['react-scripts', 'build'], {
   cwd: frontend,
   env: { ...process.env, REACT_APP_API_URL: '/api', GENERATE_SOURCEMAP: 'false', CI: 'false' },
