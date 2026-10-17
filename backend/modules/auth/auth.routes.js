@@ -5,7 +5,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { pool } = require('../../core/db');
 const { logAktivite, ISLEM_TIPLERI } = require('../../core/activityLogger');
-const { authenticateToken, isAdmin, kullaniciOnbellegiTemizle } = require('../../core/middleware/auth');
+const { authenticateToken, isAdmin, kullaniciOnbellegiTemizle, sifreParmagi } = require('../../core/middleware/auth');
 const { sifreSorunu } = require('../../core/dogrula');
 const { girisLimiti, kayitLimiti } = require('../../core/middleware/rateLimit');
 const { orderByText } = require('../../core/sqlText');
@@ -73,7 +73,8 @@ router.post('/login', girisLimiti, async (req, res) => {
     }
 
     // Token yalnızca kimliği taşır; rol ve yetkiler her istekte veritabanından okunur (core/middleware/auth.js)
-    const token = jwt.sign({ id: user.id, kullanici_adi: user.kullanici_adi }, process.env.JWT_SECRET, { expiresIn: '24h', algorithm: 'HS256' });
+    // sv: şifre parmak izi; şifre sıfırlanınca bu token geçersiz olur (core/middleware/auth.js)
+    const token = jwt.sign({ id: user.id, kullanici_adi: user.kullanici_adi, sv: sifreParmagi(user.sifre) }, process.env.JWT_SECRET, { expiresIn: '24h', algorithm: 'HS256' });
 
     await logAktivite({ kullanici_id: user.id, kullanici_adi, islem_tipi: ISLEM_TIPLERI.LOGIN, islem_detay: 'Giriş yapıldı', ip_adresi: req.ip });
 
@@ -246,6 +247,7 @@ router.patch('/users/:id/sifre', authenticateToken, isAdmin, async (req, res) =>
   const hash = await bcrypt.hash(sifre, 10);
   const sonuc = await pool.query('UPDATE kullanicilar SET sifre = $1 WHERE id = $2', [hash, req.params.id]);
   if (sonuc.rowCount === 0) return res.status(404).json({ message: 'Kullanıcı bulunamadı' });
+  kullaniciOnbellegiTemizle(req.params.id); // eski token'lar (şifre parmak izi eski) bir sonraki istekte düşer
   await logAktivite({
     kullanici_id: req.user.id, kullanici_adi: req.user.kullanici_adi,
     islem_tipi: ISLEM_TIPLERI.UPDATE, islem_detay: `Kullanıcı #${req.params.id} şifresi sıfırlandı`,

@@ -3,12 +3,15 @@ const router = express.Router();
 router.param('id', require('../../core/middleware/idDogrula').idParam);
 const { pool, isUniqueViolation } = require('../../core/db');
 const { orderByText } = require('../../core/sqlText');
+const { hataYanitla } = require('../../core/dogrula');
 
 // GET /next-stok-kodu - Sonraki otomatik stok kodu
+// Dahili kodlar 13 haneli ve 0 ile başlar. Gerçek ürün barkodları (EAN, 8690... gibi) metin sıralamasında bunların
+// üstüne çıkıp sıradaki kodu barkod+1'e zıplatıyordu; bu yüzden yalnızca dahili biçim sayılır.
 router.get('/next-stok-kodu', async (req, res) => {
   try {
     const result = await pool.query(
-      `SELECT stok_kodu FROM aksesuar_stok WHERE stok_kodu REGEXP '^[0-9]+$' ORDER BY stok_kodu DESC LIMIT 1`
+      `SELECT stok_kodu FROM aksesuar_stok WHERE stok_kodu REGEXP '^0[0-9]{12}$' ORDER BY stok_kodu DESC LIMIT 1`
     );
     let nextCode = '0000000000001';
     if (result.rows.length > 0) {
@@ -82,7 +85,7 @@ router.post('/', async (req, res) => {
     res.status(201).json(result.rows[0]);
   } catch (error) {
     if (isUniqueViolation(error)) return res.status(400).json({ message: 'Bu stok kodu zaten mevcut' });
-    res.status(500).json({ message: 'Sunucu hatası' });
+    hataYanitla(res, error, 'Aksesuar stok ekleme hatası:');
   }
 });
 
@@ -108,7 +111,7 @@ router.put('/:id', async (req, res) => {
     res.json(result.rows[0]);
   } catch (error) {
     if (isUniqueViolation(error)) return res.status(400).json({ message: 'Bu stok kodu zaten mevcut' });
-    res.status(500).json({ message: 'Sunucu hatası' });
+    hataYanitla(res, error, 'Aksesuar stok güncelleme hatası:');
   }
 });
 
@@ -131,12 +134,16 @@ router.post('/toplu', async (req, res) => {
     const gecersiz = stoklar.map((s, i) => (!String((s && s.stok_kodu) || '').trim() || !String((s && s.stok_adi) || '').trim() ? i + 1 : null)).filter(Boolean);
     if (gecersiz.length) return res.status(400).json({ message: `Stok kodu ve adı boş olamaz (satır: ${gecersiz.slice(0, 10).join(', ')})` });
 
+    // Ya hep ya hiç: ortadaki hatalı satır yüzünden yarım içe aktarma kalmasın (tek işlem)
     let eklenen = 0;
+    const client = await pool.connect();
+    try {
+    await client.query('BEGIN');
     for (const stok of stoklar) {
       const mevcut = parseInt(stok.giren_miktar) || 0;
       const envanter = mevcut * (parseFloat(stok.satis_fiyati) || 0);
       // Var olan koda tekrar aktarım: çıkan (satılan) miktar korunur → mevcut = giren − çıkan; boş marka mevcut markayı silmez
-      await pool.query(
+      await client.query(
         `INSERT INTO aksesuar_stok (stok_kodu, stok_adi, marka, giren_miktar, mevcut, birimi, alis_fiyati, satis_fiyati, envanter_degeri)
          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
          ON DUPLICATE KEY UPDATE
@@ -150,9 +157,16 @@ router.post('/toplu', async (req, res) => {
       );
       eklenen++;
     }
+    await client.query('COMMIT');
+    } catch (e) {
+      await client.query('ROLLBACK').catch(() => {});
+      throw e;
+    } finally {
+      client.release();
+    }
     res.json({ message: `${eklenen} stok kaydı eklendi/güncellendi` });
   } catch (error) {
-    res.status(500).json({ message: 'Sunucu hatası' });
+    hataYanitla(res, error, 'Aksesuar toplu stok hatası:');
   }
 });
 

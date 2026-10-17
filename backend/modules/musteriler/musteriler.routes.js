@@ -5,6 +5,7 @@ const { pool } = require('../../core/db');
 const { isAdmin } = require('../../core/middleware/auth');
 const { modulYetkisi, MUSTERI_ARAYANLAR } = require('../../core/middleware/yetki');
 const { orderByText } = require('../../core/sqlText');
+const { hataYanitla } = require('../../core/dogrula');
 
 // Müşteri dizini kişisel veri (ad, telefon, adres) içerir: yalnız müşteri seçen ekranların yetkilileri arayabilir
 const musteriAra = modulYetkisi(...MUSTERI_ARAYANLAR);
@@ -125,8 +126,7 @@ router.post('/', isAdmin, async (req, res) => {
     );
     res.status(201).json(result.rows[0]);
   } catch (error) {
-    console.error('Müşteri ekleme hatası:', error);
-    res.status(500).json({ message: 'Sunucu hatası' });
+    hataYanitla(res, error, 'Müşteri ekleme hatası:');
   }
 });
 
@@ -141,7 +141,7 @@ router.put('/:id', isAdmin, async (req, res) => {
     if (result.rows.length === 0) return res.status(404).json({ message: 'Müşteri bulunamadı' });
     res.json(result.rows[0]);
   } catch (error) {
-    res.status(500).json({ message: 'Sunucu hatası' });
+    hataYanitla(res, error, 'Müşteri güncelleme hatası:');
   }
 });
 

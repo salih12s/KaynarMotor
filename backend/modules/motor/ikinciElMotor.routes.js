@@ -4,6 +4,7 @@ router.param('id', require('../../core/middleware/idDogrula').idParam);
 const { pool } = require('../../core/db');
 const { logAktivite, ISLEM_TIPLERI } = require('../../core/activityLogger');
 const { upsertMusteri } = require('../musteriler/musteriHelper');
+const { hataYanitla } = require('../../core/dogrula');
 
 const emptyToZero = (v) => { if (v === '' || v === undefined || v === null) return 0; const n = Number(v); return isNaN(n) ? 0 : n; };
 // Parçalı ödeme dağılımını JSON string olarak normalize eder
@@ -158,8 +159,12 @@ router.get('/:id', async (req, res) => {
 });
 
 // POST / - Motor satışı ekle
+// Motor kaydı ve müşteri kayıtları TEK işlemde yazılır: biri patlarsa hiçbiri kalmaz (eskiden kayıt oluşup kullanıcı
+// hata görüyor, yeniden deneyince çift kayıt çıkıyordu).
 router.post('/', async (req, res) => {
+  const client = await pool.connect();
   try {
+    await client.query('BEGIN');
     const {
       tarih, plaka, marka, model, km,
       alis_fiyati, satis_fiyati, noter_alis, noter_satis, masraflar,
@@ -187,7 +192,7 @@ router.post('/', async (req, res) => {
     const listeFiyati = emptyToZero(liste_fiyati);
     const tamamlamaTarihi = durum === 'tamamlandi' ? new Date() : null;
 
-    const result = await pool.query(
+    const result = await client.query(
       `INSERT INTO ikinci_el_motorlar (tarih, plaka, marka, model, km, alis_fiyati, satis_fiyati, noter_alis, noter_satis, masraflar, kar,
         alici_adi, alici_tc, alici_telefon, alici_adres, odeme_sekli, aciklama, durum, tamamlama_tarihi, stok_tipi,
         yil, satici_adi, satici_tc, kalan_odeme, fatura_kesildi, yevmiye_no, satis_tarihi,
@@ -203,10 +208,12 @@ router.post('/', async (req, res) => {
        vitrin_baslik || null, vitrin_aciklama || null, vitrin_segment || null, emptyToZero(vitrin_cc) || null, vitrin_hasar || null]
     );
 
-    // Müşteri auto-collect
-    if (satici_adi) await upsertMusteri(satici_adi, null, null);
-    if (alici_adi) await upsertMusteri(alici_adi, alici_telefon, alici_adres);
-    if (komisyoncu_adi) await upsertMusteri(komisyoncu_adi, komisyoncu_telefon, null);
+    // Müşteri auto-collect (aynı işlemde)
+    if (satici_adi) await upsertMusteri(satici_adi, null, null, client);
+    if (alici_adi) await upsertMusteri(alici_adi, alici_telefon, alici_adres, client);
+    if (komisyoncu_adi) await upsertMusteri(komisyoncu_adi, komisyoncu_telefon, null, client);
+
+    await client.query('COMMIT');
 
     await logAktivite({
       kullanici_id: req.user.id, kullanici_adi: req.user.kullanici_adi,
@@ -217,20 +224,31 @@ router.post('/', async (req, res) => {
 
     res.status(201).json(sanitizeMotor(result.rows[0], req.user));
   } catch (error) {
-    console.error('Motor satış ekleme hatası:', error);
-    res.status(500).json({ message: 'Sunucu hatası' });
+    await client.query('ROLLBACK').catch(() => {});
+    hataYanitla(res, error, 'Motor satış ekleme hatası:');
+  } finally {
+    client.release();
   }
 });
 
 // PUT /:id - Güncelle
+// Motor kaydı, bağlı vitrin ilanının yayından kalkması/fiyatı ve müşteri kayıtları TEK işlemde yazılır; ilan senkronu
+// patlarsa motor güncellemesi de geri alınır (eskiden satış kaydedilir ama ilan yayında kalırdı). Satır FOR UPDATE ile
+// kilitlenir: eşzamanlı güncellemeler sıraya girer.
 router.put('/:id', async (req, res) => {
+  const client = await pool.connect();
   try {
-    const existing = await pool.query('SELECT * FROM ikinci_el_motorlar WHERE id = $1', [req.params.id]);
-    if (existing.rows.length === 0) return res.status(404).json({ message: 'Kayıt bulunamadı' });
+    await client.query('BEGIN');
+    const existing = await client.query('SELECT * FROM ikinci_el_motorlar WHERE id = $1 FOR UPDATE', [req.params.id]);
+    if (existing.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ message: 'Kayıt bulunamadı' });
+    }
     const mevcut = existing.rows[0];
 
     // Yatırımcı kendi motoru dışındakini güncelleyemez
     if (req.user.rol === 'yatirimci' && mevcut.yatirimci_id !== req.user.id) {
+      await client.query('ROLLBACK');
       return res.status(403).json({ message: 'Bu kayda erişim yetkiniz yok' });
     }
 
@@ -284,7 +302,7 @@ router.put('/:id', async (req, res) => {
     const listeFiyati = canListe ? emptyToZero(al('liste_fiyati')) : parseFloat(mevcut.liste_fiyati || 0);
     const tamamlamaTarihi = (durum === 'tamamlandi' && mevcut.durum !== 'tamamlandi') ? new Date() : null;
 
-    const result = await pool.query(
+    const result = await client.query(
       `UPDATE ikinci_el_motorlar SET
         tarih=$1, plaka=$2, marka=$3, model=$4, km=$5,
         alis_fiyati=$6, satis_fiyati=$7, noter_alis=$8, noter_satis=$9, masraflar=$10, kar=$11,
@@ -316,22 +334,20 @@ router.put('/:id', async (req, res) => {
 
     // Motor yeni satıldıysa, bağlı vitrin/site ilanını otomatik yayından kaldır
     if (durum === 'tamamlandi' && mevcut.durum !== 'tamamlandi') {
-      try {
-        await pool.query('UPDATE vitrin_urunleri SET yayinda = FALSE, updated_at = CURRENT_TIMESTAMP WHERE stok_motor_id = $1', [req.params.id]);
-      } catch (e) { console.error('Vitrin ilanı yayından kaldırma hatası:', e.message); }
+      await client.query('UPDATE vitrin_urunleri SET yayinda = FALSE, updated_at = CURRENT_TIMESTAMP WHERE stok_motor_id = $1', [req.params.id]);
     }
 
     // İlan fiyatı değiştiyse bağlı site ilanının fiyatını da güncelle (ilan fiyatı = site fiyatı)
     if (canListe && listeFiyati > 0 && listeFiyati !== parseFloat(mevcut.liste_fiyati || 0)) {
-      try {
-        await pool.query('UPDATE vitrin_urunleri SET fiyat = $1, updated_at = CURRENT_TIMESTAMP WHERE stok_motor_id = $2', [listeFiyati, req.params.id]);
-      } catch (e) { console.error('Vitrin ilan fiyatı güncelleme hatası:', e.message); }
+      await client.query('UPDATE vitrin_urunleri SET fiyat = $1, updated_at = CURRENT_TIMESTAMP WHERE stok_motor_id = $2', [listeFiyati, req.params.id]);
     }
 
-    // Müşteri auto-collect
-    if (satici_adi) await upsertMusteri(satici_adi, null, null);
-    if (alici_adi) await upsertMusteri(alici_adi, alici_telefon, alici_adres);
-    if (komisyoncu_adi) await upsertMusteri(komisyoncu_adi, komisyoncu_telefon, null);
+    // Müşteri auto-collect (aynı işlemde)
+    if (satici_adi) await upsertMusteri(satici_adi, null, null, client);
+    if (alici_adi) await upsertMusteri(alici_adi, alici_telefon, alici_adres, client);
+    if (komisyoncu_adi) await upsertMusteri(komisyoncu_adi, komisyoncu_telefon, null, client);
+
+    await client.query('COMMIT');
 
     await logAktivite({
       kullanici_id: req.user.id, kullanici_adi: req.user.kullanici_adi,
@@ -342,8 +358,10 @@ router.put('/:id', async (req, res) => {
 
     res.json(sanitizeMotor(result.rows[0], req.user));
   } catch (error) {
-    console.error('Motor satış güncelleme hatası:', error);
-    res.status(500).json({ message: 'Sunucu hatası' });
+    await client.query('ROLLBACK').catch(() => {});
+    hataYanitla(res, error, 'Motor satış güncelleme hatası:');
+  } finally {
+    client.release();
   }
 });
 

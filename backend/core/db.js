@@ -1,5 +1,16 @@
 const mysql = require('mysql2/promise');
 const { compileQuery, parseUtcDateTime, splitUpdateReturning } = require('./sqlParams');
+const { GecersizIstek } = require('./dogrula');
+
+// Katı SQL modu fazla uzun / aralık dışı değeri hata olarak reddeder. Bu kullanıcının düzeltebileceği bir hatadır
+// (400); eskiden her uç "Sunucu hatası" (500) dönüyordu.
+const GECERSIZ_DEGER_KODLARI = new Set(['ER_DATA_TOO_LONG', 'ER_WARN_DATA_OUT_OF_RANGE', 'ER_TRUNCATED_WRONG_VALUE', 'ER_TRUNCATED_WRONG_VALUE_FOR_FIELD']);
+function istemciHatasinaCevir(error) {
+  if (error && GECERSIZ_DEGER_KODLARI.has(error.code)) {
+    return new GecersizIstek('Alanlardan biri çok uzun ya da geçersiz; lütfen değerleri kontrol edin');
+  }
+  return error;
+}
 
 // Eski kodun beklediği node-pg arayüzü korunur: `pool.query(text, params)` ve
 // `pool.connect()` -> `client.query(...)` / `client.release()`; sonuç `{ rows, rowCount }`.
@@ -158,15 +169,19 @@ function derle(text, params) {
  * cümleye bölünür: önce UPDATE, sonra aynı koşulla SELECT; ikisi aynı bağlantıdadır.
  */
 async function runOn(connection, text, params) {
-  const parts = splitUpdateReturning(text);
-  if (parts) {
-    await connection.query(compileQuery(parts.update, params));
-    const [raw] = await connection.query(compileQuery(parts.select, params));
+  try {
+    const parts = splitUpdateReturning(text);
+    if (parts) {
+      await connection.query(compileQuery(parts.update, params));
+      const [raw] = await connection.query(compileQuery(parts.select, params));
+      return toResult(raw);
+    }
+    const { sql, degerler } = derle(text, params);
+    const [raw] = degerler ? await connection.execute(sql, degerler) : await connection.query(sql);
     return toResult(raw);
+  } catch (error) {
+    throw istemciHatasinaCevir(error);
   }
-  const { sql, degerler } = derle(text, params);
-  const [raw] = degerler ? await connection.execute(sql, degerler) : await connection.query(sql);
-  return toResult(raw);
 }
 
 async function query(text, params, retries = 2) {
@@ -195,7 +210,7 @@ async function query(text, params, retries = 2) {
       const [raw] = degerler ? await rawPool.execute(sql, degerler) : await rawPool.query(sql);
       return toResult(raw);
     } catch (error) {
-      if (!retryable || !isTransientDbError(error) || attempt >= retries) throw error;
+      if (!retryable || !isTransientDbError(error) || attempt >= retries) throw istemciHatasinaCevir(error);
       const delay = 300 * (attempt + 1);
       console.warn(`Geçici veritabanı hatası, sorgu tekrar denenecek (${attempt + 1}/${retries}): ${error.message}`);
       await wait(delay);

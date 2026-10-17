@@ -3,6 +3,7 @@ const router = express.Router();
 router.param('id', require('../../core/middleware/idDogrula').idParam);
 const { pool, isUniqueViolation } = require('../../core/db');
 const { orderByText } = require('../../core/sqlText');
+const { hataYanitla } = require('../../core/dogrula');
 
 // Yedek parça barkodları aksesuardan ayırt edilebilsin diye 9 ile başlar (13 hane)
 const ILK_KOD = '9000000000001';
@@ -85,7 +86,7 @@ router.post('/', async (req, res) => {
     res.status(201).json(result.rows[0]);
   } catch (error) {
     if (isUniqueViolation(error)) return res.status(400).json({ message: 'Bu stok kodu zaten mevcut' });
-    res.status(500).json({ message: 'Sunucu hatası' });
+    hataYanitla(res, error, 'Yedek parça stok ekleme hatası:');
   }
 });
 
@@ -97,20 +98,40 @@ router.put('/:id', async (req, res) => {
     const giren = parseInt(giren_miktar) || 0;
     if (giren < 0) return res.status(400).json({ message: 'Giren miktar negatif olamaz' });
 
-    // mevcut = giren − çıkan (bkz. aksesuarStok.js): düzenleme satışları stoğa geri döndürmez
-    const result = await pool.query(
-      `UPDATE yedek_parca_stok SET stok_kodu=$1, stok_adi=$2, marka=$3, giren_miktar=$4,
-       envanter_degeri=GREATEST($4 - IFNULL(cikan_miktar, 0), 0) * $7,
-       mevcut=$4 - IFNULL(cikan_miktar, 0),
-       birimi=$5, alis_fiyati=$6, satis_fiyati=$7, updated_at=CURRENT_TIMESTAMP
-       WHERE id=$8 RETURNING *`,
-      [stok_kodu, stok_adi, marka || null, giren, birimi || 'Adet', parseFloat(alis_fiyati) || 0, parseFloat(satis_fiyati) || 0, req.params.id]
-    );
-    if (result.rows.length === 0) return res.status(404).json({ message: 'Stok bulunamadı' });
-    res.json(result.rows[0]);
+    // İş emri parçaları bu stoğa stok KODUYLA bağlıdır (parcalar.parca_kodu). Kod değişirse eski iş emirleri bağlantıyı
+    // kaybeder ve onları silip düzenlerken iade yanlış yere (ya da hiçbir yere) giderdi; bu yüzden kod değişimi ve parça
+    // kodlarının güncellenmesi AYNI işlemde yapılır.
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      const eski = await client.query('SELECT stok_kodu FROM yedek_parca_stok WHERE id = $1 FOR UPDATE', [req.params.id]);
+      if (eski.rows.length === 0) {
+        await client.query('ROLLBACK');
+        return res.status(404).json({ message: 'Stok bulunamadı' });
+      }
+      // mevcut = giren − çıkan (bkz. aksesuarStok.js): düzenleme satışları stoğa geri döndürmez
+      const result = await client.query(
+        `UPDATE yedek_parca_stok SET stok_kodu=$1, stok_adi=$2, marka=$3, giren_miktar=$4,
+         envanter_degeri=GREATEST($4 - IFNULL(cikan_miktar, 0), 0) * $7,
+         mevcut=$4 - IFNULL(cikan_miktar, 0),
+         birimi=$5, alis_fiyati=$6, satis_fiyati=$7, updated_at=CURRENT_TIMESTAMP
+         WHERE id=$8 RETURNING *`,
+        [stok_kodu, stok_adi, marka || null, giren, birimi || 'Adet', parseFloat(alis_fiyati) || 0, parseFloat(satis_fiyati) || 0, req.params.id]
+      );
+      if (eski.rows[0].stok_kodu !== stok_kodu) {
+        await client.query('UPDATE parcalar SET parca_kodu = $1 WHERE parca_kodu = $2', [stok_kodu, eski.rows[0].stok_kodu]);
+      }
+      await client.query('COMMIT');
+      res.json(result.rows[0]);
+    } catch (e) {
+      await client.query('ROLLBACK').catch(() => {});
+      throw e;
+    } finally {
+      client.release();
+    }
   } catch (error) {
     if (isUniqueViolation(error)) return res.status(400).json({ message: 'Bu stok kodu zaten mevcut' });
-    res.status(500).json({ message: 'Sunucu hatası' });
+    hataYanitla(res, error, 'Yedek parça stok güncelleme hatası:');
   }
 });
 
@@ -133,12 +154,16 @@ router.post('/toplu', async (req, res) => {
     const gecersiz = stoklar.map((s, i) => (!String((s && s.stok_kodu) || '').trim() || !String((s && s.stok_adi) || '').trim() ? i + 1 : null)).filter(Boolean);
     if (gecersiz.length) return res.status(400).json({ message: `Stok kodu ve adı boş olamaz (satır: ${gecersiz.slice(0, 10).join(', ')})` });
 
+    // Ya hep ya hiç: ortadaki hatalı satır yüzünden yarım içe aktarma kalmasın (tek işlem)
     let eklenen = 0;
+    const client = await pool.connect();
+    try {
+    await client.query('BEGIN');
     for (const stok of stoklar) {
       const mevcut = parseInt(stok.giren_miktar) || 0;
       const envanter = mevcut * (parseFloat(stok.satis_fiyati) || 0);
       // Var olan koda tekrar aktarım: çıkan (satılan) miktar korunur → mevcut = giren − çıkan
-      await pool.query(
+      await client.query(
         `INSERT INTO yedek_parca_stok (stok_kodu, stok_adi, marka, giren_miktar, mevcut, birimi, alis_fiyati, satis_fiyati, envanter_degeri)
          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
          ON DUPLICATE KEY UPDATE
@@ -152,9 +177,16 @@ router.post('/toplu', async (req, res) => {
       );
       eklenen++;
     }
+    await client.query('COMMIT');
+    } catch (e) {
+      await client.query('ROLLBACK').catch(() => {});
+      throw e;
+    } finally {
+      client.release();
+    }
     res.json({ message: `${eklenen} stok kaydı eklendi/güncellendi` });
   } catch (error) {
-    res.status(500).json({ message: 'Sunucu hatası' });
+    hataYanitla(res, error, 'Yedek parça toplu stok hatası:');
   }
 });
 

@@ -39,7 +39,7 @@ router.post('/platformlar', async (req, res) => {
     res.status(201).json(result.rows[0]);
   } catch (error) {
     console.error('Platform ekleme hatası:', error);
-    res.status(500).json({ message: 'Sunucu hatası: ' + error.message });
+    hataYanitla(res, error, 'Platform işlemi hatası:');
   }
 });
 
@@ -58,7 +58,7 @@ router.put('/platformlar/:id', async (req, res) => {
     res.json(result.rows[0]);
   } catch (error) {
     console.error('Platform güncelleme hatası:', error);
-    res.status(500).json({ message: 'Sunucu hatası: ' + error.message });
+    hataYanitla(res, error, 'Platform işlemi hatası:');
   }
 });
 

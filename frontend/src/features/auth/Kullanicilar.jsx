@@ -34,7 +34,7 @@ const Kullanicilar = () => {
     if (!createForm.kullanici_adi || !createForm.sifre || !createForm.ad_soyad) {
       setError('Tüm alanlar zorunludur'); return;
     }
-    if (createForm.sifre.length < 6) { setError('Şifre en az 6 karakter olmalıdır'); return; }
+    if (createForm.sifre.length < 8) { setError('Şifre en az 8 karakter olmalıdır'); return; }
     try {
       await authService.createUser(createForm);
       setCreateDialog(false);
@@ -46,7 +46,7 @@ const Kullanicilar = () => {
   // Şifreler artık saklanmaz ve gösterilemez: unutan kullanıcıya yönetici yeni şifre belirler
   const handleSifreSifirla = async () => {
     setError('');
-    if (sifreDialog.sifre.length < 6) { setError('Şifre en az 6 karakter olmalıdır'); return; }
+    if (sifreDialog.sifre.length < 8) { setError('Şifre en az 8 karakter olmalıdır'); return; }
     try {
       await authService.setSifre(sifreDialog.user.id, sifreDialog.sifre);
       setBilgi(`${sifreDialog.user.ad_soyad} için şifre güncellendi. Yeni şifreyi kullanıcıya iletin.`);
@@ -167,7 +167,7 @@ const Kullanicilar = () => {
         <DialogContent>
           {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
           <Typography sx={{ mb: 2 }}><strong>{sifreDialog.user?.ad_soyad}</strong> için yeni şifre belirleyin. Eski şifre görüntülenemez.</Typography>
-          <TextField fullWidth label="Yeni şifre (en az 6 karakter)" type="password" autoComplete="new-password" value={sifreDialog.sifre}
+          <TextField fullWidth label="Yeni şifre (en az 8 karakter)" type="password" autoComplete="new-password" value={sifreDialog.sifre}
             onChange={e => setSifreDialog({ ...sifreDialog, sifre: e.target.value })} />
         </DialogContent>
         <DialogActions>
@@ -190,7 +190,7 @@ const Kullanicilar = () => {
             </Grid>
             <Grid size={{ xs: 12 }}><TextField fullWidth label="Ad Soyad" value={createForm.ad_soyad} onChange={e => setCreateForm({ ...createForm, ad_soyad: e.target.value })} required /></Grid>
             <Grid size={{ xs: 12, sm: 6 }}><TextField fullWidth label="Kullanıcı Adı" value={createForm.kullanici_adi} onChange={e => setCreateForm({ ...createForm, kullanici_adi: e.target.value })} required /></Grid>
-            <Grid size={{ xs: 12, sm: 6 }}><TextField fullWidth label="Şifre (en az 6 karakter)" type="password" autoComplete="new-password" value={createForm.sifre} onChange={e => setCreateForm({ ...createForm, sifre: e.target.value })} required /></Grid>
+            <Grid size={{ xs: 12, sm: 6 }}><TextField fullWidth label="Şifre (en az 8 karakter)" type="password" autoComplete="new-password" value={createForm.sifre} onChange={e => setCreateForm({ ...createForm, sifre: e.target.value })} required /></Grid>
           </Grid>
           <Alert severity="info" sx={{ mt: 2 }}>
             Yatırımcılar giriş yapınca sadece kendi motorlarını ve raporlarını görür. Personel yetkileri oluşturduktan sonra tabloda ve Yetkilendirme ekranında ayarlanabilir.

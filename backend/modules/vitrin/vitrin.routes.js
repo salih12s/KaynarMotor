@@ -3,6 +3,11 @@ const { pool, maxPaket, paketHatasi } = require('../../core/db');
 const { orderByText } = require('../../core/sqlText');
 const { opsiyonelKullanici } = require('../../core/middleware/auth');
 const { vitrinYetkili } = require('../../core/middleware/yetki');
+const { MedyaOnbellegi } = require('../../core/medyaOnbellegi');
+
+// Sık istenen küçük medya bellekten sunulur. Sınır MEDYA_ONBELLEK_MB (varsayılan 48; 0 = kapalı); paylaşımlı hostingte bellek dar.
+const ayarliMb = Number(process.env.MEDYA_ONBELLEK_MB);
+const medyaOnbellegi = new MedyaOnbellegi({ azamiBayt: (process.env.MEDYA_ONBELLEK_MB && Number.isFinite(ayarliMb) ? ayarliMb : 48) * 1024 * 1024 });
 
 // Geçerli kategoriler
 const KATEGORILER = ['motor', 'aksesuar', 'yedek_parca', 'bakim_servis', 'nakliye', 'sigorta'];
@@ -187,21 +192,27 @@ module.exports = (authenticateToken, isAdmin) => {
   });
 
   // GET /gorsel/:id - görseli binary olarak servis et (tarayıcı önbelleğe alır)
+  // Önbellek başlıkları yalnızca BAŞARILI yanıtta konur: eskiden 404/500 de "bir yıl, değişmez" başlığıyla gidiyor,
+  // aradaki önbellekler hatayı bir yıl saklayabiliyordu.
   router.get('/gorsel/:id', async (req, res) => {
     try {
       const etag = `"vitrin-gorsel-${req.params.id}"`;
-      res.set({ 'Cache-Control': 'public, max-age=31536000, immutable', ETag: etag });
-      if (req.headers['if-none-match'] === etag) return res.status(304).end();
-      const result = await pool.query('SELECT data FROM vitrin_gorseller WHERE id = $1', [req.params.id]);
-      if (result.rows.length === 0) return res.status(404).send('Görsel bulunamadı');
-      const parsed = parseDataUrl(result.rows[0].data, IZINLI_GORSEL);
-      if (!parsed) return res.status(404).send('Geçersiz görsel');
+      const KALICI = { 'Cache-Control': 'public, max-age=31536000, immutable', ETag: etag };
+      if (req.headers['if-none-match'] === etag) return res.set(KALICI).status(304).end();
+      let parsed = medyaOnbellegi.get(`g:${req.params.id}`);
+      if (!parsed) {
+        const result = await pool.query('SELECT data FROM vitrin_gorseller WHERE id = $1', [req.params.id]);
+        if (result.rows.length === 0) return res.set('Cache-Control', 'public, max-age=60').status(404).send('Görsel bulunamadı');
+        parsed = parseDataUrl(result.rows[0].data, IZINLI_GORSEL);
+        if (!parsed) return res.set('Cache-Control', 'public, max-age=60').status(404).send('Geçersiz görsel');
+        medyaOnbellegi.set(`g:${req.params.id}`, parsed, parsed.buffer.length);
+      }
       medyaBasliklari(res);
-      res.set('Content-Type', parsed.mime);
+      res.set(KALICI).set('Content-Type', parsed.mime);
       res.send(parsed.buffer);
     } catch (e) {
       console.error('Vitrin görsel hatası:', e.message);
-      res.status(500).send('Sunucu hatası');
+      res.set('Cache-Control', 'no-store').status(500).send('Sunucu hatası');
     }
   });
 
@@ -209,12 +220,18 @@ module.exports = (authenticateToken, isAdmin) => {
   router.get('/video/:id', async (req, res) => {
     try {
       const etag = `"vitrin-video-${req.params.id}"`;
+      if (!req.headers.range && req.headers['if-none-match'] === etag) {
+        return res.set({ 'Cache-Control': 'public, max-age=31536000, immutable', ETag: etag }).status(304).end();
+      }
+      let parsed = medyaOnbellegi.get(`v:${req.params.id}`);
+      if (!parsed) {
+        const result = await pool.query('SELECT data FROM vitrin_videolar WHERE id = $1', [req.params.id]);
+        if (result.rows.length === 0) return res.set('Cache-Control', 'public, max-age=60').status(404).send('Video bulunamadı');
+        parsed = parseDataUrl(result.rows[0].data, IZINLI_VIDEO);
+        if (!parsed) return res.set('Cache-Control', 'public, max-age=60').status(404).send('Geçersiz video');
+        medyaOnbellegi.set(`v:${req.params.id}`, parsed, parsed.buffer.length); // sınırın yarısından büyükse alınmaz
+      }
       res.set({ 'Cache-Control': 'public, max-age=31536000, immutable', ETag: etag });
-      if (!req.headers.range && req.headers['if-none-match'] === etag) return res.status(304).end();
-      const result = await pool.query('SELECT data FROM vitrin_videolar WHERE id = $1', [req.params.id]);
-      if (result.rows.length === 0) return res.status(404).send('Video bulunamadı');
-      const parsed = parseDataUrl(result.rows[0].data, IZINLI_VIDEO);
-      if (!parsed) return res.status(404).send('Geçersiz video');
       medyaBasliklari(res);
       const total = parsed.buffer.length;
       const range = req.headers.range;
@@ -247,7 +264,7 @@ module.exports = (authenticateToken, isAdmin) => {
       res.end(parsed.buffer);
     } catch (e) {
       console.error('Vitrin video hatası:', e.message);
-      res.status(500).send('Sunucu hatası');
+      res.set('Cache-Control', 'no-store').status(500).send('Sunucu hatası');
     }
   });
 

@@ -1,5 +1,14 @@
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const { pool } = require('../db');
+
+/*
+ * Şifre parmak izi: token'a girişte yazılır (`sv`), her istekte kullanıcının GÜNCEL şifre özetinden yeniden hesaplanıp
+ * karşılaştırılır. Şifre sıfırlanınca parmak izi değişir ve eski token'lar (çalınmış olanlar dahil) hemen geçersiz olur.
+ * Özetin kendisi token'a/req.user'a konmaz; yalnızca kısa bir türevi. `sv` taşımayan eski token'lar (bu özellikten önce
+ * verilenler) süreleri dolana kadar (en çok 24 sa) kabul edilir.
+ */
+const sifreParmagi = (ozet) => crypto.createHash('sha256').update(String(ozet || '')).digest('hex').slice(0, 16);
 
 /*
  * Kimlik doğrulama.
@@ -12,7 +21,7 @@ const { pool } = require('../db');
  * ve etki ANINDA olur. Birden fazla sunucu süreci çalışırsa diğer süreçlerde etki en geç 15 sn sonra görülür.
  */
 const KULLANICI_KOLONLARI = [
-  'id', 'kullanici_adi', 'ad_soyad', 'rol', 'onay_durumu',
+  'id', 'kullanici_adi', 'ad_soyad', 'rol', 'onay_durumu', 'sifre',
   'aksesuar_yetkisi', 'motor_satis_yetkisi', 'eticaret_yetkisi', 'servis_yetkisi',
   'aksesuar_stok_yetkisi', 'yedek_parca_yetkisi', 'motor_vitrin_yetkisi', 'aksesuar_vitrin_yetkisi',
   'liste_fiyati_gor', 'alis_fiyati_gor', 'satis_fiyati_gor', 'kar_gor', 'musteri_gor', 'satis_gecmisi_gor',
@@ -25,7 +34,11 @@ const kullaniciGetir = async (id) => {
   const kayit = onbellek.get(id);
   if (kayit && kayit.bitis > simdi) return kayit.kullanici;
   const sonuc = await pool.query(`SELECT ${KULLANICI_KOLONLARI} FROM kullanicilar WHERE id = $1`, [id]);
-  const kullanici = sonuc.rows[0] || null; // bulunamadıysa da önbelleğe alınır (silinmiş kullanıcı)
+  let kullanici = sonuc.rows[0] || null; // bulunamadıysa da önbelleğe alınır (silinmiş kullanıcı)
+  if (kullanici) {
+    const { sifre, ...geri } = kullanici; // özet bellekte/req.user'da tutulmaz
+    kullanici = { ...geri, sifre_parmak: sifreParmagi(sifre) };
+  }
   onbellek.set(id, { kullanici, bitis: simdi + ONBELLEK_MS });
   return kullanici;
 };
@@ -57,7 +70,7 @@ const authenticateToken = async (req, res, next) => {
   }
   // Veritabanı hatası fırlatırsa merkezi hata işleyicisi 500 döner (core/asyncHata.js)
   const kullanici = await kullaniciGetir(Number(yuk.id));
-  if (!kullanici || kullanici.onay_durumu !== 'onaylandi') {
+  if (!kullanici || kullanici.onay_durumu !== 'onaylandi' || (yuk.sv && yuk.sv !== kullanici.sifre_parmak)) {
     return res.status(401).json({ message: 'Oturumunuz geçersiz. Lütfen yeniden giriş yapın.', code: 'TOKEN_INVALID' });
   }
   req.user = kullanici; // rol ve yetkiler token'dan DEĞİL veritabanından
@@ -70,7 +83,9 @@ const opsiyonelKullanici = async (req) => {
   const { yuk } = tokenYukuOku(req);
   if (!yuk) return null;
   const kullanici = await kullaniciGetir(Number(yuk.id));
-  return kullanici && kullanici.onay_durumu === 'onaylandi' ? kullanici : null;
+  if (!kullanici || kullanici.onay_durumu !== 'onaylandi') return null;
+  if (yuk.sv && yuk.sv !== kullanici.sifre_parmak) return null;
+  return kullanici;
 };
 
 const isAdmin = (req, res, next) => {
@@ -80,4 +95,4 @@ const isAdmin = (req, res, next) => {
   next();
 };
 
-module.exports = { authenticateToken, isAdmin, opsiyonelKullanici, kullaniciOnbellegiTemizle };
+module.exports = { authenticateToken, isAdmin, opsiyonelKullanici, kullaniciOnbellegiTemizle, sifreParmagi };

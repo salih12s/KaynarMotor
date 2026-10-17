@@ -23,9 +23,10 @@ const adetCoz = (deger, varsayilan = 1) => {
 // Formlar boş alanı '' olarak gönderir; tamsayı/FK kolonuna '' yazılamaz (katı SQL modunda hata) → NULL
 const bosuNull = (deger) => (deger === '' || deger === undefined ? null : deger);
 
-// Şifre kuralı: metin, 6–128 karakter. Sorun varsa kullanıcıya gösterilecek mesajı, yoksa null döndürür.
+// Şifre kuralı: metin, 8–128 karakter. Sorun varsa kullanıcıya gösterilecek mesajı, yoksa null döndürür.
+// (Yalnızca YENİ şifreler denetlenir; mevcut kullanıcılar eski şifreleriyle girmeye devam eder.)
 const sifreSorunu = (sifre) => {
-  if (typeof sifre !== 'string' || sifre.length < 6) return 'Şifre en az 6 karakter olmalıdır';
+  if (typeof sifre !== 'string' || sifre.length < 8) return 'Şifre en az 8 karakter olmalıdır';
   if (sifre.length > 128) return 'Şifre en fazla 128 karakter olabilir';
   return null;
 };

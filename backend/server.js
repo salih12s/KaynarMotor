@@ -1,6 +1,15 @@
 require('dotenv').config({ path: require('path').resolve(__dirname, '../.env') });
 require('dotenv').config();
 
+// Oturum imzası için gizli anahtar şart: yoksa sunucu açılmaz (eskiden açılır, giriş yapan herkese 500 verirdi).
+if (!process.env.JWT_SECRET) {
+  console.error('HATA: JWT_SECRET tanımlı değil; sunucu başlatılmadı. Güçlü, rastgele bir değer verin (en az 32 karakter).');
+  process.exit(1);
+}
+if (process.env.NODE_ENV === 'production' && process.env.JWT_SECRET.length < 32) {
+  console.warn('UYARI: JWT_SECRET 32 karakterden kısa; üretimde güçlü ve rastgele bir değer kullanın.');
+}
+
 const express = require('express');
 require('./core/asyncHata'); // async işleyicide fırlatılan hata istemciyi yanıtsız bırakmasın (500 dönsün)
 const cors = require('cors');
@@ -90,6 +99,8 @@ const vitrinYazmaKapisi = async (req, res, next) => {
 app.use('/api/vitrin', vitrinYazmaKapisi);
 app.use('/api/vitrin', express.json({ limit: '120mb' }));
 app.use(express.json({ limit: '10mb' }));
+// Eksi tutar (fiyat, maliyet, indirim, kalan ödeme...) hiçbir uçta kabul edilmez
+app.use('/api', require('./core/middleware/tutarDogrula').negatifTutarEngelle);
 
 // Routes
 const authRoutes = require('./modules/auth/auth.routes');
