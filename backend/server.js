@@ -115,7 +115,7 @@ const yedekParcaRoutes = require('./modules/yedek-parca/yedekParcalar.routes').d
 const yedekParcaStokRoutes = require('./modules/yedek-parca/yedekParcaStok.routes').default;
 const raporRoutes = require('./modules/raporlar/raporlar.routes').default;
 const veresiyeRoutes = require('./modules/raporlar/veresiye.routes').default;
-const vitrinRoutes = require('./modules/vitrin/vitrin.routes');
+const vitrinRoutes = require('./modules/vitrin/vitrin.routes').default;
 const servisGecmisiRoutes = require('./modules/servis/servisGecmisi.routes').default;
 
 // Yetkilendirme kuralları frontend/src/App.jsx içindeki route guard'larıyla birebir
@@ -139,7 +139,7 @@ app.use('/api/raporlar', authenticateToken, kariGizle, rolYetkisi('admin', 'yati
 app.use('/api/veresiye', authenticateToken, rolYetkisi('admin'), veresiyeRoutes);
 // Vitrin: public + admin uçları karışık; auth route içinde uygulanır
 app.use('/api/vitrin', denetimKaydi('vitrin_urunleri'));
-app.use('/api/vitrin', vitrinRoutes(authenticateToken, isAdmin));
+app.use('/api/vitrin', vitrinRoutes);
 // Müşteri servis geçmişi (QR ile erişilen halka açık sayfa) — token bazlı, auth gerektirmez
 app.use('/api/servis-gecmisi', servisGecmisiRoutes);
 
