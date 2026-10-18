@@ -36,4 +36,8 @@ npm run package:hostinger             # tsc + frontend build + esbuild + zip  �
 
 ## Durum (2026-10-18)
 `typescript` dalı: backend TS geçişi + katmanlı yapı + klasör düzeni + genel temizlik **tamam**; tsc temiz, 248 birim, 201 API (kaynak ve paket),
-27 frontend testi yeşil. Canlı hâlâ eski JS paketi (`hostinger` dalı). Sıradaki işler: CI (`.github/workflows`), frontend bölme, ESLint/Prettier.
+27 frontend testi yeşil. Canlı hâlâ eski JS paketi (`hostinger` dalı). `typescript` dalı GitHub'a gönderildi (origin/typescript).
+CI iş akışı yazıldı (`.github/workflows/dogrula.yml`) ama **GitHub hesabı faturalandırma sorunu yüzünden kilitli: işler başlamıyor**
+(Salih: Settings > Billing and plans'tan çözmeli). O zamana kadar yerel güvenlik ağı: `bash backend/scripts/hepsiniDogrula.sh` ve
+`.githooks/pre-push` (etkinleştirme: `git config core.hooksPath .githooks`; tsc + birim, ~3 sn). CI'ın adımları henüz GitHub'da doğrulanmadı.
+Sıradaki işler: frontend bölme (`docs/FRONTEND-BOLME-RAPORU.md`: Küçük/Orta/Tam kapsam seçimi bekliyor), ESLint/Prettier, Vite+TSX.
