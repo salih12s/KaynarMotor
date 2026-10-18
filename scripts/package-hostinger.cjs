@@ -97,8 +97,13 @@ json(path.join(dist, 'package-lock.json'), lock);
 
 // 5) Zip. Windows'un kendi tar'ı zip'i ileri eğik çizgili yollarla yazar
 //    (PowerShell Compress-Archive ters eğik çizgi kullanır, Linux'ta açılmaz).
-const tar = process.platform === 'win32' ? path.join(process.env.SystemRoot || 'C:\\Windows', 'System32', 'tar.exe') : 'tar';
-run('zip', tar, ['-a', '-cf', zipName, 'package.json', 'package-lock.json', 'dist'], { cwd: out, shell: false });
+// Linux/macOS'ta (ör. CI) GNU tar zip yazamaz: `zip` komutu kullanılır.
+if (process.platform === 'win32') {
+  const tar = path.join(process.env.SystemRoot || 'C:\\Windows', 'System32', 'tar.exe');
+  run('zip', tar, ['-a', '-cf', zipName, 'package.json', 'package-lock.json', 'dist'], { cwd: out, shell: false });
+} else {
+  run('zip', 'zip', ['-qr', zipName, 'package.json', 'package-lock.json', 'dist'], { cwd: out, shell: false });
+}
 
 const size = (file) => `${(fs.statSync(file).size / 1048576).toFixed(2)} MB`;
 console.log(`\nHazır: ${path.join(out, zipName)} (${size(path.join(out, zipName))})`);

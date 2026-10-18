@@ -1,0 +1,131 @@
+# Her push ve pull request'te: tip kontrolü, birim testler, gerçek MariaDB'ye karşı API testleri (kaynak ve paket),
+# frontend testleri ve yayın paketinin üretilip açılması. Yerelde aynısı: backend/scripts/hepsiniDogrula.sh
+# Not: herkese açık depolarda GitHub Actions ücretsizdir.
+name: Doğrula
+
+on:
+  push:
+  pull_request:
+
+# Aynı dalda yeni push gelince eski koşuyu iptal et
+concurrency:
+  group: dogrula-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '24'
+
+jobs:
+  backend:
+    name: Backend (tsc + birim + API)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      mariadb:
+        image: mariadb:11.8
+        env:
+          MARIADB_ROOT_PASSWORD: ci-root-sifre
+          MARIADB_DATABASE: kaynar_test
+          MARIADB_USER: kaynar
+          MARIADB_PASSWORD: ci-test-sifre
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+    # API testleri yalnızca yerel ve "_test" ile biten bir veritabanında çalışır (backend/tests/api/yardimci.js koruması)
+    env:
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_NAME: kaynar_test
+      DB_USER: kaynar
+      DB_PASSWORD: ci-test-sifre
+      ADMIN_INITIAL_PASSWORD: CiAdminSifre1!
+      JWT_SECRET: ci-test-jwt-sirri-en-az-32-karakter-uzunlugunda
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+      - name: Tip kontrolü (tsc, strict)
+        run: npm run typecheck
+      - name: Birim testler
+        run: npm test
+      - name: API testleri (kaynak koddan)
+        run: npm run test:api
+      - name: API testleri (esbuild paketine karşı)
+        run: npm run test:api:paket
+
+  frontend:
+    name: Frontend (test + derleme)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - name: Testler
+        run: npx react-scripts test --watchAll=false
+        env:
+          CI: 'true'
+      - name: Derleme
+        run: npx react-scripts build
+        env:
+          CI: 'false' # CRA CI=true iken uyarıları hata sayar (React Hook bağımlılık uyarıları var)
+          GENERATE_SOURCEMAP: 'false'
+
+  paket:
+    name: Yayın paketi (üret + canlıdaki gibi aç)
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+    timeout-minutes: 20
+    services:
+      mariadb:
+        image: mariadb:11.8
+        env:
+          MARIADB_ROOT_PASSWORD: ci-root-sifre
+          MARIADB_DATABASE: kaynar_pgkopya
+          MARIADB_USER: kaynar
+          MARIADB_PASSWORD: ci-test-sifre
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+    env:
+      DB_PORT: 3306
+      DB_NAME: kaynar_pgkopya
+      DB_USER: kaynar
+      DB_PASSWORD: ci-test-sifre
+      JWT_SECRET: ci-test-jwt-sirri-en-az-32-karakter-uzunlugunda
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Bağımlılıklar
+        run: |
+          npm ci --prefix backend
+          npm ci --prefix frontend
+      - name: Paketle (tsc + frontend derlemesi + esbuild + zip)
+        run: node scripts/package-hostinger.cjs
+      - name: Paket duman testi
+        run: node --test tests/smoke/paket.smoke.test.js
+        working-directory: backend

@@ -19,13 +19,18 @@ const ENV_DOSYASI = path.resolve(__dirname, '..', '..', '.env.mariadb.kopya');
 const PORT = 5399;
 const URL = `http://127.0.0.1:${PORT}`;
 
-const env = Object.fromEntries(fs.readFileSync(ENV_DOSYASI, 'utf8').split(/\r?\n/).map((l) => /^([A-Z_]+)=(.*)$/.exec(l)).filter(Boolean).map((m) => [m[1], m[2]]));
+// Yerelde .env.mariadb.kopya dosyasından; CI'da (dosya yok) aynı anahtarlar ortam değişkenlerinden okunur.
+const env = fs.existsSync(ENV_DOSYASI)
+  ? Object.fromEntries(fs.readFileSync(ENV_DOSYASI, 'utf8').split(/\r?\n/).map((l) => /^([A-Z_]+)=(.*)$/.exec(l)).filter(Boolean).map((m) => [m[1], m[2]]))
+  : Object.fromEntries(['DB_PORT', 'DB_NAME', 'DB_USER', 'DB_PASSWORD', 'JWT_SECRET'].map((k) => [k, process.env[k]]));
 
 test('paket: zip açılır, üretim modunda başlar, arayüz ve API çalışır', { timeout: 120000 }, async (t) => {
   assert.ok(fs.existsSync(ZIP), `önce paket üretin: ${ZIP}`);
   const klasor = fs.mkdtempSync(path.join(os.tmpdir(), 'kaynar-paket-'));
-  const tar = process.platform === 'win32' ? path.join(process.env.SystemRoot || 'C:\\Windows', 'System32', 'tar.exe') : 'tar';
-  const ac = spawnSync(tar, ['-xf', ZIP, '-C', klasor]);
+  // Windows'un tar'ı zip açar; Linux/macOS'ta (CI) `unzip` kullanılır.
+  const ac = process.platform === 'win32'
+    ? spawnSync(path.join(process.env.SystemRoot || 'C:\\Windows', 'System32', 'tar.exe'), ['-xf', ZIP, '-C', klasor])
+    : spawnSync('unzip', ['-q', ZIP, '-d', klasor]);
   assert.equal(ac.status, 0, 'zip açılamadı');
 
   // Hostinger'ın yaptığı gibi: yalnızca ortam değişkenleri (NODE_ENV BİLEREK verilmez: paket kendisi production olur)
