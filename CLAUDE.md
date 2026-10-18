@@ -43,3 +43,4 @@ CI iş akışı yazıldı (`.github/workflows/dogrula.yml`) ama **GitHub hesabı
 Frontend bölme: **Raporlar tamam** (1563 -> 95 satırlık kabuk, 2 commit: testler `0a6b891`, bölme `9066223`); sıradaki dosya IsEmirleri.
 Yöntem ve kurallar `docs/FRONTEND-BOLME-RAPORU.md` §9'da (önce karakterizasyon testi, betikle taşıma, eski-yeni HTML karşılaştırması).
 Sonraki işler: kalan dosyaların bölünmesi, TanStack Query (ayrı adım), ESLint/Prettier, Vite+TSX.
+**Tüm kalan işler, öncelik sırası ve sunum (portföy) hedefi: `docs/YOL-HARITASI.md`.** Yeni sohbette önce onu oku.
