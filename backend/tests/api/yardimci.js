@@ -1,7 +1,7 @@
 /*
  * API testleri için ortak yardımcılar.
  *
- * Bu testler GERÇEK sunucuyu (server.js) ve GERÇEK MariaDB'yi kullanır. Üretim verisine
+ * Bu testler GERÇEK sunucuyu (server.ts) ve GERÇEK MariaDB'yi kullanır. Üretim verisine
  * zarar vermemek için bağlantı koruması vardır: DB_HOST yerel, DB_NAME "_test" ya da "_fake"
  * ile bitmelidir; aksi hâlde testler hiçbir şey yapmadan durur.
  *
@@ -23,7 +23,7 @@ const BACKEND = path.resolve(__dirname, '..', '..');
 // (canlıda çalışacak olan; `npm run test:api:paket` bunu kullanır).
 function sunucuArgumanlari() {
   if (process.env.SUNUCU_GIRIS) return [path.resolve(process.env.SUNUCU_GIRIS)];
-  return ['--import', 'tsx', 'server.js'];
+  return ['--import', 'tsx', 'server.ts'];
 }
 
 function baglantiKorumasi() {

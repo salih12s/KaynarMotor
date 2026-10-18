@@ -408,7 +408,7 @@ ve TC bilgileri uydurmadır.
 ```
 KaynarMotorCRM/
 ├── backend/
-│   ├── server.js                # Express app, CORS, route mount, DB init
+│   ├── server.ts                # Express app, CORS, route mount, DB init
 │   ├── core/                    # Altyapı: hiçbir iş alanına bağlı değil
 │   │   ├── db.js                # MariaDB bağlantı havuzu (node-pg uyumlu query/connect arayüzü)
 │   │   ├── initDb.js            # Şema, migration'lar ve index'ler

@@ -16,5 +16,5 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["server.js", "core/**/*", "modules/**/*", "shared/**/*"]
+  "include": ["server.ts", "core/**/*", "modules/**/*", "shared/**/*"]
 }

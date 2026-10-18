@@ -113,7 +113,7 @@ function sunucuBaslat(s) {
   if (!s.dizin) throw new Error('PG_REF_DIR tanımlı değil (eski kodun backend klasörü).');
   const log = fs.openSync(path.join(require('os').tmpdir(), `kaynar-parity-${s.port}.log`), 'w');
   const tsx = fs.existsSync(path.join(s.dizin, 'node_modules', 'tsx')) ? ['--import', 'tsx'] : []; // eski referans kodda tsx yok
-  const cocuk = spawn(process.execPath, [`--env-file=${s.env}`, ...tsx, 'server.js'], {
+  const cocuk = spawn(process.execPath, [`--env-file=${s.env}`, ...tsx, fs.existsSync(path.join(s.dizin, 'server.ts')) ? 'server.ts' : 'server.js'], { // eski referans kodda server.js
     cwd: s.dizin,
     env: { ...process.env, PORT: String(s.port), TZ: 'UTC', NODE_ENV: 'development' },
     stdio: ['ignore', log, log],

@@ -1,5 +1,5 @@
 /**
- * Sunucuyu (server.js ve bağımlılıkları, .js + .ts birlikte) esbuild ile tek dosyada toplar.
+ * Sunucuyu (server.ts ve bağımlılıkları) esbuild ile tek dosyada toplar.
  * İki yerde aynı ayarla kullanılır, böylece "testte çalışan" ile "canlıda çalışan" aynı paket olur:
  *   - scripts/package-hostinger.cjs (kökte): Hostinger yayın paketi
  *   - backend/scripts/testApiPaket.cjs: API testlerini PAKETLENMİŞ sunucuya karşı koşturur
@@ -11,7 +11,7 @@ const BACKEND = path.resolve(__dirname, '..');
 function sunucuPaketle(outfile) {
   const esbuild = require(path.join(BACKEND, 'node_modules', 'esbuild'));
   return esbuild.buildSync({
-    entryPoints: [path.join(BACKEND, 'server.js')],
+    entryPoints: [path.join(BACKEND, 'server.ts')],
     outfile,
     bundle: true,
     platform: 'node',

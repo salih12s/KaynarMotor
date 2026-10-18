@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "concurrently \"cd backend && npm run dev\" \"cd frontend && npm start\"",
     "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
-    "start": "cd backend && node server.js",
+    "start": "cd backend && npm start",
     "build": "cd frontend && npm run build",
     "seed": "cd backend && npm run seed",
     "seed:gorseller": "cd backend && npm run seed:gorseller",

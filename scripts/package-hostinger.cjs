@@ -53,22 +53,6 @@ fs.mkdirSync(dist, { recursive: true });
 // 0) Tip kontrolü: esbuild tipleri kontrol etmez, yalnızca siler; tip hatalı kod pakete girmesin.
 run('sunucu tip kontrolü (tsc)', 'npx', ['tsc', '-p', 'tsconfig.json'], { cwd: backend });
 
-// 1) Sözdizimi denetimi: hatalı kod pakete girmesin.
-console.log('\n> sunucu sözdizimi denetimi');
-// core/, shared/ ve modules/ altındaki her .js dosyası (iç içe klasörler dahil) denetlenir.
-const sunucuJsDosyalari = (klasor) => fs.readdirSync(klasor, { withFileTypes: true }).flatMap((e) => {
-  const yol = path.join(klasor, e.name);
-  if (e.isDirectory()) return sunucuJsDosyalari(yol);
-  return e.name.endsWith('.js') ? [yol] : [];
-});
-for (const klasor of ['core', 'shared', 'modules']) {
-  for (const dosya of sunucuJsDosyalari(path.join(backend, klasor))) {
-    const r = spawnSync(process.execPath, ['--check', dosya], { stdio: 'inherit' });
-    if (r.status !== 0) process.exit(1);
-  }
-}
-run('sunucu sözdizimi (server.js)', process.execPath, ['--check', path.join(backend, 'server.js')], { shell: false });
-
 // 2) Arayüz. Adres göreceli: arayüz ve API aynı sunucudadır. Kabuk değişkeni .env dosyasını ezer.
 // Önceki derlemelerden kalan içerik özetli dosyalar (main.*.js, kaynak haritaları) pakete girmesin.
 temizle(path.join(frontend, 'build'));

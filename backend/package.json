@@ -2,10 +2,10 @@
   "name": "kaynar-motor-backend",
   "version": "1.0.0",
   "description": "Kaynar Motor CRM Backend",
-  "main": "server.js",
+  "main": "server.ts",
   "scripts": {
-    "start": "tsx server.js",
-    "dev": "tsx watch server.js",
+    "start": "tsx server.ts",
+    "dev": "tsx watch server.ts",
     "typecheck": "tsc -p tsconfig.json",
     "seed": "tsx scripts/seedLocal.js",
     "seed:gorseller": "tsx scripts/seedGorselIndir.js",
@@ -24,6 +24,7 @@
     "helmet": "^8.3.0",
     "jsonwebtoken": "^9.0.2",
     "mysql2": "^3.24.5",
+    "tsx": "^4.23.15",
     "zod": "^4.6.7"
   },
   "devDependencies": {
@@ -34,7 +35,6 @@
     "@types/node": "^24.19.2",
     "esbuild": "^0.28.2",
     "pg": "^8.23.1",
-    "tsx": "^4.23.15",
     "typescript": "^7.0.2"
   },
   "engines": {

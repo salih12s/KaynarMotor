@@ -1,24 +1,38 @@
-require('dotenv').config({ path: require('path').resolve(__dirname, '../.env') });
-require('dotenv').config();
+// Ortam değişkenleri HER ŞEYDEN ÖNCE yüklenir (core/db gibi modüller içe aktarılırken ortamı okur) ve JWT_SECRET denetlenir.
+import './core/env';
 
-// Oturum imzası için gizli anahtar şart: yoksa sunucu açılmaz (eskiden açılır, giriş yapan herkese 500 verirdi).
-if (!process.env.JWT_SECRET) {
-  console.error('HATA: JWT_SECRET tanımlı değil; sunucu başlatılmadı. Güçlü, rastgele bir değer verin (en az 32 karakter).');
-  process.exit(1);
-}
-if (process.env.NODE_ENV === 'production' && process.env.JWT_SECRET.length < 32) {
-  console.warn('UYARI: JWT_SECRET 32 karakterden kısa; üretimde güçlü ve rastgele bir değer kullanın.');
-}
-
-const express = require('express');
-require('./core/asyncHata'); // async işleyicide fırlatılan hata istemciyi yanıtsız bırakmasın (500 dönsün)
-const cors = require('cors');
-const helmet = require('helmet');
-const path = require('path');
-const fs = require('fs');
-const { denetimKaydi } = require('./core/denetimKaydi');
-const { initializeDatabase } = require('./core/initDb');
-const { pool } = require('./core/db');
+import fs from 'node:fs';
+import path from 'node:path';
+import cors from 'cors';
+import express from 'express';
+import type { NextFunction, Request, Response } from 'express';
+import helmet from 'helmet';
+import './core/asyncHata'; // async işleyicide fırlatılan hata istemciyi yanıtsız bırakmasın (500 dönsün)
+import { denetimKaydi } from './core/denetimKaydi';
+import { pool } from './core/db';
+import { initializeDatabase } from './core/initDb';
+// Kimlik doğrulama ve yetkilendirme middleware'leri (bkz. core/middleware/)
+import { authenticateToken } from './core/middleware/auth';
+import { negatifTutarEngelle } from './core/middleware/tutarDogrula';
+import {
+  modulYetkisi, yazmaYetkisi, rolYetkisi, motorYazmaYetkisi, vitrinYetkili, kariGizle,
+  AKSESUAR_STOK_OKUYANLAR, YEDEK_PARCA_STOK_OKUYANLAR,
+} from './core/middleware/yetki';
+// Modül yolları (her biri routes → controller → service → repository katmanlarıdır)
+import authRoutes from './modules/auth/auth.routes';
+import musteriRoutes from './modules/musteriler/musteriler.routes';
+import isEmriRoutes from './modules/servis/isEmirleri.routes';
+import aksesuarRoutes from './modules/aksesuar/aksesuarlar.routes';
+import aksesuarStokRoutes from './modules/aksesuar/aksesuarStok.routes';
+import ikinciElMotorRoutes from './modules/motor/ikinciElMotor.routes';
+import satisBelgeRoutes from './modules/motor/satisBelgeleri.routes';
+import eticaretRoutes from './modules/eticaret/eticaret.routes';
+import yedekParcaRoutes from './modules/yedek-parca/yedekParcalar.routes';
+import yedekParcaStokRoutes from './modules/yedek-parca/yedekParcaStok.routes';
+import raporRoutes from './modules/raporlar/raporlar.routes';
+import veresiyeRoutes from './modules/raporlar/veresiye.routes';
+import vitrinRoutes from './modules/vitrin/vitrin.routes';
+import servisGecmisiRoutes from './modules/servis/servisGecmisi.routes';
 
 const app = express();
 const PORT = process.env.PORT || 5100;
@@ -48,7 +62,7 @@ const allowedOrigins = [
   'http://kaynarmotorservis.com',
   'http://www.kaynarmotorservis.com',
   process.env.FRONTEND_URL,
-].filter(Boolean);
+].filter(Boolean) as string[];
 
 app.use(cors({
   origin: function (origin, callback) {
@@ -66,7 +80,7 @@ app.use(cors({
     console.warn(`CORS reddedildi: ${origin} (izin vermek için FRONTEND_URL ayarlayın)`);
     callback(Object.assign(new Error('CORS policy violation'), { status: 403 }));
   },
-  credentials: true
+  credentials: true,
 }));
 
 // Güvenlik başlıkları.
@@ -79,19 +93,12 @@ app.use(helmet({
   crossOriginOpenerPolicy: false,
 }));
 
-// Kimlik doğrulama ve yetkilendirme middleware'leri (bkz. core/middleware/)
-const { authenticateToken, isAdmin } = require('./core/middleware/auth');
-const {
-  modulYetkisi, yazmaYetkisi, rolYetkisi, motorYazmaYetkisi, vitrinYetkili, kariGizle,
-  AKSESUAR_STOK_OKUYANLAR, YEDEK_PARCA_STOK_OKUYANLAR
-} = require('./core/middleware/yetki');
-
 // Gövde limiti: yüksek limit yalnızca vitrin yükleme uçlarında gerekli (görsel/video base64, 120 MB).
 // Bu devasa gövde KİMLİK DOĞRULANMADAN okunursa yetkisiz biri sunucu belleğini şişirebilir. Bu yüzden
 // vitrinde GET dışındaki her istek önce doğrulanır ve vitrin yetkisi aranır; gövde ondan SONRA okunur.
 // Vitrin gövde ayrıştırıcısı genel limitten ÖNCE gelmeli; gövde bir kez ayrıştırıldığında
 // express.json sonraki çağrıda devreye girmez.
-const vitrinYazmaKapisi = async (req, res, next) => {
+const vitrinYazmaKapisi = async (req: Request, res: Response, next: NextFunction) => {
   if (req.method === 'GET' || req.method === 'HEAD' || req.method === 'OPTIONS') return next();
   // await: authenticateToken artık veritabanına gider; hata (ör. DB kapalı) merkezi hata işleyicisine ulaşmalı
   await authenticateToken(req, res, () => vitrinYetkili(req, res, next));
@@ -100,28 +107,12 @@ app.use('/api/vitrin', vitrinYazmaKapisi);
 app.use('/api/vitrin', express.json({ limit: '120mb' }));
 app.use(express.json({ limit: '10mb' }));
 // Eksi tutar (fiyat, maliyet, indirim, kalan ödeme...) hiçbir uçta kabul edilmez
-app.use('/api', require('./core/middleware/tutarDogrula').negatifTutarEngelle);
-
-// Routes
-const authRoutes = require('./modules/auth/auth.routes').default;
-const musteriRoutes = require('./modules/musteriler/musteriler.routes').default;
-const isEmriRoutes = require('./modules/servis/isEmirleri.routes').default;
-const aksesuarRoutes = require('./modules/aksesuar/aksesuarlar.routes').default;
-const aksesuarStokRoutes = require('./modules/aksesuar/aksesuarStok.routes').default;
-const ikinciElMotorRoutes = require('./modules/motor/ikinciElMotor.routes').default;
-const satisBelgeRoutes = require('./modules/motor/satisBelgeleri.routes').default;
-const eticaretRoutes = require('./modules/eticaret/eticaret.routes').default;
-const yedekParcaRoutes = require('./modules/yedek-parca/yedekParcalar.routes').default;
-const yedekParcaStokRoutes = require('./modules/yedek-parca/yedekParcaStok.routes').default;
-const raporRoutes = require('./modules/raporlar/raporlar.routes').default;
-const veresiyeRoutes = require('./modules/raporlar/veresiye.routes').default;
-const vitrinRoutes = require('./modules/vitrin/vitrin.routes').default;
-const servisGecmisiRoutes = require('./modules/servis/servisGecmisi.routes').default;
+app.use('/api', negatifTutarEngelle);
 
 // Yetkilendirme kuralları frontend/src/App.jsx içindeki route guard'larıyla birebir
 // eşleşecek şekilde seçilmiştir. Bazı uçlar sahibi olmadıkları ekranlar tarafından da
 // OKUMA amaçlı kullanıldığından (ör. stok araması servis/e-ticaret/rapor ekranlarında),
-// bu uçlarda yalnızca yazma işlemleri yetkiye bağlanır — bkz. core/middleware/yetki.js.
+// bu uçlarda yalnızca yazma işlemleri yetkiye bağlanır — bkz. core/middleware/yetki.ts.
 app.use('/api/auth', authRoutes);
 // Müşteri: arama uçları tüm modüllerdeki formlar tarafından kullanılır,
 // yönetim uçları admin'e kısıtlıdır — kural route dosyası içinde uygulanır.
@@ -146,17 +137,17 @@ app.use('/api/servis-gecmisi', servisGecmisiRoutes);
 // Health check
 // NOT: Production'daki SPA catch-all ('*') bu satırdan SONRA tanımlanmalı,
 // aksi hâlde /api/health isteği catch-all'a takılıp index.html döner.
-app.get('/api/health', (req, res) => {
+app.get('/api/health', (_req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
 // Veritabanı sağlık kontrolü (deploy sonrası duman testi). Ayrıntı sızdırmaz.
-app.get('/api/health/database', async (req, res) => {
+app.get('/api/health/database', async (_req, res) => {
   try {
     await pool.query('SELECT 1');
     res.json({ status: 'OK' });
   } catch (error) {
-    console.error('Veritabanı sağlık kontrolü başarısız:', error.message);
+    console.error('Veritabanı sağlık kontrolü başarısız:', (error as Error).message);
     res.status(503).json({ status: 'HATA' });
   }
 });
@@ -170,7 +161,7 @@ if (process.env.NODE_ENV === 'production') {
   app.use('/static', express.static(path.join(arayuzKlasoru, 'static'), { immutable: true, maxAge: '1y', index: false }));
   app.use(express.static(arayuzKlasoru, { index: false }));
   // /api ile başlayan bilinmeyen adres arayüz sayfası yerine 404 JSON döner.
-  app.use('/api', (req, res) => res.status(404).json({ message: 'Bulunamadı' }));
+  app.use('/api', (_req, res) => res.status(404).json({ message: 'Bulunamadı' }));
   app.get('*', (req, res) => {
     // Uzantılı bir dosya (örn. /eski.mp4) bulunamadıysa arayüz sayfası yerine 404 döner.
     if (/\.[A-Za-z0-9]{2,8}$/.test(req.path)) return res.status(404).type('text/plain').send('Bulunamadı');
@@ -183,8 +174,8 @@ if (process.env.NODE_ENV === 'production') {
 // Global hata yakalayıcı.
 // Route'larda yakalanmayan hatalar buraya düşer; istemciye hiçbir zaman yığın izi
 // (stack trace) sızdırılmaz, ayrıntı yalnızca sunucu loguna yazılır.
-// eslint-disable-next-line no-unused-vars -- Express hata middleware'i 4 argüman ister
-app.use((err, req, res, next) => {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Express hata middleware'i 4 argüman ister
+app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
   if (res.headersSent) return next(err);
   // İstemci kaynaklı hatalar (bozuk JSON, büyük gövde, reddedilen origin) 500 değildir ve yığın izi gerektirmez.
   if (err && err.istemciHatasi) {
@@ -223,7 +214,7 @@ app.listen(PORT, () => {
 const MAX_RETRIES = 10;
 let retryCount = 0;
 
-const tryInitDb = async () => {
+const tryInitDb = async (): Promise<void> => {
   try {
     await initializeDatabase();
     console.log('Veritabanı başarıyla başlatıldı');
@@ -234,11 +225,9 @@ const tryInitDb = async () => {
       console.log(`DB init denemesi ${retryCount}/${MAX_RETRIES} başarısız. ${delay / 1000}s sonra tekrar...`);
       setTimeout(tryInitDb, delay);
     } else {
-      console.error('Veritabanı başlatılamadı:', error.message);
+      console.error('Veritabanı başlatılamadı:', (error as Error).message);
     }
   }
 };
 
 tryInitDb();
-
-module.exports = { authenticateToken, isAdmin };
