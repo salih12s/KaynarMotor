@@ -59,7 +59,9 @@ const MotorSatisRoute = ({ children }) => {
   const { user, loading } = useAuth();
   if (loading) return null;
   if (!user) return <Navigate to="/login" />;
-  if (user.rol !== 'admin' && !user.motor_satis_yetkisi) return <Navigate to="/" />;
+  // Muhasebeci: yalnızca admin "Motor Satış'ı görebilir" anahtarını açtıysa (salt-okunur)
+  const muhasebeGorur = user.rol === 'muhasebeci' && !!user.motor_satis_gor;
+  if (user.rol !== 'admin' && !user.motor_satis_yetkisi && !muhasebeGorur) return <Navigate to="/" />;
   return children;
 };
 

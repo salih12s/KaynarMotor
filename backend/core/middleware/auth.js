@@ -25,6 +25,7 @@ const KULLANICI_KOLONLARI = [
   'aksesuar_yetkisi', 'motor_satis_yetkisi', 'eticaret_yetkisi', 'servis_yetkisi',
   'aksesuar_stok_yetkisi', 'yedek_parca_yetkisi', 'motor_vitrin_yetkisi', 'aksesuar_vitrin_yetkisi',
   'liste_fiyati_gor', 'alis_fiyati_gor', 'satis_fiyati_gor', 'kar_gor', 'musteri_gor', 'satis_gecmisi_gor',
+  'motor_satis_gor',
 ].join(', ');
 const ONBELLEK_MS = 15000;
 const onbellek = new Map(); // id -> { kullanici | null, bitis }

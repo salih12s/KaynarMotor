@@ -72,6 +72,7 @@ const Layout = () => {
   const isMuhasebeci = user?.rol === 'muhasebeci';
   const hasAksesuar = user?.aksesuar_yetkisi;
   const hasMotor = user?.motor_satis_yetkisi;
+  const muhasebeMotor = isMuhasebeci && !!user?.motor_satis_gor; // muhasebeci: salt-okunur Motor Satış
   const hasEticaret = user?.eticaret_yetkisi;
   const hasServis = user?.servis_yetkisi;
   const hasAksesuarStok = user?.aksesuar_stok_yetkisi;
@@ -107,10 +108,10 @@ const Layout = () => {
 
   const menuItems = [
     {
-      title: 'Motorsiklet', icon: <MotorIcon />, color: '#C62828', show: isAdmin || hasMotor || isYatirimci, key: 'motor',
+      title: 'Motorsiklet', icon: <MotorIcon />, color: '#C62828', show: isAdmin || hasMotor || isYatirimci || muhasebeMotor, key: 'motor',
       subItems: [
-        ...((isAdmin || hasMotor) ? [{ title: 'Motor Satış', path: '/ikinci-el-motor', icon: <SellIcon /> }] : []),
-        { title: isYatirimci ? 'Motorlarım' : 'Motor Stok', path: '/motor-stok', icon: <StokIcon /> },
+        ...((isAdmin || hasMotor || muhasebeMotor) ? [{ title: 'Motor Satış', path: '/ikinci-el-motor', icon: <SellIcon /> }] : []),
+        ...(!muhasebeMotor ? [{ title: isYatirimci ? 'Motorlarım' : 'Motor Stok', path: '/motor-stok', icon: <StokIcon /> }] : []),
       ]
     },
     { title: 'Servis', path: '/servis', icon: <BuildIcon />, show: isAdmin || hasServis, color: '#C62828' },

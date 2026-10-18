@@ -44,6 +44,8 @@ router.get('/arsiv', async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT m.id AS motor_id, m.plaka, m.marka, m.model, m.durum,
+              DATE_FORMAT(m.tarih, '%Y-%m-%d') AS alis_tarihi,
+              DATE_FORMAT(COALESCE(m.satis_tarihi, DATE(m.tamamlama_tarihi)), '%Y-%m-%d') AS satis_tarihi,
               b.id, b.dosya_adi, b.mime, b.boyut, b.created_at
        FROM satis_belgeleri b
        JOIN ikinci_el_motorlar m ON m.id = b.motor_id
@@ -54,7 +56,8 @@ router.get('/arsiv', async (req, res) => {
     for (const r of result.rows) {
       let g = harita.get(r.motor_id);
       if (!g) {
-        g = { motor_id: r.motor_id, plaka: r.plaka, marka: r.marka, model: r.model, durum: r.durum, belgeler: [] };
+        g = { motor_id: r.motor_id, plaka: r.plaka, marka: r.marka, model: r.model, durum: r.durum,
+          alis_tarihi: r.alis_tarihi, satis_tarihi: r.satis_tarihi, belgeler: [] };
         harita.set(r.motor_id, g);
         gruplar.push(g);
       }

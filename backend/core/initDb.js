@@ -441,6 +441,8 @@ const MIGRATIONS = [
   'ALTER TABLE aksesuar_parcalar ADD CONSTRAINT aksesuar_parcalar_stok_fk FOREIGN KEY IF NOT EXISTS (stok_id) REFERENCES aksesuar_stok(id) ON DELETE SET NULL',
   // Düz metin şifreler artık saklanmıyor/gösterilmiyor: önceden kalmış olanları temizle (kolon geri dönüş için duruyor)
   'UPDATE kullanicilar SET plain_sifre = NULL WHERE plain_sifre IS NOT NULL',
+  // Muhasebeci için "Motor Satış sayfasını salt-okunur görebilir" anahtarı (admin Yetkilendirme'den açar)
+  'ALTER TABLE kullanicilar ADD COLUMN IF NOT EXISTS motor_satis_gor BOOLEAN DEFAULT FALSE',
 ];
 
 const initializeDatabase = async () => {

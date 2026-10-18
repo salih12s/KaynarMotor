@@ -29,7 +29,9 @@ const IkinciElMotor = () => {
   const { user } = useAuth();
   const isAdmin = user?.rol === 'admin';
   // Motor Satış yetkilisi satış/müşteri/geçmişi/alış fiyatını görür ve düzenler; yalnızca kâr admindedir
-  const canAlis = isAdmin || !!user?.alis_fiyati_gor || !!user?.motor_satis_yetkisi;
+  // Muhasebeci: admin izin verdiyse sayfayı SALT OKUNUR görür (alım/satım, noter, satış ve kişi bilgisi; kâr yok)
+  const salt = user?.rol === 'muhasebeci';
+  const canAlis = isAdmin || salt || !!user?.alis_fiyati_gor || !!user?.motor_satis_yetkisi;
   const canKar = isAdmin; // kâr ve yatırımcı payı yalnızca admin'e açık
   const location = useLocation();
   const navigate = useNavigate();
@@ -93,6 +95,7 @@ const IkinciElMotor = () => {
   }, [location.state]);
 
   const openDialog = (motor = null) => {
+    if (salt) return;
     setError('');
     setSelectedStokId(null);
     setBekleyenBelgeler([]);
@@ -257,7 +260,7 @@ const IkinciElMotor = () => {
         ))}
         <Box sx={{ flexGrow: 1 }} />
         <Button variant="outlined" size="large" startIcon={<FileDownloadIcon />} onClick={exportToExcel} sx={{ mr: 1, color: '#1B5E20', borderColor: '#1B5E20', '&:hover': { borderColor: '#1B5E20', bgcolor: '#E8F5E9' } }}>Excel'e Aktar</Button>
-        <Button variant="contained" size="large" startIcon={<AddIcon />} onClick={() => openDialog()} sx={{ bgcolor: '#C62828', '&:hover': { bgcolor: '#b71c1c' } }}>Motor Satış</Button>
+        {!salt && <Button variant="contained" size="large" startIcon={<AddIcon />} onClick={() => openDialog()} sx={{ bgcolor: '#C62828', '&:hover': { bgcolor: '#b71c1c' } }}>Motor Satış</Button>}
       </Box>
 
       <Paper sx={{ p: 2, mb: 2 }}>
@@ -301,7 +304,7 @@ const IkinciElMotor = () => {
                 {canKar && <Typography variant="body2" sx={{ color: parseFloat(m.kar || 0) >= 0 ? 'green' : 'red' }}>Kâr: <strong>₺{parseFloat(m.kar || 0).toLocaleString('tr-TR')}</strong></Typography>}
                 </Box>
                 <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 0.5 }} onClick={e => e.stopPropagation()}>
-                  <IconButton size="small" color="info" onClick={() => openDialog(m)}><EditIcon /></IconButton>
+                  {!salt && <IconButton size="small" color="info" onClick={() => openDialog(m)}><EditIcon /></IconButton>}
                   {isAdmin && <IconButton size="small" color="error" onClick={() => handleDelete(m.id)}><DeleteIcon /></IconButton>}
                 </Box>
               </Paper>
@@ -339,7 +342,7 @@ const IkinciElMotor = () => {
                   <TableCell>{formatDate(m.satis_tarihi || m.tarih)}</TableCell>
                   <TableCell>
                     <IconButton size="small" color="primary" onClick={async () => { try { const res = await ikinciElMotorService.getById(m.id); setDetayModal({ open: true, data: res.data }); } catch {} }}><ViewIcon /></IconButton>
-                    <IconButton size="small" color="info" onClick={() => openDialog(m)}><EditIcon /></IconButton>
+                    {!salt && <IconButton size="small" color="info" onClick={() => openDialog(m)}><EditIcon /></IconButton>}
                     {isAdmin && <IconButton size="small" color="error" onClick={() => handleDelete(m.id)}><DeleteIcon /></IconButton>}
                   </TableCell>
                 </TableRow>
@@ -550,12 +553,12 @@ const IkinciElMotor = () => {
       </Dialog>
 
       {/* Motor Detay Modal */}
-      <MotorDetayModal open={detayModal.open} data={detayModal.data} onClose={() => setDetayModal({ open: false, data: null })} printRef={printRef} isMobile={isMobile} canAlis={canAlis} canKar={canKar} />
+      <MotorDetayModal open={detayModal.open} data={detayModal.data} onClose={() => setDetayModal({ open: false, data: null })} printRef={printRef} isMobile={isMobile} canAlis={canAlis} canKar={canKar} salt={salt} />
     </Box>
   );
 };
 
-const MotorDetayModal = ({ open, data, onClose, printRef, isMobile, canAlis, canKar }) => {
+const MotorDetayModal = ({ open, data, onClose, printRef, isMobile, canAlis, canKar, salt }) => {
   const handlePrint = useReactToPrint({ contentRef: printRef });
   if (!data) return null;
 
@@ -697,7 +700,7 @@ const MotorDetayModal = ({ open, data, onClose, printRef, isMobile, canAlis, can
           )}
         </Box>
         {/* Belgeler yazdırma alanının (printRef) dışında: çıktıya girmez */}
-        <BelgeBolumu key={data.id} motorId={data.id} />
+        {!salt && <BelgeBolumu key={data.id} motorId={data.id} />}
       </DialogContent>
     </Dialog>
   );

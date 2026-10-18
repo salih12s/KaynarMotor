@@ -58,7 +58,8 @@ const vitrinYetkili = (req, res, next) => {
 const motorYazmaYetkisi = (req, res, next) => {
   if (!YAZMA_METODLARI.includes(req.method)) return next();
   if (req.user.rol === 'admin') return next();
-  if (req.user.rol !== 'yatirimci' && req.user.motor_satis_yetkisi) return next();
+  // Muhasebeci de salt-okunurdur (motor_satis_gor yalnızca görüntüleme açar)
+  if (req.user.rol !== 'yatirimci' && req.user.rol !== 'muhasebeci' && req.user.motor_satis_yetkisi) return next();
   return res.status(403).json({ message: 'Bu işlem için yetkiniz yok' });
 };
 

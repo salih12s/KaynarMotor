@@ -26,6 +26,7 @@ const TUM_YETKILER = ISLEM_YETKILERI;
 const Yetkilendirme = () => {
   const isMobile = useMediaQuery(useTheme().breakpoints.down('md'));
   const [users, setUsers] = useState([]);
+  const [muhasebeciler, setMuhasebeciler] = useState([]);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
@@ -34,6 +35,7 @@ const Yetkilendirme = () => {
       const res = await authService.getUsers();
       // Admin ve yatırımcı dışındaki (personel) kullanıcılar yetkilendirilir
       setUsers(res.data.filter(u => u.rol !== 'admin' && u.rol !== 'yatirimci' && u.rol !== 'muhasebeci'));
+      setMuhasebeciler(res.data.filter(u => u.rol === 'muhasebeci'));
     } catch { setError('Kullanıcılar yüklenemedi'); }
   };
 
@@ -56,6 +58,20 @@ const Yetkilendirme = () => {
       setError(err.response?.data?.message || 'Güncelleme hatası');
       // Geri al
       setUsers(prev => prev.map(u => u.id === user.id ? oncekiUser : u));
+    }
+  };
+
+  // Muhasebeci: Motor Satış sayfasını SALT OKUNUR görme izni (alım/satım, noter, satış ve kişi bilgileri; kâr hariç)
+  const handleMuhasebeToggle = async (user, value) => {
+    setError(''); setSuccess('');
+    setMuhasebeciler(prev => prev.map(u => u.id === user.id ? { ...u, motor_satis_gor: value } : u));
+    try {
+      await authService.setYetkiler(user.id, { motor_satis_gor: value });
+      setSuccess(`${user.ad_soyad} yetkileri güncellendi`);
+      setTimeout(() => setSuccess(''), 2000);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Güncelleme hatası');
+      setMuhasebeciler(prev => prev.map(u => u.id === user.id ? user : u));
     }
   };
 
@@ -120,6 +136,28 @@ const Yetkilendirme = () => {
             </Table>
           </TableContainer>
         )
+      )}
+
+      <Typography variant="h6" fontWeight="bold" mt={4} mb={0.5}>Muhasebeciler</Typography>
+      <Typography variant="body2" color="text.secondary" mb={2}>
+        Muhasebeci her zaman Belge Arşivi'ni görür. Aşağıdaki anahtar açılırsa <strong>Motor Satış</strong> sayfasını da <strong>salt okunur</strong> görür:
+        alım/satım bedeli, noter tutarları, satış bilgileri ve alıcı/satıcı bilgileri. Kâr, masraf ve yatırımcı payı görünmez; kayıt ekleyemez, düzenleyemez.
+      </Typography>
+      {muhasebeciler.length === 0 ? (
+        <Alert severity="info">Muhasebeci hesabı yok. Kullanıcı Yönetimi ekranından ekleyebilirsiniz.</Alert>
+      ) : (
+        <Paper variant="outlined">
+          {muhasebeciler.map((u, i) => (
+            <Box key={u.id} sx={{ display: 'flex', alignItems: 'center', gap: 1, px: 2, py: 1, borderTop: i ? '1px solid' : 0, borderColor: 'divider' }}>
+              <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+                <Typography fontWeight="bold" variant="body2">{u.ad_soyad}</Typography>
+                <Typography variant="caption" color="text.secondary">{u.kullanici_adi}</Typography>
+              </Box>
+              <FormControlLabel labelPlacement="start" sx={{ mr: 0 }} label="Motor Satış (salt okunur)"
+                control={<Switch checked={!!u.motor_satis_gor} onChange={e => handleMuhasebeToggle(u, e.target.checked)} />} />
+            </Box>
+          ))}
+        </Paper>
       )}
     </Box>
   );

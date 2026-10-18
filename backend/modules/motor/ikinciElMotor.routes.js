@@ -22,11 +22,23 @@ const MOTOR_SATIS = ['satis_fiyati', 'noter_satis', 'kalan_odeme', 'odeme_detayl
 const MOTOR_MUSTERI = ['alici_adi', 'alici_tc', 'alici_telefon', 'alici_adres', 'satici_adi', 'satici_tc',
   'komisyoncu_adi', 'komisyoncu_telefon', 'komisyoncu_tutari'];
 
+// Muhasebeci: admin Yetkilendirme'den "Motor Satış'ı görebilir" anahtarını açtıysa satış kayıtlarını SALT OKUNUR görür
+// (yazma zaten motorYazmaYetkisi ile kapalı). Anahtar kapalıysa bu router'a hiç giremez (aşağıdaki router.use).
+const muhasebeMotorGorur = (user) => user.rol === 'muhasebeci' && !!user.motor_satis_gor;
+const MUHASEBE_ALIS = ['alis_fiyati', 'noter_alis']; // masraflar dahil değil (kâr hesabına yarar; kâr zaten admin'e özel)
+
 // Bir motor kaydını kullanıcının yetkisine göre temizler (hassas alanları gizler)
 const sanitizeMotor = (row, user) => {
   if (!row) return row;
   // Admin her şeyi görür
   if (user.rol === 'admin') return row;
+  // Muhasebeci: alım/satım bedelleri, noter tutarları, satış bilgileri ve kişi bilgileri. Kâr ve yatırımcı alanları yok.
+  if (user.rol === 'muhasebeci') {
+    if (!muhasebeMotorGorur(user)) return {};
+    const m = {};
+    for (const alan of [...MOTOR_TEMEL, ...MUHASEBE_ALIS, ...MOTOR_SATIS, ...MOTOR_MUSTERI]) if (alan in row) m[alan] = row[alan];
+    return m;
+  }
   // Yatırımcı:
   //  - liste_fiyati_gor AÇIK ise "vitrin" modundadır: tüm satılık motorları SADECE liste fiyatıyla görür
   //  - kapalı ise kendi motorlarını tam detayıyla görür
@@ -76,13 +88,22 @@ const sanitizeOzet = (row, user) => {
   if (user.rol === 'admin') return row;
   const o = { ...row };
   o.toplam_kar = null;
-  if (!(user.alis_fiyati_gor || user.motor_satis_yetkisi)) o.toplam_alis = null;
-  if (!(user.satis_fiyati_gor || user.motor_satis_yetkisi)) {
+  const muhasebe = muhasebeMotorGorur(user);
+  if (!(user.alis_fiyati_gor || user.motor_satis_yetkisi || muhasebe)) o.toplam_alis = null;
+  if (!(user.satis_fiyati_gor || user.motor_satis_yetkisi || muhasebe)) {
     o.toplam_satis = null;
     o.toplam_satis_tutari = null;
   }
   return o;
 };
+
+// Muhasebeci, admin izin vermedikçe motor satış verisine erişemez (menüden gizlemek yetmez, asıl kapı burası).
+router.use((req, res, next) => {
+  if (req.user.rol === 'muhasebeci' && !req.user.motor_satis_gor) {
+    return res.status(403).json({ message: 'Bu bölüme erişim yetkiniz yok' });
+  }
+  next();
+});
 
 // GET /stats/ozet
 router.get('/stats/ozet', async (req, res) => {
@@ -125,7 +146,7 @@ router.get('/', async (req, res) => {
         params.push(req.user.id);
         query += ` AND yatirimci_id = $${params.length}`;
       }
-    } else if (req.user.rol !== 'admin' && !req.user.satis_gecmisi_gor && !req.user.motor_satis_yetkisi) {
+    } else if (req.user.rol !== 'admin' && !req.user.satis_gecmisi_gor && !req.user.motor_satis_yetkisi && !muhasebeMotorGorur(req.user)) {
       // Satış geçmişi/motor satış yetkisi olmayan personel satılan motorları görmez
       query += ` AND durum <> 'tamamlandi'`;
     }
@@ -149,7 +170,7 @@ router.get('/:id', async (req, res) => {
       return res.status(403).json({ message: 'Bu kayda erişim yetkiniz yok' });
     }
     // Satılmış motor: listeyle AYNI kural (eskiden liste gizliyor ama id ile erişim açıktı)
-    if (req.user.rol !== 'admin' && req.user.rol !== 'yatirimci' && !req.user.satis_gecmisi_gor && !req.user.motor_satis_yetkisi && row.durum === 'tamamlandi') {
+    if (req.user.rol !== 'admin' && req.user.rol !== 'yatirimci' && !req.user.satis_gecmisi_gor && !req.user.motor_satis_yetkisi && !muhasebeMotorGorur(req.user) && row.durum === 'tamamlandi') {
       return res.status(404).json({ message: 'Kayıt bulunamadı' });
     }
     res.json(sanitizeMotor(row, req.user));
