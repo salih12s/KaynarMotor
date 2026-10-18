@@ -8,7 +8,7 @@ tutarlı tasarım. Bu belge neyin bittiğini, neyin kaldığını ve hangi sıra
 |---|---|---|
 | Backend TypeScript (strict) + katmanlı yapı | Tamam | `tsc` temiz, 248 birim, 201 API testi (kaynak + paket) |
 | Klasör düzeni + genel temizlik | Tamam | `backend/{core,shared,modules}`, kök sadeleşti |
-| Frontend: Testing Library + Raporlar, İş Emirleri ve Vitrin bölme | Tamam | 1563 -> 95, 950 -> 53 ve 972 -> 75 satır, 156 frontend testi, eski-yeni HTML karşılaştırması aynı |
+| Frontend: Testing Library + sekiz büyük dosyanın bölünmesi | Tamam (2026-10-19) | Raporlar 1563 -> 95, İş Emirleri 950 -> 53, Vitrin 972 -> 75, MotorStok 779 -> 66, İkinci El 709 -> 57, Storefront 721 -> 77, E-Ticaret 622 -> 52, Aksesuar 614 -> 33; 328 frontend testi (21 dosya, ~4 dk); her biri için mutasyon denemesi ve eski-yeni HTML karşılaştırması aynı |
 | CI iş akışı | Yazıldı, **GitHub'da kullanılmayacak** | Sahibi faturalandırmayı çözmeyecek; iş akışı yalnızca elle tetiklenir, kanıt yerel doğrulamadır |
 
 ## A. Önce yapılacaklar (sunum etkisi yüksek, emek düşük)
@@ -29,11 +29,9 @@ tutarlı tasarım. Bu belge neyin bittiğini, neyin kaldığını ve hangi sıra
 |---|---|---|---|
 | ✓ | ~~`features/servis/IsEmirleri.jsx`~~ (950 -> 53, 2026-10-18) | tamam | |
 | ✓ | ~~`features/vitrin/yonetim/Vitrin.jsx`~~ (972 -> 75, 2026-10-18) | tamam | |
-| 1 | `features/motor/MotorStok.jsx` + `IkinciElMotor.jsx` | 779 + 709 | Orta |
-| 2 | `features/vitrin/magaza/Storefront.jsx` (herkese açık sayfa) | 721 | Orta (görsel kalite önemli) |
-| 3 | `features/eticaret/ETicaret.jsx`, `features/aksesuar/Aksesuarlar.jsx` | 622, 614 | Düşük-orta |
+| ✓ | ~~MotorStok, IkinciElMotor, Storefront, ETicaret, Aksesuarlar~~ (2026-10-19) | tamam | |
 
-Her dosya: önce karakterizasyon testi, testi bozarak sına, betikle taşı, eski-yeni HTML karşılaştır, ayrı commit. Tahmini toplam 7-8 saat.
+Her dosya: önce karakterizasyon testi, testi bozarak sına, betikle taşı, eski-yeni HTML karşılaştır, ayrı commit. **B listesi bitti.**
 
 ## C. Bölmeden sonra (her biri ayrı karar)
 - `shared/bicim.js`: para/tarih biçimleyicilerini tekilleştir (şimdi `toLocaleString('tr-TR')` ~161 yerde).

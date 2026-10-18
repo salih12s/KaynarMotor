@@ -107,6 +107,45 @@ ortak 60 sn sınır `setupTests.js`'e kondu. Tam koşu ~8 dk; geliştirirken `np
 (görünüm aynı, yalnızca boş bir `style` niteliği kalıyor). Gerekirse dönüş ifadesini `<>…</>` ile sarmak eski davranışı verir.
 **Test edilmedi:** tarayıcıda resim küçültme (canvas) ve gerçek sürükle-bırak; ikisi de jsdom'da yok (sürükle-bırak olayları `fireEvent` ile sınandı).
 
+### MotorStok (tamam, 2026-10-19)
+`features/motor/MotorStok.jsx` -> 66 satırlık kabuk. `motor/motorStok/`: `yetkiler.js` (kim ne görür/yapar), `motorStokVeri.js` (saf kurallar), `useMotorStok`,
+`useMusteriAra`, `useMotorFormu`, `useHizliSatis`; `bilesenler/`: IstatistikCipleri, MotorListesi, MotorFormModal (+ Bilgi / YatirimciSatici / VitrinBelge),
+HizliSatisModal (+ OdemeDagilimi, KarOnizleme), StokDetayModal. Testler: `MotorStok.test.js` (32) + `motorStok.test.js` (15). Mutasyonda "sıralama" mutantı
+yalnızca karşılaştırıcının iki yönü de sınanınca yakalandı.
+
+### İkinci El Motor (tamam, 2026-10-19)
+`features/motor/IkinciElMotor.jsx` -> 57 satır. `motor/ikinciElMotor/`: `satisVeri.js` (saf), `excel.js` (dışa aktarma), `useSatisListesi`, `useSatisFormu`;
+`bilesenler/`: IstatistikSatiri, Suzgecler, SatisListesi, SatisFormModal (+ MotorBilgileri / FiyatKar / Taraflar / KalanOdemeBelge), MotorDetayModal.
+Testler: `IkinciElMotor.test.js` (29) + `satisVeri.test.js` (9). Önce testler (ec05d3a), sonra bölme (b8346e6).
+
+### Storefront (herkese açık mağaza, tamam, 2026-10-19)
+`features/vitrin/magaza/Storefront.jsx` 722 -> 77 satır. `storefront/useStorefront.js` (ilanlar, süzgeçler, giriş ekranı, yoklama), `kategoriSabitleri.jsx`;
+`bilesenler/`: GirisEkrani, UstBar, MobilMenu, HizmetSayfasi, DurumSecimi, SayfaBasi, MotorFiltreleri, IlanAlani, TaksitHesaplaDialog, FiltreBilesenleri.
+Test: `Storefront.test.js` (17). Giriş videosu `window.matchMedia` çağırdığı için testte her zaman sahtelenir; mobilde `HTMLMediaElement.prototype.pause` da.
+
+### E-Ticaret (tamam, 2026-10-19)
+`features/eticaret/ETicaret.jsx` 622 -> 52 satır. `eticaret/useETicaret.js`, `eticaretVeri.js` (saf; komisyon önizlemesi, form dönüşümleri), `bilesenler/`:
+IstatistikSatiri, Sekmeler, SatisListesi, PlatformListesi, SatisFormModal (+ KomisyonOnizleme), PlatformFormModal, SatisDetayModal.
+Testler: `ETicaret.test.js` (23) + `eticaretVeri.test.js` (12).
+
+### Aksesuarlar (tamam, 2026-10-19)
+`features/aksesuar/Aksesuarlar.jsx` 614 -> 33 satır. `aksesuarlar/`: `useAksesuarlar.js` (satışlar, istatistik, stok, form, ürün satırları, barkod, kaydet/sil),
+`aksesuarVeri.js` (form dönüşümleri, süzme, ürün satırı işlemleri, toplam/indirim/kâr; her işlem yeni dizi döndürür), `bilesenler/`: IstatistikSatiri,
+Suzgecler, SatisListesi, SatisFormModal (+ MusteriSatisAlanlari / UrunlerBolumu / ToplamOzeti / KalanOdemeKutusu), SatisDetayModal.
+Testler: `Aksesuarlar.test.js` (23) + `aksesuarVeri.test.js` (16). Mutasyon: 9 bilinçli hatanın 9'u da yakalandı.
+**Testin yakaladığı bölme hatası:** betik `musteriService` içe aktarmasını bileşene taşımayı unuttu; çağrı `try/catch` içinde olduğundan ekranda hata görünmedi
+ama telefondan müşteri eşleştirme sessizce çalışmaz oldu. Karakterizasyon testi ("telefon yazınca ad dolar") bunu yakaladı: `catch {}` yutan kodda test şart.
+
+### Bu tur (MotorStok -> Aksesuarlar) dersleri
+- Ağır bileşen testleri çoğalınca 5 sn'lik `waitFor` sınırı da yetmedi: `setupTests.js`'e `configure({ asyncUtilTimeout: 5000 })` ve 60 sn test sınırı kondu.
+- Eski-yeni HTML karşılaştırmasında zamana bağlı gürültü: MUI ripple içi, `role="tooltip"`, `_r_xx_` kimlikleri, boş `style=""`; ayrıca yalnızca boşluktan oluşan
+  metin düğümleri (özgün JSX'te aynı satırda kalmış etiketler). Pencere kapanış animasyonu bitmeden kare alınırsa eski pencere `aria-hidden` olarak DOM'da kalır:
+  kareden önce `.MuiDialog-root` sayısını 1'e `waitFor` ile bekle.
+- Git Bash tuzağı: `/kâr|...` gibi `/` ile başlayan argüman Windows yoluna çevrilir (mutasyon sessizce uygulanmaz); mutasyonları dosyadan okuyan Python ile uygula.
+- Mutasyonla yakalanmayan "0.00" (metin) kalan ödeme -> 0 kuralı üç sayfada (İş Emirleri, İkinci El, Aksesuar) ayrı test gerektirdi: aynı kalıp, aynı tuzak.
+- Hook'lar arası ortak nesne ("hook nesnesi": `liste`, `f`, `ilet`, `a`, `e`, `s`, `form`, `hs`) tek tek prop geçmekten çok daha okunaklı; ama bileşenin hangi alanları
+  kullandığını `const { ... } = a` ile ilk satırda göstermek şart.
+
 ### Yöntem (sonraki dosyalar için tarif)
 1. **Önce test:** Testing Library ile mevcut davranışı sınayan testler yaz (API `jest.mock`, oturum `useAuth` mock). CRA `resetMocks` açık: sahte cevapları her testten ÖNCE kur.
    Test dosyası `.test.js` olmalı (`tanimsizDegisken.test.js` yalnızca `.test.js`'i tarama dışı bırakır). Sayıları elle hesapla; tr-TR tarihi `05.10.2026` (sıfırlı).
@@ -124,6 +163,6 @@ ortak 60 sn sınır `setupTests.js`'e kondu. Tam koşu ~8 dk; geliştirirken `np
 7. Doğrulama komutları: `cd frontend; CI=true npx react-scripts test --watchAll=false` ve `CI=false npx react-scripts build` ("Compiled successfully").
    Yerel sunucu `backend/.env` ile başlatılmamalı: Railway'e işaret ediyor; gerekirse `set -a; . ./.env.mariadb.dev; set +a` ile ortam değişkenleri önce yüklenir (dotenv ezmez).
 
-### Sıradaki dosyalar
-MotorStok/IkinciElMotor -> Storefront -> ETicaret/Aksesuarlar (bkz. §4). `shared/bicim.js`
-tekilleştirmesi ve `toLocaleString('tr-TR')` toplu değişimi bölme bittikten sonra ayrı adım; `features/raporlar/bicim.js` şimdilik raporlara özel.
+### Sıradaki işler
+Sekiz büyük dosyanın hepsi bölündü (Raporlar, İş Emirleri, Vitrin, MotorStok, İkinci El, Storefront, E-Ticaret, Aksesuarlar). `shared/bicim.js` tekilleştirmesi ve
+`toLocaleString('tr-TR')` toplu değişimi, ardından TanStack Query, ESLint + Prettier, Vite + TSX ayrı adımlardır (`docs/YOL-HARITASI.md`).
