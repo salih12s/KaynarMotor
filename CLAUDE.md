@@ -10,7 +10,7 @@ açıktır: gerçek müşteri verisi, parola, token ve kullanıcı adı **commit
   service express bilmez (hata `IstemciHatasi` sınıflarıyla), denetim günlüğü controller'da, saf kurallar `*.gorunum.ts` / `*.hesap.ts`.
   Klasörler: `core/{veritabani,dogrulama,http,gunluk,onbellek,middleware}`, `shared/`, `modules/<alan>/<özellik>/`.
   **Ayrıntı ve "yeni özellik ekleme" adımları: `docs/TS-GECISI.md`.**
-- `frontend/`: CRA + React + MUI (JS), `src/features/<alan>/`. Büyük dosyalar bölünecek (bkz. `docs/FRONTEND-BOLME-RAPORU.md`).
+- `frontend/`: CRA + React + MUI (JS), `src/features/<alan>/`. Bölme sürüyor (bkz. `docs/FRONTEND-BOLME-RAPORU.md`): **Raporlar bölündü** (kabuk + hook + sekmeler/ + modallar/ + bilesenler/), sırada IsEmirleri, Vitrin…
 - Roller: admin, personel (modül yetkileri), yatırımcı, muhasebeci. **Kâr yalnızca admin görür.** Alan düzeyinde görünürlük:
   `backend/modules/motor/ikinciElMotor/ikinciElMotor.gorunum.ts` + `core/middleware/yetki.ts` (`kariGizle`).
 
@@ -36,8 +36,10 @@ npm run package:hostinger             # tsc + frontend build + esbuild + zip  �
 
 ## Durum (2026-10-18)
 `typescript` dalı: backend TS geçişi + katmanlı yapı + klasör düzeni + genel temizlik **tamam**; tsc temiz, 248 birim, 201 API (kaynak ve paket),
-27 frontend testi yeşil. Canlı hâlâ eski JS paketi (`hostinger` dalı). `typescript` dalı GitHub'a gönderildi (origin/typescript).
+61 frontend testi yeşil (Testing Library kurulu; Raporlar için bileşen + birim testleri). Canlı hâlâ eski JS paketi (`hostinger` dalı). `typescript` dalı GitHub'a gönderildi (origin/typescript).
 CI iş akışı yazıldı (`.github/workflows/dogrula.yml`) ama **GitHub hesabı faturalandırma sorunu yüzünden kilitli: işler başlamıyor**
 (Salih: Settings > Billing and plans'tan çözmeli). O zamana kadar yerel güvenlik ağı: `bash backend/scripts/hepsiniDogrula.sh` ve
 `.githooks/pre-push` (etkinleştirme: `git config core.hooksPath .githooks`; tsc + birim, ~3 sn). CI'ın adımları henüz GitHub'da doğrulanmadı.
-Sıradaki işler: frontend bölme (`docs/FRONTEND-BOLME-RAPORU.md`: Küçük/Orta/Tam kapsam seçimi bekliyor), ESLint/Prettier, Vite+TSX.
+Frontend bölme: **Raporlar tamam** (1563 -> 95 satırlık kabuk, 2 commit: testler `0a6b891`, bölme `9066223`); sıradaki dosya IsEmirleri.
+Yöntem ve kurallar `docs/FRONTEND-BOLME-RAPORU.md` §9'da (önce karakterizasyon testi, betikle taşıma, eski-yeni HTML karşılaştırması).
+Sonraki işler: kalan dosyaların bölünmesi, TanStack Query (ayrı adım), ESLint/Prettier, Vite+TSX.
