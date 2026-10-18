@@ -1,0 +1,61 @@
+import QRCode from 'qrcode';
+import { servisGecmisiService } from '../servisApi';
+import { isEmriYazdirHtml } from '../isEmriYazdir';
+
+// Motorun üzerine yapıştırılacak servis geçmişi QR etiketi — müşteri okutunca
+// sadece o plakanın servis geçmişini gösteren halka açık sayfa açılır.
+export const printServisQr = async (plaka) => {
+  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => (
+    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+  ));
+  const temiz = esc(String(plaka || '').trim().toUpperCase());
+  if (!temiz) {
+    alert('Bu iş emrinde plaka kayıtlı değil. QR oluşturmak için önce plaka girin.');
+    return;
+  }
+  try {
+    const res = await servisGecmisiService.getQrToken(temiz);
+    const url = `${window.location.origin}/s/${res.data.token}`;
+    const dataUrl = await QRCode.toDataURL(url, { margin: 1, width: 400, errorCorrectionLevel: 'M' });
+    const win = window.open('', '_blank', 'width=420,height=340');
+    if (!win) {
+      alert('Yazdırma penceresi açılamadı. Tarayıcı pop-up engelleyicisini kapatın.');
+      return;
+    }
+    win.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Servis QR - ${temiz}</title>
+      <style>
+        @page { size: 58mm 40mm; margin: 1mm; }
+        * { box-sizing: border-box; }
+        body { font-family: Arial, Helvetica, sans-serif; margin: 0; padding: 4px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .qr img { width: 30mm; height: 30mm; display: block; }
+        .info { text-align: center; }
+        .marka { font-size: 11px; font-weight: bold; letter-spacing: 0.5px; }
+        .plaka { font-size: 16px; font-weight: bold; margin: 3px 0; border: 1.5px solid #000; border-radius: 4px; padding: 2px 6px; display: inline-block; }
+        .not { font-size: 8.5px; line-height: 1.25; }
+      </style></head><body>
+        <div class="qr"><img src="${dataUrl}" alt="QR" /></div>
+        <div class="info">
+          <div class="marka">KAYNAR MOTOR</div>
+          <div class="plaka">${temiz}</div>
+          <div class="not">Servis geçmişiniz için<br/>QR kodu okutun</div>
+        </div>
+        <script>window.onload=function(){window.focus();window.print();window.onafterprint=function(){window.close();};setTimeout(function(){window.close();},800);};</script>
+      </body></html>`);
+    win.document.close();
+  } catch (err) {
+    alert(err.response?.data?.message || 'QR oluşturulamadı');
+  }
+};
+
+export const printIsEmri = (data) => {
+  if (!data) return;
+  const win = window.open('', '_blank', 'width=900,height=700');
+  if (!win) {
+    alert('Yazdırma penceresi açılamadı. Tarayıcı pop-up engelleyicisini kapatın.');
+    return;
+  }
+  win.document.write(isEmriYazdirHtml(data));
+  win.document.close();
+  win.focus();
+  win.print();
+};
