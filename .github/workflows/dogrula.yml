@@ -1,11 +1,12 @@
-# Her push ve pull request'te: tip kontrolü, birim testler, gerçek MariaDB'ye karşı API testleri (kaynak ve paket),
-# frontend testleri ve yayın paketinin üretilip açılması. Yerelde aynısı: backend/scripts/hepsiniDogrula.sh
-# Not: herkese açık depolarda GitHub Actions ücretsizdir.
+# Tip kontrolü, birim testler, gerçek MariaDB'ye karşı API testleri (kaynak ve paket), frontend testleri ve yayın paketinin
+# üretilip açılması. Yerelde aynısı: backend/scripts/hepsiniDogrula.sh (+ frontend: npx react-scripts test).
+# Bu iş akışı yalnızca ELLE tetiklenir (Actions sekmesi > Run workflow): sahibinin GitHub hesabında faturalandırma kilidi olduğu için
+# otomatik tetikleme her push'ta başarısız koşu üretirdi. Kilit kalkarsa `on:` altına push/pull_request geri eklenebilir.
+# Adımlar GitHub'da henüz doğrulanmadı; asıl güvenlik ağı yerel doğrulamadır.
 name: Doğrula
 
 on:
-  push:
-  pull_request:
+  workflow_dispatch:
 
 # Aynı dalda yeni push gelince eski koşuyu iptal et
 concurrency:

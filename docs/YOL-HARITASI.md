@@ -9,10 +9,12 @@ tutarlı tasarım. Bu belge neyin bittiğini, neyin kaldığını ve hangi sıra
 | Backend TypeScript (strict) + katmanlı yapı | Tamam | `tsc` temiz, 248 birim, 201 API testi (kaynak + paket) |
 | Klasör düzeni + genel temizlik | Tamam | `backend/{core,shared,modules}`, kök sadeleşti |
 | Frontend: Testing Library + Raporlar bölme | Tamam | Raporlar 1563 -> 95 satır, 61 frontend testi, eski-yeni HTML karşılaştırması aynı |
-| CI iş akışı | Yazıldı, **çalışmadı** | GitHub hesabı faturalandırma kilidi (`.github/workflows/dogrula.yml`) |
+| CI iş akışı | Yazıldı, **GitHub'da kullanılmayacak** | Sahibi faturalandırmayı çözmeyecek; iş akışı yalnızca elle tetiklenir, kanıt yerel doğrulamadır |
 
 ## A. Önce yapılacaklar (sunum etkisi yüksek, emek düşük)
-1. **GitHub faturalandırma kilidini çöz** (Settings > Billing and plans, sahibi yapar). Sonra CI'ı koşturup ilk koşudaki hataları düzelt, README'ye durum rozeti ekle.
+1. **CI yerine yerel kanıt** (karar: GitHub faturalandırması çözülmeyecek). README'de CI rozeti olmaz; bunun yerine "Testler ve doğrulama" bölümü: test piramidi,
+   güncel sayılar, tek komutla yeniden üretme (`backend/scripts/hepsiniDogrula.sh`), mutasyon kontrolü ve paket duman testi anlatılır. Pre-push kancası
+   (`.githooks`) istenirse etkinleştirilir. Mülakatta dürüst cümle: "CI tanımı hazır, hesap kısıtı yüzünden Actions'ta çalıştırmadım, aynı adımlar yerelde tek komutla koşuyor." 
 2. **`typescript` dalını push et ve `main`'e al.** Şu an `main` 36 commit geride: depoya bakan biri eski JS kodu görüyor. Karar gerekir: `main`'e birleştirme
    canlı sürümü (`hostinger` dalı) etkilemez, ama canlıya çıkış ayrı ve yalnızca sahibinin onayıyla yapılır.
 3. **README'yi güncel hâle getir** (şimdi eski kalan yerler):

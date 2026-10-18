@@ -37,9 +37,9 @@ npm run package:hostinger             # tsc + frontend build + esbuild + zip  �
 ## Durum (2026-10-18)
 `typescript` dalı: backend TS geçişi + katmanlı yapı + klasör düzeni + genel temizlik **tamam**; tsc temiz, 248 birim, 201 API (kaynak ve paket),
 61 frontend testi yeşil (Testing Library kurulu; Raporlar için bileşen + birim testleri). Canlı hâlâ eski JS paketi (`hostinger` dalı). `typescript` dalı GitHub'a gönderildi (origin/typescript).
-CI iş akışı yazıldı (`.github/workflows/dogrula.yml`) ama **GitHub hesabı faturalandırma sorunu yüzünden kilitli: işler başlamıyor**
-(Salih: Settings > Billing and plans'tan çözmeli). O zamana kadar yerel güvenlik ağı: `bash backend/scripts/hepsiniDogrula.sh` ve
-`.githooks/pre-push` (etkinleştirme: `git config core.hooksPath .githooks`; tsc + birim, ~3 sn). CI'ın adımları henüz GitHub'da doğrulanmadı.
+**KARAR: Salih GitHub faturalandırmasını çözmeyecek, GitHub Actions kullanılmayacak.** `.github/workflows/dogrula.yml` yalnızca elle
+tetiklenir (kırmızı ✗ üretmesin diye) ve GitHub'da hiç doğrulanmadı. Asıl güvenlik ağı yerel: `bash backend/scripts/hepsiniDogrula.sh` (+ frontend testleri) ve
+`.githooks/pre-push` (etkinleştirme: `git config core.hooksPath .githooks`; tsc + birim, ~3 sn). README'de CI rozeti KOYMA; kanıt olarak test sayılarını yaz.
 Frontend bölme: **Raporlar tamam** (1563 -> 95 satırlık kabuk, 2 commit: testler `0a6b891`, bölme `9066223`); sıradaki dosya IsEmirleri.
 Yöntem ve kurallar `docs/FRONTEND-BOLME-RAPORU.md` §9'da (önce karakterizasyon testi, betikle taşıma, eski-yeni HTML karşılaştırması).
 Sonraki işler: kalan dosyaların bölünmesi, TanStack Query (ayrı adım), ESLint/Prettier, Vite+TSX.
