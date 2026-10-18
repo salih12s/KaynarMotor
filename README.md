@@ -7,6 +7,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white" alt="React 19">
+  <img src="https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white" alt="TypeScript strict">
   <img src="https://img.shields.io/badge/Node.js-22-339933?logo=nodedotjs&logoColor=white" alt="Node.js 22">
   <img src="https://img.shields.io/badge/Express-4-000000?logo=express&logoColor=white" alt="Express 4">
   <img src="https://img.shields.io/badge/MariaDB-11-003545?logo=mariadb&logoColor=white" alt="MariaDB 11">
@@ -28,7 +29,7 @@ Kaynar Motor is a production dealership ERP and digital showroom integrating mot
 
 ### My Contribution
 
-I developed the React interface, Node.js/Express API, MariaDB data model (migrated from PostgreSQL with a verified, test-covered data migration), authentication and permission system, reporting tools, barcode and QR workflows, public showroom integration, and Hostinger deployment.
+I developed the React interface, the layered TypeScript (strict) / Express API with zod validation, MariaDB data model (migrated from PostgreSQL with a verified, test-covered data migration), authentication and permission system, reporting tools, barcode and QR workflows, public showroom integration, and Hostinger deployment.
 
 ### Engineering Challenges
 
@@ -37,6 +38,8 @@ I developed the React interface, Node.js/Express API, MariaDB data model (migrat
 - Publishing and removing showroom listings automatically as inventory status changes
 - Exposing privacy-safe QR service history without leaking cost or customer data
 - Recovering cleanly from database cold starts and deployment-time connection delays
+- Migrating the whole backend to TypeScript and a routes/controller/service/repository layout without changing the HTTP contract: 201 API tests run against both the source and the bundled build
+- Refactoring the frontend safely: characterization tests first, then splitting a 1,563-line screen into a 95-line shell plus small components, verified by identical rendered HTML
 
 **See it in action:** the [Nasıl Çalışır](#nasıl-çalışır) section has four end-to-end recordings: public showroom, service work order with QR history, inventory ↔ showroom sync, and role-based access. The [Mimari](#mimari) section has the C4 container view, the request lifecycle, and the listing lifecycle.
 <!-- english-overview:end -->
@@ -175,10 +178,11 @@ kim tarafından ne zaman yapıldığını kaydeden aktivite logu.
 
 | Katman | Teknolojiler |
 |---|---|
-| **Frontend** | React 19, React Router 7, Material UI 7, Axios, date-fns, jsbarcode, qrcode, react-to-print |
-| **Backend** | Node.js 22, Express 4, JSON Web Token, bcryptjs, helmet, express-rate-limit |
-| **Veritabanı** | MariaDB 11 — ORM kullanılmadan, `mysql2` ile doğrudan parametreli SQL (PostgreSQL uyum katmanı: `backend/core/db.js`) |
-| **Altyapı** | Hostinger Node.js barındırma (tek uygulama + MariaDB); eski Railway yapılandırması temizlendi |
+| **Frontend** | React 19, React Router 7, Material UI 7, Axios, jsbarcode, qrcode, react-to-print; testler: Jest + Testing Library |
+| **Backend** | Node.js (>=20), Express 4, **TypeScript (strict)**, **zod** (girdi doğrulama), JSON Web Token, bcryptjs, helmet, express-rate-limit; `tsx` ile çalışır, `esbuild` ile tek dosyaya paketlenir |
+| **Veritabanı** | MariaDB 11 — ORM kullanılmadan, `mysql2` ile doğrudan parametreli SQL (`$1` tarzı parametreleri MariaDB'ye çeviren ince katman: `backend/core/veritabani/`) |
+| **Test** | Birim (sahte veritabanıyla), API (gerçek MariaDB'ye karşı, kaynak ve paket), paket duman testi, frontend bileşen testleri |
+| **Altyapı** | Hostinger Node.js barındırma (tek uygulama + MariaDB) |
 
 ## Mimari
 
@@ -327,11 +331,12 @@ flowchart LR
 
 ### Tasarım kararları
 
-- **Şema kod içinde yönetilir.** ORM yoktur. Tablolar ve migration'lar `core/initDb.js` içinde `CREATE TABLE IF NOT EXISTS` ve kademeli `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` ile tanımlanır. Sunucu her açılışta şemayı eksiksiz hâle getirir, bu da deploy'u tek adıma indirir.
-- **Yetkilendirme sunucu tarafındadır.** Arayüzdeki route guard'lar yalnızca gezinmeyi düzenler; asıl kontrol `backend/core/middleware/yetki.js` içindedir ve API'ye bağlıdır. Hassas alanlar (kâr, alış fiyatı, müşteri bilgisi) yetkisi olmayan kullanıcının yanıtından sunucuda temizlenir. Gizleme arayüzde değil, veri katmanında yapılır.
+- **Şema kod içinde yönetilir.** ORM yoktur. Tablolar ve migration'lar `core/veritabani/initDb.ts` içinde `CREATE TABLE IF NOT EXISTS` ve kademeli `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` ile tanımlanır. Sunucu her açılışta şemayı eksiksiz hâle getirir, bu da deploy'u tek adıma indirir.
+- **Yetkilendirme sunucu tarafındadır.** Arayüzdeki route guard'lar yalnızca gezinmeyi düzenler; asıl kontrol `backend/core/middleware/yetki.ts` içindedir ve API'ye bağlıdır. Hassas alanlar (kâr, alış fiyatı, müşteri bilgisi) yetkisi olmayan kullanıcının yanıtından sunucuda temizlenir. Gizleme arayüzde değil, veri katmanında yapılır.
 - **Okuma serbest, yazma yetkili.** Stok gibi birçok ekranın aradığı uçlarda GET istekleri açıktır, POST/PUT/PATCH/DELETE ise modül yetkisine bağlıdır (`yazmaYetkisi`).
 - **Veritabanına dayanıklı başlangıç.** Backend veritabanı henüz hazır değilken de ayağa kalkar (`/api/health` yanıt verir) ve bağlantıyı artan gecikmelerle yeniden dener. Bu, barındırmadaki soğuk başlatma senaryolarına karşı dayanıklılık sağlar.
 - **Para ve stok işlemleri transaction içindedir.** Çok adımlı yazma işlemleri (iş emri + parçalar + stok düşümü) tek transaction'da yürür. Fiş numarası üretimi tek satırlık bir kilit tablosunda satır kilidiyle (`SELECT … FOR UPDATE`) serileştirilir.
+- **Katmanlı, sade fonksiyonlu yapı.** Her özellik `routes → controller → service → repository` ve `schemas` (zod) olarak ayrılır; service Express bilmez (hatalar `IstemciHatasi` sınıflarıyla), SQL repository'lerde (ve modüller arası ortak yardımcılarda, `shared/`) bulunur; service ve controller'larda yoktur. Kâr gizleme gibi saf kurallar `*.gorunum.ts` / `*.hesap.ts` dosyalarındadır ve doğrudan test edilir. Ayrıntı: [docs/TS-GECISI.md](docs/TS-GECISI.md).
 - **Denetim izi.** Giriş/çıkış ve başarısız giriş denemeleri (IP ile), kayıt/onay işlemleri, iş emri ve motor satışının oluşturma/güncelleme/silme adımları, aksesuar ve e-ticaret satışları, işlemi yapan kullanıcıyla birlikte `aktivite_log` tablosuna yazılır.
 
 ## Kurulum
@@ -403,6 +408,30 @@ Mevcut kullanıcı hesaplarına dokunmaz, demo hesaplarını ekler (şifre: `dem
 `servis`, `usta`, `satis`, `satis2`, `aksesuar`, `yatirimci1`, `yatirimci2`. Tüm kişi, telefon, plaka
 ve TC bilgileri uydurmadır.
 
+## Testler ve Doğrulama
+
+| Katman | Ne sınar | Sayı |
+|---|---|---|
+| Birim (backend) | Servis kuralları, kâr gizleme, komisyon/hesap fonksiyonları; sahte veritabanı (`tests/unit/sahteDb.js`) | 248 |
+| API (backend) | HTTP sözleşmesi, yetki, transaction/rollback, eşzamanlılık; **gerçek MariaDB**'ye karşı, hem kaynak koddan hem **esbuild paketinden** | 201 + 201 |
+| Duman (paket) | Canlıdaki gibi üretilen zip açılır, sunucu ayağa kalkar, sağlık ve giriş uçları denenir (`npm run package:hostinger` sonrası: `node --test tests/smoke/paket.smoke.test.js`) | ayrı çalıştırılır |
+| Frontend | Raporlar ekranı için bileşen testleri (3 rol, 8 sekme, süzgeçler, detay pencereleri, mobil), saf fonksiyonlar, servis çağrı denetimi | 61 |
+
+Her şey tek komutla yeniden üretilir (yerel MariaDB açık olmalı):
+
+```bash
+cd backend
+set -a; . ./.env.mariadb.test; set +a     # test veritabanı: adı "_test" ile biten yerel bir veritabanı
+bash scripts/hepsiniDogrula.sh            # tsc (strict) + birim + API (kaynak) + API (paket)
+cd ../frontend && CI=true npx react-scripts test --watchAll=false
+```
+
+Testlerin gerçekten bir şey yakaladığı **mutasyonla** sınanır: kritik kural bilerek bozulur, ilgili testin kırmızıya dönmesi beklenir.
+API testleri yalnızca yerel ve adı `_test` ile biten bir veritabanında çalışır (canlıya yanlışlıkla yazmayı engelleyen koruma).
+
+> CI: `.github/workflows/dogrula.yml` aynı adımları tanımlar; sahibinin GitHub hesabındaki faturalandırma kısıtı nedeniyle Actions'ta
+> çalıştırılmadı ve yalnızca elle tetiklenecek şekilde bırakıldı. Doğrulama yerelde yukarıdaki komutlarla yapılır.
+
 ## Proje Yapısı
 
 ```
@@ -444,11 +473,15 @@ KaynarMotorCRM/
 │       │   ├── eticaret/        # E-ticaret ekranı + komisyon hesabı (testli)
 │       │   ├── vitrin/          # yonetim/ (admin) ve magaza/ (herkese açık)
 │       │   ├── taksit/
-│       │   └── raporlar/        # Raporlar + Veresiye
+│       │   └── raporlar/        # Raporlar (95 satırlık kabuk) + useRaporVerisi + raporHesap; sekmeler/ modallar/ bilesenler/ ; Veresiye
 │       └── shared/
 │           ├── api/istemci.js   # Axios örneği ve oturum yönetimi (özellik API'leri bunu kullanır)
 │           └── utils/           # htmlKacis, tarih, sonIstek
 └── docs/
+    ├── TS-GECISI.md             # Backend mimarisi, yeni özellik ekleme adımları, test stratejisi
+    ├── FRONTEND-BOLME-RAPORU.md # Frontend bölme planı, yöntem ve ilerleme
+    ├── YOL-HARITASI.md          # Kalan işler
+    ├── HOSTINGER.md             # Deploy kılavuzu
     ├── demo/                    # Uçtan uca demo kayıtları (GIF)
     └── screenshots/             # Ekran görüntüleri
 ```
@@ -497,7 +530,7 @@ route'lar JWT ile korunur.
 
 ## Veritabanı
 
-19 tablo; ilişkiler yabancı anahtarlarla, sık sorgulanan kolonlar index'lerle tanımlıdır.
+21 tablo; ilişkiler yabancı anahtarlarla, sık sorgulanan kolonlar index'lerle tanımlıdır.
 
 | Alan | Tablolar |
 |---|---|
@@ -506,8 +539,9 @@ route'lar JWT ile korunur.
 | Servis | `is_emirleri`, `parcalar`, `servis_qr_tokenler` |
 | Aksesuar | `aksesuar_stok`, `aksesuarlar`, `aksesuar_parcalar` |
 | Yedek parça | `yedek_parca_stok`, `yedek_parcalar` |
-| Motosiklet | `ikinci_el_motorlar` |
+| Motosiklet | `ikinci_el_motorlar`, `satis_belgeleri` |
 | E-ticaret | `eticaret_platformlar`, `eticaret_satislar` |
+| Sistem | `fis_no_kilidi` (fiş numarası üretimi için tek satırlık kilit) |
 | Vitrin | `vitrin_urunleri`, `vitrin_gorseller`, `vitrin_videolar`, `vitrin_segmentler`, `vitrin_kategori_iletisim` |
 
 ## Deploy
