@@ -1,11 +1,13 @@
-const mysql = require('mysql2/promise');
-const { compileQuery, parseUtcDateTime, splitUpdateReturning } = require('./sqlParams');
-const { GecersizIstek } = require('./dogrula');
+import mysql from 'mysql2/promise';
+import type { PoolConnection, PoolOptions } from 'mysql2/promise';
+import { compileQuery, parseUtcDateTime, splitUpdateReturning } from './sqlParams';
+import { GecersizIstek } from './dogrula';
+import type { Baglanti, SqlSonuc } from './tipler';
 
 // Katı SQL modu fazla uzun / aralık dışı değeri hata olarak reddeder. Bu kullanıcının düzeltebileceği bir hatadır
 // (400); eskiden her uç "Sunucu hatası" (500) dönüyordu.
 const GECERSIZ_DEGER_KODLARI = new Set(['ER_DATA_TOO_LONG', 'ER_WARN_DATA_OUT_OF_RANGE', 'ER_TRUNCATED_WRONG_VALUE', 'ER_TRUNCATED_WRONG_VALUE_FOR_FIELD']);
-function istemciHatasinaCevir(error) {
+function istemciHatasinaCevir(error: any): any {
   if (error && GECERSIZ_DEGER_KODLARI.has(error.code)) {
     return new GecersizIstek('Alanlardan biri çok uzun ya da geçersiz; lütfen değerleri kontrol edin');
   }
@@ -17,7 +19,7 @@ function istemciHatasinaCevir(error) {
 // Böylece route dosyalarındaki $1, $2 parametreli sorgular ve BEGIN/COMMIT/ROLLBACK
 // akışı olduğu gibi çalışır; yalnızca PostgreSQL'e özel SQL sözdizimi elle çevrilmiştir.
 
-function numberFromEnv(name, fallback) {
+function numberFromEnv(name: string, fallback: number): number {
   const value = Number(process.env[name]);
   return Number.isFinite(value) && value > 0 ? value : fallback;
 }
@@ -34,8 +36,8 @@ const SESSION_SETUP =
   "sql_mode = 'STRICT_TRANS_TABLES,NO_ZERO_DATE,NO_ZERO_IN_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION,PIPES_AS_CONCAT', " +
   "collation_connection = 'utf8mb4_nopad_bin'";
 
-function poolOptionsFromEnv() {
-  const base = {
+function poolOptionsFromEnv(): PoolOptions {
+  const base: PoolOptions = {
     charset: 'utf8mb4',
     // DATETIME değerleri UTC'dir. Okurken çeviri typeCast içinde yapılır.
     timezone: 'Z',
@@ -50,7 +52,7 @@ function poolOptionsFromEnv() {
     // API yanıtlarındaki sayaçların tipi değişmesin. DECIMAL zaten metin döner.
     supportBigNumbers: true,
     bigNumberStrings: true,
-    typeCast: (field, next) => {
+    typeCast: (field: any, next: () => unknown) => {
       // BOOLEAN (TINYINT(1)) kolonları true/false olarak döner (PostgreSQL boolean karşılığı).
       if (field.type === 'TINY' && field.length === 1) {
         const value = field.string();
@@ -96,8 +98,8 @@ const rawPool = mysql.createPool(poolOptionsFromEnv());
 
 // Oturum ayarı, bağlantıdaki ilk komut olarak kuyruğa girer; sonraki sorgular her zaman
 // bu ayarlarla çalışır. (Olayla gelen nesne mysql2'nin geri çağırmalı çekirdek bağlantısıdır.)
-rawPool.on('connection', (connection) => {
-  connection.query(SESSION_SETUP, (err) => {
+rawPool.on('connection', (connection: any) => {
+  connection.query(SESSION_SETUP, (err: Error | null) => {
     if (err) console.error('Veritabanı oturum ayarı yapılamadı:', err.message);
   });
 });
@@ -116,7 +118,7 @@ const TRANSIENT_DB_ERROR_CODES = new Set([
   'EPIPE',
 ]);
 
-function isTransientDbError(error) {
+function isTransientDbError(error: any): boolean {
   const message = ((error && error.message) || '').toLowerCase();
   return (
     Boolean(error && error.code && TRANSIENT_DB_ERROR_CODES.has(error.code)) ||
@@ -127,28 +129,28 @@ function isTransientDbError(error) {
 }
 
 /** Sunucunun kabul ettiği en büyük paket (bayt); yükleme sınırlarını buna göre belirlemek için. */
-let paketSiniri = null;
-async function maxPaket() {
+let paketSiniri: number | null = null;
+export async function maxPaket(): Promise<number> {
   if (paketSiniri === null) {
-    const [[satir]] = await rawPool.query('SELECT @@max_allowed_packet AS p');
+    const [[satir]] = (await rawPool.query('SELECT @@max_allowed_packet AS p')) as unknown as [[{ p: string | number }]];
     paketSiniri = Number(satir.p);
   }
   return paketSiniri;
 }
 
 /** Paket sınırını aştığı için reddedilen sorgu mu? */
-function paketHatasi(error) {
+export function paketHatasi(error: any): boolean {
   return Boolean(error) && (error.code === 'ER_NET_PACKET_TOO_LARGE' || error.code === 'ER_NET_ERROR_ON_WRITE' || /max_allowed_packet|Got a packet bigger/i.test(error.message || ''));
 }
 
 /** Tekil (UNIQUE) kısıt ihlali mi? (PostgreSQL'deki 23505 kodunun karşılığı) */
-function isUniqueViolation(error) {
+export function isUniqueViolation(error: any): boolean {
   return Boolean(error) && error.code === 'ER_DUP_ENTRY';
 }
 
-const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
-function toResult(raw) {
+function toResult(raw: any): SqlSonuc {
   if (Array.isArray(raw)) return { rows: raw, rowCount: raw.length };
   return { rows: [], rowCount: raw.affectedRows ?? 0, insertId: raw.insertId };
 }
@@ -156,9 +158,9 @@ function toResult(raw) {
 // Bu boyutun üstündeki ikili (Buffer) parametre içeren sorgular hazır ifadeyle gönderilir (bkz. sqlParams).
 const BUYUK_IKILI = 64 * 1024;
 
-function derle(text, params) {
+function derle(text: string, params?: unknown[]): { sql: string; degerler?: any[] } {
   if (params && params.some((p) => Buffer.isBuffer(p) && p.length > BUYUK_IKILI)) {
-    const degerler = [];
+    const degerler: any[] = [];
     return { sql: compileQuery(text, params, degerler), degerler };
   }
   return { sql: compileQuery(text, params) };
@@ -168,7 +170,7 @@ function derle(text, params) {
  * Tek bir bağlantıda sorgu çalıştırır. `UPDATE ... RETURNING` (MariaDB'de yok) iki
  * cümleye bölünür: önce UPDATE, sonra aynı koşulla SELECT; ikisi aynı bağlantıdadır.
  */
-async function runOn(connection, text, params) {
+async function runOn(connection: PoolConnection, text: string, params?: unknown[]): Promise<SqlSonuc> {
   try {
     const parts = splitUpdateReturning(text);
     if (parts) {
@@ -184,7 +186,7 @@ async function runOn(connection, text, params) {
   }
 }
 
-async function query(text, params, retries = 2) {
+async function query(text: string, params?: unknown[], retries = 2): Promise<SqlSonuc> {
   // UPDATE ... RETURNING: güncelleme ve geri okuma aynı transaction'da.
   if (splitUpdateReturning(text)) {
     const connection = await rawPool.getConnection();
@@ -209,7 +211,7 @@ async function query(text, params, retries = 2) {
     try {
       const [raw] = degerler ? await rawPool.execute(sql, degerler) : await rawPool.query(sql);
       return toResult(raw);
-    } catch (error) {
+    } catch (error: any) {
       if (!retryable || !isTransientDbError(error) || attempt >= retries) throw istemciHatasinaCevir(error);
       const delay = 300 * (attempt + 1);
       console.warn(`Geçici veritabanı hatası, sorgu tekrar denenecek (${attempt + 1}/${retries}): ${error.message}`);
@@ -218,11 +220,11 @@ async function query(text, params, retries = 2) {
   }
 }
 
-async function connect() {
+async function connect(): Promise<Baglanti> {
   const connection = await rawPool.getConnection();
   let released = false;
   return {
-    query: (text, params) => runOn(connection, text, params),
+    query: <T = any>(text: string, params?: unknown[]) => runOn(connection, text, params) as Promise<SqlSonuc<T>>,
     release: () => {
       if (released) return;
       released = true;
@@ -231,12 +233,30 @@ async function connect() {
   };
 }
 
-const pool = {
-  query,
+/**
+ * Transaction: BEGIN → işleyici → COMMIT. İşleyici hata fırlatırsa ROLLBACK yapılır ve hata aynen yukarı iletilir
+ * (service'ler 404/403/409 gibi istemci hatalarını fırlatarak transaction'ı geri alır). Bağlantı her durumda bırakılır.
+ */
+async function withTransaction<T>(isleyici: (tx: Baglanti) => Promise<T>): Promise<T> {
+  const client = await connect();
+  try {
+    await client.query('BEGIN');
+    const sonuc = await isleyici(client);
+    await client.query('COMMIT');
+    return sonuc;
+  } catch (hata) {
+    await client.query('ROLLBACK').catch(() => undefined);
+    throw hata;
+  } finally {
+    client.release();
+  }
+}
+
+export const pool = {
+  query: query as <T = any>(text: string, params?: unknown[]) => Promise<SqlSonuc<T>>,
   connect,
+  withTransaction,
   end: () => rawPool.end(),
-  on: (event, handler) => rawPool.on(event, handler),
+  on: (event: string, handler: (...args: any[]) => void) => (rawPool as any).on(event, handler),
   raw: rawPool,
 };
-
-module.exports = { pool, isUniqueViolation, maxPaket, paketHatasi };

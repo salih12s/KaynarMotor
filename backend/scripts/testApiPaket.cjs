@@ -21,7 +21,7 @@ console.log('> sunucu paketleniyor (esbuild)');
 sunucuPaketle(giris);
 console.log(`> API testleri paketlenmiş sunucuya karşı koşuyor: ${giris}`);
 
-const sonuc = spawnSync(process.execPath, ['--test', '--test-concurrency=1', ...fs.readdirSync(path.join(BACKEND, 'tests', 'api'))
+const sonuc = spawnSync(process.execPath, ['--import', 'tsx', '--test', '--test-concurrency=1', ...fs.readdirSync(path.join(BACKEND, 'tests', 'api'))
   .filter((a) => a.endsWith('.test.js')).map((a) => path.join('tests', 'api', a))], {
   cwd: BACKEND,
   stdio: 'inherit',

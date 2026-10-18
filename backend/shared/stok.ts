@@ -11,7 +11,9 @@
  * `tablo` ve `kosul` kod içindeki sabitlerdir (kullanıcı girdisi değil); değerler $-parametresi olarak geçer.
  * Etkilenen satır sayısını döndürür.
  */
-const stokAyarla = async (client, tablo, kosul, kosulDegeri, miktar) => {
+import type { Veritabani } from '../core/tipler';
+
+export const stokAyarla = async (client: Veritabani, tablo: string, kosul: string, kosulDegeri: unknown, miktar: number): Promise<number> => {
   if (!miktar) return 0;
   const sonuc = await client.query(
     `UPDATE ${tablo} SET
@@ -24,5 +26,3 @@ const stokAyarla = async (client, tablo, kosul, kosulDegeri, miktar) => {
   );
   return sonuc.rowCount;
 };
-
-module.exports = { stokAyarla };

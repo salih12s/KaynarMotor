@@ -1,4 +1,5 @@
-const { logAktivite, ISLEM_TIPLERI } = require('./activityLogger');
+import type { NextFunction, Request, Response } from 'express';
+import { logAktivite, ISLEM_TIPLERI } from './activityLogger';
 
 /*
  * Denetim kaydı ara katmanı: yazma isteği (POST/PUT/PATCH/DELETE) BAŞARIYLA bittiğinde aktivite günlüğüne
@@ -8,9 +9,9 @@ const { logAktivite, ISLEM_TIPLERI } = require('./activityLogger');
  * Başarısız (4xx/5xx) istekler yazılmaz. `req.user` yönlendiriciden SONRA doldurulduğu için kayıt yanıt bitince alınır.
  * Günlük hatası ana işlemi etkilemez (logAktivite içeride yakalar). Gövde (kişisel veri/görsel) KAYDEDİLMEZ; yalnızca yol.
  */
-const ISLEM = { POST: ISLEM_TIPLERI.CREATE, PUT: ISLEM_TIPLERI.UPDATE, PATCH: ISLEM_TIPLERI.UPDATE, DELETE: ISLEM_TIPLERI.DELETE };
+const ISLEM: Record<string, string> = { POST: ISLEM_TIPLERI.CREATE, PUT: ISLEM_TIPLERI.UPDATE, PATCH: ISLEM_TIPLERI.UPDATE, DELETE: ISLEM_TIPLERI.DELETE };
 
-const denetimKaydi = (hedefTablo) => (req, res, next) => {
+export const denetimKaydi = (hedefTablo: string) => (req: Request, res: Response, next: NextFunction) => {
   const islemTipi = ISLEM[req.method];
   if (!islemTipi) return next();
   const yol = req.originalUrl.split('?')[0];
@@ -19,7 +20,7 @@ const denetimKaydi = (hedefTablo) => (req, res, next) => {
   let hedefId = sayisal ? parseInt(sayisal, 10) : null;
   // Oluşturmada (POST /koleksiyon) kimlik yolda yoktur: yanıtın id'sinden alınır (gövdenin kendisi kaydedilmez)
   const json = res.json.bind(res);
-  res.json = (govde) => {
+  res.json = (govde: any) => {
     if (hedefId === null && govde && Number.isInteger(govde.id)) hedefId = govde.id;
     return json(govde);
   };
@@ -37,5 +38,3 @@ const denetimKaydi = (hedefTablo) => (req, res, next) => {
   });
   next();
 };
-
-module.exports = { denetimKaydi };

@@ -1,5 +1,5 @@
-const { pool } = require('./db');
-const bcrypt = require('bcryptjs');
+import bcrypt from 'bcryptjs';
+import { pool } from './db';
 
 // MariaDB şeması (Hostinger). Canlı PostgreSQL şemasından (Railway) kolon sırası, tipler,
 // varsayılanlar, yabancı anahtarlar ve indeksler korunarak üretilmiştir.
@@ -445,7 +445,7 @@ const MIGRATIONS = [
   'ALTER TABLE kullanicilar ADD COLUMN IF NOT EXISTS motor_satis_gor BOOLEAN DEFAULT FALSE',
 ];
 
-const initializeDatabase = async () => {
+export const initializeDatabase = async (): Promise<void> => {
   const client = await pool.connect();
   try {
     for (const sql of SIRA_ONCE) await client.query(sql);
@@ -506,11 +506,9 @@ const initializeDatabase = async () => {
 
     console.log('Tüm tablolar başarıyla oluşturuldu/kontrol edildi');
   } catch (error) {
-    console.error('Veritabanı başlatma hatası:', error.message);
+    console.error('Veritabanı başlatma hatası:', (error as Error).message);
     throw error;
   } finally {
     client.release();
   }
 };
-
-module.exports = { initializeDatabase };

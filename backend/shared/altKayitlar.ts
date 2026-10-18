@@ -1,5 +1,5 @@
-const { pool } = require('../core/db');
-const { jsonSatir, pgJsonZaman, grupla } = require('../core/sqlText');
+import { pool } from '../core/db';
+import { jsonSatir, pgJsonZaman, grupla } from '../core/sqlText';
 
 /**
  * PostgreSQL'deki `json_agg(...)` alt sorgularının karşılığı: alt kayıtlar (ör. iş emrinin
@@ -13,7 +13,9 @@ const { jsonSatir, pgJsonZaman, grupla } = require('../core/sqlText');
  * `anahtariTut`: json_agg(tablo.*) gibi tüm kolonları veren sorgularda bağlantı kolonu
  * (ör. aksesuar_id) da çıktıda kalır; json_build_object(...) ile seçilenlerde kalmaz.
  */
-async function parcalariEkle(kayitlar, tablo, anahtar, kolonlar, sayiKolonlari = [], { anahtariTut = false } = {}) {
+export async function parcalariEkle(
+  kayitlar: any[], tablo: string, anahtar: string, kolonlar: string[], sayiKolonlari: string[] = [], { anahtariTut = false }: { anahtariTut?: boolean } = {}
+): Promise<any[]> {
   if (kayitlar.length === 0) return kayitlar;
   const secilen = [anahtar, ...kolonlar.filter((k) => k !== anahtar)]
     .map((k) => (k.endsWith('_at') ? `CAST(${k} AS CHAR) AS ${k}` : k))
@@ -25,13 +27,11 @@ async function parcalariEkle(kayitlar, tablo, anahtar, kolonlar, sayiKolonlari =
   const harita = grupla(sonuc.rows, anahtar);
   return kayitlar.map((r) => ({
     ...r,
-    parcalar: (harita.get(r.id) || []).map((p) => {
-      const { [anahtar]: anahtarDegeri, ...geri } = p;
+    parcalar: (harita.get(r.id) || []).map((p: Record<string, any>) => {
+      const { [anahtar]: anahtarDegeri, ...geri } = p as Record<string, any>;
       for (const k of Object.keys(geri)) if (k.endsWith('_at')) geri[k] = pgJsonZaman(geri[k]);
       const satir = jsonSatir(geri, sayiKolonlari);
       return anahtariTut ? { [anahtar]: anahtarDegeri, ...satir } : satir;
     }),
   }));
 }
-
-module.exports = { parcalariEkle };

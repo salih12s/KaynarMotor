@@ -16,7 +16,7 @@
  * PostgreSQL'de NULL'lar artan sırada SONA gider; MariaDB'de başa: ilk anahtar bunu düzeltir.
  * Birleşen işaretler (U+0300-U+036F) korunur: "İ" bazı kayıtlarda "I + nokta" olarak durur.
  */
-function orderByText(column) {
+export function orderByText(column: string): string {
   const harfRakam = `REGEXP_REPLACE(${column}, '(*UCP)[^[:alnum:]̀-ͯ]', '')`;
   return (
     `(${column} IS NULL), ` +
@@ -26,7 +26,7 @@ function orderByText(column) {
 }
 
 /** `kolon ILIKE $n` karşılığı (PostgreSQL ILIKE): iki taraf da küçük harfe çevrilir. */
-function ilike(column, paramIndex) {
+export function ilike(column: string, paramIndex: number): string {
   return `LOWER(${column}) LIKE LOWER($${paramIndex})`;
 }
 
@@ -36,8 +36,8 @@ function ilike(column, paramIndex) {
  * çekilip JS'te birleştirilir. PostgreSQL JSON'unda DECIMAL kolonlar SAYI, zaman
  * damgaları saat dilimsiz ISO metni olur; bu çevirme aynı biçimi üretir.
  */
-function jsonSatir(satir, sayiKolonlari = []) {
-  const cikti = {};
+export function jsonSatir(satir: Record<string, any>, sayiKolonlari: string[] = []): Record<string, any> {
+  const cikti: Record<string, any> = {};
   for (const [kolon, deger] of Object.entries(satir)) {
     if (deger === null || deger === undefined) cikti[kolon] = null;
     else if (sayiKolonlari.includes(kolon)) cikti[kolon] = Number(deger);
@@ -51,14 +51,14 @@ function jsonSatir(satir, sayiKolonlari = []) {
  * 'YYYY-MM-DD HH:MM:SS.ffffff' (DATETIME(6) metni) -> PostgreSQL JSON zaman damgası
  * ('YYYY-MM-DDTHH:MM:SS.ffffff'; sondaki sıfırlar ve boş kesir atılır).
  */
-function pgJsonZaman(metin) {
+export function pgJsonZaman(metin: unknown): string | null {
   if (metin === null || metin === undefined) return null;
   return String(metin).replace(' ', 'T').replace(/(\.\d*?)0+$/, '$1').replace(/\.$/, '');
 }
 
 /** Satırları `anahtar` kolonuna göre gruplar: Map(anahtar -> satır dizisi). */
-function grupla(satirlar, anahtar) {
-  const harita = new Map();
+export function grupla<T extends Record<string, any>>(satirlar: T[], anahtar: string): Map<any, T[]> {
+  const harita = new Map<any, T[]>();
   for (const satir of satirlar) {
     const liste = harita.get(satir[anahtar]);
     if (liste) liste.push(satir);
@@ -66,5 +66,3 @@ function grupla(satirlar, anahtar) {
   }
   return harita;
 }
-
-module.exports = { orderByText, ilike, jsonSatir, pgJsonZaman, grupla };

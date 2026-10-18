@@ -1,6 +1,6 @@
-const { pool } = require('./db');
+import { pool } from './db';
 
-const ISLEM_TIPLERI = {
+export const ISLEM_TIPLERI = {
   LOGIN: 'LOGIN',
   LOGOUT: 'LOGOUT',
   LOGIN_FAILED: 'LOGIN_FAILED',
@@ -30,9 +30,22 @@ const ISLEM_TIPLERI = {
   YEDEK_PARCA_OLUSTUR: 'YEDEK_PARCA_OLUSTUR',
   YEDEK_PARCA_GUNCELLE: 'YEDEK_PARCA_GUNCELLE',
   YEDEK_PARCA_SIL: 'YEDEK_PARCA_SIL',
-};
+} as const;
 
-const logAktivite = async (params) => {
+export type IslemTipi = (typeof ISLEM_TIPLERI)[keyof typeof ISLEM_TIPLERI];
+
+export interface AktiviteParametreleri {
+  kullanici_id?: number | null;
+  kullanici_adi?: string | null;
+  islem_tipi: IslemTipi | string;
+  islem_detay?: string | null;
+  hedef_tablo?: string | null;
+  hedef_id?: number | null;
+  ip_adresi?: string | null;
+  tarayici_bilgisi?: string | null;
+}
+
+export const logAktivite = async (params: AktiviteParametreleri) => {
   try {
     // Object parametre
     if (typeof params === 'object' && !Array.isArray(params)) {
@@ -48,9 +61,7 @@ const logAktivite = async (params) => {
       );
     }
   } catch (error) {
-    console.error('Aktivite log hatası:', error.message);
+    console.error('Aktivite log hatası:', (error as Error).message);
     // Log hatası ana işlemi durdurmamalı
   }
 };
-
-module.exports = { logAktivite, ISLEM_TIPLERI };

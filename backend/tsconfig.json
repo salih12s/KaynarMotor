@@ -1,6 +1,6 @@
 {
   // Geçiş dönemi ayarları: .js ve .ts dosyaları yan yana çalışır. Tip kontrolü yalnızca .ts dosyalarına uygulanır
-  // (checkJs kapalı) ve strict kapalıdır; kurallar geçiş bittikçe sıkılaştırılır (bkz. docs/TS-GECISI.md).
+  // (checkJs kapalı); .ts dosyaları baştan strict yazılır (bkz. docs/TS-GECISI.md).
   "compilerOptions": {
     "target": "ES2022",
     "module": "preserve",
@@ -10,7 +10,7 @@
     "allowJs": true,
     "checkJs": false,
     "noEmit": true,
-    "strict": false,
+    "strict": true,
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "skipLibCheck": true,

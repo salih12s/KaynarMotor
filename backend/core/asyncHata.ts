@@ -7,14 +7,15 @@
  * server.js'teki merkezi hata işleyicisine düşer ve istemci 500 alır (express-async-errors ile aynı yaklaşım).
  * Express 4'e özgüdür; Express 5'e geçilirse gerekmez (o sürüm bunu kendisi yapar).
  */
-const Layer = require('express/lib/router/layer');
+import type { NextFunction, Request, Response } from 'express';
+import Layer from 'express/lib/router/layer';
 
-Layer.prototype.handle_request = function handleRequest(req, res, next) {
-  const fn = this.handle;
+Layer.prototype.handle_request = function handleRequest(this: { handle: (...a: unknown[]) => unknown }, req: Request, res: Response, next: NextFunction) {
+  const fn = this.handle as (...a: unknown[]) => unknown;
   if (fn.length > 3) return next(); // hata işleyicisi: normal akışta çağrılmaz
   try {
     const sonuc = fn(req, res, next);
-    if (sonuc && typeof sonuc.catch === 'function') sonuc.catch(next);
+    if (sonuc && typeof (sonuc as Promise<unknown>).catch === 'function') (sonuc as Promise<unknown>).catch(next);
   } catch (hata) {
     next(hata);
   }

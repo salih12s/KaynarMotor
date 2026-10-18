@@ -1,4 +1,4 @@
-const rateLimit = require('express-rate-limit');
+import rateLimit from 'express-rate-limit';
 
 /*
  * Kimlik doğrulama uçları için hız sınırlama.
@@ -9,7 +9,7 @@ const rateLimit = require('express-rate-limit');
  * yalnızca başarısız denemeler sayılır.
  */
 
-const girisLimiti = rateLimit({
+export const girisLimiti = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 dakika
   max: 30,                  // IP başına 30 BAŞARISIZ deneme
   skipSuccessfulRequests: true,
@@ -20,7 +20,7 @@ const girisLimiti = rateLimit({
   },
 });
 
-const kayitLimiti = rateLimit({
+export const kayitLimiti = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 saat
   max: 10,                  // IP başına saatte 10 kayıt denemesi
   standardHeaders: true,
@@ -29,5 +29,3 @@ const kayitLimiti = rateLimit({
     message: 'Çok fazla kayıt denemesi yapıldı. Lütfen bir saat sonra tekrar deneyin.'
   },
 });
-
-module.exports = { girisLimiti, kayitLimiti };

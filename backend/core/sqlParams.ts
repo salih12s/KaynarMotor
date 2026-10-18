@@ -18,7 +18,7 @@
  *   - `= ANY($n)` (n bir dizi) `IN (...)` olur; boş dizi hiçbir satırla eşleşmez.
  */
 
-const ESCAPES = {
+const ESCAPES: Record<string, string> = {
   '\0': '\\0',
   '\b': '\\b',
   '\t': '\\t',
@@ -30,12 +30,12 @@ const ESCAPES = {
   '\\': '\\\\',
 };
 
-function pad(value, width) {
+function pad(value: number | string, width: number): string {
   return String(value).padStart(width, '0');
 }
 
 /** UTC 'YYYY-MM-DD HH:MM:SS.mmm' (oturum saat dilimi UTC'dir). */
-function formatDateUtc(date) {
+function formatDateUtc(date: Date): string {
   if (Number.isNaN(date.getTime())) throw new Error('Geçersiz tarih parametresi');
   return (
     `${pad(date.getUTCFullYear(), 4)}-${pad(date.getUTCMonth() + 1, 2)}-${pad(date.getUTCDate(), 2)} ` +
@@ -48,7 +48,7 @@ function formatDateUtc(date) {
  * Veritabanının yazdığı 'YYYY-MM-DD HH:MM:SS[.ffffff]' metnini UTC Date'e çevirir.
  * Milisaniyeden sonraki basamaklar atılır (node-pg de böyle yapıyordu).
  */
-function parseUtcDateTime(text) {
+export function parseUtcDateTime(text: string): Date {
   const match = /^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2}):(\d{2})(?:\.(\d{1,6}))?)?$/.exec(text);
   if (!match) return new Date(NaN);
   const [, year, month, day, hour = '0', minute = '0', second = '0', fraction = ''] = match;
@@ -59,9 +59,9 @@ function parseUtcDateTime(text) {
 }
 
 /** Metni dize sabiti olarak kaçışlar (NO_BACKSLASH_ESCAPES kapalı varsayılır). */
-function quoteString(value) {
+export function quoteString(value: string): string {
   // eslint-disable-next-line no-control-regex
-  return `'${value.replace(/[\0\b\t\n\r\x1a"'\\]/g, (ch) => ESCAPES[ch])}'`;
+  return `'${value.replace(/[\0\b\t\n\r\x1a"'\\]/g, (ch) => ESCAPES[ch] as string)}'`;
 }
 
 // İstemciden gelen '2026-10-04T10:30:00.000Z' / '...+03:00' biçimli tarih-saat metni.
@@ -71,14 +71,14 @@ function quoteString(value) {
 // biçimdeyse uygulanır; açıklama gibi serbest metinlere dokunulmaz.
 const ISO_ZONLU = /^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2}(?::\d{2})?)(\.\d{1,9})?(?:Z|[+-]\d{2}(?::?\d{2})?)$/;
 
-function isoZonuAt(value) {
+function isoZonuAt(value: string): string {
   const m = ISO_ZONLU.exec(value);
   if (!m) return value;
   return `${m[1]} ${m[2]}${m[3] ? m[3].slice(0, 7) : ''}`;
 }
 
 /** Tek bir parametreyi SQL sabitine çevirir. */
-function encodeParam(value) {
+export function encodeParam(value: unknown): string {
   if (value === null || value === undefined) return 'NULL';
 
   switch (typeof value) {
@@ -104,7 +104,7 @@ function encodeParam(value) {
 }
 
 /** Hazır ifade modunda bir parametrenin sunucuya gönderilecek değeri (encodeParam ile aynı anlam). */
-function bindDeger(value) {
+function bindDeger(value: unknown): string | Buffer | null {
   if (value === null || value === undefined) return null;
   switch (typeof value) {
     case 'string':
@@ -122,7 +122,7 @@ function bindDeger(value) {
   }
 }
 
-function encodeLimit(value, keyword) {
+function encodeLimit(value: unknown, keyword: string): string {
   const numeric = typeof value === 'string' && /^\d+$/.test(value) ? Number(value) : value;
   if (typeof numeric !== 'number' || !Number.isSafeInteger(numeric) || numeric < 0) {
     throw new Error(`${keyword} için negatif olmayan tam sayı gerekli`);
@@ -139,7 +139,7 @@ function encodeLimit(value, keyword) {
  * Büyük ikili veri (belge yükleme) için kullanılır: X'hex' sabiti veriyi iki katına çıkarırdı ve
  * max_allowed_packet sınırını erken aşardı. LIMIT/OFFSET ve `= ANY($n)` her iki modda da metne yazılır.
  */
-function compileQuery(text, params = [], degerler) {
+export function compileQuery(text: string, params: unknown[] = [], degerler?: unknown[]): string {
   let out = '';
   let i = 0;
   const n = text.length;
@@ -244,23 +244,15 @@ function compileQuery(text, params = [], degerler) {
  * çalışır; bu yüzden WHERE, SET ile değiştirilen bir kolona bağlı olmamalıdır.
  * UPDATE ... RETURNING değilse null döner.
  */
-function splitUpdateReturning(text) {
+export function splitUpdateReturning(text: string): { update: string; select: string } | null {
   const match =
     /^\s*UPDATE\s+([A-Za-z_][A-Za-z0-9_]*)\s+SET\s+([\s\S]+?)\s+WHERE\s+([\s\S]+?)\s+RETURNING\s+([\s\S]+?)\s*;?\s*$/i.exec(
       text
     );
   if (!match) return null;
-  const [, table, setClause, whereClause, returning] = match;
+  const [, table, setClause, whereClause, returning] = match as unknown as string[];
   return {
     update: `UPDATE ${table} SET ${setClause} WHERE ${whereClause}`,
     select: `SELECT ${returning} FROM ${table} WHERE ${whereClause}`,
   };
 }
-
-module.exports = {
-  compileQuery,
-  encodeParam,
-  quoteString,
-  parseUtcDateTime,
-  splitUpdateReturning,
-};

@@ -1,6 +1,8 @@
-const jwt = require('jsonwebtoken');
-const crypto = require('crypto');
-const { pool } = require('../db');
+import crypto from 'node:crypto';
+import jwt from 'jsonwebtoken';
+import type { NextFunction, Request, Response } from 'express';
+import { pool } from '../db';
+import type { Kullanici } from '../tipler';
 
 /*
  * Şifre parmak izi: token'a girişte yazılır (`sv`), her istekte kullanıcının GÜNCEL şifre özetinden yeniden hesaplanıp
@@ -8,7 +10,7 @@ const { pool } = require('../db');
  * Özetin kendisi token'a/req.user'a konmaz; yalnızca kısa bir türevi. `sv` taşımayan eski token'lar (bu özellikten önce
  * verilenler) süreleri dolana kadar (en çok 24 sa) kabul edilir.
  */
-const sifreParmagi = (ozet) => crypto.createHash('sha256').update(String(ozet || '')).digest('hex').slice(0, 16);
+export const sifreParmagi = (ozet: unknown): string => crypto.createHash('sha256').update(String(ozet || '')).digest('hex').slice(0, 16);
 
 /*
  * Kimlik doğrulama.
@@ -28,32 +30,32 @@ const KULLANICI_KOLONLARI = [
   'motor_satis_gor',
 ].join(', ');
 const ONBELLEK_MS = 15000;
-const onbellek = new Map(); // id -> { kullanici | null, bitis }
+const onbellek = new Map<number, { kullanici: Kullanici | null; bitis: number }>(); // id -> { kullanici | null, bitis }
 
-const kullaniciGetir = async (id) => {
+const kullaniciGetir = async (id: number): Promise<Kullanici | null> => {
   const simdi = Date.now();
   const kayit = onbellek.get(id);
   if (kayit && kayit.bitis > simdi) return kayit.kullanici;
   const sonuc = await pool.query(`SELECT ${KULLANICI_KOLONLARI} FROM kullanicilar WHERE id = $1`, [id]);
-  let kullanici = sonuc.rows[0] || null; // bulunamadıysa da önbelleğe alınır (silinmiş kullanıcı)
-  if (kullanici) {
-    const { sifre, ...geri } = kullanici; // özet bellekte/req.user'da tutulmaz
-    kullanici = { ...geri, sifre_parmak: sifreParmagi(sifre) };
+  let kullanici: Kullanici | null = null; // bulunamadıysa da önbelleğe alınır (silinmiş kullanıcı)
+  if (sonuc.rows[0]) {
+    const { sifre, ...geri } = sonuc.rows[0]; // özet bellekte/req.user'da tutulmaz
+    kullanici = { ...geri, sifre_parmak: sifreParmagi(sifre) } as Kullanici;
   }
   onbellek.set(id, { kullanici, bitis: simdi + ONBELLEK_MS });
   return kullanici;
 };
 
 // Yönetici bir kullanıcıyı onayladığında/reddettiğinde/sildiğinde/yetkisini ya da şifresini değiştirdiğinde çağrılır.
-const kullaniciOnbellegiTemizle = (id) => {
+export const kullaniciOnbellegiTemizle = (id?: number | string): void => {
   if (id === undefined) onbellek.clear(); else onbellek.delete(Number(id));
 };
 
-const tokenYukuOku = (req) => {
+const tokenYukuOku = (req: Request): { token: string | null; yuk?: any } => {
   const token = (req.headers['authorization'] || '').split(' ')[1];
   if (!token) return { token: null };
   try {
-    return { token, yuk: jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] }) };
+    return { token, yuk: jwt.verify(token, process.env.JWT_SECRET as string, { algorithms: ['HS256'] }) };
   } catch {
     return { token, yuk: null };
   }
@@ -61,7 +63,7 @@ const tokenYukuOku = (req) => {
 
 // code alanı, frontend'in "oturum bitti" ile "bu işleme yetkin yok" (403) ayrımını
 // mesaj metnine bakmadan yapabilmesi içindir; bkz. frontend/src/services/api.js.
-const authenticateToken = async (req, res, next) => {
+export const authenticateToken = async (req: Request, res: Response, next: NextFunction) => {
   const { token, yuk } = tokenYukuOku(req);
   if (!token) {
     return res.status(401).json({ message: 'Yetkilendirme token\'ı gerekli', code: 'TOKEN_MISSING' });
@@ -80,7 +82,7 @@ const authenticateToken = async (req, res, next) => {
 
 // Herkese açık uçlarda "giriş yapmış (ve hâlâ geçerli) bir kullanıcı var mı?" sorusu için.
 // Token yoksa/bozuksa/kullanıcı artık geçerli değilse null döner; yanıt yazmaz, hata fırlatmaz (token hatası dışında).
-const opsiyonelKullanici = async (req) => {
+export const opsiyonelKullanici = async (req: Request): Promise<Kullanici | null> => {
   const { yuk } = tokenYukuOku(req);
   if (!yuk) return null;
   const kullanici = await kullaniciGetir(Number(yuk.id));
@@ -89,11 +91,9 @@ const opsiyonelKullanici = async (req) => {
   return kullanici;
 };
 
-const isAdmin = (req, res, next) => {
+export const isAdmin = (req: Request, res: Response, next: NextFunction) => {
   if (req.user.rol !== 'admin') {
     return res.status(403).json({ message: 'Bu işlem için admin yetkisi gerekli' });
   }
   next();
 };
-
-module.exports = { authenticateToken, isAdmin, opsiyonelKullanici, kullaniciOnbellegiTemizle, sifreParmagi };
