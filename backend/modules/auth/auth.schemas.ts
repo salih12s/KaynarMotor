@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { serbest } from '../../core/semalar';
+import { serbest } from '../../core/dogrulama/semalar';
 
 /*
  * Kimlik doğrulama gövdeleri. Alan türü/boşluk denetimleri (ve onların ÖZEL mesajları) service'te yapılır: eskiden

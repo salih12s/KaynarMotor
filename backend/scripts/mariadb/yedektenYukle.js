@@ -192,9 +192,9 @@ async function yukle() {
   if (hedef === 'mariadb') {
     // Şemayı depodaki initDb ile kur (yoksa); varsayılan satırlar aşağıda boşaltılır.
     process.env.NODE_ENV = process.env.NODE_ENV || 'development';
-    const { initializeDatabase } = require('../../core/initDb');
+    const { initializeDatabase } = require('../../core/veritabani/initDb');
     await initializeDatabase();
-    const { pool } = require('../../core/db');
+    const { pool } = require('../../core/veritabani/db');
     await pool.end();
     db = await mariadbBaglan();
     calistir = (sql, p) => db.execute(sql, p);

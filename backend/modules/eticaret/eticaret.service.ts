@@ -3,8 +3,8 @@
  * HTTP bilmez (express yok). Denetim günlüğü HTTP katmanında, controller'da yazılır.
  * Komisyon/kâr formülü komisyon.ts içindedir (arayüzdeki kopyasıyla aynı test vektörlerinden geçer).
  */
-import { BulunamadiHatasi, GecersizIstek, YetkiHatasi, adetCoz, bosuNull } from '../../core/dogrula';
-import { bosuSifir } from '../../core/sayi';
+import { BulunamadiHatasi, GecersizIstek, YetkiHatasi, adetCoz, bosuNull } from '../../core/dogrulama/dogrula';
+import { bosuSifir } from '../../core/dogrulama/sayi';
 import type { BaglamDb, Kullanici, Veritabani } from '../../core/tipler';
 import { stokAyarla } from '../../shared/stok';
 import { detectPlatform, hesaplaKomisyon } from './komisyon';

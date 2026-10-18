@@ -7,9 +7,9 @@ const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 const { sahteDb } = require('./sahteDb');
 const ortak = require('../../modules/vitrin/vitrinOrtak');
-const servis = require('../../modules/vitrin/vitrin.service');
-const iletisim = require('../../modules/vitrin/vitrinIletisim.service');
-const medya = require('../../modules/vitrin/vitrinMedya.service');
+const servis = require('../../modules/vitrin/ilanlar/ilanlar.service');
+const iletisim = require('../../modules/vitrin/iletisim/iletisim.service');
+const medya = require('../../modules/vitrin/medya/medya.service');
 
 const kul = (rol, ek = {}) => ({ id: 1, rol, motor_vitrin_yetkisi: false, aksesuar_vitrin_yetkisi: false, ...ek });
 const ADMIN = kul('admin');

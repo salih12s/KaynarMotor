@@ -7,10 +7,10 @@ import cors from 'cors';
 import express from 'express';
 import type { NextFunction, Request, Response } from 'express';
 import helmet from 'helmet';
-import './core/asyncHata'; // async işleyicide fırlatılan hata istemciyi yanıtsız bırakmasın (500 dönsün)
-import { denetimKaydi } from './core/denetimKaydi';
-import { pool } from './core/db';
-import { initializeDatabase } from './core/initDb';
+import './core/http/asyncHata'; // async işleyicide fırlatılan hata istemciyi yanıtsız bırakmasın (500 dönsün)
+import { denetimKaydi } from './core/gunluk/denetimKaydi';
+import { pool } from './core/veritabani/db';
+import { initializeDatabase } from './core/veritabani/initDb';
 // Kimlik doğrulama ve yetkilendirme middleware'leri (bkz. core/middleware/)
 import { authenticateToken } from './core/middleware/auth';
 import { negatifTutarEngelle } from './core/middleware/tutarDogrula';
@@ -21,18 +21,18 @@ import {
 // Modül yolları (her biri routes → controller → service → repository katmanlarıdır)
 import authRoutes from './modules/auth/auth.routes';
 import musteriRoutes from './modules/musteriler/musteriler.routes';
-import isEmriRoutes from './modules/servis/isEmirleri.routes';
-import aksesuarRoutes from './modules/aksesuar/aksesuarlar.routes';
-import aksesuarStokRoutes from './modules/aksesuar/aksesuarStok.routes';
-import ikinciElMotorRoutes from './modules/motor/ikinciElMotor.routes';
-import satisBelgeRoutes from './modules/motor/satisBelgeleri.routes';
+import isEmriRoutes from './modules/servis/isEmirleri/isEmirleri.routes';
+import aksesuarRoutes from './modules/aksesuar/aksesuarlar/aksesuarlar.routes';
+import aksesuarStokRoutes from './modules/aksesuar/aksesuarStok/aksesuarStok.routes';
+import ikinciElMotorRoutes from './modules/motor/ikinciElMotor/ikinciElMotor.routes';
+import satisBelgeRoutes from './modules/motor/satisBelgeleri/satisBelgeleri.routes';
 import eticaretRoutes from './modules/eticaret/eticaret.routes';
-import yedekParcaRoutes from './modules/yedek-parca/yedekParcalar.routes';
-import yedekParcaStokRoutes from './modules/yedek-parca/yedekParcaStok.routes';
-import raporRoutes from './modules/raporlar/raporlar.routes';
-import veresiyeRoutes from './modules/raporlar/veresiye.routes';
-import vitrinRoutes from './modules/vitrin/vitrin.routes';
-import servisGecmisiRoutes from './modules/servis/servisGecmisi.routes';
+import yedekParcaRoutes from './modules/yedek-parca/yedekParcalar/yedekParcalar.routes';
+import yedekParcaStokRoutes from './modules/yedek-parca/yedekParcaStok/yedekParcaStok.routes';
+import raporRoutes from './modules/raporlar/raporlar/raporlar.routes';
+import veresiyeRoutes from './modules/raporlar/veresiye/veresiye.routes';
+import vitrinRoutes from './modules/vitrin/ilanlar/ilanlar.routes';
+import servisGecmisiRoutes from './modules/servis/servisGecmisi/servisGecmisi.routes';
 
 const app = express();
 const PORT = process.env.PORT || 5100;

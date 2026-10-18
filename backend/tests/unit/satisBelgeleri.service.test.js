@@ -5,7 +5,7 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 const { sahteDb } = require('./sahteDb');
-const servis = require('../../modules/motor/satisBelgeleri.service');
+const servis = require('../../modules/motor/satisBelgeleri/satisBelgeleri.service');
 
 const KUL = { id: 3, kullanici_adi: 'ali' };
 const PDF = Buffer.from('%PDF-1.4 test');

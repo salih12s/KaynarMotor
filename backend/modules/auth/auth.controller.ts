@@ -1,8 +1,8 @@
 /* Kimlik doğrulama HTTP katmanı: isteği okur, servisi çağırır, denetim günlüğünü (kim, ne, hangi IP) yazar, yanıtı verir. */
-import { ISLEM_TIPLERI, logAktivite } from '../../core/activityLogger';
-import { pool } from '../../core/db';
-import { dogrula } from '../../core/dogrula';
-import { sarmala } from '../../core/kontrolcu';
+import { ISLEM_TIPLERI, logAktivite } from '../../core/gunluk/activityLogger';
+import { pool } from '../../core/veritabani/db';
+import { dogrula } from '../../core/dogrulama/dogrula';
+import { sarmala } from '../../core/http/kontrolcu';
 import {
   girisGovdesi, kullaniciOlusturGovdesi, sifreGovdesi, yetkiGovdesi,
 } from './auth.schemas';

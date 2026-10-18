@@ -10,8 +10,8 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 const { sahteDb } = require('./sahteDb');
-const isEmri = require('../../modules/servis/isEmirleri.service');
-const gecmis = require('../../modules/servis/servisGecmisi.service');
+const isEmri = require('../../modules/servis/isEmirleri/isEmirleri.service');
+const gecmis = require('../../modules/servis/servisGecmisi/servisGecmisi.service');
 
 const ADMIN = { id: 1, kullanici_adi: 'admin', ad_soyad: 'Admin', rol: 'admin' };
 const PERSONEL = { id: 2, kullanici_adi: 'ali', ad_soyad: 'Ali Usta', rol: 'personel' };

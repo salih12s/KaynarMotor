@@ -1,7 +1,7 @@
 import crypto from 'node:crypto';
 import jwt from 'jsonwebtoken';
 import type { NextFunction, Request, Response } from 'express';
-import { pool } from '../db';
+import { pool } from '../veritabani/db';
 import type { Kullanici } from '../tipler';
 
 /*

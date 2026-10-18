@@ -1,5 +1,5 @@
 /* Müşteri tabloları için SQL. İş kuralı yok: yalnızca sorgular. `db` havuz ya da açık bir transaction bağlantısıdır. */
-import { orderByText } from '../../core/sqlText';
+import { orderByText } from '../../core/veritabani/sqlText';
 import type { Veritabani } from '../../core/tipler';
 
 export interface MusteriSatiri {

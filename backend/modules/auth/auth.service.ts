@@ -5,7 +5,7 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { kullaniciOnbellegiTemizle, sifreParmagi } from '../../core/middleware/auth';
-import { BulunamadiHatasi, GecersizIstek, IstemciHatasi, sifreSorunu } from '../../core/dogrula';
+import { BulunamadiHatasi, GecersizIstek, IstemciHatasi, sifreSorunu } from '../../core/dogrulama/dogrula';
 import type { BaglamDb, Kullanici, Veritabani } from '../../core/tipler';
 import type { GirisGovdesi, KullaniciOlusturGovdesi, SifreGovdesi, YetkiGovdesi } from './auth.schemas';
 import { YETKI_ALANLARI } from './auth.schemas';

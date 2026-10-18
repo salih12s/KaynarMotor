@@ -1,7 +1,7 @@
 /* Müşteri HTTP katmanı: isteği okur, servisi çağırır, yanıtı yazar. İş kuralı burada değil, service'te. */
-import { pool } from '../../core/db';
-import { dogrula } from '../../core/dogrula';
-import { sarmala } from '../../core/kontrolcu';
+import { pool } from '../../core/veritabani/db';
+import { dogrula } from '../../core/dogrulama/dogrula';
+import { sarmala } from '../../core/http/kontrolcu';
 import { musteriGovdesi } from './musteriler.schemas';
 import * as servis from './musteriler.service';
 

@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { MedyaOnbellegi } = require('../../core/medyaOnbellegi');
+const { MedyaOnbellegi } = require('../../core/onbellek/medyaOnbellegi');
 
 test('eklenen değer okunur; olmayan anahtar undefined', () => {
   const o = new MedyaOnbellegi({ azamiBayt: 100 });

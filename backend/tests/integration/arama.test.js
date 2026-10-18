@@ -16,7 +16,7 @@ const path = require('path');
 const BACKEND = path.resolve(__dirname, '..', '..');
 const ENV = path.join(BACKEND, '.env.mariadb.test');
 process.loadEnvFile(ENV);
-const { pool } = require('../../core/db');
+const { pool } = require('../../core/veritabani/db');
 
 const YEDEK = path.join(process.env.USERPROFILE || process.env.HOME, 'KaynarMariaDB', 'railway-yedek', '_arama.json');
 const kehanet = JSON.parse(fs.readFileSync(YEDEK, 'utf8'));

@@ -8,8 +8,8 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 const { sahteDb } = require('./sahteDb');
-const satis = require('../../modules/aksesuar/aksesuarlar.service');
-const stok = require('../../modules/aksesuar/aksesuarStok.service');
+const satis = require('../../modules/aksesuar/aksesuarlar/aksesuarlar.service');
+const stok = require('../../modules/aksesuar/aksesuarStok/aksesuarStok.service');
 
 const KULLANICI = { id: 1, kullanici_adi: 'ali', ad_soyad: 'Ali Usta', rol: 'personel' };
 

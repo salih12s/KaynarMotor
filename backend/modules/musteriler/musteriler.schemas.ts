@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { gevsekMetin } from '../../core/semalar';
+import { gevsekMetin } from '../../core/dogrulama/semalar';
 
 /** POST / ve PUT /:id gövdesi (yönetim ekranı). Alanlar eski davranışla aynı: gönderilmeyen alan NULL yazılır. */
 export const musteriGovdesi = z.object({

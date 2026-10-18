@@ -2,7 +2,7 @@
  * Vitrin özellikleri arasında ortak SAF yardımcılar (veritabanı/HTTP yok, tek istisna paketAsimi): kategori ve medya kuralları,
  * base64 data URL çözümleme, bağlantı doğrulama, kategori yetkisi.
  */
-import { maxPaket } from '../../core/db';
+import { maxPaket } from '../../core/veritabani/db';
 import type { Kullanici } from '../../core/tipler';
 
 // Geçerli kategoriler

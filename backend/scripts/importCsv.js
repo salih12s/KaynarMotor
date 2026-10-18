@@ -1,7 +1,7 @@
 require('./_koruma'); // emniyet kilidi: --onayliyorum olmadan çalışmaz
 const fs = require('fs');
 const path = require('path');
-const { pool } = require('../core/db');
+const { pool } = require('../core/veritabani/db');
 
 // Turkish number parser: "31,000₺" → 31000, "6,005" → 6005
 function parseTurkishNumber(val) {

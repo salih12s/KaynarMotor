@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { compileQuery, parseUtcDateTime, splitUpdateReturning, encodeParam } = require('../../core/sqlParams');
+const { compileQuery, parseUtcDateTime, splitUpdateReturning, encodeParam } = require('../../core/veritabani/sqlParams');
 
 test('$n yer tutucuları tırnaklı metin olarak yerleşir; sayı da tırnaklıdır', () => {
   assert.equal(compileQuery('SELECT * FROM t WHERE id = $1 AND ad = $2', [5, 'ali']), "SELECT * FROM t WHERE id = '5' AND ad = 'ali'");

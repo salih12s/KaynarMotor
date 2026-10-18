@@ -8,9 +8,9 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 const { sahteDb } = require('./sahteDb');
-const hesap = require('../../modules/raporlar/raporlar.hesap');
-const servis = require('../../modules/raporlar/raporlar.service');
-const veresiye = require('../../modules/raporlar/veresiye.service');
+const hesap = require('../../modules/raporlar/raporlar/raporlar.hesap');
+const servis = require('../../modules/raporlar/raporlar/raporlar.service');
+const veresiye = require('../../modules/raporlar/veresiye/veresiye.service');
 
 // DECIMAL kolonlar sürücüden METİN gelir.
 const isEmirleri = [

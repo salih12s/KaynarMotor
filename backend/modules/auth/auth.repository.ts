@@ -1,5 +1,5 @@
 /* Kullanıcı ve etkinlik günlüğü tabloları için SQL. İş kuralı yok: yalnızca sorgular. */
-import { orderByText } from '../../core/sqlText';
+import { orderByText } from '../../core/veritabani/sqlText';
 import type { Veritabani } from '../../core/tipler';
 
 /** Oturum açmış kullanıcıya/yönetici listesine dönen yetki kolonları (şifre özeti ASLA seçilmez). */

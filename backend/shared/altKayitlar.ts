@@ -1,5 +1,5 @@
 import type { Veritabani } from '../core/tipler';
-import { jsonSatir, pgJsonZaman, grupla } from '../core/sqlText';
+import { jsonSatir, pgJsonZaman, grupla } from '../core/veritabani/sqlText';
 
 /**
  * PostgreSQL'deki `json_agg(...)` alt sorgularının karşılığı: alt kayıtlar (ör. iş emrinin

@@ -9,7 +9,7 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 const { sahteDb } = require('./sahteDb');
-const servis = require('../../modules/motor/ikinciElMotor.service');
+const servis = require('../../modules/motor/ikinciElMotor/ikinciElMotor.service');
 
 const kul = (rol, ek = {}) => ({
   id: 10, kullanici_adi: 'u', ad_soyad: 'U', rol, motor_satis_yetkisi: false, alis_fiyati_gor: false, satis_fiyati_gor: false,

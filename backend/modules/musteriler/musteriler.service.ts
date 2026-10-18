@@ -6,8 +6,8 @@
  * formlar). Yatırımcı, muhasebeci ve yetkisiz hesaplar arayamaz: eskiden her giriş yapmış hesap 2 harfle tüm
  * müşteri dizinini tarayabiliyordu. Toplu listeleme ve yönetim uçları yalnızca admin'e açıktır. (Kural route'ta.)
  */
-import { pool } from '../../core/db';
-import { BulunamadiHatasi } from '../../core/dogrula';
+import { pool } from '../../core/veritabani/db';
+import { BulunamadiHatasi } from '../../core/dogrulama/dogrula';
 import type { BaglamDb, Veritabani } from '../../core/tipler';
 import type { MusteriGovdesi } from './musteriler.schemas';
 import * as repo from './musteriler.repository';

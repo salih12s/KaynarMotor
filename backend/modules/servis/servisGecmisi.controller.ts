@@ -1,8 +1,0 @@
-/* Servis geçmişi HTTP katmanı (herkese açık, token tabanlı). */
-import { pool } from '../../core/db';
-import { sarmala } from '../../core/kontrolcu';
-import * as servis from './servisGecmisi.service';
-
-export const gecmisiGetir = sarmala('Servis geçmişi hatası:', async (req, res) => {
-  res.json(await servis.gecmisiGetir(pool, req.params.token));
-});

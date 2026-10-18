@@ -21,7 +21,7 @@ const sql = async (q, p) => (await pool.query(q, p)).rows;
 
 before(async () => {
   s = await sunucuBaslat(); api = s.api; admin = s.admin;
-  pool = require('../../core/db').pool;
+  pool = require('../../core/veritabani/db').pool;
 });
 after(async () => { if (s) s.durdur(); if (pool) await pool.end(); });
 

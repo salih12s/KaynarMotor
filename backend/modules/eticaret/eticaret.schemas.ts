@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { gevsekMetin, gevsekSayi } from '../../core/semalar';
+import { gevsekMetin, gevsekSayi } from '../../core/dogrulama/semalar';
 
 /** POST /platformlar ve PUT /platformlar/:id gövdesi. Platform adı zorunluluğu service'te (eski mesajla). */
 export const platformGovdesi = z.object({

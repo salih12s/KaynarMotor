@@ -28,7 +28,7 @@ const logBul = async (tablo, hedefId, tip) => {
 };
 const logSay = async (tablo, hedefId) => Number((await sql('SELECT COUNT(*) AS n FROM aktivite_log WHERE hedef_tablo = $1 AND hedef_id = $2', [tablo, hedefId]))[0].n);
 
-before(async () => { s = await sunucuBaslat(); api = s.api; admin = s.admin; pool = require('../../core/db').pool; });
+before(async () => { s = await sunucuBaslat(); api = s.api; admin = s.admin; pool = require('../../core/veritabani/db').pool; });
 after(async () => { if (s) s.durdur(); if (pool) await pool.end(); });
 
 describe('#41 aksesuar satışı düzenleme ve silme günlüğe düşer', () => {

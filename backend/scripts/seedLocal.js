@@ -54,8 +54,8 @@ if (sorunlar.length > 0) {
 // Kilit geçildikten SONRA yüklenir: db.js bağlantı ayarını require anında ortamdan okur.
 const bcrypt = require('bcryptjs');
 const os = require('os');
-const { pool } = require('../core/db');
-const { initializeDatabase } = require('../core/initDb');
+const { pool } = require('../core/veritabani/db');
+const { initializeDatabase } = require('../core/veritabani/initDb');
 const { hesaplaKomisyon, detectPlatform } = require('../modules/eticaret/komisyon');
 
 // ---------------------------------------------------------------------------
