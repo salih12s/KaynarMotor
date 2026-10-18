@@ -18,7 +18,7 @@ env:
 jobs:
   backend:
     name: Backend (tsc + birim + API)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     services:
       mariadb:
@@ -66,7 +66,7 @@ jobs:
 
   frontend:
     name: Frontend (test + derleme)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     defaults:
       run:
@@ -91,7 +91,7 @@ jobs:
 
   paket:
     name: Yayın paketi (üret + canlıdaki gibi aç)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: [backend, frontend]
     timeout-minutes: 20
     services:
