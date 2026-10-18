@@ -6,6 +6,7 @@
  *   #45 müşteriler: detay biçimi, 404/400 mesajları, gövde doğrulaması
  *   #46 yedek parça stok: kod/barkod, UNIQUE, kod değişimi, toplu içe aktarma
  *   #47 yedek parça satışı: 404, adet doğrulaması, silme
+ *   #51 motor ve satış belgeleri: CRUD sözleşmesi, 404/403 mesajları, belge yükleme/indirme/silme/arşiv
  *   #50 e-ticaret: platform yönetimi (admin), satış kâr hesabı, stok düşüm/iade, 404 mesajları
  *   #49 aksesuar stok ve satışı: kod/barkod, indirim/kâr, stok düşümü, 404 mesajları, istatistik
  *   #48 iş emirleri: fiş no, 404/403 mesajları, tamamlanan iş emri, silme, QR token ve herkese açık servis geçmişi
@@ -22,6 +23,7 @@ const k = {};
 before(async () => {
   s = await sunucuBaslat(); api = s.api; admin = s.admin;
   k.servis = await kullaniciOlustur(api, admin, benzersiz('f10_srv_'), 'personel', { servis_yetkisi: true });
+  k.motor = await kullaniciOlustur(api, admin, benzersiz('f10_mtr_'), 'personel', { motor_satis_yetkisi: true });
   k.eticaret = await kullaniciOlustur(api, admin, benzersiz('f10_etc_'), 'personel', { eticaret_yetkisi: true });
 });
 after(() => s && s.durdur());
@@ -432,5 +434,111 @@ describe('#50 e-ticaret: HTTP sözleşmesi', () => {
     const r = await api('DELETE', `/api/eticaret/platformlar/${platformId}`, undefined, admin);
     assert.equal(r.durum, 200);
     assert.equal(r.govde.message, 'Platform silindi');
+  });
+});
+
+describe('#51 motor ve satış belgeleri: HTTP sözleşmesi', () => {
+  let motorId, plaka;
+  const PDF = '%PDF-1.4 f10 sozlesme';
+  const OCTET = { basliklar: { 'Content-Type': 'application/octet-stream' } };
+
+  before(async () => {
+    plaka = benzersiz('34M').slice(0, 12);
+    const r = await api('POST', '/api/ikinci-el-motor', {
+      plaka, marka: 'Honda', model: 'PCX', yil: 2021, km: 5000, alis_fiyati: 100000, satis_fiyati: 150000, masraflar: 2000,
+      komisyoncu_tutari: 3000, durum: 'tamamlandi', alici_adi: benzersiz('F10 Alıcı '), tarih: '2026-08-05', satis_tarihi: '2026-09-20',
+    }, admin);
+    assert.equal(r.durum, 201);
+    motorId = r.govde.id;
+  });
+
+  it('oluşturma: kâr hesaplanır (satış - alış - masraf - komisyon), tamamlama tarihi dolu', async () => {
+    const r = await api('GET', `/api/ikinci-el-motor/${motorId}`, undefined, admin);
+    assert.equal(Number(r.govde.kar), 45000);
+    assert.ok(r.govde.tamamlama_tarihi);
+    assert.equal(r.govde.durum, 'tamamlandi');
+  });
+
+  it('olmayan kayıt 404 "Kayıt bulunamadı" (detay ve güncelleme); geçersiz numara 400', async () => {
+    const g = await api('GET', '/api/ikinci-el-motor/2147483000', undefined, admin);
+    assert.equal(g.durum, 404);
+    assert.equal(g.govde.message, 'Kayıt bulunamadı');
+    assert.equal((await api('PUT', '/api/ikinci-el-motor/2147483000', { plaka: 'x' }, admin)).durum, 404);
+    assert.equal((await api('GET', '/api/ikinci-el-motor/5abc', undefined, admin)).durum, 400);
+  });
+
+  it('kısmi güncelleme: yalnızca gönderilen alan değişir, satış verisi korunur, kâr yeniden hesaplanır', async () => {
+    const r = await api('PUT', `/api/ikinci-el-motor/${motorId}`, { km: 6000 }, admin);
+    assert.equal(r.durum, 200);
+    assert.equal(Number(r.govde.km), 6000);
+    assert.equal(Number(r.govde.satis_fiyati), 150000);
+    assert.equal(r.govde.plaka, plaka);
+    assert.equal(Number(r.govde.kar), 45000);
+  });
+
+  it('özet: alan adları; Motor Satış yetkilisi kâr toplamını göremez', async () => {
+    const a = await api('GET', '/api/ikinci-el-motor/stats/ozet', undefined, admin);
+    for (const alan of ['toplam', 'toplam_satis', 'toplam_alis', 'toplam_kar', 'bekleyen', 'tamamlanan']) assert.ok(alan in a.govde, alan);
+    const p = await api('GET', '/api/ikinci-el-motor/stats/ozet', undefined, k.motor.token);
+    assert.ok(!('toplam_kar' in p.govde), 'kariGizle kâr anahtarını yanıttan tamamen siler');
+  });
+
+  it('silme yalnız admin: Motor Satış yetkilisi 403 "Silme yetkiniz yok"', async () => {
+    const r = await api('DELETE', `/api/ikinci-el-motor/${motorId}`, undefined, k.motor.token);
+    assert.equal(r.durum, 403);
+    assert.equal(r.govde.message, 'Silme yetkiniz yok');
+  });
+
+  it('belge: yükleme 201, listede görünür, indirilen içerik yüklenenle AYNI, arşivde tarihlerle gruplanır', async () => {
+    const y = await api('POST', `/api/satis-belgeleri/motor/${motorId}?ad=sozlesme.pdf`, PDF, k.motor.token, OCTET);
+    assert.equal(y.durum, 201);
+    assert.equal(y.govde.dosya_adi, 'sozlesme.pdf');
+    assert.equal(y.govde.mime, 'application/pdf');
+    const liste = await api('GET', `/api/satis-belgeleri/motor/${motorId}`, undefined, k.motor.token);
+    assert.equal(liste.govde.length, 1);
+    const indir = await api('GET', `/api/satis-belgeleri/${y.govde.id}/indir`, undefined, k.motor.token);
+    assert.equal(indir.durum, 200);
+    assert.equal(indir.govde, PDF);
+    assert.match(indir.basliklar.get('content-disposition'), /attachment; filename="sozlesme.pdf"/);
+    const arsiv = await api('GET', '/api/satis-belgeleri/arsiv', undefined, admin);
+    const grup = arsiv.govde.find((g) => g.motor_id === motorId);
+    assert.equal(grup.alis_tarihi, '2026-08-05');
+    assert.equal(grup.satis_tarihi, '2026-09-20');
+    assert.equal(grup.belgeler.length, 1);
+  });
+
+  it('belge doğrulaması: tür, içerik uyuşmazlığı, boş gövde, olmayan satış, geçersiz numara', async () => {
+    const exe = await api('POST', `/api/satis-belgeleri/motor/${motorId}?ad=virus.exe`, PDF, admin, OCTET);
+    assert.equal(exe.durum, 400);
+    assert.match(exe.govde.message, /Desteklenmeyen dosya türü/);
+    const sahte = await api('POST', `/api/satis-belgeleri/motor/${motorId}?ad=foto.png`, PDF, admin, OCTET);
+    assert.equal(sahte.durum, 400);
+    assert.equal(sahte.govde.message, 'Dosya içeriği uzantısıyla uyuşmuyor');
+    const yok = await api('POST', '/api/satis-belgeleri/motor/2147483000?ad=a.pdf', PDF, admin, OCTET);
+    assert.equal(yok.durum, 404);
+    assert.equal(yok.govde.message, 'Satış kaydı bulunamadı');
+    assert.equal((await api('POST', '/api/satis-belgeleri/motor/abc?ad=a.pdf', PDF, admin, OCTET)).govde.message, 'Geçersiz satış');
+    assert.equal((await api('GET', '/api/satis-belgeleri/xyz/indir', undefined, admin)).govde.message, 'Geçersiz belge');
+    assert.equal((await api('GET', '/api/satis-belgeleri/2147483000/indir', undefined, admin)).govde.message, 'Belge bulunamadı');
+  });
+
+  it('belge erişimi: yetkisiz personel 403; muhasebeci arşivi görür ama yükleyemez/silemez', async () => {
+    const yetkisiz = await api('GET', `/api/satis-belgeleri/motor/${motorId}`, undefined, k.servis.token);
+    assert.equal(yetkisiz.durum, 403);
+    assert.equal(yetkisiz.govde.message, 'Satış belgelerine erişim yetkiniz yok');
+    const muh = await kullaniciOlustur(api, admin, benzersiz('f10_muh_'), 'muhasebeci');
+    assert.equal((await api('GET', '/api/satis-belgeleri/arsiv', undefined, muh.token)).durum, 200);
+    assert.equal((await api('POST', `/api/satis-belgeleri/motor/${motorId}?ad=a.pdf`, PDF, muh.token, OCTET)).durum, 403);
+  });
+
+  it('belge silme 200 "Belge silindi"; sonra indirme 404; admin motoru siler 200', async () => {
+    const liste = (await api('GET', `/api/satis-belgeleri/motor/${motorId}`, undefined, admin)).govde;
+    const sil = await api('DELETE', `/api/satis-belgeleri/${liste[0].id}`, undefined, k.motor.token);
+    assert.equal(sil.durum, 200);
+    assert.equal(sil.govde.message, 'Belge silindi');
+    assert.equal((await api('GET', `/api/satis-belgeleri/${liste[0].id}/indir`, undefined, admin)).durum, 404);
+    const motor = await api('DELETE', `/api/ikinci-el-motor/${motorId}`, undefined, admin);
+    assert.equal(motor.durum, 200);
+    assert.equal(motor.govde.message, 'Motor satışı silindi');
   });
 });
