@@ -4,7 +4,7 @@ const router = express.Router();
 router.param('id', require('../../core/middleware/idDogrula').idParam);
 const { pool } = require('../../core/db');
 const { logAktivite, ISLEM_TIPLERI } = require('../../core/activityLogger');
-const { upsertMusteri } = require('../musteriler/musteriHelper');
+const { upsertMusteri } = require('../musteriler/musteriler.service');
 const { adetCoz, hataYanitla } = require('../../core/dogrula');
 const { stokAyarla } = require('../../shared/stok');
 

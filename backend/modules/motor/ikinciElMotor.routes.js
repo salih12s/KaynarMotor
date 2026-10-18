@@ -3,7 +3,7 @@ const router = express.Router();
 router.param('id', require('../../core/middleware/idDogrula').idParam);
 const { pool } = require('../../core/db');
 const { logAktivite, ISLEM_TIPLERI } = require('../../core/activityLogger');
-const { upsertMusteri } = require('../musteriler/musteriHelper');
+const { upsertMusteri } = require('../musteriler/musteriler.service');
 const { hataYanitla } = require('../../core/dogrula');
 
 const emptyToZero = (v) => { if (v === '' || v === undefined || v === null) return 0; const n = Number(v); return isNaN(n) ? 0 : n; };

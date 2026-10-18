@@ -104,7 +104,7 @@ app.use('/api', require('./core/middleware/tutarDogrula').negatifTutarEngelle);
 
 // Routes
 const authRoutes = require('./modules/auth/auth.routes');
-const musteriRoutes = require('./modules/musteriler/musteriler.routes');
+const musteriRoutes = require('./modules/musteriler/musteriler.routes').default;
 const isEmriRoutes = require('./modules/servis/isEmirleri.routes');
 const aksesuarRoutes = require('./modules/aksesuar/aksesuarlar.routes');
 const aksesuarStokRoutes = require('./modules/aksesuar/aksesuarStok.routes');

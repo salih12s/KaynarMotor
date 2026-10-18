@@ -60,3 +60,8 @@ export interface Veritabani {
 export interface Baglanti extends Veritabani {
   release(): void;
 }
+
+/** Servislerin aldığı veritabanı bağlamı: sorgu + transaction. Üretimde `pool`; testlerde sahte (Fake) bir nesne. */
+export interface BaglamDb extends Veritabani {
+  withTransaction<T>(isleyici: (tx: Veritabani) => Promise<T>): Promise<T>;
+}

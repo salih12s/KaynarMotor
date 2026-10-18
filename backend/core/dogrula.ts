@@ -1,6 +1,9 @@
 /* İstek doğrulama yardımcıları ve istemci hata sınıfları (route/controller/service'ler arasında ortak). */
 import type { Response } from 'express';
-import type { z } from 'zod';
+import { z } from 'zod';
+
+// zod hata mesajları Türkçe (varsayılan İngilizce).
+z.config(z.locales.tr());
 
 // İstemcinin düzeltebileceği hata: 4xx döner, mesajı kullanıcıya gösterilir. Controller'lar bunu `hataYanitla` ile
 // ayırır; merkezi hata işleyicisi de tanır (server.js). Service'ler HTTP bilmez: durumu bu sınıflarla bildirir.
@@ -82,6 +85,10 @@ export const hataYanitla = (res: Response, hata: unknown, baglam: string): Respo
  */
 export const dogrula = <S extends z.ZodType>(sema: S, veri: unknown): z.infer<S> => {
   const sonuc = sema.safeParse(veri);
-  if (!sonuc.success) throw new GecersizIstek(sonuc.error.issues[0]?.message || 'Geçersiz istek');
+  if (!sonuc.success) {
+    const ilk = sonuc.error.issues[0];
+    const alan = ilk?.path.join('.');
+    throw new GecersizIstek(ilk ? (alan ? `${alan}: ${ilk.message}` : ilk.message) : 'Geçersiz istek');
+  }
   return sonuc.data;
 };
