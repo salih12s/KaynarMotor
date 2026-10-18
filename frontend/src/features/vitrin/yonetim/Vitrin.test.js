@@ -24,7 +24,6 @@ jest.mock('../../aksesuar/aksesuarApi', () => ({ aksesuarStokService: { getAll: 
 jest.mock('../../auth/AuthContext', () => ({ useAuth: jest.fn() }));
 jest.mock('../../motor/SatisBelgeleri', () => ({ BelgeBolumu: ({ motorId }) => <div>BELGE-BOLUMU-{motorId}</div> }));
 
-jest.setTimeout(30000);
 
 // ---- Sabit test verisi -------------------------------------------------------------------------------------------
 const U1 = { id: 1, baslik: 'NMAX Fırsat', marka: 'Yamaha', model: 'NMAX', yil: 2021, segment: 'Scooter', motor_cc: 155, km: 12000, fiyat: 150000, yayinda: true, ilan_no: 7, motor_durumu: 'ikinci_el', one_cikan: true, stok_motor_id: 5, kapak_gorsel_id: 11, siralama: 0 };

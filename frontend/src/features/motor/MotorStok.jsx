@@ -17,7 +17,7 @@ import { useReactToPrint } from 'react-to-print';
 import { ikinciElMotorService } from './motorApi';
 import { musteriService } from '../musteriler/musteriApi';
 import { authService } from '../auth/authApi';
-import { SEGMENTLER } from '../vitrin/yonetim/Vitrin';
+import { SEGMENTLER } from '../vitrin/vitrinSabitleri';
 import { BelgeBolumu, BekleyenBelgeler, bekleyenBelgeleriYukle } from './SatisBelgeleri';
 import { useAuth } from '../auth/AuthContext';
 

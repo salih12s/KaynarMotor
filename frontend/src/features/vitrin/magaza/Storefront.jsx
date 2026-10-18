@@ -20,7 +20,8 @@ import HomeIcon from '@mui/icons-material/Home';
 import CalculateIcon from '@mui/icons-material/Calculate';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import { vitrinService } from '../vitrinApi';
-import { KATEGORILER, SEGMENTLER, HIZMET_KATEGORILER, MOTOR_DURUMLARI, ilanAramaUygunMu } from '../yonetim/Vitrin';
+import { KATEGORILER, SEGMENTLER, HIZMET_KATEGORILER, MOTOR_DURUMLARI } from '../vitrinSabitleri';
+import { ilanAramaUygunMu } from '../ilanArama';
 import { hesaplaTaksit, TaksitTablo, ParaInput, paraToNumber, fmtTL } from '../../taksit/TaksitHesaplama';
 import {
   VitrinTema, VitrinAcikTema, RENK, YAZI, ODAK, IlanKarti, IlanIskelet, ilanIzgarasi, iletisimKisileri, KisiDugmeleri, KisiSessiz

@@ -20,6 +20,7 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
+    "test:hizli": "react-scripts test --watchAll=false --testPathIgnorePatterns Raporlar.test IsEmirleri.test Vitrin.test",
     "eject": "react-scripts eject"
   },
   "browserslist": {

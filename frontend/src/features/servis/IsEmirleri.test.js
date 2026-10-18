@@ -30,7 +30,6 @@ const mockNavigate = jest.fn();
 jest.mock('react-router-dom', () => ({ useNavigate: () => mockNavigate, useLocation: () => mockLocation }), { virtual: true });
 jest.mock('qrcode', () => ({ __esModule: true, default: { toDataURL: jest.fn() } }));
 
-jest.setTimeout(30000); // MUI diyalogları jsdom'da yavaş; user.type her tuş için bekler
 
 // ---- Sabit test verisi -------------------------------------------------------------------------------------------
 const BUGUN = new Date().toISOString();
