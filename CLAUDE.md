@@ -10,7 +10,7 @@ açıktır: gerçek müşteri verisi, parola, token ve kullanıcı adı **commit
   service express bilmez (hata `IstemciHatasi` sınıflarıyla), denetim günlüğü controller'da, saf kurallar `*.gorunum.ts` / `*.hesap.ts`.
   Klasörler: `core/{veritabani,dogrulama,http,gunluk,onbellek,middleware}`, `shared/`, `modules/<alan>/<özellik>/`.
   **Ayrıntı ve "yeni özellik ekleme" adımları: `docs/TS-GECISI.md`.**
-- `frontend/`: CRA + React + MUI (JS), `src/features/<alan>/`. Bölme sürüyor (bkz. `docs/FRONTEND-BOLME-RAPORU.md`): **Raporlar ve IsEmirleri bölündü**, sırada Vitrin yönetimi…
+- `frontend/`: CRA + React + MUI (JS), `src/features/<alan>/`. Bölme sürüyor (bkz. `docs/FRONTEND-BOLME-RAPORU.md`): **Raporlar, IsEmirleri ve Vitrin yönetimi bölündü**, sırada MotorStok + IkinciElMotor…
 - Roller: admin, personel (modül yetkileri), yatırımcı, muhasebeci. **Kâr yalnızca admin görür.** Alan düzeyinde görünürlük:
   `backend/modules/motor/ikinciElMotor/ikinciElMotor.gorunum.ts` + `core/middleware/yetki.ts` (`kariGizle`).
 
@@ -36,11 +36,11 @@ npm run package:hostinger             # tsc + frontend build + esbuild + zip  �
 
 ## Durum (2026-10-18)
 `typescript` dalı: backend TS geçişi + katmanlı yapı + klasör düzeni + genel temizlik **tamam**; tsc temiz, 248 birim, 201 API (kaynak ve paket),
-114 frontend testi yeşil (Testing Library kurulu; Raporlar ve İş Emirleri için bileşen + birim testleri; bileşen testleri yavaş, ~5 dk). Canlı hâlâ eski JS paketi (`hostinger` dalı). `typescript` dalı GitHub'a gönderildi (origin/typescript).
+156 frontend testi yeşil (Testing Library kurulu; Raporlar, İş Emirleri, Vitrin için bileşen + birim testleri; tam koşu ~8 dk, geliştirirken `cd frontend && npm run test:hizli` ~26 sn). Canlı hâlâ eski JS paketi (`hostinger` dalı). `typescript` dalı GitHub'a gönderildi (origin/typescript).
 **KARAR: Salih GitHub faturalandırmasını çözmeyecek, GitHub Actions kullanılmayacak.** `.github/workflows/dogrula.yml` yalnızca elle
 tetiklenir (kırmızı ✗ üretmesin diye) ve GitHub'da hiç doğrulanmadı. Asıl güvenlik ağı yerel: `bash backend/scripts/hepsiniDogrula.sh` (+ frontend testleri) ve
 `.githooks/pre-push` (etkinleştirme: `git config core.hooksPath .githooks`; tsc + birim, ~3 sn). README'de CI rozeti KOYMA; kanıt olarak test sayılarını yaz.
-Frontend bölme: **Raporlar** (1563 -> 95) ve **IsEmirleri** (950 -> 53) tamam; sıradaki dosya Vitrin yönetimi.
+Frontend bölme: **Raporlar** (1563 -> 95), **IsEmirleri** (950 -> 53), **Vitrin yönetimi** (972 -> 75) tamam; sıradaki dosya MotorStok + IkinciElMotor.
 Yöntem ve kurallar `docs/FRONTEND-BOLME-RAPORU.md` §9'da (önce karakterizasyon testi, betikle taşıma, eski-yeni HTML karşılaştırması).
 Sonraki işler: kalan dosyaların bölünmesi, TanStack Query (ayrı adım), ESLint/Prettier, Vite+TSX.
 **Tüm kalan işler, öncelik sırası ve sunum (portföy) hedefi: `docs/YOL-HARITASI.md`.** Yeni sohbette önce onu oku.
