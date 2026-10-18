@@ -15,9 +15,9 @@ tutarlı tasarım. Bu belge neyin bittiğini, neyin kaldığını ve hangi sıra
 1. **CI yerine yerel kanıt** (karar: GitHub faturalandırması çözülmeyecek). README'de CI rozeti olmaz; bunun yerine "Testler ve doğrulama" bölümü: test piramidi,
    güncel sayılar, tek komutla yeniden üretme (`backend/scripts/hepsiniDogrula.sh`), mutasyon kontrolü ve paket duman testi anlatılır. Pre-push kancası
    (`.githooks`) istenirse etkinleştirilir. Mülakatta dürüst cümle: "CI tanımı hazır, hesap kısıtı yüzünden Actions'ta çalıştırmadım, aynı adımlar yerelde tek komutla koşuyor." 
-2. **`typescript` dalını push et ve `main`'e al.** Şu an `main` 36 commit geride: depoya bakan biri eski JS kodu görüyor. Karar gerekir: `main`'e birleştirme
-   canlı sürümü (`hostinger` dalı) etkilemez, ama canlıya çıkış ayrı ve yalnızca sahibinin onayıyla yapılır.
-3. **README'yi güncel hâle getir** (şimdi eski kalan yerler):
+2. ~~`typescript` dalını push et ve `main`'e al.~~ **YAPILDI (2026-10-18):** `main` ve `typescript` aynı commit'te (e91a16a); canlı sürüm (`hostinger` dalı) etkilenmedi.
+   Bundan sonra: ilerleme `typescript` dalında sürer, anlamlı bir turdan sonra aynı şekilde `main`'e ileri sarılır (`git push origin typescript:main`).
+3. **README** (2026-10-18 güncellendi: teknoloji tablosu, Testler ve Doğrulama bölümü, yollar; kalanlar):
    - "Teknoloji Yığını" tablosu: Node 22 / Express / `backend/core/db.js` eski; TypeScript strict, zod, tsx + esbuild, Testing Library eksik.
    - "Testler" bölümü yok: test piramidi ve sayılar (birim 248, API 201, frontend 61, paket duman testi) + nasıl çalıştırılır.
    - Railway/PostgreSQL anıları ("eski yapılandırma temizlendi") sadeleştir; mimari diyagramı güncel yapıyla karşılaştır.
