@@ -101,11 +101,11 @@ router.get('/aralik', engelleYatirimci, async (req, res) => {
     );
 
     const isEmirleri = {
-      rows: await parcalariEkle(isEmirleriHam.rows, 'parcalar', 'is_emri_id',
+      rows: await parcalariEkle(pool, isEmirleriHam.rows, 'parcalar', 'is_emri_id',
         ['takilan_parca', 'adet', 'birim_fiyat', 'toplam_fiyat', 'maliyet'], ['birim_fiyat', 'toplam_fiyat', 'maliyet']),
     };
     const aksesuarlar = {
-      rows: await parcalariEkle(aksesuarlarHam.rows, 'aksesuar_parcalar', 'aksesuar_id',
+      rows: await parcalariEkle(pool, aksesuarlarHam.rows, 'aksesuar_parcalar', 'aksesuar_id',
         ['urun_adi', 'adet', 'maliyet', 'satis_fiyati'], ['maliyet', 'satis_fiyati']),
     };
 

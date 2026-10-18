@@ -52,7 +52,7 @@ router.get('/', async (req, res) => {
       ORDER BY COALESCE(ie.tamamlama_tarihi, ie.created_at) DESC
     `);
     // json_agg karşılığı: parçalar ayrı sorguyla eklenir
-    servis.rows = await parcalariEkle(servis.rows, 'parcalar', 'is_emri_id',
+    servis.rows = await parcalariEkle(pool, servis.rows, 'parcalar', 'is_emri_id',
       ['takilan_parca', 'adet', 'birim_fiyat', 'toplam_fiyat'], ['birim_fiyat', 'toplam_fiyat']);
     servis.rows.forEach(r => sources.push({
       kaynak: 'Servis',
@@ -84,7 +84,7 @@ router.get('/', async (req, res) => {
       WHERE COALESCE(a.kalan_odeme, 0) > 0
       ORDER BY COALESCE(a.satis_tarihi, a.created_at) DESC
     `);
-    aksesuar.rows = await parcalariEkle(aksesuar.rows, 'aksesuar_parcalar', 'aksesuar_id',
+    aksesuar.rows = await parcalariEkle(pool, aksesuar.rows, 'aksesuar_parcalar', 'aksesuar_id',
       ['urun_adi', 'adet', 'satis_fiyati'], ['satis_fiyati']);
     aksesuar.rows.forEach(r => sources.push({
       kaynak: 'Aksesuar',

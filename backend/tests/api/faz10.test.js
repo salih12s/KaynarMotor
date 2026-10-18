@@ -6,6 +6,7 @@
  *   #45 müşteriler: detay biçimi, 404/400 mesajları, gövde doğrulaması
  *   #46 yedek parça stok: kod/barkod, UNIQUE, kod değişimi, toplu içe aktarma
  *   #47 yedek parça satışı: 404, adet doğrulaması, silme
+ *   #49 aksesuar stok ve satışı: kod/barkod, indirim/kâr, stok düşümü, 404 mesajları, istatistik
  *   #48 iş emirleri: fiş no, 404/403 mesajları, tamamlanan iş emri, silme, QR token ve herkese açık servis geçmişi
  */
 const { describe, it, before, after } = require('node:test');
@@ -288,5 +289,82 @@ describe('#48 iş emirleri ve servis geçmişi: HTTP sözleşmesi', () => {
     assert.equal(r.durum, 200);
     assert.equal(r.govde.message, 'İş emri silindi');
     assert.equal((await api('GET', `/api/is-emirleri/${ieId}`, undefined, admin)).durum, 404);
+  });
+});
+
+describe('#49 aksesuar stok ve satışı: HTTP sözleşmesi', () => {
+  let stokId, kod;
+
+  before(async () => {
+    kod = benzersiz('AK-').slice(0, 20);
+    const r = await api('POST', '/api/aksesuar-stok', { stok_kodu: kod, stok_adi: benzersiz('Kask F10 '), giren_miktar: 10, satis_fiyati: 200 }, admin);
+    assert.equal(r.durum, 201);
+    stokId = r.govde.id;
+  });
+
+  it('stok: ekleme mevcut=giren; aynı kod 400; zorunlu alan 400; barkod ve otomatik kod', async () => {
+    const b = await api('GET', `/api/aksesuar-stok/barkod/${kod}`, undefined, admin);
+    assert.equal(Number(b.govde.mevcut), 10);
+    assert.equal(Number(b.govde.envanter_degeri), 2000);
+    const cift = await api('POST', '/api/aksesuar-stok', { stok_kodu: kod, stok_adi: 'x' }, admin);
+    assert.equal(cift.durum, 400);
+    assert.equal(cift.govde.message, 'Bu stok kodu zaten mevcut');
+    const eksik = await api('POST', '/api/aksesuar-stok', { stok_adi: 'x' }, admin);
+    assert.equal(eksik.govde.message, 'Stok kodu ve stok adı zorunludur');
+    const sonraki = await api('GET', '/api/aksesuar-stok/next-stok-kodu', undefined, admin);
+    assert.match(sonraki.govde.nextStokKodu, /^0\d{12}$/);
+    assert.equal((await api('GET', '/api/aksesuar-stok/barkod/YOK-KOD', undefined, admin)).durum, 404);
+  });
+
+  it('stok: olmayan kaydı güncelleme 404 "Stok bulunamadı"; negatif giren 400', async () => {
+    const yok = await api('PUT', '/api/aksesuar-stok/2147483000', { stok_kodu: 'Z', stok_adi: 'Z' }, admin);
+    assert.equal(yok.durum, 404);
+    assert.equal(yok.govde.message, 'Stok bulunamadı');
+    const eksi = await api('PUT', `/api/aksesuar-stok/${stokId}`, { stok_kodu: kod, stok_adi: 'x', giren_miktar: -2 }, admin);
+    assert.equal(eksi.durum, 400);
+  });
+
+  it('satış: indirim ve kâr hesabı; tamamlandı olunca stok id ile DÜŞER; silinince iade', async () => {
+    const r = await api('POST', '/api/aksesuarlar', {
+      ad_soyad: benzersiz('F10 Alıcı '), durum: 'tamamlandi', indirim: 20,
+      parcalar: [{ stok_id: stokId, urun_adi: 'Kask', adet: 3, maliyet: 100, satis_fiyati: 200 }],
+    }, admin);
+    assert.equal(r.durum, 201);
+    assert.equal(Number(r.govde.toplam_satis), 580);
+    assert.equal(Number(r.govde.toplam_maliyet), 300);
+    assert.equal(Number(r.govde.kar), 280);
+    assert.equal(Number(r.govde.indirim), 20);
+    assert.ok(r.govde.tamamlama_tarihi);
+    assert.equal(r.govde.parcalar.length, 1);
+    const dusmus = (await api('GET', `/api/aksesuar-stok/barkod/${kod}`, undefined, admin)).govde;
+    assert.equal(Number(dusmus.mevcut), 7);
+    const sil = await api('DELETE', `/api/aksesuarlar/${r.govde.id}`, undefined, admin);
+    assert.equal(sil.durum, 200);
+    assert.equal(sil.govde.message, 'Aksesuar satışı silindi');
+    const iade = (await api('GET', `/api/aksesuar-stok/barkod/${kod}`, undefined, admin)).govde;
+    assert.equal(Number(iade.mevcut), 10);
+  });
+
+  it('satış: olmayan kayıt 404 mesajları; geçersiz adet 400; liste parçalarla birlikte; istatistik alanları', async () => {
+    const g = await api('GET', '/api/aksesuarlar/2147483000', undefined, admin);
+    assert.equal(g.durum, 404);
+    assert.equal(g.govde.message, 'Aksesuar bulunamadı');
+    const p = await api('PUT', '/api/aksesuarlar/2147483000', { ad_soyad: 'x', parcalar: [] }, admin);
+    assert.equal(p.durum, 404);
+    assert.equal(p.govde.message, 'Bulunamadı');
+    const kotu = await api('POST', '/api/aksesuarlar', { ad_soyad: 'x', parcalar: [{ urun_adi: 'a', adet: -1 }] }, admin);
+    assert.equal(kotu.durum, 400);
+    const liste = await api('GET', '/api/aksesuarlar', undefined, admin);
+    assert.equal(liste.durum, 200);
+    assert.ok(liste.govde.every((x) => Array.isArray(x.parcalar)));
+    const ist = await api('GET', '/api/aksesuarlar/stats/genel', undefined, admin);
+    for (const alan of ['toplam_satis', 'toplam_gelir', 'toplam_maliyet', 'toplam_kar', 'bekleyen', 'tamamlanan']) assert.ok(alan in ist.govde, alan);
+  });
+
+  it('stok silme 200 "Stok silindi"; toplu içe aktarma mesajı', async () => {
+    const toplu = await api('POST', '/api/aksesuar-stok/toplu', { stoklar: [{ stok_kodu: benzersiz('AT-'), stok_adi: 'Toplu', giren_miktar: 1 }] }, admin);
+    assert.equal(toplu.govde.message, '1 stok kaydı eklendi/güncellendi');
+    const sil = await api('DELETE', `/api/aksesuar-stok/${stokId}`, undefined, admin);
+    assert.equal(sil.govde.message, 'Stok silindi');
   });
 });
