@@ -415,7 +415,7 @@ ve TC bilgileri uydurmadır.
 | Birim (backend) | Servis kuralları, kâr gizleme, komisyon/hesap fonksiyonları; sahte veritabanı (`tests/unit/sahteDb.js`) | 248 |
 | API (backend) | HTTP sözleşmesi, yetki, transaction/rollback, eşzamanlılık; **gerçek MariaDB**'ye karşı, hem kaynak koddan hem **esbuild paketinden** | 201 + 201 |
 | Duman (paket) | Canlıdaki gibi üretilen zip açılır, sunucu ayağa kalkar, sağlık ve giriş uçları denenir (`npm run package:hostinger` sonrası: `node --test tests/smoke/paket.smoke.test.js`) | ayrı çalıştırılır |
-| Frontend | Raporlar ekranı için bileşen testleri (3 rol, 8 sekme, süzgeçler, detay pencereleri, mobil), saf fonksiyonlar, servis çağrı denetimi | 61 |
+| Frontend | Raporlar ve İş Emirleri ekranları için bileşen testleri (roller, süzgeçler, form, detay/yazdırma, mobil), saf fonksiyonlar, servis çağrı denetimi | 114 |
 
 Her şey tek komutla yeniden üretilir (yerel MariaDB açık olmalı):
 
@@ -423,7 +423,7 @@ Her şey tek komutla yeniden üretilir (yerel MariaDB açık olmalı):
 cd backend
 set -a; . ./.env.mariadb.test; set +a     # test veritabanı: adı "_test" ile biten yerel bir veritabanı
 bash scripts/hepsiniDogrula.sh            # tsc (strict) + birim + API (kaynak) + API (paket)
-cd ../frontend && CI=true npx react-scripts test --watchAll=false
+cd ../frontend && CI=true npx react-scripts test --watchAll=false   # ~5 dk: bileşen testleri ağır
 ```
 
 Testlerin gerçekten bir şey yakaladığı **mutasyonla** sınanır: kritik kural bilerek bozulur, ilgili testin kırmızıya dönmesi beklenir.
@@ -466,7 +466,7 @@ KaynarMotorCRM/
 │       ├── features/            # Her iş alanı kendi ekranları, API çağrıları ve yardımcılarıyla
 │       │   ├── auth/            # Login, Kullanıcılar, Yetkilendirme, AuthContext, authApi
 │       │   ├── musteriler/
-│       │   ├── servis/          # İş emirleri, form, detay, servis geçmişi, yazdırma
+│       │   ├── servis/          # IsEmirleri (53 satırlık kabuk) + isEmirleri/ (hook'lar, saf kurallar, liste, form, detay); form/detay sayfaları, servis geçmişi, yazdırma
 │       │   ├── aksesuar/        # Satış + stok
 │       │   ├── yedek-parca/     # Satış + stok
 │       │   ├── motor/           # İkinci el, motor stok, detay, belge arşivi, satış belgeleri

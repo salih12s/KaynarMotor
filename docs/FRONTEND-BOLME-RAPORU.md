@@ -1,7 +1,7 @@
 # Frontend bölme raporu
 
 Hazırlayan: Claude, 2026-10-18 (`typescript` dalı, backend düzeni bittikten sonra). Başka bir sohbette doğrudan buradan devam edilebilir.
-**Durum (2026-10-18): Raporlar bölündü ve doğrulandı (§9). Sıradaki: IsEmirleri.** Kapsam seçimi: Salih "Küçük" ile başladı; TanStack Query ayrı bir adım.
+**Durum (2026-10-18): Raporlar ve IsEmirleri bölündü ve doğrulandı (§9). Sıradaki: Vitrin (yönetim).** Kapsam seçimi: Salih "Küçük" ile başladı; TanStack Query ayrı bir adım.
 
 ## 1. Neden
 Backend katmanlı ve testli (puan ~9/10), frontend ise en zayıf halka (~5/10): sekiz dosya 600-1563 satır, tek bileşende
@@ -85,6 +85,15 @@ Hafıza notları `proje-genel-bakis` ve `kaynarmotor-yol-haritasi` otomatik yük
 `bicim.js`, `bilesenler/{KartItem,DurumChip,TarihFiltresi}.jsx`, `sekmeler/` (9 dosya), `modallar/` (4 dosya).
 Karakterizasyon testi (`Raporlar.test.js`, 24) + birim test (`raporHesap.test.js`, 10). Derleme uyarısız.
 
+### İş Emirleri (tamam, 2026-10-18)
+`features/servis/IsEmirleri.jsx` 950 -> 53 satır. Yeni klasör `features/servis/isEmirleri/`: `useIsEmirleri` (liste + silme + personel), `useIsEmriDetayi`
+(detay + konumdan otomatik açma), `useIsEmriFormu` (form durumu, stok/barkod arama, müşteri eşleştirme, kaydetme), `isEmriVeri.js` (saf kurallar), `servisYazdir.js`
+(fiş + QR etiketi), `IstatistikSatiri`, `Suzgecler`, `IsEmriListesi`, `IsEmriFormModal` + `form/{MusteriAracBolumu,ParcaBolumu,OdemeTeslimBolumu}`, `IsEmriDetayModal`.
+`IsEmriForm.jsx` / `IsEmriDetay.jsx` ayrı sayfalar (kendi rotaları) ve bu turda dokunulmadı. Testler: `IsEmirleri.test.js` (41) + `isEmirleri/isEmriVeri.test.js` (11);
+bileşen testi yavaş (2-6 dk, MUI formu + çok tuş vuruşu; `userEvent.setup({delay:null})` denendi, daha yavaş ve kararsız oldu).
+Öğrenilen: `react-router-dom` v7'nin `exports` alanını CRA'nın Jest 27'si çözemez, testte `jest.mock('react-router-dom', ..., { virtual: true })` ile
+`useNavigate/useLocation` sahtelenir. Mutasyonla yakalanmayan bir kural ("0.00" metin kalan ödeme -> 0) için test eklendi.
+
 ### Yöntem (sonraki dosyalar için tarif)
 1. **Önce test:** Testing Library ile mevcut davranışı sınayan testler yaz (API `jest.mock`, oturum `useAuth` mock). CRA `resetMocks` açık: sahte cevapları her testten ÖNCE kur.
    Test dosyası `.test.js` olmalı (`tanimsizDegisken.test.js` yalnızca `.test.js`'i tarama dışı bırakır). Sayıları elle hesapla; tr-TR tarihi `05.10.2026` (sıfırlı).
@@ -103,5 +112,5 @@ Karakterizasyon testi (`Raporlar.test.js`, 24) + birim test (`raporHesap.test.js
    Yerel sunucu `backend/.env` ile başlatılmamalı: Railway'e işaret ediyor; gerekirse `set -a; . ./.env.mariadb.dev; set +a` ile ortam değişkenleri önce yüklenir (dotenv ezmez).
 
 ### Sıradaki dosyalar
-IsEmirleri (950 satır, 15 useState) -> Vitrin yönetimi -> MotorStok/IkinciElMotor -> Storefront -> ETicaret/Aksesuarlar (bkz. §4). `shared/bicim.js`
+Vitrin yönetimi (972 satır, 32 useState) -> MotorStok/IkinciElMotor -> Storefront -> ETicaret/Aksesuarlar (bkz. §4). `shared/bicim.js`
 tekilleştirmesi ve `toLocaleString('tr-TR')` toplu değişimi bölme bittikten sonra ayrı adım; `features/raporlar/bicim.js` şimdilik raporlara özel.

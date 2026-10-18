@@ -8,7 +8,7 @@ tutarlı tasarım. Bu belge neyin bittiğini, neyin kaldığını ve hangi sıra
 |---|---|---|
 | Backend TypeScript (strict) + katmanlı yapı | Tamam | `tsc` temiz, 248 birim, 201 API testi (kaynak + paket) |
 | Klasör düzeni + genel temizlik | Tamam | `backend/{core,shared,modules}`, kök sadeleşti |
-| Frontend: Testing Library + Raporlar bölme | Tamam | Raporlar 1563 -> 95 satır, 61 frontend testi, eski-yeni HTML karşılaştırması aynı |
+| Frontend: Testing Library + Raporlar ve İş Emirleri bölme | Tamam | 1563 -> 95 ve 950 -> 53 satır, 114 frontend testi, eski-yeni HTML karşılaştırması aynı |
 | CI iş akışı | Yazıldı, **GitHub'da kullanılmayacak** | Sahibi faturalandırmayı çözmeyecek; iş akışı yalnızca elle tetiklenir, kanıt yerel doğrulamadır |
 
 ## A. Önce yapılacaklar (sunum etkisi yüksek, emek düşük)
@@ -27,11 +27,11 @@ tutarlı tasarım. Bu belge neyin bittiğini, neyin kaldığını ve hangi sıra
 ## B. Frontend bölme (sırayla; yöntem: `docs/FRONTEND-BOLME-RAPORU.md` §9)
 | Sıra | Dosya | Satır | Zorluk |
 |---|---|---|---|
-| 1 | `features/servis/IsEmirleri.jsx` | 950 | Orta |
-| 2 | `features/vitrin/yonetim/Vitrin.jsx` | 972 | Yüksek (32 durum, sürükle-bırak) |
-| 3 | `features/motor/MotorStok.jsx` + `IkinciElMotor.jsx` | 779 + 709 | Orta |
-| 4 | `features/vitrin/magaza/Storefront.jsx` (herkese açık sayfa) | 721 | Orta (görsel kalite önemli) |
-| 5 | `features/eticaret/ETicaret.jsx`, `features/aksesuar/Aksesuarlar.jsx` | 622, 614 | Düşük-orta |
+| ✓ | ~~`features/servis/IsEmirleri.jsx`~~ (950 -> 53, 2026-10-18) | tamam | |
+| 1 | `features/vitrin/yonetim/Vitrin.jsx` | 972 | Yüksek (32 durum, sürükle-bırak) |
+| 2 | `features/motor/MotorStok.jsx` + `IkinciElMotor.jsx` | 779 + 709 | Orta |
+| 3 | `features/vitrin/magaza/Storefront.jsx` (herkese açık sayfa) | 721 | Orta (görsel kalite önemli) |
+| 4 | `features/eticaret/ETicaret.jsx`, `features/aksesuar/Aksesuarlar.jsx` | 622, 614 | Düşük-orta |
 
 Her dosya: önce karakterizasyon testi, testi bozarak sına, betikle taşı, eski-yeni HTML karşılaştır, ayrı commit. Tahmini toplam 7-8 saat.
 
