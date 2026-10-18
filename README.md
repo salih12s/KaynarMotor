@@ -415,7 +415,7 @@ ve TC bilgileri uydurmadır.
 | Birim (backend) | Servis kuralları, kâr gizleme, komisyon/hesap fonksiyonları; sahte veritabanı (`tests/unit/sahteDb.js`) | 248 |
 | API (backend) | HTTP sözleşmesi, yetki, transaction/rollback, eşzamanlılık; **gerçek MariaDB**'ye karşı, hem kaynak koddan hem **esbuild paketinden** | 201 + 201 |
 | Duman (paket) | Canlıdaki gibi üretilen zip açılır, sunucu ayağa kalkar, sağlık ve giriş uçları denenir (`npm run package:hostinger` sonrası: `node --test tests/smoke/paket.smoke.test.js`) | ayrı çalıştırılır |
-| Frontend | Raporlar ve İş Emirleri ekranları için bileşen testleri (roller, süzgeçler, form, detay/yazdırma, mobil), saf fonksiyonlar, servis çağrı denetimi | 114 |
+| Frontend | Raporlar, İş Emirleri ve Vitrin yönetimi için bileşen testleri (roller, süzgeçler, formlar, sıralama, detay/yazdırma, mobil), saf fonksiyonlar, servis çağrı denetimi | 156 |
 
 Her şey tek komutla yeniden üretilir (yerel MariaDB açık olmalı):
 
@@ -423,7 +423,8 @@ Her şey tek komutla yeniden üretilir (yerel MariaDB açık olmalı):
 cd backend
 set -a; . ./.env.mariadb.test; set +a     # test veritabanı: adı "_test" ile biten yerel bir veritabanı
 bash scripts/hepsiniDogrula.sh            # tsc (strict) + birim + API (kaynak) + API (paket)
-cd ../frontend && CI=true npx react-scripts test --watchAll=false   # ~5 dk: bileşen testleri ağır
+cd ../frontend && CI=true npx react-scripts test --watchAll=false   # ~8 dk: bileşen testleri ağır (MUI + jsdom)
+npm run test:hizli                                                  # ~26 sn: ağır bileşen testleri atlanır
 ```
 
 Testlerin gerçekten bir şey yakaladığı **mutasyonla** sınanır: kritik kural bilerek bozulur, ilgili testin kırmızıya dönmesi beklenir.
@@ -471,7 +472,7 @@ KaynarMotorCRM/
 │       │   ├── yedek-parca/     # Satış + stok
 │       │   ├── motor/           # İkinci el, motor stok, detay, belge arşivi, satış belgeleri
 │       │   ├── eticaret/        # E-ticaret ekranı + komisyon hesabı (testli)
-│       │   ├── vitrin/          # yonetim/ (admin) ve magaza/ (herkese açık)
+│       │   ├── vitrin/          # yonetim/ (admin: 75 satırlık kabuk + hook'lar + bilesenler/) ve magaza/ (herkese açık); ortak vitrinSabitleri, ilanArama
 │       │   ├── taksit/
 │       │   └── raporlar/        # Raporlar (95 satırlık kabuk) + useRaporVerisi + raporHesap; sekmeler/ modallar/ bilesenler/ ; Veresiye
 │       └── shared/

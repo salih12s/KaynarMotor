@@ -1,7 +1,7 @@
 # Frontend bölme raporu
 
 Hazırlayan: Claude, 2026-10-18 (`typescript` dalı, backend düzeni bittikten sonra). Başka bir sohbette doğrudan buradan devam edilebilir.
-**Durum (2026-10-18): Raporlar ve IsEmirleri bölündü ve doğrulandı (§9). Sıradaki: Vitrin (yönetim).** Kapsam seçimi: Salih "Küçük" ile başladı; TanStack Query ayrı bir adım.
+**Durum (2026-10-18): Raporlar, IsEmirleri ve Vitrin yönetimi bölündü ve doğrulandı (§9). Sıradaki: MotorStok + IkinciElMotor.** Kapsam seçimi: Salih "Küçük" ile başladı; TanStack Query ayrı bir adım.
 
 ## 1. Neden
 Backend katmanlı ve testli (puan ~9/10), frontend ise en zayıf halka (~5/10): sekiz dosya 600-1563 satır, tek bileşende
@@ -94,6 +94,19 @@ bileşen testi yavaş (2-6 dk, MUI formu + çok tuş vuruşu; `userEvent.setup({
 Öğrenilen: `react-router-dom` v7'nin `exports` alanını CRA'nın Jest 27'si çözemez, testte `jest.mock('react-router-dom', ..., { virtual: true })` ile
 `useNavigate/useLocation` sahtelenir. Mutasyonla yakalanmayan bir kural ("0.00" metin kalan ödeme -> 0) için test eklendi.
 
+### Vitrin yönetimi (tamam, 2026-10-18)
+`features/vitrin/yonetim/Vitrin.jsx` 972 -> 75 satır (32 useState dört hook'a dağıldı): `useIlanListesi` (liste, arama, arşiv, sıralama, yayın/silme),
+`useVitrinReferans` (segmentler, iletişim, video sınırı, stok listeleri), `useIlanFormu` (alanlar, görseller, video, kaydetme), `useIletisimFormu`;
+`gorselIsle.js` (canvas ile küçültme); `bilesenler/`: HizmetPaneli, IletisimSatiri, AramaSatiri, IlanListesi, IlanKarti, IlanDialog (+ MotorAlanlari,
+VideoAlani, GorselYonetimi), IletisimDialog. Hook'larla bileşenler arasında "hook nesnesi" (liste, f, ilet) geçirilir: yüzlerce tek tek prop yerine.
+**Yapı düzeltmesi:** herkese açık `Storefront` ve `MotorStok`, sabitleri yönetim sayfasının modülünden içe aktarıyordu (mağaza paketine yönetim kodu
+çekiyordu); `vitrin/vitrinSabitleri.js` ve `vitrin/ilanArama.js`'e taşındı. Testler: `Vitrin.test.js` (37) + `ilanArama.test.js` (5).
+**Test altyapısı dersi:** 3 ağır bileşen test dosyası paralel çalışınca 5 sn'lik varsayılan sınırı aşıp "bazen geçen bazen kalan" (flaky) oldu;
+ortak 60 sn sınır `setupTests.js`'e kondu. Tam koşu ~8 dk; geliştirirken `npm run test:hizli` (~26 sn, bileşen testleri hariç).
+**Bilinen React inceliği:** bileşenin kökündeki fragman React'te açılır; bu yüzden `IlanListesi`'nde önceki dalın DOM düğümü yeniden kullanılıyor
+(görünüm aynı, yalnızca boş bir `style` niteliği kalıyor). Gerekirse dönüş ifadesini `<>…</>` ile sarmak eski davranışı verir.
+**Test edilmedi:** tarayıcıda resim küçültme (canvas) ve gerçek sürükle-bırak; ikisi de jsdom'da yok (sürükle-bırak olayları `fireEvent` ile sınandı).
+
 ### Yöntem (sonraki dosyalar için tarif)
 1. **Önce test:** Testing Library ile mevcut davranışı sınayan testler yaz (API `jest.mock`, oturum `useAuth` mock). CRA `resetMocks` açık: sahte cevapları her testten ÖNCE kur.
    Test dosyası `.test.js` olmalı (`tanimsizDegisken.test.js` yalnızca `.test.js`'i tarama dışı bırakır). Sayıları elle hesapla; tr-TR tarihi `05.10.2026` (sıfırlı).
@@ -112,5 +125,5 @@ bileşen testi yavaş (2-6 dk, MUI formu + çok tuş vuruşu; `userEvent.setup({
    Yerel sunucu `backend/.env` ile başlatılmamalı: Railway'e işaret ediyor; gerekirse `set -a; . ./.env.mariadb.dev; set +a` ile ortam değişkenleri önce yüklenir (dotenv ezmez).
 
 ### Sıradaki dosyalar
-Vitrin yönetimi (972 satır, 32 useState) -> MotorStok/IkinciElMotor -> Storefront -> ETicaret/Aksesuarlar (bkz. §4). `shared/bicim.js`
+MotorStok/IkinciElMotor -> Storefront -> ETicaret/Aksesuarlar (bkz. §4). `shared/bicim.js`
 tekilleştirmesi ve `toLocaleString('tr-TR')` toplu değişimi bölme bittikten sonra ayrı adım; `features/raporlar/bicim.js` şimdilik raporlara özel.
