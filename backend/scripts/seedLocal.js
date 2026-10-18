@@ -56,7 +56,7 @@ const bcrypt = require('bcryptjs');
 const os = require('os');
 const { pool } = require('../core/db');
 const { initializeDatabase } = require('../core/initDb');
-const { hesaplaKomisyon, detectPlatform } = require('../modules/eticaret/eticaret.routes');
+const { hesaplaKomisyon, detectPlatform } = require('../modules/eticaret/komisyon');
 
 // ---------------------------------------------------------------------------
 // Yardımcılar

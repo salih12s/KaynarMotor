@@ -6,6 +6,7 @@
  *   #45 müşteriler: detay biçimi, 404/400 mesajları, gövde doğrulaması
  *   #46 yedek parça stok: kod/barkod, UNIQUE, kod değişimi, toplu içe aktarma
  *   #47 yedek parça satışı: 404, adet doğrulaması, silme
+ *   #50 e-ticaret: platform yönetimi (admin), satış kâr hesabı, stok düşüm/iade, 404 mesajları
  *   #49 aksesuar stok ve satışı: kod/barkod, indirim/kâr, stok düşümü, 404 mesajları, istatistik
  *   #48 iş emirleri: fiş no, 404/403 mesajları, tamamlanan iş emri, silme, QR token ve herkese açık servis geçmişi
  */
@@ -21,6 +22,7 @@ const k = {};
 before(async () => {
   s = await sunucuBaslat(); api = s.api; admin = s.admin;
   k.servis = await kullaniciOlustur(api, admin, benzersiz('f10_srv_'), 'personel', { servis_yetkisi: true });
+  k.eticaret = await kullaniciOlustur(api, admin, benzersiz('f10_etc_'), 'personel', { eticaret_yetkisi: true });
 });
 after(() => s && s.durdur());
 
@@ -366,5 +368,69 @@ describe('#49 aksesuar stok ve satışı: HTTP sözleşmesi', () => {
     assert.equal(toplu.govde.message, '1 stok kaydı eklendi/güncellendi');
     const sil = await api('DELETE', `/api/aksesuar-stok/${stokId}`, undefined, admin);
     assert.equal(sil.govde.message, 'Stok silindi');
+  });
+});
+
+describe('#50 e-ticaret: HTTP sözleşmesi', () => {
+  let platformId, stokId, stokKodu;
+
+  before(async () => {
+    const p = await api('POST', '/api/eticaret/platformlar', { platform_adi: benzersiz('F10 Platform '), komisyon_orani: 10, kargo_ucreti: 20 }, admin);
+    assert.equal(p.durum, 201);
+    platformId = p.govde.id;
+    stokKodu = benzersiz('ET-').slice(0, 20);
+    const st = await api('POST', '/api/aksesuar-stok', { stok_kodu: stokKodu, stok_adi: benzersiz('E-ticaret ürün '), giren_miktar: 10, satis_fiyati: 300 }, admin);
+    stokId = st.govde.id;
+  });
+
+  it('platform yönetimi yalnız admin: e-ticaret yetkilisi bile 403 "Admin yetkisi gerekli"', async () => {
+    const e = await api('POST', '/api/eticaret/platformlar', { platform_adi: 'x' }, k.eticaret.token);
+    assert.equal(e.durum, 403);
+    assert.equal(e.govde.message, 'Admin yetkisi gerekli');
+    assert.equal((await api('PUT', `/api/eticaret/platformlar/${platformId}`, { platform_adi: 'x' }, k.eticaret.token)).durum, 403);
+    assert.equal((await api('DELETE', `/api/eticaret/platformlar/${platformId}`, undefined, k.eticaret.token)).durum, 403);
+    // listeleme ise e-ticaret yetkilisine açık
+    assert.equal((await api('GET', '/api/eticaret/platformlar', undefined, k.eticaret.token)).durum, 200);
+  });
+
+  it('platform: ad zorunlu 400; olmayan güncelleme 404; KDV varsayılanı 20', async () => {
+    const bos = await api('POST', '/api/eticaret/platformlar', { platform_adi: '  ' }, admin);
+    assert.equal(bos.durum, 400);
+    assert.equal(bos.govde.message, 'Platform adı zorunludur');
+    const yok = await api('PUT', '/api/eticaret/platformlar/2147483000', { platform_adi: 'x' }, admin);
+    assert.equal(yok.durum, 404);
+    assert.equal(yok.govde.message, 'Platform bulunamadı');
+    const liste = (await api('GET', '/api/eticaret/platformlar', undefined, admin)).govde.find((x) => x.id === platformId);
+    assert.equal(Number(liste.kdv_orani), 20);
+  });
+
+  it('satış: kâr hesaplanır, platform adı yanıtta; stok düşer; silinince iade edilir', async () => {
+    const r = await api('POST', '/api/eticaret', { stok_id: stokId, platform_id: platformId, urun_adi: 'Kask', alis_fiyati: 100, satis_fiyati: 300, komisyon_orani: 10, kargo_ucreti: 20, adet: 2 }, admin);
+    assert.equal(r.durum, 201);
+    assert.ok(r.govde.platform_adi);
+    assert.equal(typeof Number(r.govde.kar), 'number');
+    assert.ok(Number(r.govde.komisyon_tutari) > 0);
+    assert.equal((await api('GET', `/api/aksesuar-stok/barkod/${stokKodu}`, undefined, admin)).govde.mevcut, 8);
+    const sil = await api('DELETE', `/api/eticaret/${r.govde.id}`, undefined, admin);
+    assert.equal(sil.durum, 200);
+    assert.equal(sil.govde.message, 'E-ticaret satışı silindi');
+    assert.equal((await api('GET', `/api/aksesuar-stok/barkod/${stokKodu}`, undefined, admin)).govde.mevcut, 10);
+  });
+
+  it('satış: olmayan kayıt 404 mesajları; geçersiz adet 400; istatistik alanları; liste platform adıyla', async () => {
+    const g = await api('GET', '/api/eticaret/2147483000', undefined, admin);
+    assert.equal(g.durum, 404);
+    assert.equal(g.govde.message, 'Satış bulunamadı');
+    assert.equal((await api('PUT', '/api/eticaret/2147483000', { urun_adi: 'x', adet: 1 }, admin)).govde.message, 'Bulunamadı');
+    assert.equal((await api('POST', '/api/eticaret', { urun_adi: 'x', adet: 0 }, admin)).durum, 400);
+    const ist = await api('GET', '/api/eticaret/stats', undefined, admin);
+    for (const alan of ['toplam_satis', 'toplam_gelir', 'toplam_komisyon', 'toplam_kar']) assert.ok(alan in ist.govde, alan);
+    assert.equal((await api('GET', '/api/eticaret', undefined, admin)).durum, 200);
+  });
+
+  it('platform silme 200 "Platform silindi"', async () => {
+    const r = await api('DELETE', `/api/eticaret/platformlar/${platformId}`, undefined, admin);
+    assert.equal(r.durum, 200);
+    assert.equal(r.govde.message, 'Platform silindi');
   });
 });

@@ -5,7 +5,9 @@
  */
 
 // Platform adından tür çıkarır. "hb" yalnızca tek başına bir sözcük olarak sayılır (ör. "Shbank" Hepsiburada olmaz).
-const detectPlatform = (platformAdi) => {
+export type PlatformTipi = 'trendyol' | 'hepsiburada' | 'n11' | 'shoppier';
+
+export const detectPlatform = (platformAdi: unknown): PlatformTipi => {
   if (!platformAdi) return 'trendyol';
   // Türkçe büyük harfler için: 'İ'.toLowerCase() birleşik noktalı 'i̇' üretir; aksan işaretlerini at, ı→i
   const name = String(platformAdi).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/ı/g, 'i');
@@ -16,13 +18,16 @@ const detectPlatform = (platformAdi) => {
 };
 
 // KDV: 0 geçerli bir orandır (eskiden `Number(kdv) || 20` 0'ı sessizce 20 yapıyordu). Yalnızca boş/geçersizse %20.
-const kdvCoz = (kdvOrani) => {
+export const kdvCoz = (kdvOrani: unknown): number => {
   if (kdvOrani === '' || kdvOrani === null || kdvOrani === undefined) return 20;
   const n = Number(kdvOrani);
   return Number.isFinite(n) ? n : 20;
 };
 
-const hesaplaKomisyon = (satisFiyati, alisFiyati, komisyonOrani, kdvOrani, kargoUcreti, adet, platformTipi = 'trendyol') => {
+export const hesaplaKomisyon = (
+  satisFiyati: unknown, alisFiyati: unknown, komisyonOrani: unknown, kdvOrani: unknown, kargoUcreti: unknown, adet: unknown,
+  platformTipi: PlatformTipi = 'trendyol'
+) => {
   const satis = Number(satisFiyati) || 0;
   const alis = Number(alisFiyati) || 0;
   const komisyon = Number(komisyonOrani) || 0;
@@ -37,7 +42,7 @@ const hesaplaKomisyon = (satisFiyati, alisFiyati, komisyonOrani, kdvOrani, kargo
   const alisKDV = alis - kdvHaricAlis;
   const kargoKDV = kargo - kargo / (1 + kdv / 100);
 
-  let komisyonTutari, komisyonKDV, hizmetBedeli, hizmetKDV, stopaj;
+  let komisyonTutari: number, komisyonKDV: number, hizmetBedeli: number, hizmetKDV: number, stopaj: number;
   let odemeBedeli = 0, islemBedeli = 0, odemIslemKDV = 0;
   let pazarlamaHizmet = 0, pazarlamaHizmetKDV = 0;
 
@@ -82,7 +87,7 @@ const hesaplaKomisyon = (satisFiyati, alisFiyati, komisyonOrani, kdvOrani, kargo
   const karOrani = alis > 0 ? (netKar / alis * 100) : 0;                       // KDV dahil alışa göre
   const yatirimGeriDonus = kdvHaricAlis > 0 ? (netKar / kdvHaricAlis * 100) : 0; // KDV hariç alışa göre
 
-  const r = (v) => Math.round(v * 100) / 100;
+  const r = (v: number) => Math.round(v * 100) / 100;
   return {
     platformTipi, satis, alis, komisyon, kdv, kargo, miktar,
     kdvHaricSatis: r(kdvHaricSatis),
@@ -98,5 +103,3 @@ const hesaplaKomisyon = (satisFiyati, alisFiyati, komisyonOrani, kdvOrani, kargo
     netKar: r(netKar * miktar), karOrani: r(karOrani), yatirimGeriDonus: r(yatirimGeriDonus),
   };
 };
-
-module.exports = { hesaplaKomisyon, detectPlatform, kdvCoz };
