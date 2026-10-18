@@ -1,5 +1,5 @@
 /*
- * Faz 2 regression testleri (gerçek sunucu + gerçek MariaDB). Bkz. YAPILACAKLAR-INCELEME.md
+ * Faz 2 regression testleri (gerçek sunucu + gerçek MariaDB). Bkz. yerel-arsiv/notlar-ve-veri/YAPILACAKLAR-INCELEME.md
  *   #3   stok düzenleme / içe aktarma satışları silmemeli (mevcut = giren − çıkan)
  *   #10  aksesuar satışında adet tutarlılığı ve adet doğrulaması
  *   #11  müşteri kaydı başka kişinin bilgisini ezmemeli

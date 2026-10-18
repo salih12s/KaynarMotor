@@ -1,5 +1,5 @@
 /*
- * Faz 1 regression testleri (gerçek sunucu + gerçek MariaDB). Bkz. YAPILACAKLAR-INCELEME.md
+ * Faz 1 regression testleri (gerçek sunucu + gerçek MariaDB). Bkz. yerel-arsiv/notlar-ve-veri/YAPILACAKLAR-INCELEME.md
  *   #26/#27  motor PUT, formda olmayan alanları silmemeli
  *   #2       vitrin görseli/videosu yalnızca güvenli MIME türleri
  *   #4       kimlik doğrulama gövde ayrıştırılmadan ÖNCE

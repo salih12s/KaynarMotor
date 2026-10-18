@@ -15,7 +15,7 @@
  * GÜVENLİK KİLİDİ
  *  - Yalnızca localhost'taki veritabanına yazar. DB_HOST yerel değilse, DATABASE_URL
  *    tanımlıysa ya da NODE_ENV=production ise veritabanına HİÇ bağlanmadan durur.
- *    (set-production-env.bat çalıştırılmışken yanlışlıkla canlıyı silmemek için.)
+ *    (canlı ortam ayarları yüklüyken yanlışlıkla canlıyı silmemek için.)
  *
  * KVKK
  *  - Buradaki tüm kişiler, telefonlar, adresler, plakalar ve TC numaraları UYDURMADIR.
@@ -47,7 +47,7 @@ const sorunlar = hedefSorunlari(process.env);
 if (sorunlar.length > 0) {
   console.error('\nDURDURULDU — örnek veri yalnızca YEREL veritabanına yüklenir.');
   sorunlar.forEach((s) => console.error(`  • ${s}`));
-  console.error('\nÖnce set-local-env.bat çalıştırın, sonra tekrar deneyin. Veritabanına bağlanılmadı.\n');
+  console.error('\nÖnce yerel ortamı yükleyin (backend klasöründe: set -a; . ./.env.mariadb.dev; set +a), sonra tekrar deneyin. Veritabanına bağlanılmadı.\n');
   process.exit(1);
 }
 

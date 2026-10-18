@@ -23,6 +23,9 @@ GUVENLIK-BULGULARI.md
 YAPILACAKLAR-INCELEME.md
 ekran-goruntuleri/
 
+# Kokten tasinan eski/yerel dosyalar (eski build zip'leri, gercek veri iceren csv, notlar)
+yerel-arsiv/
+
 # Ornek veri (npm run seed) fotograflari - npm run seed:gorseller ile indirilir
 backend/scripts/seed-gorseller/
 

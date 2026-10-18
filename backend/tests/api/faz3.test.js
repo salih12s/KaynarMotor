@@ -1,5 +1,5 @@
 /*
- * Faz 3 regression testleri (gerçek sunucu + gerçek MariaDB). Bkz. YAPILACAKLAR-INCELEME.md
+ * Faz 3 regression testleri (gerçek sunucu + gerçek MariaDB). Bkz. yerel-arsiv/notlar-ve-veri/YAPILACAKLAR-INCELEME.md
  *   #5   yetki/hesap iptali token süresini beklemeden uygulanmalı
  *   #6   düz metin şifre saklanmamalı/gösterilmemeli; admin şifre sıfırlayabilmeli
  *   #21  şifre kuralı; giriş yanıtı kullanıcı adı/onay durumu sızdırmamalı
