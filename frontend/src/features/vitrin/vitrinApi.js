@@ -1,4 +1,4 @@
-import api from '../../shared/api/istemci';
+import api, { API_URL } from '../../shared/api/istemci';
 
 // Vitrin (genel kullanıma açık mağaza)
 export const vitrinService = {
