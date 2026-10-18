@@ -103,7 +103,7 @@ app.use(express.json({ limit: '10mb' }));
 app.use('/api', require('./core/middleware/tutarDogrula').negatifTutarEngelle);
 
 // Routes
-const authRoutes = require('./modules/auth/auth.routes');
+const authRoutes = require('./modules/auth/auth.routes').default;
 const musteriRoutes = require('./modules/musteriler/musteriler.routes').default;
 const isEmriRoutes = require('./modules/servis/isEmirleri.routes').default;
 const aksesuarRoutes = require('./modules/aksesuar/aksesuarlar.routes').default;
