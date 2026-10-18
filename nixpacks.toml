@@ -1,8 +1,0 @@
-[phases.setup]
-nixPkgs = ["nodejs_22"]
-
-[phases.install]
-cmds = ["cd frontend && npm install && npm run build", "cd backend && npm install"]
-
-[start]
-cmd = "cd backend && npm start"

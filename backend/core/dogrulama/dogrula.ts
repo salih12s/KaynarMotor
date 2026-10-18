@@ -41,14 +41,6 @@ export class YetkiHatasi extends IstemciHatasi {
   }
 }
 
-/** 409: kayıt mevcut durumla çakışıyor. */
-export class CakismaHatasi extends IstemciHatasi {
-  constructor(mesaj: string) {
-    super(mesaj, 409);
-    this.name = 'CakismaHatasi';
-  }
-}
-
 // Adet: pozitif tam sayı olmalı. Boş/undefined/null → varsayılan (1). 0, negatif, ondalık, metin → 400.
 // (Eskiden `Number(adet) || 1` negatif adedi geçiriyordu: negatif satış stoğu ARTIRIYORDU.)
 export const adetCoz = (deger: unknown, varsayilan = 1): number => {

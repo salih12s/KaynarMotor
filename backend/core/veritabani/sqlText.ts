@@ -25,11 +25,6 @@ export function orderByText(column: string): string {
   );
 }
 
-/** `kolon ILIKE $n` karşılığı (PostgreSQL ILIKE): iki taraf da küçük harfe çevrilir. */
-export function ilike(column: string, paramIndex: number): string {
-  return `LOWER(${column}) LIKE LOWER($${paramIndex})`;
-}
-
 /**
  * PostgreSQL'in `json_agg(...)` / `json_build_object(...)` çıktısının JS karşılığı.
  * MariaDB'de bu birleştirme SQL ile yapılamadığı için ilgili satırlar ayrı sorguyla

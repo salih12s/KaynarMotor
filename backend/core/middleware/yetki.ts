@@ -41,13 +41,6 @@ export const rolYetkisi = (...roller: Rol[]) => (req: Request, res: Response, ne
   return res.status(403).json({ message: 'Bu bölüme erişim yetkiniz yok' });
 };
 
-// Yalnızca yazma işlemlerinde rol arar; GET istekleri serbest bırakılır.
-export const yazmaRolu = (...roller: Rol[]) => (req: Request, res: Response, next: NextFunction) => {
-  if (!YAZMA_METODLARI.includes(req.method)) return next();
-  if (roller.includes(req.user.rol)) return next();
-  return res.status(403).json({ message: 'Bu işlem için yetkiniz yok' });
-};
-
 // Vitrin yönetimi: admin VEYA motor/aksesuar vitrin yetkisi olan personel.
 // Hem route'ta hem de gövde ayrıştırılmadan önce (server.js) kullanılır.
 export const vitrinYetkili = (req: Request, res: Response, next: NextFunction) => {

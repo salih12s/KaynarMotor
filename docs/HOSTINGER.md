@@ -128,6 +128,7 @@ Gizli bilgiler (`.env.mariadb.*`, `.env.pg.ref`, canlı yedek) git dışındadı
 
 - `plain_sifre` kolonu (kullanıcı şifrelerini **düz metin** saklıyor) olduğu gibi taşındı: bu eski tasarımdır,
   davranış değişikliği olmasın diye dokunulmadı. Ayrı bir iş olarak kaldırılması önerilir.
-- `scripts/` altındaki tek seferlik eski araçlar (`importCsv`, `fix*`, `check*`, `add*`) PostgreSQL döneminden kalmadır;
-  MariaDB'ye karşı doğrulanmadı. Sürdürülen araçlar: `seedLocal.js`, `seedGorselIndir.js`, `scripts/mariadb/*`.
+- PostgreSQL döneminden kalma tek seferlik araçlar (`importCsv`, `fix*`, `check*`, `add*`, `importSold`, `updateFatura`) ve
+  Railway ile kıyaslama aracı (`canliKiyasla`) temizlik sırasında silindi (git geçmişinde durur). Sürdürülen araçlar:
+  `seedLocal.js`, `seedGorselIndir.js`, `scripts/mariadb/*`.
 - `demo` dalı (Postgres/Supabase) bu işten etkilenmez.

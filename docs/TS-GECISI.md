@@ -34,7 +34,7 @@ Modüller: `auth`, `musteriler`, `servis` (iş emirleri + QR geçmişi), `aksesu
 `eticaret`, `motor` (ikinci el + belgeler), `raporlar` (+ veresiye), `vitrin` (ilanlar + medya + iletişim).
 
 Ortak: `core/tipler.ts` (`Kullanici`, `req.user`, `BaglamDb`), `core/dogrula.ts` (`GecersizIstek` 400, `BulunamadiHatasi` 404,
-`YetkiHatasi` 403, `CakismaHatasi` 409, `dogrula()`), `core/kontrolcu.ts` (`sarmala`: try/catch + hata yanıtı), `core/semalar.ts`
+`YetkiHatasi` 403, `dogrula()`), `core/kontrolcu.ts` (`sarmala`: try/catch + hata yanıtı), `core/semalar.ts`
 (gevşek zod parçaları), `core/sayi.ts`, `core/env.ts` (.env'i HER ŞEYDEN önce yükler; `server.ts` ilk içe aktarır).
 
 ### Yeni özellik eklemek
@@ -72,7 +72,7 @@ eşitlemesi, stok kodu değişince parça kodu taşıma, tamamlama tarihi, yapı
 
 ## Tuzaklar
 - `.js` dosyası `.ts`'yi `require` edebilir (tsx ve esbuild çözer); `export default` `require(...).default` olur.
-- Düz `node server.ts` çalışmaz: `npm start` (tsx) kullanın. Railway dönemi dosyaları (`Procfile`, `nixpacks.toml`, `railway.json`) `npm start`'a çevrildi.
+- Düz `node server.ts` çalışmaz: `npm start` (tsx) kullanın. (Railway dönemi `Procfile`/`nixpacks.toml`/`railway.json` temizlikte silindi.)
 - TypeScript 7 `moduleResolution: node10` seçeneğini kaldırdı; `module: preserve` + `bundler` kullanılır.
 - Bash araç satırında tek tırnak sayısı çift değilse komut ayrıştırılamaz: Türkçe metinli dosyaları `Write` ile yazın.
 - Test dosyalarında SQL'e göre eşleşen Fake kuralları ilk eşleşen kazanır; daha özel kuralı öne koyun.

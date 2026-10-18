@@ -4,5 +4,3 @@ import { z } from 'zod';
 export const belgeYuklemeSorgusu = z.object({
   ad: z.string().optional(),
 });
-
-export type BelgeYuklemeSorgusu = z.infer<typeof belgeYuklemeSorgusu>;

@@ -60,8 +60,6 @@ run('arayüz derlemesi', 'npx', ['react-scripts', 'build'], {
   cwd: frontend,
   env: { ...process.env, REACT_APP_API_URL: '/api', GENERATE_SOURCEMAP: 'false', CI: 'false' },
 });
-// Pakete girmeyen eski/kullanılmayan dosyalar (arayüz kodunda başvurulmuyor)
-const kullanilmayan = new Set(['KaynarMotor.mp4', '_redirects']);
 const build = path.join(frontend, 'build');
 const kopyala = (kaynak, hedef) => {
   fs.mkdirSync(hedef, { recursive: true });
@@ -70,7 +68,7 @@ const kopyala = (kaynak, hedef) => {
     const k = path.join(kaynak, ad);
     const h = path.join(hedef, ad);
     if (fs.statSync(k).isDirectory()) kopyala(k, h);
-    else if (!(kaynak === build && kullanilmayan.has(ad))) fs.copyFileSync(k, h);
+    else fs.copyFileSync(k, h);
   }
 };
 kopyala(build, path.join(dist, 'public'));

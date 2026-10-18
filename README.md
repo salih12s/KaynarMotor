@@ -178,7 +178,7 @@ kim tarafından ne zaman yapıldığını kaydeden aktivite logu.
 | **Frontend** | React 19, React Router 7, Material UI 7, Axios, date-fns, jsbarcode, qrcode, react-to-print |
 | **Backend** | Node.js 22, Express 4, JSON Web Token, bcryptjs, helmet, express-rate-limit |
 | **Veritabanı** | MariaDB 11 — ORM kullanılmadan, `mysql2` ile doğrudan parametreli SQL (PostgreSQL uyum katmanı: `backend/core/db.js`) |
-| **Altyapı** | Hostinger Node.js barındırma (tek uygulama + MariaDB); eski Railway yapılandırması `nixpacks.toml` / `Procfile` içinde duruyor |
+| **Altyapı** | Hostinger Node.js barındırma (tek uygulama + MariaDB); eski Railway yapılandırması temizlendi |
 
 ## Mimari
 
@@ -275,7 +275,7 @@ sequenceDiagram
     actor U as Servis personeli
     participant P as Panel (React)
     participant M as Middleware zinciri
-    participant R as modules/servis/isEmirleri.routes.js
+    participant R as modules/servis/isEmirleri/isEmirleri.routes.ts
     participant DB as MariaDB
 
     U->>P: Yeni iş emri: müşteri, plaka, parçalar
@@ -407,29 +407,30 @@ ve TC bilgileri uydurmadır.
 
 ```
 KaynarMotorCRM/
-├── backend/
+├── backend/                     # TypeScript (strict) + Express; her özellik routes/controller/service/repository/schemas
 │   ├── server.ts                # Express app, CORS, route mount, DB init
 │   ├── core/                    # Altyapı: hiçbir iş alanına bağlı değil
-│   │   ├── db.js                # MariaDB bağlantı havuzu (node-pg uyumlu query/connect arayüzü)
-│   │   ├── initDb.js            # Şema, migration'lar ve index'ler
-│   │   ├── sqlParams.js         # $1 parametreli SQL → MariaDB uyumu
-│   │   ├── dogrula.js           # İstek doğrulama (adet, şifre, hata yanıtı)
-│   │   ├── activityLogger.js    # Aktivite/audit kaydı
-│   │   ├── denetimKaydi.js      # Yazma isteklerini otomatik günlüğe yazan ara katman
-│   │   └── middleware/          # auth (JWT), yetki (modül/rol), rateLimit, idDogrula
+│   │   ├── env.ts               # .env yükleme + JWT_SECRET denetimi (her şeyden önce)
+│   │   ├── tipler.ts            # Kullanici, req.user, BaglamDb tipleri
+│   │   ├── veritabani/          # db (havuz, transaction), sqlParams ($1 → MariaDB), sqlText, initDb (şema/migration)
+│   │   ├── dogrulama/           # dogrula (hata sınıfları, zod), semalar, sayi
+│   │   ├── http/                # kontrolcu (sarmala), asyncHata
+│   │   ├── gunluk/              # activityLogger (denetim kaydı), denetimKaydi (yazma istekleri için ara katman)
+│   │   ├── onbellek/            # medyaOnbellegi (LRU)
+│   │   └── middleware/          # auth (JWT), yetki (modül/rol/kâr gizleme), rateLimit, idDogrula, tutarDogrula
 │   ├── shared/                  # Modüller arası ortak iş yardımcıları (stok hareketi, alt kayıtlar)
-│   ├── modules/                 # İş alanları; ilişkili uçlar aynı klasörde
+│   ├── modules/                 # İş alanları; her özellik KENDİ klasöründe (routes/controller/service/repository/schemas)
 │   │   ├── auth/                # giriş, kayıt, kullanıcı ve yetki yönetimi
 │   │   ├── musteriler/          # müşteri uçları + otomatik müşteri eşleştirme
-│   │   ├── servis/              # iş emirleri + servis geçmişi (QR)
-│   │   ├── aksesuar/            # aksesuar satışı + aksesuar stoğu
-│   │   ├── yedek-parca/         # yedek parça satışı + yedek parça stoğu
-│   │   ├── motor/               # ikinci el motor + satış belgeleri
+│   │   ├── servis/              # isEmirleri/ + servisGecmisi/ (QR)
+│   │   ├── aksesuar/            # aksesuarlar/ (satış) + aksesuarStok/
+│   │   ├── yedek-parca/         # yedekParcalar/ (satış) + yedekParcaStok/
+│   │   ├── motor/               # ikinciElMotor/ (+ gorunum: kim neyi görür) + satisBelgeleri/
 │   │   ├── eticaret/            # pazaryeri satışları + komisyon hesabı
-│   │   ├── vitrin/              # herkese açık vitrin ve yönetimi
-│   │   └── raporlar/            # raporlar + veresiye
-│   ├── tests/                   # unit / integration / api / parity / smoke
-│   └── scripts/                 # Tek seferlik veri aktarım script'leri (--onayliyorum ister)
+│   │   ├── vitrin/              # ilanlar/ + medya/ + iletisim/ (+ vitrinOrtak)
+│   │   └── raporlar/            # raporlar/ (+ hesap) + veresiye/
+│   ├── tests/                   # unit (Fake veritabanı) / integration / api / parity / smoke
+│   └── scripts/                 # seed, paketleme/test yardımcıları, MariaDB araçları (bkz. docs/TS-GECISI.md)
 ├── frontend/
 │   └── src/
 │       ├── app/                 # App (route tanımları ve guard'lar), Layout, ThemeContext
@@ -521,8 +522,8 @@ Sunucu tek dosyaya (`dist/main.cjs`, esbuild) paketlenir, arayüz `dist/public` 
 Express ikisini de aynı adresten sunar (`/api` + SPA). Ayrıntılı adımlar, ortam değişkenleri ve
 geçiş kılavuzu: [docs/HOSTINGER.md](docs/HOSTINGER.md).
 
-Eski Railway/nixpacks yapılandırması (`nixpacks.toml`, `railway.json`, `Procfile`) geçiş tamamlanana
-kadar depoda kalır.
+Eski Railway/nixpacks yapılandırması (`nixpacks.toml`, `railway.json`, `Procfile`) geçiş tamamlandığı için silindi
+(git geçmişinde durur).
 
 ## Lisans
 
