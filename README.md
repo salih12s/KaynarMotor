@@ -380,7 +380,7 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ## Çalıştırma
 
 ```bash
-npm run dev      # backend + frontend eş zamanlı (nodemon + react-scripts)
+npm run dev      # backend + frontend eş zamanlı (tsx watch + react-scripts)
 npm run build    # frontend production build
 npm start        # production: backend, frontend/build'i statik serve eder
 ```

@@ -55,7 +55,7 @@ function envOku(dosya) {
 
 /** İki veritabanını da canlı yedekten sıfırlar (önceki koşuların günlük/kayıt birikimi kalmasın). */
 function veritabanlariniSifirla() {
-  const yukle = (env, ...ek) => execFileSync(process.execPath, ['scripts/mariadb/yedektenYukle.js', '--env', env, ...ek], { cwd: BACKEND, stdio: 'pipe' });
+  const yukle = (env, ...ek) => execFileSync(process.execPath, ['--import', 'tsx', 'scripts/mariadb/yedektenYukle.js', '--env', env, ...ek], { cwd: BACKEND, stdio: 'pipe' });
   yukle(SUNUCULAR.ref.env, '--hedef', 'pg');
   yukle(SUNUCULAR.yeni.env);
 }
@@ -112,7 +112,8 @@ async function veritabanlariniHazirla() {
 function sunucuBaslat(s) {
   if (!s.dizin) throw new Error('PG_REF_DIR tanımlı değil (eski kodun backend klasörü).');
   const log = fs.openSync(path.join(require('os').tmpdir(), `kaynar-parity-${s.port}.log`), 'w');
-  const cocuk = spawn(process.execPath, [`--env-file=${s.env}`, 'server.js'], {
+  const tsx = fs.existsSync(path.join(s.dizin, 'node_modules', 'tsx')) ? ['--import', 'tsx'] : []; // eski referans kodda tsx yok
+  const cocuk = spawn(process.execPath, [`--env-file=${s.env}`, ...tsx, 'server.js'], {
     cwd: s.dizin,
     env: { ...process.env, PORT: String(s.port), TZ: 'UTC', NODE_ENV: 'development' },
     stdio: ['ignore', log, log],

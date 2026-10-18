@@ -1,0 +1,20 @@
+{
+  // Geçiş dönemi ayarları: .js ve .ts dosyaları yan yana çalışır. Tip kontrolü yalnızca .ts dosyalarına uygulanır
+  // (checkJs kapalı) ve strict kapalıdır; kurallar geçiş bittikçe sıkılaştırılır (bkz. docs/TS-GECISI.md).
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "lib": ["ES2023"],
+    "types": ["node"],
+    "allowJs": true,
+    "checkJs": false,
+    "noEmit": true,
+    "strict": false,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": ["server.js", "core/**/*", "modules/**/*", "shared/**/*"]
+}

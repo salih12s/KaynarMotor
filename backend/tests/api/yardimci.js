@@ -18,6 +18,14 @@ const path = require('path');
 
 const BACKEND = path.resolve(__dirname, '..', '..');
 
+// Sunucuyu başlatan komut. Varsayılan: kaynak kod, tsx ile (.js ve .ts birlikte çalışır).
+// SUNUCU_GIRIS=<main.cjs yolu> verilirse bunun yerine esbuild ile PAKETLENMİŞ sunucu çalışır
+// (canlıda çalışacak olan; `npm run test:api:paket` bunu kullanır).
+function sunucuArgumanlari() {
+  if (process.env.SUNUCU_GIRIS) return [path.resolve(process.env.SUNUCU_GIRIS)];
+  return ['--import', 'tsx', 'server.js'];
+}
+
 function baglantiKorumasi() {
   const host = process.env.DB_HOST || '';
   const ad = process.env.DB_NAME || '';
@@ -38,7 +46,7 @@ const bekle = (ms) => new Promise((r) => setTimeout(r, ms));
 async function sunucuBaslat() {
   baglantiKorumasi();
   const port = await bosPort();
-  const cocuk = spawn(process.execPath, ['server.js'], {
+  const cocuk = spawn(process.execPath, sunucuArgumanlari(), {
     cwd: BACKEND,
     env: { ...process.env, PORT: String(port), NODE_ENV: 'test', JWT_SECRET: process.env.JWT_SECRET || 'api-test-jwt-sirri' },
     stdio: 'ignore',
@@ -64,7 +72,7 @@ async function dbsizSunucuBaslat() {
   const port = await bosPort();
   const kapaliDbPort = await bosPort(); // boş port = orada dinleyen yok
   const jwtSirri = process.env.JWT_SECRET || 'api-test-jwt-sirri';
-  const cocuk = spawn(process.execPath, ['server.js'], {
+  const cocuk = spawn(process.execPath, sunucuArgumanlari(), {
     cwd: BACKEND,
     env: { ...process.env, PORT: String(port), NODE_ENV: 'test', JWT_SECRET: jwtSirri, DB_PORT: String(kapaliDbPort) },
     stdio: 'ignore',
@@ -111,4 +119,4 @@ async function kullaniciOlustur(api, admin, ad, rol, yetkiler = {}) {
   return { id: k.govde.id, token: g.govde.token };
 }
 
-module.exports = { sunucuBaslat, dbsizSunucuBaslat, istemci, hamIstek, kullaniciOlustur, baglantiKorumasi };
+module.exports = { sunucuArgumanlari, sunucuBaslat, dbsizSunucuBaslat, istemci, hamIstek, kullaniciOlustur, baglantiKorumasi };

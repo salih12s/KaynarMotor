@@ -15,7 +15,7 @@ const { describe, it, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { spawn } = require('node:child_process');
 const path = require('node:path');
-const { sunucuBaslat, kullaniciOlustur } = require('./yardimci');
+const { sunucuBaslat, kullaniciOlustur, sunucuArgumanlari } = require('./yardimci');
 
 const SON = Date.now().toString(36);
 const num = (v) => Number(v);
@@ -72,7 +72,7 @@ describe('#46 oturum: şifre sıfırlanınca eski token geçersiz', () => {
   });
 
   it('JWT_SECRET tanımsızsa sunucu hata koduyla kapanır (güvensiz açılmaz)', async () => {
-    const cocuk = spawn(process.execPath, ['server.js'], {
+    const cocuk = spawn(process.execPath, sunucuArgumanlari(), {
       cwd: path.resolve(__dirname, '..', '..'),
       env: { ...process.env, PORT: '0', NODE_ENV: 'test', JWT_SECRET: '' }, // boş değer .env dosyasının doldurmasını da engeller
       stdio: 'ignore',

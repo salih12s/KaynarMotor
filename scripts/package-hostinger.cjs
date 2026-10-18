@@ -50,6 +50,9 @@ function temizle(yol) {
 temizle(out);
 fs.mkdirSync(dist, { recursive: true });
 
+// 0) Tip kontrolü: esbuild tipleri kontrol etmez, yalnızca siler; tip hatalı kod pakete girmesin.
+run('sunucu tip kontrolü (tsc)', 'npx', ['tsc', '-p', 'tsconfig.json'], { cwd: backend });
+
 // 1) Sözdizimi denetimi: hatalı kod pakete girmesin.
 console.log('\n> sunucu sözdizimi denetimi');
 // core/, shared/ ve modules/ altındaki her .js dosyası (iç içe klasörler dahil) denetlenir.
@@ -90,30 +93,8 @@ kopyala(build, path.join(dist, 'public'));
 
 // 3) Sunucu: bağımlılıklarıyla birlikte tek dosya.
 console.log('\n> sunucu paketi (esbuild)');
-const esbuild = require(path.join(backend, 'node_modules', 'esbuild'));
-const bundle = esbuild.buildSync({
-  entryPoints: [path.join(backend, 'server.js')],
-  outfile: path.join(dist, 'main.cjs'),
-  bundle: true,
-  platform: 'node',
-  target: 'node20',
-  format: 'cjs',
-  banner: {
-    js: [
-      // Ortam değişkeni verilmemişse üretim modunda açıl (arayüzü sunmak buna bağlı).
-      "process.env.NODE_ENV = process.env.NODE_ENV || 'production';",
-      // Paylaşımlı barındırmada hesabın süreç/iş parçacığı kotası dardır. Node dosya okuma,
-      // sıkıştırma ve rastgele sayı üretimi için varsayılan olarak 4 iş parçacığı açar; kota dolunca
-      // süreç HİÇBİR İZ BIRAKMADAN öldürülür (arayüz 503 verir, veritabanı sorguları çalışır).
-      // 2026-10-12'de aynı hesaptaki crm-mefateknik.com'da ölçüldü: 4 ile düşüyor, 1 ile çalışıyor.
-      // Değer ilk kullanımdan önce verilmek zorunda olduğu için dosyanın en başındadır.
-      "process.env.UV_THREADPOOL_SIZE = process.env.UV_THREADPOOL_SIZE || '1';",
-    ].join('\n'),
-  },
-  legalComments: 'none',
-  logLevel: 'warning',
-  metafile: true,
-});
+const { sunucuPaketle } = require(path.join(backend, 'scripts', 'sunucuPaketi.cjs'));
+const bundle = sunucuPaketle(path.join(dist, 'main.cjs'));
 const bundled = Object.keys(bundle.metafile.inputs);
 // Taşıma araçları, örnek veri betikleri ve testler sunucuya girmemeli; pg yalnızca geliştirme aracıdır.
 const istenmeyen = bundled.filter((f) => /[\\/](scripts|tests)[\\/]|node_modules[\\/]pg[\\/]/.test(f));

@@ -23,7 +23,7 @@ const kehanet = JSON.parse(fs.readFileSync(YEDEK, 'utf8'));
 
 // Başka testlerin değiştirdiği veri karışmasın: arama kendi veritabanına (kaynar_test) canlı yedeği yükleyip çalışır.
 test.before(() => {
-  require('child_process').execFileSync(process.execPath, ['scripts/mariadb/yedektenYukle.js', '--env', ENV], { cwd: BACKEND, stdio: 'pipe' });
+  require('child_process').execFileSync(process.execPath, ['--import', 'tsx', 'scripts/mariadb/yedektenYukle.js', '--env', ENV], { cwd: BACKEND, stdio: 'pipe' });
 });
 test.after(() => pool.end());
 
