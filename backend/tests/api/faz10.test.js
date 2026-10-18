@@ -6,6 +6,7 @@
  *   #45 müşteriler: detay biçimi, 404/400 mesajları, gövde doğrulaması
  *   #46 yedek parça stok: kod/barkod, UNIQUE, kod değişimi, toplu içe aktarma
  *   #47 yedek parça satışı: 404, adet doğrulaması, silme
+ *   #52 raporlar ve veresiye: yanıt şekilleri, erişim kuralları, tarih doğrulaması
  *   #51 motor ve satış belgeleri: CRUD sözleşmesi, 404/403 mesajları, belge yükleme/indirme/silme/arşiv
  *   #50 e-ticaret: platform yönetimi (admin), satış kâr hesabı, stok düşüm/iade, 404 mesajları
  *   #49 aksesuar stok ve satışı: kod/barkod, indirim/kâr, stok düşümü, 404 mesajları, istatistik
@@ -540,5 +541,75 @@ describe('#51 motor ve satış belgeleri: HTTP sözleşmesi', () => {
     const motor = await api('DELETE', `/api/ikinci-el-motor/${motorId}`, undefined, admin);
     assert.equal(motor.durum, 200);
     assert.equal(motor.govde.message, 'Motor satışı silindi');
+  });
+});
+
+describe('#52 raporlar ve veresiye: HTTP sözleşmesi', () => {
+  let yat, bugun;
+
+  before(async () => {
+    yat = await kullaniciOlustur(api, admin, benzersiz('f10_yat_'), 'yatirimci');
+    bugun = new Date().toISOString().split('T')[0];
+  });
+
+  it('günlük rapor: dört kaynak + toplam; tarih verilmezse bugün (UTC)', async () => {
+    const r = await api('GET', '/api/raporlar/gunluk', undefined, admin);
+    assert.equal(r.durum, 200);
+    assert.equal(r.govde.tarih, bugun);
+    for (const alan of ['is_emirleri', 'aksesuarlar', 'motorlar', 'eticaret']) assert.ok(Array.isArray(r.govde[alan].kayitlar), alan);
+    assert.ok('gelir' in r.govde.toplam && 'kar' in r.govde.toplam);
+    assert.equal((await api('GET', '/api/raporlar/gunluk?tarih=2020-01-02', undefined, admin)).govde.tarih, '2020-01-02');
+  });
+
+  it('aralık raporu: tarih eksikse 400 "Başlangıç ve bitiş tarihi gerekli"; tam istekte toplam alanları', async () => {
+    const eksik = await api('GET', '/api/raporlar/aralik?baslangic=2026-01-01', undefined, admin);
+    assert.equal(eksik.durum, 400);
+    assert.equal(eksik.govde.message, 'Başlangıç ve bitiş tarihi gerekli');
+    const tam = await api('GET', '/api/raporlar/aralik?baslangic=2026-01-01&bitis=2026-12-31', undefined, admin);
+    assert.equal(tam.durum, 200);
+    for (const alan of ['motorGelir', 'isEmriGelir', 'aksesuarGelir', 'eticaretGelir', 'yedekParcaToplamDeger', 'motorStokToplam']) assert.ok(alan in tam.govde, alan);
+    assert.ok('gelir' in tam.govde.toplam && 'maliyet' in tam.govde.toplam && 'kar' in tam.govde.toplam);
+  });
+
+  it('genel rapor, fiş kâr ve personel listesi yanıt şekilleri', async () => {
+    const genel = await api('GET', '/api/raporlar/genel', undefined, admin);
+    for (const alan of ['is_emirleri', 'aksesuarlar', 'motorlar', 'eticaret', 'yedek_parcalar', 'toplam']) assert.ok(alan in genel.govde, alan);
+    assert.ok(Array.isArray((await api('GET', '/api/raporlar/fis-kar', undefined, admin)).govde));
+    assert.ok(Array.isArray((await api('GET', '/api/raporlar/personeller', undefined, admin)).govde));
+  });
+
+  it('erişim: personel raporlara giremez (403); yatırımcı genel raporlara giremez ama kendi raporunu görür', async () => {
+    assert.equal((await api('GET', '/api/raporlar/genel', undefined, k.servis.token)).durum, 403);
+    const genel = await api('GET', '/api/raporlar/genel', undefined, yat.token);
+    assert.equal(genel.durum, 403);
+    assert.equal(genel.govde.message, 'Bu rapora erişim yetkiniz yok');
+    const kendi = await api('GET', '/api/raporlar/yatirimci-rapor', undefined, yat.token);
+    assert.equal(kendi.durum, 200);
+    for (const alan of ['stok_adet', 'satilan_adet', 'toplam_yatirimci_kar', 'toplam_satis', 'toplam_alis', 'stok_degeri']) assert.ok(alan in kendi.govde.ozet, alan);
+  });
+
+  it('yatırımcı raporu: admin yatirimci_id vermezse 400; verirse o yatırımcının raporu', async () => {
+    const yok = await api('GET', '/api/raporlar/yatirimci-rapor', undefined, admin);
+    assert.equal(yok.durum, 400);
+    assert.equal(yok.govde.message, 'yatirimci_id gerekli');
+    assert.equal((await api('GET', `/api/raporlar/yatirimci-rapor?yatirimci_id=${yat.id}`, undefined, admin)).durum, 200);
+    const ozet = await api('GET', '/api/raporlar/yatirimci-ozet', undefined, admin);
+    assert.ok(ozet.govde.some((x) => x.id === yat.id));
+  });
+
+  it('veresiye: yalnız admin; yanıt borclar + özet; açık borç aksesuar satışı listeye girer', async () => {
+    assert.equal((await api('GET', '/api/veresiye', undefined, k.servis.token)).durum, 403);
+    const ad = benzersiz('F10 Borçlu ');
+    const s2 = await api('POST', '/api/aksesuarlar', { ad_soyad: ad, kalan_odeme: 123, parcalar: [{ urun_adi: 'Kask', adet: 1, satis_fiyati: 500 }] }, admin);
+    assert.equal(s2.durum, 201);
+    const r = await api('GET', '/api/veresiye', undefined, admin);
+    assert.equal(r.durum, 200);
+    const borc = r.govde.borclar.find((b) => b.musteri_adi === ad);
+    assert.ok(borc, 'borç listede');
+    assert.equal(borc.kaynak_key, 'aksesuar');
+    assert.equal(borc.kalan_odeme, 123);
+    assert.ok(r.govde.ozet.aksesuar >= 123);
+    for (const alan of ['motor', 'servis', 'aksesuar', 'yedek_parca', 'toplam', 'kayit_sayisi']) assert.ok(alan in r.govde.ozet, alan);
+    await api('DELETE', `/api/aksesuarlar/${s2.govde.id}`, undefined, admin);
   });
 });

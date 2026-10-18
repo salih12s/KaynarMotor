@@ -113,8 +113,8 @@ const satisBelgeRoutes = require('./modules/motor/satisBelgeleri.routes').defaul
 const eticaretRoutes = require('./modules/eticaret/eticaret.routes').default;
 const yedekParcaRoutes = require('./modules/yedek-parca/yedekParcalar.routes').default;
 const yedekParcaStokRoutes = require('./modules/yedek-parca/yedekParcaStok.routes').default;
-const raporRoutes = require('./modules/raporlar/raporlar.routes');
-const veresiyeRoutes = require('./modules/raporlar/veresiye.routes');
+const raporRoutes = require('./modules/raporlar/raporlar.routes').default;
+const veresiyeRoutes = require('./modules/raporlar/veresiye.routes').default;
 const vitrinRoutes = require('./modules/vitrin/vitrin.routes');
 const servisGecmisiRoutes = require('./modules/servis/servisGecmisi.routes').default;
 
