@@ -105,7 +105,7 @@ app.use('/api', require('./core/middleware/tutarDogrula').negatifTutarEngelle);
 // Routes
 const authRoutes = require('./modules/auth/auth.routes');
 const musteriRoutes = require('./modules/musteriler/musteriler.routes').default;
-const isEmriRoutes = require('./modules/servis/isEmirleri.routes');
+const isEmriRoutes = require('./modules/servis/isEmirleri.routes').default;
 const aksesuarRoutes = require('./modules/aksesuar/aksesuarlar.routes');
 const aksesuarStokRoutes = require('./modules/aksesuar/aksesuarStok.routes');
 const ikinciElMotorRoutes = require('./modules/motor/ikinciElMotor.routes');
@@ -116,7 +116,7 @@ const yedekParcaStokRoutes = require('./modules/yedek-parca/yedekParcaStok.route
 const raporRoutes = require('./modules/raporlar/raporlar.routes');
 const veresiyeRoutes = require('./modules/raporlar/veresiye.routes');
 const vitrinRoutes = require('./modules/vitrin/vitrin.routes');
-const servisGecmisiRoutes = require('./modules/servis/servisGecmisi.routes');
+const servisGecmisiRoutes = require('./modules/servis/servisGecmisi.routes').default;
 
 // Yetkilendirme kuralları frontend/src/App.jsx içindeki route guard'larıyla birebir
 // eşleşecek şekilde seçilmiştir. Bazı uçlar sahibi olmadıkları ekranlar tarafından da

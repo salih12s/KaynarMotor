@@ -6,6 +6,7 @@
  *   #45 müşteriler: detay biçimi, 404/400 mesajları, gövde doğrulaması
  *   #46 yedek parça stok: kod/barkod, UNIQUE, kod değişimi, toplu içe aktarma
  *   #47 yedek parça satışı: 404, adet doğrulaması, silme
+ *   #48 iş emirleri: fiş no, 404/403 mesajları, tamamlanan iş emri, silme, QR token ve herkese açık servis geçmişi
  */
 const { describe, it, before, after } = require('node:test');
 const assert = require('node:assert/strict');
@@ -199,5 +200,93 @@ describe('#47 yedek parça satışı: HTTP sözleşmesi', () => {
     assert.equal(sil.durum, 200);
     assert.equal(sil.govde.message, 'Yedek parça silindi');
     assert.equal((await api('GET', `/api/yedek-parcalar/${iyi.govde.id}`, undefined, admin)).durum, 404);
+  });
+});
+
+describe('#48 iş emirleri ve servis geçmişi: HTTP sözleşmesi', () => {
+  let ieId, fisNo, plaka;
+
+  before(async () => {
+    plaka = ('34' + benzersiz('F').replace(/[^A-Za-z0-9]/g, '')).toUpperCase().slice(0, 10);
+    const r = await api('POST', '/api/is-emirleri', {
+      musteri_ad_soyad: benzersiz('F10 Servis '), plaka, marka: 'Honda', model_tip: 'PCX', km: 1200,
+      parcalar: [{ takilan_parca: 'Yağ değişimi', adet: 2, birim_fiyat: 100, maliyet: 60 }],
+    }, admin);
+    assert.equal(r.durum, 201);
+    ieId = r.govde.id;
+    fisNo = r.govde.fis_no;
+  });
+
+  it('oluşturma: toplam/maliyet/kâr hesaplanır, parçalar yanıtta gelir', async () => {
+    const r = await api('GET', `/api/is-emirleri/${ieId}`, undefined, admin);
+    assert.equal(r.durum, 200);
+    assert.equal(Number(r.govde.gercek_toplam_ucret), 200);
+    assert.equal(Number(r.govde.toplam_maliyet), 120);
+    assert.equal(Number(r.govde.kar), 80);
+    assert.equal(r.govde.parcalar.length, 1);
+    assert.equal(r.govde.parcalar[0].takilan_parca, 'Yağ değişimi');
+  });
+
+  it('fiş numarası: önizleme sayı döner ve bir sonraki numara mevcut en büyükten büyüktür', async () => {
+    const r = await api('GET', '/api/is-emirleri/next-fis-no/preview', undefined, admin);
+    assert.equal(typeof r.govde.nextFisNo, 'number');
+    assert.ok(r.govde.nextFisNo > fisNo);
+  });
+
+  it('olmayan iş emri 404 "İş emri bulunamadı" (detay ve güncelleme)', async () => {
+    const g = await api('GET', '/api/is-emirleri/2147483000', undefined, admin);
+    assert.equal(g.durum, 404);
+    assert.equal(g.govde.message, 'İş emri bulunamadı');
+    const p = await api('PUT', '/api/is-emirleri/2147483000', { musteri_ad_soyad: 'x', parcalar: [] }, admin);
+    assert.equal(p.durum, 404);
+  });
+
+  it('liste durum filtresiyle çalışır', async () => {
+    const r = await api('GET', '/api/is-emirleri?durum=beklemede', undefined, admin);
+    assert.equal(r.durum, 200);
+    assert.ok(r.govde.every((x) => x.durum === 'beklemede'));
+    assert.ok(r.govde.some((x) => x.id === ieId));
+  });
+
+  it('tamamlanan iş emrini personel düzenleyemez (403), silemez (403); admin düzenler', async () => {
+    const tamam = await api('PUT', `/api/is-emirleri/${ieId}`, { musteri_ad_soyad: 'x', plaka, durum: 'tamamlandi', parcalar: [{ takilan_parca: 'Yağ değişimi', adet: 2, birim_fiyat: 100, maliyet: 60 }] }, admin);
+    assert.equal(tamam.durum, 200);
+    assert.ok(tamam.govde.tamamlama_tarihi, 'geçişte tamamlama tarihi verilir');
+    const personel = await api('PUT', `/api/is-emirleri/${ieId}`, { musteri_ad_soyad: 'y', parcalar: [] }, k.servis.token);
+    assert.equal(personel.durum, 403);
+    assert.equal(personel.govde.message, 'Tamamlanan iş emrini düzenleme yetkiniz yok');
+    const sil = await api('DELETE', `/api/is-emirleri/${ieId}`, undefined, k.servis.token);
+    assert.equal(sil.durum, 403);
+    assert.equal(sil.govde.message, 'Admin yetkisi gerekli');
+  });
+
+  it('QR token: aynı plaka için aynı token; plakasız 400; herkese açık geçmiş maliyet/kâr/telefon içermez', async () => {
+    const ilk = await api('POST', '/api/is-emirleri/qr-token', { plaka: plaka.toLowerCase() }, admin);
+    assert.equal(ilk.durum, 200);
+    assert.equal(ilk.govde.plaka, plaka);
+    const ikinci = await api('POST', '/api/is-emirleri/qr-token', { plaka }, admin);
+    assert.equal(ikinci.govde.token, ilk.govde.token);
+    const bos = await api('POST', '/api/is-emirleri/qr-token', { plaka: ' - ' }, admin);
+    assert.equal(bos.durum, 400);
+    assert.equal(bos.govde.message, 'Plaka gerekli');
+
+    const gecmis = await api('GET', `/api/servis-gecmisi/${ilk.govde.token}`);
+    assert.equal(gecmis.durum, 200);
+    assert.equal(gecmis.govde.plaka, plaka);
+    assert.ok(gecmis.govde.servisler.length >= 1);
+    assert.deepEqual(gecmis.govde.servisler.find((x) => x.fis_no === fisNo).islemler, [{ islem: 'Yağ değişimi', adet: 2 }]);
+    const metin = JSON.stringify(gecmis.govde);
+    for (const alan of ['maliyet', '"kar"', 'telefon', 'musteri_ad_soyad']) assert.ok(!metin.includes(alan), `${alan} sızıyor`);
+
+    const yok = await api('GET', '/api/servis-gecmisi/yok-boyle-token');
+    assert.equal(yok.durum, 404);
+    assert.equal(yok.govde.message, 'Geçersiz veya süresi dolmuş bağlantı');
+  });
+
+  it('admin siler: 200 "İş emri silindi"; sonra detay 404', async () => {
+    const r = await api('DELETE', `/api/is-emirleri/${ieId}`, undefined, admin);
+    assert.equal(r.durum, 200);
+    assert.equal(r.govde.message, 'İş emri silindi');
+    assert.equal((await api('GET', `/api/is-emirleri/${ieId}`, undefined, admin)).durum, 404);
   });
 });

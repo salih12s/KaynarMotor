@@ -13,4 +13,4 @@ export const gevsekSayi = z.union([z.number(), z.string()]).nullish();
 /** true/false ya da formlardan gelen 'true'/'false', 0/1. */
 export const gevsekMantiksal = z.union([z.boolean(), z.string(), z.number()]).nullish();
 /** Yapısı işleyicide ayrıca ele alınan değer (ör. ödeme dağılımı: nesne, dizi ya da JSON metni). */
-export const serbest = z.unknown();
+export const serbest = z.unknown().optional();
