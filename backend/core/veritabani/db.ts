@@ -140,7 +140,10 @@ export async function maxPaket(): Promise<number> {
 
 /** Paket sınırını aştığı için reddedilen sorgu mu? */
 export function paketHatasi(error: any): boolean {
-  return Boolean(error) && (error.code === 'ER_NET_PACKET_TOO_LARGE' || error.code === 'ER_NET_ERROR_ON_WRITE' || /max_allowed_packet|Got a packet bigger/i.test(error.message || ''));
+  return (
+    Boolean(error) &&
+    (error.code === 'ER_NET_PACKET_TOO_LARGE' || error.code === 'ER_NET_ERROR_ON_WRITE' || /max_allowed_packet|Got a packet bigger/i.test(error.message || ''))
+  );
 }
 
 /** Tekil (UNIQUE) kısıt ihlali mi? (PostgreSQL'deki 23505 kodunun karşılığı) */

@@ -49,39 +49,65 @@ const Login = () => {
     <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: '#1a1a1a' }}>
       <Paper elevation={6} sx={{ p: 4, width: 400, maxWidth: '95%' }}>
         <Box sx={{ textAlign: 'center', mb: 2 }}>
-          <img src="/KaynarMotor.png" alt="Kaynar Motor" width="200" height="222"
-            style={{ width: 200, maxWidth: '80%', height: 'auto', display: 'block', margin: '0 auto' }} />
+          <img
+            src="/KaynarMotor.png"
+            alt="Kaynar Motor"
+            width="200"
+            height="222"
+            style={{ width: 200, maxWidth: '80%', height: 'auto', display: 'block', margin: '0 auto' }}
+          />
         </Box>
         <Typography variant="body2" textAlign="center" color="text.secondary" mb={3}>
           Servis Yönetim Sistemi
         </Typography>
 
-        <Tabs value={tab} onChange={(_, v) => { setTab(v); setError(''); setSuccess(''); }} centered sx={{ mb: 3 }}>
+        <Tabs
+          value={tab}
+          onChange={(_, v) => {
+            setTab(v);
+            setError('');
+            setSuccess('');
+          }}
+          centered
+          sx={{ mb: 3 }}
+        >
           <Tab label="Giriş Yap" />
           <Tab label="Kayıt Ol" />
         </Tabs>
 
-        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-        {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
+        {success && (
+          <Alert severity="success" sx={{ mb: 2 }}>
+            {success}
+          </Alert>
+        )}
 
         {tab === 0 ? (
           <form onSubmit={handleLogin}>
-            <TextField fullWidth label="Kullanıcı Adı" name="kullanici_adi" value={formData.kullanici_adi}
-              onChange={handleChange} margin="normal" required autoFocus />
-            <TextField fullWidth label="Şifre" name="sifre" type="password" value={formData.sifre}
-              onChange={handleChange} margin="normal" required />
+            <TextField
+              fullWidth
+              label="Kullanıcı Adı"
+              name="kullanici_adi"
+              value={formData.kullanici_adi}
+              onChange={handleChange}
+              margin="normal"
+              required
+              autoFocus
+            />
+            <TextField fullWidth label="Şifre" name="sifre" type="password" value={formData.sifre} onChange={handleChange} margin="normal" required />
             <Button type="submit" fullWidth variant="contained" size="large" sx={{ mt: 2 }} disabled={loading}>
               {loading ? 'Giriş yapılıyor...' : 'Giriş Yap'}
             </Button>
           </form>
         ) : (
           <form onSubmit={handleRegister}>
-            <TextField fullWidth label="Ad Soyad" name="ad_soyad" value={formData.ad_soyad}
-              onChange={handleChange} margin="normal" required autoFocus />
-            <TextField fullWidth label="Kullanıcı Adı" name="kullanici_adi" value={formData.kullanici_adi}
-              onChange={handleChange} margin="normal" required />
-            <TextField fullWidth label="Şifre" name="sifre" type="password" value={formData.sifre}
-              onChange={handleChange} margin="normal" required />
+            <TextField fullWidth label="Ad Soyad" name="ad_soyad" value={formData.ad_soyad} onChange={handleChange} margin="normal" required autoFocus />
+            <TextField fullWidth label="Kullanıcı Adı" name="kullanici_adi" value={formData.kullanici_adi} onChange={handleChange} margin="normal" required />
+            <TextField fullWidth label="Şifre" name="sifre" type="password" value={formData.sifre} onChange={handleChange} margin="normal" required />
             <Button type="submit" fullWidth variant="contained" size="large" sx={{ mt: 2 }} disabled={loading}>
               {loading ? 'Kayıt yapılıyor...' : 'Kayıt Ol'}
             </Button>

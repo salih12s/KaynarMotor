@@ -28,7 +28,16 @@ describe('motorYetkileri: rol matrisi', () => {
 
   test('yatırımcı (vitrin): yalnızca ilan fiyatı; hiçbir işlem yapamaz; kâr kapalı', () => {
     const y = motorYetkileri({ rol: 'yatirimci', liste_fiyati_gor: true });
-    expect(y).toMatchObject({ isYatirimciVitrin: true, isYatirimciSahip: false, full: false, canListe: true, canAlis: false, canMusteri: false, canKar: false, canEdit: false });
+    expect(y).toMatchObject({
+      isYatirimciVitrin: true,
+      isYatirimciSahip: false,
+      full: false,
+      canListe: true,
+      canAlis: false,
+      canMusteri: false,
+      canKar: false,
+      canEdit: false,
+    });
   });
 
   test('yatırımcı (sahip): kendi motorunu tam görür ama işlem yapamaz ve kâr (admin payı) görmez', () => {
@@ -90,7 +99,16 @@ describe('form dönüşümleri ve ödeme çözümleme', () => {
 
   test('motordenForm: boşlar "", tarih yyyy-aa-gg, yatırımcı varlığı bayrağa dönüşür', () => {
     const f = motordenForm({ plaka: 'X', tarih: '2026-09-01T12:00:00', yatirimci_id: 9, fatura_kesildi: true });
-    expect(f).toMatchObject({ plaka: 'X', marka: '', tarih: '2026-09-01', yatirimci: true, yatirimci_id: 9, fatura_kesildi: true, durum: 'stokta', stok_tipi: 'sahip' });
+    expect(f).toMatchObject({
+      plaka: 'X',
+      marka: '',
+      tarih: '2026-09-01',
+      yatirimci: true,
+      yatirimci_id: 9,
+      fatura_kesildi: true,
+      durum: 'stokta',
+      stok_tipi: 'sahip',
+    });
     expect(motordenForm({}).yatirimci).toBe(false);
   });
 

@@ -10,8 +10,16 @@ export const useMusteriAra = () => {
   const [musteriOptions, setMusteriOptions] = useState([]);
 
   const searchMusteri = async (query) => {
-    if (!query || query.length < 2) { setMusteriOptions([]); return; }
-    try { const res = await sonAra(musteriService.search(query)); if (res) setMusteriOptions(res.data); } catch { setMusteriOptions([]); }
+    if (!query || query.length < 2) {
+      setMusteriOptions([]);
+      return;
+    }
+    try {
+      const res = await sonAra(musteriService.search(query));
+      if (res) setMusteriOptions(res.data);
+    } catch {
+      setMusteriOptions([]);
+    }
   };
 
   return { musteriOptions, searchMusteri };

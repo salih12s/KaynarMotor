@@ -9,11 +9,16 @@ const assert = require('node:assert/strict');
 const { sunucuBaslat } = require('./yardimci');
 
 const SON = Date.now().toString(36);
-let s, api, admin, sayac = 0;
+let s,
+  api,
+  admin,
+  sayac = 0;
 const benzersiz = (onek) => `${onek}${SON}${++sayac}`;
 
 before(async () => {
-  s = await sunucuBaslat(); api = s.api; admin = s.admin;
+  s = await sunucuBaslat();
+  api = s.api;
+  admin = s.admin;
 });
 after(() => s && s.durdur());
 
@@ -39,7 +44,10 @@ describe('#53 kimlik doğrulama: HTTP sözleşmesi', () => {
 
   it('kayıt doğrulaması: eksik alan, kısa şifre, alınmış ad; gövde dizi/boşsa 400', async () => {
     assert.equal((await api('POST', '/api/auth/register', { kullanici_adi: 'x' })).govde.message, 'Tüm alanlar zorunludur');
-    assert.equal((await api('POST', '/api/auth/register', { kullanici_adi: benzersiz('k'), sifre: 'kisa', ad_soyad: 'A' })).govde.message, 'Şifre en az 8 karakter olmalıdır');
+    assert.equal(
+      (await api('POST', '/api/auth/register', { kullanici_adi: benzersiz('k'), sifre: 'kisa', ad_soyad: 'A' })).govde.message,
+      'Şifre en az 8 karakter olmalıdır',
+    );
     const cift = await api('POST', '/api/auth/register', { kullanici_adi: ad, sifre: SIFRE, ad_soyad: 'Başka' });
     assert.equal(cift.durum, 400);
     assert.equal(cift.govde.message, 'Bu kullanıcı adı zaten kullanılıyor');
@@ -79,7 +87,13 @@ describe('#53 kimlik doğrulama: HTTP sözleşmesi', () => {
 
   it('yönetim uçları yalnız admin: personel 403 "Bu işlem için admin yetkisi gerekli"; tokensız 401', async () => {
     const t = (await api('POST', '/api/auth/login', { kullanici_adi: ad, sifre: SIFRE })).govde.token;
-    for (const [m, y] of [['GET', '/api/auth/users'], ['POST', '/api/auth/users'], ['GET', '/api/auth/yatirimcilar'], ['GET', '/api/auth/activity-logs'], ['PATCH', `/api/auth/users/${hesapId}/yetkiler`]]) {
+    for (const [m, y] of [
+      ['GET', '/api/auth/users'],
+      ['POST', '/api/auth/users'],
+      ['GET', '/api/auth/yatirimcilar'],
+      ['GET', '/api/auth/activity-logs'],
+      ['PATCH', `/api/auth/users/${hesapId}/yetkiler`],
+    ]) {
       const r = await api(m, y, m === 'GET' ? undefined : {}, t);
       assert.equal(r.durum, 403, `${m} ${y}`);
       assert.equal(r.govde.message, 'Bu işlem için admin yetkisi gerekli');
@@ -116,12 +130,18 @@ describe('#53 kimlik doğrulama: HTTP sözleşmesi', () => {
   it('etkinlik günlüğü: giriş denemeleri iz bırakır; çıkış 200', async () => {
     const loglar = (await api('GET', '/api/auth/activity-logs', undefined, admin)).govde;
     assert.ok(Array.isArray(loglar));
-    assert.ok(loglar.some((l) => l.islem_tipi === 'LOGIN_FAILED' && l.kullanici_adi === ad), 'başarısız deneme günlükte');
-    assert.ok(loglar.some((l) => l.islem_tipi === 'REGISTER' && l.kullanici_adi === ad), 'kayıt günlükte');
+    assert.ok(
+      loglar.some((l) => l.islem_tipi === 'LOGIN_FAILED' && l.kullanici_adi === ad),
+      'başarısız deneme günlükte',
+    );
+    assert.ok(
+      loglar.some((l) => l.islem_tipi === 'REGISTER' && l.kullanici_adi === ad),
+      'kayıt günlükte',
+    );
     assert.equal((await api('POST', '/api/auth/logout', undefined, admin)).govde.message, 'Çıkış başarılı');
   });
 
-  it('giriş sınırı hesap başınadır: bir çalışanın yanlış denemeleri 429 alır, AYNI IP\'deki başka hesap etkilenmez', async () => {
+  it("giriş sınırı hesap başınadır: bir çalışanın yanlış denemeleri 429 alır, AYNI IP'deki başka hesap etkilenmez", async () => {
     const calisan = benzersiz('f11_lim_');
     for (let i = 0; i < 10; i++) {
       assert.equal((await api('POST', '/api/auth/login', { kullanici_adi: calisan, sifre: 'yanlis' })).durum, 401, `deneme ${i + 1}`);

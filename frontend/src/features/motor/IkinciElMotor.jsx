@@ -34,20 +34,49 @@ const IkinciElMotor = () => {
 
   return (
     <Box>
-      <IstatistikSatiri motorlar={liste.motorlar} stats={liste.stats} canKar={canKar} salt={salt}
-        onExcel={() => excelIndir(excelHtml(filteredMotorlar, { canAlis, canKar }))} onYeni={() => form.openDialog()} />
+      <IstatistikSatiri
+        motorlar={liste.motorlar}
+        stats={liste.stats}
+        canKar={canKar}
+        salt={salt}
+        onExcel={() => excelIndir(excelHtml(filteredMotorlar, { canAlis, canKar }))}
+        onYeni={() => form.openDialog()}
+      />
 
-      <Suzgecler search={search} setSearch={setSearch} tarihBaslangic={tarihBaslangic} setTarihBaslangic={setTarihBaslangic}
-        tarihBitis={tarihBitis} setTarihBitis={setTarihBitis} />
+      <Suzgecler
+        search={search}
+        setSearch={setSearch}
+        tarihBaslangic={tarihBaslangic}
+        setTarihBaslangic={setTarihBaslangic}
+        tarihBitis={tarihBitis}
+        setTarihBitis={setTarihBitis}
+      />
 
-      <SatisListesi filteredMotorlar={filteredMotorlar} isMobile={isMobile} canAlis={canAlis} canKar={canKar} salt={salt} isAdmin={isAdmin}
-        onDetay={liste.detayAc} onDuzenle={form.openDialog} onSil={liste.sil} />
+      <SatisListesi
+        filteredMotorlar={filteredMotorlar}
+        isMobile={isMobile}
+        canAlis={canAlis}
+        canKar={canKar}
+        salt={salt}
+        isAdmin={isAdmin}
+        onDetay={liste.detayAc}
+        onDuzenle={form.openDialog}
+        onSil={liste.sil}
+      />
 
       <SatisFormModal form={form} stokMotorlar={liste.stokMotorlar} yatirimciMap={liste.yatirimciMap} canAlis={canAlis} canKar={canKar} isMobile={isMobile} />
 
       {/* Motor Detay Modal */}
-      <MotorDetayModal open={liste.detayModal.open} data={liste.detayModal.data} onClose={liste.detayKapat} printRef={printRef} isMobile={isMobile}
-        canAlis={canAlis} canKar={canKar} salt={salt} />
+      <MotorDetayModal
+        open={liste.detayModal.open}
+        data={liste.detayModal.data}
+        onClose={liste.detayKapat}
+        printRef={printRef}
+        isMobile={isMobile}
+        canAlis={canAlis}
+        canKar={canKar}
+        salt={salt}
+      />
     </Box>
   );
 };

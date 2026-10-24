@@ -16,16 +16,15 @@ export const tokenOku = async (db: Veritabani, plaka: string) =>
 
 /** Plakayı normalize ederek eşleştirir (büyük/küçük harf ve boşluk farkları sorun olmasın). */
 export const plakayaGoreServisler = async (db: Veritabani, plaka: string) =>
-  (await db.query(
-    `SELECT id, fis_no, plaka, marka, model_tip, km, durum, created_at, teslim_tarihi, tamamlama_tarihi, gercek_toplam_ucret
+  (
+    await db.query(
+      `SELECT id, fis_no, plaka, marka, model_tip, km, durum, created_at, teslim_tarihi, tamamlama_tarihi, gercek_toplam_ucret
      FROM is_emirleri
      WHERE REGEXP_REPLACE(UPPER(COALESCE(plaka, '')), '[^A-Z0-9]', '') = $1
      ORDER BY created_at DESC`,
-    [plaka]
-  )).rows;
+      [plaka],
+    )
+  ).rows;
 
 export const parcaIsimleri = async (db: Veritabani, isEmriIdleri: number[]) =>
-  (await db.query(
-    'SELECT is_emri_id, takilan_parca, adet FROM parcalar WHERE is_emri_id = ANY($1) ORDER BY id',
-    [isEmriIdleri]
-  )).rows;
+  (await db.query('SELECT is_emri_id, takilan_parca, adet FROM parcalar WHERE is_emri_id = ANY($1) ORDER BY id', [isEmriIdleri])).rows;

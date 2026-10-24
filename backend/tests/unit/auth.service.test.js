@@ -18,8 +18,15 @@ const { sifreParmagi } = require('../../core/middleware/auth');
 const SIFRE = 'GucluSifre1';
 const OZET = bcrypt.hashSync(SIFRE, 4); // düşük maliyet: yalnızca test hızı için
 const kullaniciSatiri = (ek = {}) => ({
-  id: 7, kullanici_adi: 'ali', sifre: OZET, ad_soyad: 'Ali Usta', rol: 'personel', onay_durumu: 'onaylandi',
-  servis_yetkisi: true, motor_satis_gor: false, ...ek,
+  id: 7,
+  kullanici_adi: 'ali',
+  sifre: OZET,
+  ad_soyad: 'Ali Usta',
+  rol: 'personel',
+  onay_durumu: 'onaylandi',
+  servis_yetkisi: true,
+  motor_satis_gor: false,
+  ...ek,
 });
 const girisDb = (satir) => sahteDb([['SELECT * FROM kullanicilar WHERE kullanici_adi', satir ? [satir] : []]]);
 const sorgular = (db, parca) => db.cagrilar.filter((c) => c.sql.includes(parca));
@@ -47,7 +54,10 @@ describe('giriş', () => {
   it('kullanıcı YOKKEN de bcrypt doğrulaması çalışır (süre farkından kullanıcı adı sızmasın)', async () => {
     const asil = bcrypt.compare;
     let cagri = 0;
-    bcrypt.compare = (...a) => { cagri++; return asil(...a); };
+    bcrypt.compare = (...a) => {
+      cagri++;
+      return asil(...a);
+    };
     try {
       await servis.giris(girisDb(null), { kullanici_adi: 'yok', sifre: SIFRE }).catch(() => {});
       assert.equal(cagri, 1);
@@ -58,15 +68,21 @@ describe('giriş', () => {
 
   it('onaylanmamış hesap: DOĞRU şifreyle 403 "henüz onaylanmadı"; YANLIŞ şifreyle 401 (durum sızmaz)', async () => {
     const onaysiz = kullaniciSatiri({ onay_durumu: 'beklemede' });
-    await assert.rejects(servis.giris(girisDb(onaysiz), { kullanici_adi: 'ali', sifre: SIFRE }), (h) => h.status === 403 && h.message === 'Hesabınız henüz onaylanmadı');
-    await assert.rejects(servis.giris(girisDb(onaysiz), { kullanici_adi: 'ali', sifre: 'Yanlis123' }), (h) => h.status === 401 && h.message === 'Geçersiz kullanıcı adı veya şifre');
+    await assert.rejects(
+      servis.giris(girisDb(onaysiz), { kullanici_adi: 'ali', sifre: SIFRE }),
+      (h) => h.status === 403 && h.message === 'Hesabınız henüz onaylanmadı',
+    );
+    await assert.rejects(
+      servis.giris(girisDb(onaysiz), { kullanici_adi: 'ali', sifre: 'Yanlis123' }),
+      (h) => h.status === 401 && h.message === 'Geçersiz kullanıcı adı veya şifre',
+    );
   });
 
   it('başarılı giriş: token yalnızca kimlik + şifre parmak izi taşır; yanıtta şifre özeti ve onay durumu YOK', async () => {
     const sonuc = await servis.giris(girisDb(kullaniciSatiri()), { kullanici_adi: 'ali', sifre: SIFRE });
     const yuk = jwt.verify(sonuc.token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
     assert.deepEqual([yuk.id, yuk.kullanici_adi, yuk.sv], [7, 'ali', sifreParmagi(OZET)]);
-    assert.ok(!('rol' in yuk) && !('servis_yetkisi' in yuk), 'rol/yetki token içinde taşınmaz (her istekte DB\'den okunur)');
+    assert.ok(!('rol' in yuk) && !('servis_yetkisi' in yuk), "rol/yetki token içinde taşınmaz (her istekte DB'den okunur)");
     assert.equal(sonuc.user.id, 7);
     assert.equal(sonuc.user.servis_yetkisi, true);
     const metin = JSON.stringify(sonuc);
@@ -89,14 +105,17 @@ describe('kayıt (herkese açık)', () => {
     }
   });
 
-  it('şifre kuralı: 8 karakterden kısa ya da 128\'den uzun reddedilir; metin olmayan şifre de', async () => {
+  it("şifre kuralı: 8 karakterden kısa ya da 128'den uzun reddedilir; metin olmayan şifre de", async () => {
     await assert.rejects(servis.kayitOl(sahteDb(), { ...gecerli, sifre: 'kisa' }), (h) => h.message === 'Şifre en az 8 karakter olmalıdır');
     await assert.rejects(servis.kayitOl(sahteDb(), { ...gecerli, sifre: 'x'.repeat(129) }), (h) => h.message === 'Şifre en fazla 128 karakter olabilir');
     await assert.rejects(servis.kayitOl(sahteDb(), { ...gecerli, sifre: 12345678 }), (h) => h.message === 'Şifre en az 8 karakter olmalıdır');
   });
 
   it('kullanıcı adı alınmışsa 400; başarıda şifre HASH olarak yazılır (düz metin değil), hesap onaysız başlar', async () => {
-    await assert.rejects(servis.kayitOl(sahteDb([['SELECT id FROM kullanicilar', [{ id: 1 }]]]), gecerli), (h) => h.status === 400 && h.message === 'Bu kullanıcı adı zaten kullanılıyor');
+    await assert.rejects(
+      servis.kayitOl(sahteDb([['SELECT id FROM kullanicilar', [{ id: 1 }]]]), gecerli),
+      (h) => h.status === 400 && h.message === 'Bu kullanıcı adı zaten kullanılıyor',
+    );
     const db = sahteDb([['INSERT INTO kullanicilar', [{ id: 9, kullanici_adi: 'yeni' }]]]);
     await servis.kayitOl(db, gecerli);
     const ekleme = sorgular(db, 'INSERT INTO kullanicilar')[0];
@@ -110,7 +129,13 @@ describe('admin: kullanıcı oluşturma ve şifre sıfırlama', () => {
   const gecerli = { kullanici_adi: 'muh1', sifre: SIFRE, ad_soyad: 'Muhasebe Kişisi' };
 
   it('rol: personel/yatırımcı/muhasebeci geçerli; bilinmeyen rol (admin dahil!) "personel" olur; hesap hemen onaylı', async () => {
-    for (const [istenen, beklenen] of [['muhasebeci', 'muhasebeci'], ['yatirimci', 'yatirimci'], ['admin', 'personel'], ['x', 'personel'], [undefined, 'personel']]) {
+    for (const [istenen, beklenen] of [
+      ['muhasebeci', 'muhasebeci'],
+      ['yatirimci', 'yatirimci'],
+      ['admin', 'personel'],
+      ['x', 'personel'],
+      [undefined, 'personel'],
+    ]) {
       const db = sahteDb([['INSERT INTO kullanicilar', [{ id: 9, rol: beklenen }]]]);
       await servis.kullaniciOlustur(db, { ...gecerli, rol: istenen });
       const ekleme = sorgular(db, 'INSERT INTO kullanicilar')[0];
@@ -157,7 +182,12 @@ describe('admin: silme, onay ve yetki', () => {
     await servis.yetkileriGuncelle(db, 4, { motor_satis_gor: 'true', servis_yetkisi: 0, rol: 'admin', sifre: 'x', kar_gor: 1 });
     const guncelleme = db.cagrilar[0];
     assert.ok(!/rol|sifre/.test(guncelleme.sql), 'rol/şifre kolonu asla yazılmaz');
-    const eslesme = Object.fromEntries(guncelleme.sql.match(/(\w+) = \$(\d+)/g).map((p) => { const [k, i] = p.split(' = $'); return [k, guncelleme.params[Number(i) - 1]]; }));
+    const eslesme = Object.fromEntries(
+      guncelleme.sql.match(/(\w+) = \$(\d+)/g).map((p) => {
+        const [k, i] = p.split(' = $');
+        return [k, guncelleme.params[Number(i) - 1]];
+      }),
+    );
     assert.equal(eslesme.motor_satis_gor, true);
     assert.equal(eslesme.servis_yetkisi, false);
     assert.equal(eslesme.kar_gor, true);

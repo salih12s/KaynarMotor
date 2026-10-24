@@ -5,21 +5,46 @@ import type { IsEmriFiltresi } from './isEmirleri.schemas';
 export interface YeniIsEmri {
   fisNo: number;
   musteriId: number | null;
-  musteri_ad_soyad: unknown; adres: unknown; telefon: unknown; km: number;
-  model_tip: unknown; marka: unknown; aciklama: unknown; ariza_sikayetler: unknown;
-  tahmini_teslim_tarihi: unknown; tahmini_toplam_ucret: number;
-  durum: string; odeme_detaylari: unknown; kalan_odeme: number;
-  olusturan_kullanici_id: number; olusturan_kisi: string; teslim_eden_teknisyen: string;
-  plaka: unknown; tamamlama_tarihi: Date | null;
+  musteri_ad_soyad: unknown;
+  adres: unknown;
+  telefon: unknown;
+  km: number;
+  model_tip: unknown;
+  marka: unknown;
+  aciklama: unknown;
+  ariza_sikayetler: unknown;
+  tahmini_teslim_tarihi: unknown;
+  tahmini_toplam_ucret: number;
+  durum: string;
+  odeme_detaylari: unknown;
+  kalan_odeme: number;
+  olusturan_kullanici_id: number;
+  olusturan_kisi: string;
+  teslim_eden_teknisyen: string;
+  plaka: unknown;
+  tamamlama_tarihi: Date | null;
 }
 
 export interface IsEmriGuncelleme {
-  musteri_ad_soyad: unknown; adres: unknown; telefon: unknown; km: number;
-  model_tip: unknown; marka: unknown; aciklama: unknown; ariza_sikayetler: unknown;
-  tahmini_teslim_tarihi: unknown; tahmini_toplam_ucret: number;
-  durum: unknown; odeme_detaylari: unknown;
-  teslim_alan_ad_soyad: unknown; teslim_eden_teknisyen: unknown; teslim_tarihi: unknown;
-  tamamlama_tarihi: Date | null; kalan_odeme: number; plaka: unknown; musteriId: number | null;
+  musteri_ad_soyad: unknown;
+  adres: unknown;
+  telefon: unknown;
+  km: number;
+  model_tip: unknown;
+  marka: unknown;
+  aciklama: unknown;
+  ariza_sikayetler: unknown;
+  tahmini_teslim_tarihi: unknown;
+  tahmini_toplam_ucret: number;
+  durum: unknown;
+  odeme_detaylari: unknown;
+  teslim_alan_ad_soyad: unknown;
+  teslim_eden_teknisyen: unknown;
+  teslim_tarihi: unknown;
+  tamamlama_tarihi: Date | null;
+  kalan_odeme: number;
+  plaka: unknown;
+  musteriId: number | null;
 }
 
 export interface ParcaSatiri {
@@ -52,8 +77,7 @@ export const listele = async (db: Veritabani, { baslangic, bitis, durum }: IsEmr
   return (await db.query(sorgu, params)).rows;
 };
 
-export const idyeGoreBul = async (db: Veritabani, id: number) =>
-  (await db.query('SELECT * FROM is_emirleri WHERE id = $1', [id])).rows[0] ?? null;
+export const idyeGoreBul = async (db: Veritabani, id: number) => (await db.query('SELECT * FROM is_emirleri WHERE id = $1', [id])).rows[0] ?? null;
 
 export const parcalariListele = async (db: Veritabani, isEmriId: number) =>
   (await db.query('SELECT * FROM parcalar WHERE is_emri_id = $1 ORDER BY id', [isEmriId])).rows;
@@ -68,34 +92,52 @@ export const fisNoKilidiniAl = async (db: Veritabani) => {
 };
 
 export const ekle = async (db: Veritabani, e: YeniIsEmri) =>
-  (await db.query(
-    `INSERT INTO is_emirleri (fis_no, musteri_id, musteri_ad_soyad, adres, telefon, km, model_tip, marka,
+  (
+    await db.query(
+      `INSERT INTO is_emirleri (fis_no, musteri_id, musteri_ad_soyad, adres, telefon, km, model_tip, marka,
       aciklama, ariza_sikayetler, tahmini_teslim_tarihi, tahmini_toplam_ucret, durum, odeme_detaylari, kalan_odeme,
       olusturan_kullanici_id, olusturan_kisi, teslim_eden_teknisyen, plaka, tamamlama_tarihi)
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20)
      RETURNING *`,
-    [e.fisNo, e.musteriId, e.musteri_ad_soyad, e.adres, e.telefon, e.km, e.model_tip, e.marka,
-     e.aciklama, e.ariza_sikayetler, e.tahmini_teslim_tarihi, e.tahmini_toplam_ucret,
-     e.durum, e.odeme_detaylari, e.kalan_odeme, e.olusturan_kullanici_id, e.olusturan_kisi, e.teslim_eden_teknisyen,
-     e.plaka, e.tamamlama_tarihi]
-  )).rows[0];
+      [
+        e.fisNo,
+        e.musteriId,
+        e.musteri_ad_soyad,
+        e.adres,
+        e.telefon,
+        e.km,
+        e.model_tip,
+        e.marka,
+        e.aciklama,
+        e.ariza_sikayetler,
+        e.tahmini_teslim_tarihi,
+        e.tahmini_toplam_ucret,
+        e.durum,
+        e.odeme_detaylari,
+        e.kalan_odeme,
+        e.olusturan_kullanici_id,
+        e.olusturan_kisi,
+        e.teslim_eden_teknisyen,
+        e.plaka,
+        e.tamamlama_tarihi,
+      ],
+    )
+  ).rows[0];
 
 export const parcaEkle = async (
-  db: Veritabani, isEmriId: number,
-  p: { parca_kodu: unknown; takilan_parca: unknown; adet: number; birim_fiyat: number; maliyet: number; toplam_fiyat: number }
+  db: Veritabani,
+  isEmriId: number,
+  p: { parca_kodu: unknown; takilan_parca: unknown; adet: number; birim_fiyat: number; maliyet: number; toplam_fiyat: number },
 ) => {
   await db.query(
     `INSERT INTO parcalar (is_emri_id, parca_kodu, takilan_parca, adet, birim_fiyat, maliyet, toplam_fiyat)
      VALUES ($1,$2,$3,$4,$5,$6,$7)`,
-    [isEmriId, p.parca_kodu, p.takilan_parca, p.adet, p.birim_fiyat, p.maliyet, p.toplam_fiyat]
+    [isEmriId, p.parca_kodu, p.takilan_parca, p.adet, p.birim_fiyat, p.maliyet, p.toplam_fiyat],
   );
 };
 
 export const toplamlariGuncelle = async (db: Veritabani, id: number, toplamFiyat: number, toplamMaliyet: number, kar: number) => {
-  await db.query(
-    'UPDATE is_emirleri SET gercek_toplam_ucret = $1, toplam_maliyet = $2, kar = $3 WHERE id = $4',
-    [toplamFiyat, toplamMaliyet, kar, id]
-  );
+  await db.query('UPDATE is_emirleri SET gercek_toplam_ucret = $1, toplam_maliyet = $2, kar = $3 WHERE id = $4', [toplamFiyat, toplamMaliyet, kar, id]);
 };
 
 /** Satırı kilitleyerek mevcut durumu okur: eşzamanlı düzenleme/silme sıraya girer (kilitsiz okuma ER_CHECKREAD ile düşerdi). */
@@ -116,10 +158,28 @@ export const guncelle = async (db: Veritabani, id: number, e: IsEmriGuncelleme) 
       durum=$11, odeme_detaylari=$12, teslim_alan_ad_soyad=$13, teslim_eden_teknisyen=$14,
       teslim_tarihi=$15, tamamlama_tarihi=COALESCE($16, tamamlama_tarihi), kalan_odeme=$18, plaka=$19, musteri_id=COALESCE($20, musteri_id),
       updated_at=CURRENT_TIMESTAMP WHERE id=$17`,
-    [e.musteri_ad_soyad, e.adres, e.telefon, e.km, e.model_tip, e.marka,
-     e.aciklama, e.ariza_sikayetler, e.tahmini_teslim_tarihi, e.tahmini_toplam_ucret,
-     e.durum, e.odeme_detaylari, e.teslim_alan_ad_soyad, e.teslim_eden_teknisyen,
-     e.teslim_tarihi, e.tamamlama_tarihi, id, e.kalan_odeme, e.plaka, e.musteriId]
+    [
+      e.musteri_ad_soyad,
+      e.adres,
+      e.telefon,
+      e.km,
+      e.model_tip,
+      e.marka,
+      e.aciklama,
+      e.ariza_sikayetler,
+      e.tahmini_teslim_tarihi,
+      e.tahmini_toplam_ucret,
+      e.durum,
+      e.odeme_detaylari,
+      e.teslim_alan_ad_soyad,
+      e.teslim_eden_teknisyen,
+      e.teslim_tarihi,
+      e.tamamlama_tarihi,
+      id,
+      e.kalan_odeme,
+      e.plaka,
+      e.musteriId,
+    ],
   );
 };
 

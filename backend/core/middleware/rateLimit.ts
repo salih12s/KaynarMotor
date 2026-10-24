@@ -43,10 +43,10 @@ export const girisLimiti = [girisIpLimiti, girisHesapLimiti];
 
 export const kayitLimiti = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 saat
-  max: 10,                  // IP başına saatte 10 kayıt denemesi
+  max: 10, // IP başına saatte 10 kayıt denemesi
   standardHeaders: true,
   legacyHeaders: false,
   message: {
-    message: 'Çok fazla kayıt denemesi yapıldı. Lütfen bir saat sonra tekrar deneyin.'
+    message: 'Çok fazla kayıt denemesi yapıldı. Lütfen bir saat sonra tekrar deneyin.',
   },
 });

@@ -9,7 +9,10 @@ const assert = require('node:assert/strict');
 const { sunucuBaslat, kullaniciOlustur } = require('./yardimci');
 
 const SON = Date.now().toString(36);
-let s, api, admin, sayac = 0;
+let s,
+  api,
+  admin,
+  sayac = 0;
 const benzersiz = (onek) => `${onek}${SON}${++sayac}`;
 const k = {};
 
@@ -17,7 +20,9 @@ const PNG = 'data:image/png;base64,iVBORw0KGgo=';
 const MP4 = `data:video/mp4;base64,${Buffer.alloc(100, 7).toString('base64')}`; // 100 baytlık sahte video
 
 before(async () => {
-  s = await sunucuBaslat(); api = s.api; admin = s.admin;
+  s = await sunucuBaslat();
+  api = s.api;
+  admin = s.admin;
   k.motorcu = await kullaniciOlustur(api, admin, benzersiz('f12_mtr_'), 'personel', { motor_vitrin_yetkisi: true });
   k.aksesuarci = await kullaniciOlustur(api, admin, benzersiz('f12_aks_'), 'personel', { aksesuar_vitrin_yetkisi: true });
   k.bos = await kullaniciOlustur(api, admin, benzersiz('f12_bos_'), 'personel');
@@ -29,10 +34,22 @@ describe('#54 vitrin: HTTP sözleşmesi', () => {
 
   before(async () => {
     marka = benzersiz('Marka');
-    const r = await api('POST', '/api/vitrin', {
-      kategori: 'motor', baslik: benzersiz('F12 İlan '), segment: 'Scooter', marka, model: 'PCX', fiyat: 100000,
-      motor_durumu: 'sifir', gorseller: [PNG, PNG], video: MP4,
-    }, admin);
+    const r = await api(
+      'POST',
+      '/api/vitrin',
+      {
+        kategori: 'motor',
+        baslik: benzersiz('F12 İlan '),
+        segment: 'Scooter',
+        marka,
+        model: 'PCX',
+        fiyat: 100000,
+        motor_durumu: 'sifir',
+        gorseller: [PNG, PNG],
+        video: MP4,
+      },
+      admin,
+    );
     assert.equal(r.durum, 201, JSON.stringify(r.govde));
     ilanId = r.govde.id;
     const detay = await api('GET', `/api/vitrin/${ilanId}`);
@@ -161,8 +178,14 @@ describe('#54 vitrin: HTTP sözleşmesi', () => {
     assert.equal(yetkisiz.durum, 403);
     assert.equal(yetkisiz.govde.message, 'Bu kategori için vitrin yetkiniz yok');
     assert.equal((await api('PUT', '/api/vitrin/sirala', { kategori: 'motor', urun_ids: [] }, admin)).govde.message, 'Sıralanacak ilan listesi geçersiz');
-    assert.equal((await api('PUT', '/api/vitrin/sirala', { kategori: 'motor', urun_ids: [ilanId, ilanId] }, admin)).govde.message, 'İlan listesinde geçersiz veya tekrar eden kayıt var');
-    assert.equal((await api('PUT', '/api/vitrin/sirala', { kategori: 'aksesuar', urun_ids: [ilanId] }, admin)).govde.message, 'Bazı ilanlar bu kategoriye ait değil');
+    assert.equal(
+      (await api('PUT', '/api/vitrin/sirala', { kategori: 'motor', urun_ids: [ilanId, ilanId] }, admin)).govde.message,
+      'İlan listesinde geçersiz veya tekrar eden kayıt var',
+    );
+    assert.equal(
+      (await api('PUT', '/api/vitrin/sirala', { kategori: 'aksesuar', urun_ids: [ilanId] }, admin)).govde.message,
+      'Bazı ilanlar bu kategoriye ait değil',
+    );
   });
 
   it('oluşturma doğrulamaları: kategori, başlık, segment, medya türü, bağlantı; yetkisiz kategori 403', async () => {
@@ -170,8 +193,14 @@ describe('#54 vitrin: HTTP sözleşmesi', () => {
     assert.equal((await gonder({ kategori: 'x', baslik: 'a' })).govde.message, 'Geçersiz kategori');
     assert.equal((await gonder({ kategori: 'motor', baslik: '', segment: 'S' })).govde.message, 'Başlık zorunlu');
     assert.equal((await gonder({ kategori: 'motor', baslik: 'a' })).govde.message, 'Motor ilanı için segment zorunlu');
-    assert.match((await gonder({ kategori: 'motor', baslik: 'a', segment: 'S', gorseller: ['data:text/html;base64,AAAA'] })).govde.message, /Görseller yalnızca/);
-    assert.equal((await gonder({ kategori: 'motor', baslik: 'a', segment: 'S', rubik_link: 'javascript:alert(1)' })).govde.message, 'Ödeme linki http:// veya https:// ile başlamalıdır');
+    assert.match(
+      (await gonder({ kategori: 'motor', baslik: 'a', segment: 'S', gorseller: ['data:text/html;base64,AAAA'] })).govde.message,
+      /Görseller yalnızca/,
+    );
+    assert.equal(
+      (await gonder({ kategori: 'motor', baslik: 'a', segment: 'S', rubik_link: 'javascript:alert(1)' })).govde.message,
+      'Ödeme linki http:// veya https:// ile başlamalıdır',
+    );
     const yetkisiz = await gonder({ kategori: 'motor', baslik: 'a', segment: 'S' }, k.aksesuarci.token);
     assert.equal(yetkisiz.durum, 403);
     assert.equal((await gonder({ kategori: 'motor', baslik: 'a', segment: 'S' }, k.bos.token)).govde.message, 'Vitrin yönetim yetkiniz yok');

@@ -18,7 +18,9 @@ const KULLANICILAR = [
   kisi(5, 'Reddedilen Muhasebeci', 'muhasebeci', 'reddedildi'),
 ];
 
-beforeEach(() => { authService.getUsers.mockResolvedValue({ data: KULLANICILAR }); });
+beforeEach(() => {
+  authService.getUsers.mockResolvedValue({ data: KULLANICILAR });
+});
 
 describe('Yetkilendirme', () => {
   test('reddedilen personel ve muhasebeci listede yoktur; onaylı ve bekleyenler vardır', async () => {

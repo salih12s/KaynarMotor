@@ -16,36 +16,59 @@ export const useVitrinReferans = () => {
     try {
       const res = await vitrinService.getIletisim();
       const map = {};
-      res.data.forEach(r => { map[r.kategori] = r; });
+      res.data.forEach((r) => {
+        map[r.kategori] = r;
+      });
       setIletisim(map);
-    } catch { /* sessiz */ }
+    } catch {
+      /* sessiz */
+    }
   }, []);
 
   const loadSegmentler = useCallback(async () => {
     try {
       const res = await vitrinService.getSegmentler();
-      if (res.data?.length) setSegmentler(res.data.map(s => s.ad));
-    } catch { /* varsayılan listede kalır */ }
+      if (res.data?.length) setSegmentler(res.data.map((s) => s.ad));
+    } catch {
+      /* varsayılan listede kalır */
+    }
   }, []);
 
-  useEffect(() => { loadIletisim(); }, [loadIletisim]);
-  useEffect(() => { loadSegmentler(); }, [loadSegmentler]);
   useEffect(() => {
-    vitrinService.getYuklemeSiniri().then(res => { if (res.data?.video_mb) setVideoLimitMb(res.data.video_mb); }).catch(() => { /* varsayılan sınırda kalır */ });
+    loadIletisim();
+  }, [loadIletisim]);
+  useEffect(() => {
+    loadSegmentler();
+  }, [loadSegmentler]);
+  useEffect(() => {
+    vitrinService
+      .getYuklemeSiniri()
+      .then((res) => {
+        if (res.data?.video_mb) setVideoLimitMb(res.data.video_mb);
+      })
+      .catch(() => {
+        /* varsayılan sınırda kalır */
+      });
   }, []);
 
   // Stoktaki (satılmamış) motorları yükle — vitrine aktarma için
   useEffect(() => {
-    ikinciElMotorService.getAll()
-      .then(res => setStokMotorlar((res.data || []).filter(m => m.durum !== 'tamamlandi' && m.durum !== 'perte')))
-      .catch(() => { /* yetki yoksa boş kalır */ });
+    ikinciElMotorService
+      .getAll()
+      .then((res) => setStokMotorlar((res.data || []).filter((m) => m.durum !== 'tamamlandi' && m.durum !== 'perte')))
+      .catch(() => {
+        /* yetki yoksa boş kalır */
+      });
   }, []);
 
   // Aksesuar stoğunu yükle — aksesuar ilanını otomatik doldurmak için
   useEffect(() => {
-    aksesuarStokService.getAll()
-      .then(res => setStokAksesuarlar(res.data || []))
-      .catch(() => { /* yetki yoksa boş kalır */ });
+    aksesuarStokService
+      .getAll()
+      .then((res) => setStokAksesuarlar(res.data || []))
+      .catch(() => {
+        /* yetki yoksa boş kalır */
+      });
   }, []);
 
   return { segmentler, iletisim, loadIletisim, stokMotorlar, stokAksesuarlar, videoLimitMb };

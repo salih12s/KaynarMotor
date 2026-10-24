@@ -3,7 +3,10 @@ import { sonIstek } from './sonIstek';
 // Elle çözülebilen söz: yanıtların geliş sırasını biz belirleriz
 const ertelenmis = () => {
   let coz, reddet;
-  const vaat = new Promise((c, r) => { coz = c; reddet = r; });
+  const vaat = new Promise((c, r) => {
+    coz = c;
+    reddet = r;
+  });
   return { vaat, coz, reddet };
 };
 

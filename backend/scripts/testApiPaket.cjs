@@ -21,15 +21,29 @@ console.log('> sunucu paketleniyor (esbuild)');
 sunucuPaketle(giris);
 console.log(`> API testleri paketlenmiş sunucuya karşı koşuyor: ${giris}`);
 
-const sonuc = spawnSync(process.execPath, ['--import', 'tsx', '--test', '--test-concurrency=1', ...fs.readdirSync(path.join(BACKEND, 'tests', 'api'))
-  .filter((a) => a.endsWith('.test.js')).map((a) => path.join('tests', 'api', a))], {
-  cwd: BACKEND,
-  stdio: 'inherit',
-  env: { ...process.env, SUNUCU_GIRIS: giris },
-});
+const sonuc = spawnSync(
+  process.execPath,
+  [
+    '--import',
+    'tsx',
+    '--test',
+    '--test-concurrency=1',
+    ...fs
+      .readdirSync(path.join(BACKEND, 'tests', 'api'))
+      .filter((a) => a.endsWith('.test.js'))
+      .map((a) => path.join('tests', 'api', a)),
+  ],
+  {
+    cwd: BACKEND,
+    stdio: 'inherit',
+    env: { ...process.env, SUNUCU_GIRIS: giris },
+  },
+);
 
 try {
   fs.unlinkSync(giris);
   fs.rmdirSync(klasor);
-} catch { /* geçici klasör */ }
+} catch {
+  /* geçici klasör */
+}
 process.exit(sonuc.status === null ? 1 : sonuc.status);

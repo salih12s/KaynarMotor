@@ -12,21 +12,47 @@ const assert = require('node:assert/strict');
 const { sunucuBaslat, kullaniciOlustur } = require('./yardimci');
 
 const SON = Date.now().toString(36);
-let s, api, admin, sayac = 0;
+let s,
+  api,
+  admin,
+  sayac = 0;
 const benzersiz = (onek) => `${onek}${SON}${++sayac}`;
 const k = {};
 let motorId;
 
 before(async () => {
-  s = await sunucuBaslat(); api = s.api; admin = s.admin;
+  s = await sunucuBaslat();
+  api = s.api;
+  admin = s.admin;
   k.muhasebeci = await kullaniciOlustur(api, admin, benzersiz('f9_muh_'), 'muhasebeci');
   k.personel = await kullaniciOlustur(api, admin, benzersiz('f9_prs_'), 'personel');
-  const r = await api('POST', '/api/ikinci-el-motor', {
-    plaka: benzersiz('34F9').slice(0, 12), marka: 'Honda', model: 'PCX', yil: 2021, km: 8000,
-    alis_fiyati: 90000, noter_alis: 85000, noter_satis: 120000, satis_fiyati: 130000, masraflar: 2500, durum: 'tamamlandi',
-    alici_adi: 'Ali Veli', alici_tc: '11111111111', alici_telefon: '05551112233', alici_adres: 'Adres 1',
-    satici_adi: 'Satici S', satici_tc: '22222222222', yatirimci_kar: 4000, tarih: '2026-08-05', satis_tarihi: '2026-09-20',
-  }, admin);
+  const r = await api(
+    'POST',
+    '/api/ikinci-el-motor',
+    {
+      plaka: benzersiz('34F9').slice(0, 12),
+      marka: 'Honda',
+      model: 'PCX',
+      yil: 2021,
+      km: 8000,
+      alis_fiyati: 90000,
+      noter_alis: 85000,
+      noter_satis: 120000,
+      satis_fiyati: 130000,
+      masraflar: 2500,
+      durum: 'tamamlandi',
+      alici_adi: 'Ali Veli',
+      alici_tc: '11111111111',
+      alici_telefon: '05551112233',
+      alici_adres: 'Adres 1',
+      satici_adi: 'Satici S',
+      satici_tc: '22222222222',
+      yatirimci_kar: 4000,
+      tarih: '2026-08-05',
+      satis_tarihi: '2026-09-20',
+    },
+    admin,
+  );
   assert.equal(r.durum, 201);
   motorId = r.govde.id;
 });
@@ -45,7 +71,9 @@ describe('#41 anahtar kapalıyken muhasebeci motor satış verisine erişemez', 
 });
 
 describe('#42 anahtar açıkken muhasebeci salt okunur görür, kâr görmez', () => {
-  before(async () => { assert.equal((await anahtar(true)).durum, 200); });
+  before(async () => {
+    assert.equal((await anahtar(true)).durum, 200);
+  });
 
   it('satılmış motoru alım/satım, noter, satış ve kişi bilgisiyle görür', async () => {
     const r = await api('GET', `/api/ikinci-el-motor/${motorId}`, undefined, k.muhasebeci.token);
@@ -65,7 +93,11 @@ describe('#42 anahtar açıkken muhasebeci salt okunur görür, kâr görmez', (
     const liste = (await api('GET', '/api/ikinci-el-motor', undefined, k.muhasebeci.token)).govde.find((x) => x.id === motorId);
     assert.ok(liste, 'satılmış motor listede görünmeli');
     const ozet = (await api('GET', '/api/ikinci-el-motor/stats/ozet', undefined, k.muhasebeci.token)).govde;
-    for (const [ad, nesne] of [['tek', tek], ['liste', liste], ['özet', ozet]]) {
+    for (const [ad, nesne] of [
+      ['tek', tek],
+      ['liste', liste],
+      ['özet', ozet],
+    ]) {
       for (const alan of YASAK) assert.ok(!(alan in nesne) || nesne[alan] === null, `${ad}: ${alan} sızıyor (${nesne[alan]})`);
     }
     for (const alan of ['kar', 'masraflar', 'yatirimci_kar']) assert.ok(!(alan in tek), `tek: ${alan} anahtarı bile olmamalı`);
@@ -102,7 +134,9 @@ describe('#43 anahtar açıkken de yazamaz; anahtarı yalnız admin verir', () =
 describe('#44 belge arşivi alış/satış tarihini döner', () => {
   it('arşiv grubunda alis_tarihi ve satis_tarihi YYYY-AA-GG biçiminde gelir', async () => {
     // Arşiv yalnız belgesi olan motorları listeler: önce bu motora küçük bir PDF ekle (ham gövde, ?ad= ile)
-    const yukle = await api('POST', `/api/satis-belgeleri/motor/${motorId}?ad=sozlesme.pdf`, '%PDF-1.4 test', admin, { basliklar: { 'Content-Type': 'application/octet-stream' } });
+    const yukle = await api('POST', `/api/satis-belgeleri/motor/${motorId}?ad=sozlesme.pdf`, '%PDF-1.4 test', admin, {
+      basliklar: { 'Content-Type': 'application/octet-stream' },
+    });
     assert.equal(yukle.durum, 201, JSON.stringify(yukle.govde));
     const r = await api('GET', '/api/satis-belgeleri/arsiv', undefined, k.muhasebeci.token);
     assert.equal(r.durum, 200);

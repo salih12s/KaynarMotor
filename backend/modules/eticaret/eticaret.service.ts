@@ -14,8 +14,7 @@ import * as repo from './eticaret.repository';
 import type { PlatformAlanlari, SatisAlanlari } from './eticaret.repository';
 
 /** KDV boş bırakılırsa %20; 0 geçerli bir orandır. */
-const kdvVarsayilan = (kdv: unknown): number =>
-  kdv !== '' && kdv !== undefined && kdv !== null ? bosuSifir(kdv) : 20;
+const kdvVarsayilan = (kdv: unknown): number => (kdv !== '' && kdv !== undefined && kdv !== null ? bosuSifir(kdv) : 20);
 
 const yalnizAdmin = (kullanici: Kullanici) => {
   if (kullanici.rol !== 'admin') throw new YetkiHatasi('Admin yetkisi gerekli');
@@ -79,9 +78,18 @@ const satisHesapla = async (db: Veritabani, g: SatisGovdesi): Promise<SatisAlanl
   const hesap = hesaplaKomisyon(satis, alis, komisyon, kdv, kargo, miktar, platformTipi);
 
   return {
-    stok_id: bosuNull(g.stok_id), platform_id: bosuNull(g.platform_id), urun_adi: g.urun_adi,
-    alis_fiyati: alis, satis_fiyati: satis, komisyon_orani: komisyon, komisyon_tutari: hesap.komisyonTutari,
-    kdv_orani: kdv, kargo_ucreti: kargo, kar: hesap.netKar, adet: miktar, tarih: g.tarih,
+    stok_id: bosuNull(g.stok_id),
+    platform_id: bosuNull(g.platform_id),
+    urun_adi: g.urun_adi,
+    alis_fiyati: alis,
+    satis_fiyati: satis,
+    komisyon_orani: komisyon,
+    komisyon_tutari: hesap.komisyonTutari,
+    kdv_orani: kdv,
+    kargo_ucreti: kargo,
+    kar: hesap.netKar,
+    adet: miktar,
+    tarih: g.tarih,
   };
 };
 

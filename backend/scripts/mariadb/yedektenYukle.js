@@ -28,9 +28,7 @@ if (!envDosyasi) {
   console.error('HATA: --env <dosya> verin (hedef veritabanı bağlantısı).');
   process.exit(1);
 }
-const yedekKlasoru = path.resolve(
-  arg('--yedek', path.join(process.env.USERPROFILE || process.env.HOME, 'KaynarMariaDB', 'railway-yedek'))
-);
+const yedekKlasoru = path.resolve(arg('--yedek', path.join(process.env.USERPROFILE || process.env.HOME, 'KaynarMariaDB', 'railway-yedek')));
 const hedef = arg('--hedef', 'mariadb');
 // --atla tablo1,tablo2: bu tablolar boşaltılmaz/yüklenmez (büyük ve DEĞİŞMEDİĞİ bilinen tablolar için hız).
 // Doğrulama yine TÜM tablolarda çalışır: atlanan tabloların yedekle aynı olduğu kanıtlanır.
@@ -205,51 +203,53 @@ async function yukle() {
 
   const sadeceDogrula = bayrak('--sadece-dogrula');
   if (!sadeceDogrula) {
-  // Boşalt
-  if (hedef === 'mariadb') {
-    // TRUNCATE: AUTO_INCREMENT sayaçları da sıfırlanır (foreign_key_checks oturumda kapalıdır).
-    for (const t of [...siraliTablolar].reverse()) if (!atla.has(t)) await db.query(`TRUNCATE TABLE ${t}`);
-    await db.query('DELETE FROM fis_no_kilidi');
-    await db.query('INSERT INTO fis_no_kilidi (id) VALUES (1)');
-    // Dizi: SETVAL geriye gitmez; ilk değere ALTER SEQUENCE ile dönülür
-    await db.query('ALTER SEQUENCE vitrin_ilan_no_seq RESTART 1');
-  } else {
-    await db.query(`TRUNCATE ${siraliTablolar.join(', ')} RESTART IDENTITY CASCADE`);
-  }
-
-  // Yükle
-  for (const tablo of siraliTablolar) {
-    if (atla.has(tablo)) {
-      console.log(`${tablo.padEnd(28)} atlandı (doğrulama yine yapılır)`);
-      continue;
+    // Boşalt
+    if (hedef === 'mariadb') {
+      // TRUNCATE: AUTO_INCREMENT sayaçları da sıfırlanır (foreign_key_checks oturumda kapalıdır).
+      for (const t of [...siraliTablolar].reverse()) if (!atla.has(t)) await db.query(`TRUNCATE TABLE ${t}`);
+      await db.query('DELETE FROM fis_no_kilidi');
+      await db.query('INSERT INTO fis_no_kilidi (id) VALUES (1)');
+      // Dizi: SETVAL geriye gitmez; ilk değere ALTER SEQUENCE ile dönülür
+      await db.query('ALTER SEQUENCE vitrin_ilan_no_seq RESTART 1');
+    } else {
+      await db.query(`TRUNCATE ${siraliTablolar.join(', ')} RESTART IDENTITY CASCADE`);
     }
-    const kolonlar = kolonlarOf(tablo);
-    const adlar = kolonlar.map((k) => k.column_name);
-    const yer = hedef === 'mariadb' ? adlar.map(() => '?').join(', ') : adlar.map((_, i) => `$${i + 1}`).join(', ');
-    const sql = `INSERT INTO ${tablo} (${adlar.join(', ')}) VALUES (${yer})`;
-    let n = 0;
-    for await (const satir of satirlar(tablo)) {
-      await calistir(sql, kolonlar.map((k) => degerCevir(satir[k.column_name], k)));
-      n++;
-    }
-    console.log(`${tablo.padEnd(28)} ${String(n).padStart(7)} satır yüklendi`);
-  }
 
-  // Dizileri / AUTO_INCREMENT değerlerini ayarla (PostgreSQL'deki gibi silinen numaralar yeniden kullanılmaz)
-  for (const d of sema.diziler) {
-    if (d.last_value === null || d.last_value === undefined) continue;
-    const son = Number(d.last_value);
-    if (d.sequencename === 'vitrin_ilan_no_seq') {
-      if (hedef === 'mariadb') await db.query(`ALTER SEQUENCE vitrin_ilan_no_seq RESTART ${son + 1}`);
-      else await db.query(`SELECT setval('vitrin_ilan_no_seq', ${son})`);
-      continue;
+    // Yükle
+    for (const tablo of siraliTablolar) {
+      if (atla.has(tablo)) {
+        console.log(`${tablo.padEnd(28)} atlandı (doğrulama yine yapılır)`);
+        continue;
+      }
+      const kolonlar = kolonlarOf(tablo);
+      const adlar = kolonlar.map((k) => k.column_name);
+      const yer = hedef === 'mariadb' ? adlar.map(() => '?').join(', ') : adlar.map((_, i) => `$${i + 1}`).join(', ');
+      const sql = `INSERT INTO ${tablo} (${adlar.join(', ')}) VALUES (${yer})`;
+      let n = 0;
+      for await (const satir of satirlar(tablo)) {
+        await calistir(
+          sql,
+          kolonlar.map((k) => degerCevir(satir[k.column_name], k)),
+        );
+        n++;
+      }
+      console.log(`${tablo.padEnd(28)} ${String(n).padStart(7)} satır yüklendi`);
     }
-    const m = /^(.*)_id_seq$/.exec(d.sequencename);
-    if (!m) continue;
-    if (hedef === 'mariadb') await db.query(`ALTER TABLE ${m[1]} AUTO_INCREMENT = ${son + 1}`);
-    else await db.query(`SELECT setval('${d.sequencename}', ${son})`);
-  }
 
+    // Dizileri / AUTO_INCREMENT değerlerini ayarla (PostgreSQL'deki gibi silinen numaralar yeniden kullanılmaz)
+    for (const d of sema.diziler) {
+      if (d.last_value === null || d.last_value === undefined) continue;
+      const son = Number(d.last_value);
+      if (d.sequencename === 'vitrin_ilan_no_seq') {
+        if (hedef === 'mariadb') await db.query(`ALTER SEQUENCE vitrin_ilan_no_seq RESTART ${son + 1}`);
+        else await db.query(`SELECT setval('vitrin_ilan_no_seq', ${son})`);
+        continue;
+      }
+      const m = /^(.*)_id_seq$/.exec(d.sequencename);
+      if (!m) continue;
+      if (hedef === 'mariadb') await db.query(`ALTER TABLE ${m[1]} AUTO_INCREMENT = ${son + 1}`);
+      else await db.query(`SELECT setval('${d.sequencename}', ${son})`);
+    }
   }
 
   // ---------- doğrulama ----------
@@ -272,7 +272,10 @@ async function yukle() {
         sorgular.push(`MIN(${col}) AS ${q}${c}__min${q}`, `MAX(${col}) AS ${q}${c}__max${q}`);
       }
     }
-    const sonuc = hedef === 'mariadb' ? (await db.query(`SELECT ${sorgular.join(', ')} FROM ${tablo}`))[0][0] : (await db.query(`SELECT ${sorgular.join(', ')} FROM ${tablo}`)).rows[0];
+    const sonuc =
+      hedef === 'mariadb'
+        ? (await db.query(`SELECT ${sorgular.join(', ')} FROM ${tablo}`))[0][0]
+        : (await db.query(`SELECT ${sorgular.join(', ')} FROM ${tablo}`)).rows[0];
     const sorunlar = [];
     if (Number(sonuc.satir) !== ist.satir) sorunlar.push(`satır: yedek ${ist.satir}, hedef ${sonuc.satir}`);
     if (ist.satir !== ozet[tablo].satir) sorunlar.push(`yedek dosyası eksik: _ozet ${ozet[tablo].satir}, dosya ${ist.satir}`);
@@ -291,7 +294,14 @@ async function yukle() {
       } else if (k.udt_name === 'bytea' || metinMi(k)) {
         if (Number(sonuc[`${c}__uzunluk`]) !== o.uzunluk) sorunlar.push(`${c}: uzunluk toplamı yedek ${o.uzunluk}, hedef ${sonuc[`${c}__uzunluk`]}`);
       } else if (zamanMi(k)) {
-        const norm = (v) => (v === null || v === undefined ? null : String(v instanceof Date ? v.toISOString() : v).replace('T', ' ').replace('Z', '').replace(/(\.\d*?)0+$/, '$1').replace(/\.$/, ''));
+        const norm = (v) =>
+          v === null || v === undefined
+            ? null
+            : String(v instanceof Date ? v.toISOString() : v)
+                .replace('T', ' ')
+                .replace('Z', '')
+                .replace(/(\.\d*?)0+$/, '$1')
+                .replace(/\.$/, '');
         const hm = norm(sonuc[`${c}__min`]);
         const hx = norm(sonuc[`${c}__max`]);
         const ym = o.min === null ? null : norm(o.min);
@@ -314,7 +324,7 @@ async function yukle() {
     await db.query('SET SESSION foreign_key_checks = 1');
     for (const f of sema.yabanciAnahtarlar) {
       const [[r]] = await db.query(
-        `SELECT COUNT(*) AS n FROM ${f.table_name} c LEFT JOIN ${f.ref_table} p ON c.${f.column_name} = p.${f.ref_column} WHERE c.${f.column_name} IS NOT NULL AND p.${f.ref_column} IS NULL`
+        `SELECT COUNT(*) AS n FROM ${f.table_name} c LEFT JOIN ${f.ref_table} p ON c.${f.column_name} = p.${f.ref_column} WHERE c.${f.column_name} IS NOT NULL AND p.${f.ref_column} IS NULL`,
       );
       if (Number(r.n) > 0) {
         hata++;

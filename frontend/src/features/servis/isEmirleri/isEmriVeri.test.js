@@ -5,9 +5,38 @@
 import { filtrele, istatistikler, kayittanForm, bosForm, bosParca, durumRenk, durumLabel, formatTarih } from './isEmriVeri';
 
 const liste = [
-  { id: 1, fis_no: 101, musteri_ad_soyad: 'Ayşe Yılmaz', telefon: '05551112233', marka: 'Honda', durum: 'beklemede', created_at: '2026-10-18T09:00:00', gercek_toplam_ucret: 1500, kar: 600 },
-  { id: 2, fis_no: 102, musteri_ad_soyad: 'Veli Demir', telefon: '05332223344', marka: 'Yamaha', durum: 'devam_ediyor', created_at: '2026-09-15T12:00:00', gercek_toplam_ucret: '1000.50', kar: '400.25' },
-  { id: 3, fis_no: 103, musteri_ad_soyad: 'Zeynep Kaya', marka: 'Suzuki', durum: 'tamamlandi', tarih: '2026-10-01T12:00:00', gercek_toplam_ucret: 2500, kar: 1000 },
+  {
+    id: 1,
+    fis_no: 101,
+    musteri_ad_soyad: 'Ayşe Yılmaz',
+    telefon: '05551112233',
+    marka: 'Honda',
+    durum: 'beklemede',
+    created_at: '2026-10-18T09:00:00',
+    gercek_toplam_ucret: 1500,
+    kar: 600,
+  },
+  {
+    id: 2,
+    fis_no: 102,
+    musteri_ad_soyad: 'Veli Demir',
+    telefon: '05332223344',
+    marka: 'Yamaha',
+    durum: 'devam_ediyor',
+    created_at: '2026-09-15T12:00:00',
+    gercek_toplam_ucret: '1000.50',
+    kar: '400.25',
+  },
+  {
+    id: 3,
+    fis_no: 103,
+    musteri_ad_soyad: 'Zeynep Kaya',
+    marka: 'Suzuki',
+    durum: 'tamamlandi',
+    tarih: '2026-10-01T12:00:00',
+    gercek_toplam_ucret: 2500,
+    kar: 1000,
+  },
 ];
 
 describe('filtrele', () => {
@@ -63,8 +92,15 @@ describe('form dönüşümleri', () => {
   test('kayittanForm: boş alanlar "", tarihler yyyy-aa-gg, kalan ödeme varsa ödeme tamamlanmadı', () => {
     const f = kayittanForm({ musteri_ad_soyad: 'Ayşe', tahmini_teslim_tarihi: '2026-10-20T12:00:00', kalan_odeme: '500.00', olusturan_kisi: 'ofis' });
     expect(f).toMatchObject({
-      musteri_ad_soyad: 'Ayşe', telefon: '', tahmini_teslim_tarihi: '2026-10-20', teslim_tarihi: '', durum: 'beklemede',
-      kalan_odeme: '500.00', odeme_tamamlandi: false, teslim_alan_ad_soyad: 'ofis', teslim_eden_teknisyen: 'ofis',
+      musteri_ad_soyad: 'Ayşe',
+      telefon: '',
+      tahmini_teslim_tarihi: '2026-10-20',
+      teslim_tarihi: '',
+      durum: 'beklemede',
+      kalan_odeme: '500.00',
+      odeme_tamamlandi: false,
+      teslim_alan_ad_soyad: 'ofis',
+      teslim_eden_teknisyen: 'ofis',
     });
   });
 

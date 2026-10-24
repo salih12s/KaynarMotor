@@ -51,22 +51,33 @@ const main = async () => {
   }
 
   // Tek API çağrısıyla tüm başlıkların küçültülmüş (thumbnail) adreslerini al
-  const api = 'https://commons.wikimedia.org/w/api.php?' + new URLSearchParams({
-    action: 'query', titles: eksikler.map((g) => g.baslik).join('|'),
-    prop: 'imageinfo', iiprop: 'url', iiurlwidth: String(GENISLIK), format: 'json',
-  });
+  const api =
+    'https://commons.wikimedia.org/w/api.php?' +
+    new URLSearchParams({
+      action: 'query',
+      titles: eksikler.map((g) => g.baslik).join('|'),
+      prop: 'imageinfo',
+      iiprop: 'url',
+      iiurlwidth: String(GENISLIK),
+      format: 'json',
+    });
   const yanit = await fetch(api, { headers: { 'User-Agent': UA } });
   if (!yanit.ok) throw new Error(`Wikimedia API yanıt vermedi: ${yanit.status}`);
   const json = await yanit.json();
   // API başlıkları normalize edebilir (ör. alt çizgi → boşluk); eşleştirme bu tabloyla yapılır
   const normal = Object.fromEntries((json.query?.normalized || []).map((n) => [n.from, n.to]));
   const adresler = {};
-  Object.values(json.query?.pages || {}).forEach((p) => { adresler[p.title] = p.imageinfo?.[0]?.thumburl; });
+  Object.values(json.query?.pages || {}).forEach((p) => {
+    adresler[p.title] = p.imageinfo?.[0]?.thumburl;
+  });
 
   let inen = 0;
   for (const g of eksikler) {
     const adres = adresler[normal[g.baslik] || g.baslik];
-    if (!adres) { console.warn(`  bulunamadı: ${g.baslik}`); continue; }
+    if (!adres) {
+      console.warn(`  bulunamadı: ${g.baslik}`);
+      continue;
+    }
     try {
       const r = await fetch(adres, { headers: { 'User-Agent': UA } });
       if (!r.ok) throw new Error(String(r.status));
@@ -81,4 +92,7 @@ const main = async () => {
   console.log(`${inen}/${eksikler.length} görsel indirildi → ${HEDEF}`);
 };
 
-main().catch((e) => { console.error('Görsel indirme hatası:', e.message); process.exit(1); });
+main().catch((e) => {
+  console.error('Görsel indirme hatası:', e.message);
+  process.exit(1);
+});

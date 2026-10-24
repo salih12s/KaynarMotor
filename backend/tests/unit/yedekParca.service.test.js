@@ -32,7 +32,10 @@ describe('stok: doğrulama', () => {
   });
 
   it('negatif giren miktar güncellemede 400', async () => {
-    await assert.rejects(stok.guncelle(sahteDb(), 1, { stok_kodu: 'K1', stok_adi: 'A', giren_miktar: -3 }), (h) => h.status === 400 && h.message === 'Giren miktar negatif olamaz');
+    await assert.rejects(
+      stok.guncelle(sahteDb(), 1, { stok_kodu: 'K1', stok_adi: 'A', giren_miktar: -3 }),
+      (h) => h.status === 400 && h.message === 'Giren miktar negatif olamaz',
+    );
   });
 
   it('aynı stok kodu (UNIQUE ihlali) 400 "Bu stok kodu zaten mevcut"', async () => {
@@ -61,8 +64,11 @@ describe('stok: güncelleme ve kod değişimi', () => {
     assert.deepEqual(db.olaylar, ['BEGIN', 'ROLLBACK']);
   });
 
-  it('kod DEĞİŞİRSE iş emri parça kodları aynı transaction\'da taşınır', async () => {
-    const db = sahteDb([['FOR UPDATE', [{ stok_kodu: 'ESKI' }]], ['UPDATE yedek_parca_stok', [{ id: 9 }]]]);
+  it("kod DEĞİŞİRSE iş emri parça kodları aynı transaction'da taşınır", async () => {
+    const db = sahteDb([
+      ['FOR UPDATE', [{ stok_kodu: 'ESKI' }]],
+      ['UPDATE yedek_parca_stok', [{ id: 9 }]],
+    ]);
     await stok.guncelle(db, 9, { stok_kodu: 'YENI', stok_adi: 'A' });
     const tasima = sorgular(db, 'UPDATE parcalar SET parca_kodu');
     assert.equal(tasima.length, 1);
@@ -71,7 +77,10 @@ describe('stok: güncelleme ve kod değişimi', () => {
   });
 
   it('kod DEĞİŞMEZSE parça kodlarına dokunulmaz', async () => {
-    const db = sahteDb([['FOR UPDATE', [{ stok_kodu: 'AYNI' }]], ['UPDATE yedek_parca_stok', [{ id: 9 }]]]);
+    const db = sahteDb([
+      ['FOR UPDATE', [{ stok_kodu: 'AYNI' }]],
+      ['UPDATE yedek_parca_stok', [{ id: 9 }]],
+    ]);
     await stok.guncelle(db, 9, { stok_kodu: 'AYNI', stok_adi: 'A' });
     assert.equal(sorgular(db, 'UPDATE parcalar').length, 0);
   });
@@ -87,15 +96,20 @@ describe('stok: toplu içe aktarma', () => {
     const db = sahteDb();
     await assert.rejects(
       stok.topluEkle(db, { stoklar: [{ stok_kodu: 'A', stok_adi: 'a' }, { stok_kodu: '', stok_adi: 'b' }, null] }),
-      (h) => h.status === 400 && h.message === 'Stok kodu ve adı boş olamaz (satır: 2, 3)'
+      (h) => h.status === 400 && h.message === 'Stok kodu ve adı boş olamaz (satır: 2, 3)',
     );
     assert.equal(db.cagrilar.length, 0);
     assert.deepEqual(db.olaylar, []);
   });
 
-  it('hepsi geçerliyse tek transaction\'da yazılır ve sayı döner', async () => {
+  it("hepsi geçerliyse tek transaction'da yazılır ve sayı döner", async () => {
     const db = sahteDb();
-    const sayi = await stok.topluEkle(db, { stoklar: [{ stok_kodu: 'A', stok_adi: 'a', giren_miktar: '3', satis_fiyati: '10' }, { stok_kodu: 'B', stok_adi: 'b' }] });
+    const sayi = await stok.topluEkle(db, {
+      stoklar: [
+        { stok_kodu: 'A', stok_adi: 'a', giren_miktar: '3', satis_fiyati: '10' },
+        { stok_kodu: 'B', stok_adi: 'b' },
+      ],
+    });
     assert.equal(sayi, 2);
     assert.deepEqual(db.olaylar, ['BEGIN', 'COMMIT']);
     assert.deepEqual(db.cagrilar[0].params.slice(3, 4).concat(db.cagrilar[0].params.slice(8)), [3, 30], 'giren 3, envanter 3*10');
@@ -146,7 +160,10 @@ describe('satış: stok düşümü ve iadesi', () => {
   });
 
   it('güncelleme: önce ESKİ düşüm iade, sonra yenisi düşer; olmayan satış 404', async () => {
-    const db = sahteDb([['FOR UPDATE', [{ stok_id: 5, adet: 2 }]], ['UPDATE yedek_parcalar', [{ id: 1 }]]]);
+    const db = sahteDb([
+      ['FOR UPDATE', [{ stok_id: 5, adet: 2 }]],
+      ['UPDATE yedek_parcalar', [{ id: 1 }]],
+    ]);
     await satis.guncelle(db, 1, { urun_adi: 'x', stok_id: 5, adet: 7 });
     const hareketler = sorgular(db, 'UPDATE yedek_parca_stok').map((c) => c.params[0]);
     assert.deepEqual(hareketler, [-2, 7]);

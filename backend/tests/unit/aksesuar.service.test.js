@@ -13,17 +13,16 @@ const stok = require('../../modules/aksesuar/aksesuarStok/aksesuarStok.service')
 
 const KULLANICI = { id: 1, kullanici_adi: 'ali', ad_soyad: 'Ali Usta', rol: 'personel' };
 
-const kayitDb = (ek = []) => sahteDb([
-  ...ek,
-  ['INSERT INTO aksesuarlar', [{ id: 21 }]],
-  ['SELECT * FROM aksesuarlar WHERE id', [{ id: 21 }]],
-]);
+const kayitDb = (ek = []) => sahteDb([...ek, ['INSERT INTO aksesuarlar', [{ id: 21 }]], ['SELECT * FROM aksesuarlar WHERE id', [{ id: 21 }]]]);
 const sorgular = (db, parca) => db.cagrilar.filter((c) => c.sql.includes(parca));
 const ekleme = (db) => sorgular(db, 'INSERT INTO aksesuarlar')[0].params;
 const dusumler = (db) => sorgular(db, 'UPDATE aksesuar_stok').map((c) => c.params);
 
 describe('satış: toplam, indirim ve kâr', () => {
-  const parcalar = [{ adet: 2, maliyet: 30, satis_fiyati: 100 }, { adet: 1, maliyet: 10, satis_fiyati: 50 }];
+  const parcalar = [
+    { adet: 2, maliyet: 30, satis_fiyati: 100 },
+    { adet: 1, maliyet: 10, satis_fiyati: 50 },
+  ];
 
   it('net satış = brüt - indirim; kâr = net - maliyet', async () => {
     const db = kayitDb();
@@ -32,7 +31,7 @@ describe('satış: toplam, indirim ve kâr', () => {
     assert.deepEqual([p[7], p[8], p[9], p[13]], [70, 230, 160, 20], 'maliyet 70, net 230, kâr 160, indirim 20');
   });
 
-  it('indirim brüt toplamı AŞAMAZ (net 0\'ın altına düşmez)', async () => {
+  it("indirim brüt toplamı AŞAMAZ (net 0'ın altına düşmez)", async () => {
     const db = kayitDb();
     await satis.olustur(db, { ad_soyad: 'A', parcalar, indirim: 9999 }, KULLANICI);
     const p = ekleme(db);
@@ -84,7 +83,9 @@ describe('satış: stok eşleştirme ve düşüm', () => {
     const db = kayitDb();
     const asil = console.warn;
     let uyari = '';
-    console.warn = (m) => { uyari = String(m); };
+    console.warn = (m) => {
+      uyari = String(m);
+    };
     try {
       await satis.olustur(db, tamam({ parcalar: [{ urun_adi: 'Bilinmeyen', adet: 1 }] }), KULLANICI);
     } finally {
@@ -97,13 +98,14 @@ describe('satış: stok eşleştirme ve düşüm', () => {
 });
 
 describe('satış: düzenleme ve silme', () => {
-  const eskiTamam = (parcalar = [{ stok_id: 5, urun_adi: 'Kask', adet: 2 }]) => sahteDb([
-    ['FOR UPDATE', [{ id: 21, durum: 'tamamlandi' }]],
-    ['SELECT * FROM aksesuar_parcalar WHERE aksesuar_id = $1 ORDER BY id', []],
-    ['FROM aksesuar_parcalar', parcalar],
-    ['SELECT id FROM aksesuar_stok WHERE id', [{ id: 5 }]],
-    ['SELECT * FROM aksesuarlar WHERE id', [{ id: 21 }]],
-  ]);
+  const eskiTamam = (parcalar = [{ stok_id: 5, urun_adi: 'Kask', adet: 2 }]) =>
+    sahteDb([
+      ['FOR UPDATE', [{ id: 21, durum: 'tamamlandi' }]],
+      ['SELECT * FROM aksesuar_parcalar WHERE aksesuar_id = $1 ORDER BY id', []],
+      ['FROM aksesuar_parcalar', parcalar],
+      ['SELECT id FROM aksesuar_stok WHERE id', [{ id: 5 }]],
+      ['SELECT * FROM aksesuarlar WHERE id', [{ id: 21 }]],
+    ]);
 
   it('olmayan satış: 404 "Bulunamadı", ROLLBACK', async () => {
     const db = sahteDb();
@@ -151,12 +153,18 @@ describe('aksesuar stok', () => {
     await assert.rejects(stok.ekle(sahteDb(), { stok_kodu: '', stok_adi: 'x' }), (h) => h.message === 'Stok kodu ve stok adı zorunludur');
     await assert.rejects(stok.guncelle(sahteDb(), 1, { stok_kodu: 'K', stok_adi: 'x', giren_miktar: -1 }), (h) => h.message === 'Giren miktar negatif olamaz');
     const dup = Object.assign(new Error('dup'), { code: 'ER_DUP_ENTRY' });
-    await assert.rejects(stok.ekle(sahteDb([['INSERT INTO aksesuar_stok', dup]]), { stok_kodu: 'K', stok_adi: 'x' }), (h) => h.status === 400 && h.message === 'Bu stok kodu zaten mevcut');
+    await assert.rejects(
+      stok.ekle(sahteDb([['INSERT INTO aksesuar_stok', dup]]), { stok_kodu: 'K', stok_adi: 'x' }),
+      (h) => h.status === 400 && h.message === 'Bu stok kodu zaten mevcut',
+    );
     await assert.rejects(stok.guncelle(sahteDb(), 99, { stok_kodu: 'K', stok_adi: 'x' }), (h) => h.status === 404 && h.message === 'Stok bulunamadı');
   });
 
   it('toplu: satır hatası numarasıyla, hata ortada olursa ROLLBACK', async () => {
-    await assert.rejects(stok.topluEkle(sahteDb(), { stoklar: [{ stok_kodu: 'A', stok_adi: 'a' }, { stok_adi: 'b' }] }), (h) => h.message === 'Stok kodu ve adı boş olamaz (satır: 2)');
+    await assert.rejects(
+      stok.topluEkle(sahteDb(), { stoklar: [{ stok_kodu: 'A', stok_adi: 'a' }, { stok_adi: 'b' }] }),
+      (h) => h.message === 'Stok kodu ve adı boş olamaz (satır: 2)',
+    );
     const db = sahteDb([['ON DUPLICATE KEY', new Error('hata')]]);
     await assert.rejects(stok.topluEkle(db, { stoklar: [{ stok_kodu: 'A', stok_adi: 'a' }] }), /hata/);
     assert.deepEqual(db.olaylar, ['BEGIN', 'ROLLBACK']);

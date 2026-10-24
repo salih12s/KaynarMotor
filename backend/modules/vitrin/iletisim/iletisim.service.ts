@@ -16,7 +16,9 @@ export const segmentiGaranti = async (db: Veritabani, ad: unknown): Promise<void
   try {
     const sira = await repo.sonrakiSegmentSirasi(db);
     await repo.segmentEkleYoksa(db, ad as string, sira);
-  } catch { /* sessiz */ }
+  } catch {
+    /* sessiz */
+  }
 };
 
 /** Segment ekler (var olan adla çağrılırsa mevcut kaydı döner). */
@@ -43,8 +45,12 @@ export const iletisimKaydet = async (db: Veritabani, kategori: string, govde: Il
   if (asim) throw new GecersizIstek(cokBuyukMesaji(asim), 413);
 
   await repo.iletisimKaydet(db, kategori, {
-    personel_adi: bosuNull(govde.personel_adi), telefon: bosuNull(govde.telefon), aciklama: bosuNull(govde.aciklama),
-    baslik: bosuNull(govde.baslik), personel_adi_2: bosuNull(govde.personel_adi_2), telefon_2: bosuNull(govde.telefon_2),
+    personel_adi: bosuNull(govde.personel_adi),
+    telefon: bosuNull(govde.telefon),
+    aciklama: bosuNull(govde.aciklama),
+    baslik: bosuNull(govde.baslik),
+    personel_adi_2: bosuNull(govde.personel_adi_2),
+    telefon_2: bosuNull(govde.telefon_2),
   });
   if (typeof gorsel === 'string' && gorsel) await repo.iletisimGorseliYaz(db, kategori, gorsel);
   else if (govde.gorsel_sil) await repo.iletisimGorseliniSil(db, kategori);

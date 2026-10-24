@@ -12,20 +12,42 @@ import type { NextFunction, Request, Response } from 'express';
 
 const YAZMA = new Set(['POST', 'PUT', 'PATCH']);
 const TUTAR_ALANLARI = new Set([
-  'birim_fiyat', 'maliyet', 'satis_fiyati', 'alis_fiyati', 'noter_alis', 'noter_satis', 'masraflar', 'komisyoncu_tutari',
-  'liste_fiyati', 'fiyat', 'indirim', 'kalan_odeme', 'tahmini_toplam_ucret', 'odeme_tutari', 'kargo_ucreti',
-  'komisyon_orani', 'kdv_orani', 'tutar', 'giren_miktar',
+  'birim_fiyat',
+  'maliyet',
+  'satis_fiyati',
+  'alis_fiyati',
+  'noter_alis',
+  'noter_satis',
+  'masraflar',
+  'komisyoncu_tutari',
+  'liste_fiyati',
+  'fiyat',
+  'indirim',
+  'kalan_odeme',
+  'tahmini_toplam_ucret',
+  'odeme_tutari',
+  'kargo_ucreti',
+  'komisyon_orani',
+  'kdv_orani',
+  'tutar',
+  'giren_miktar',
 ]);
 
 export const negatifBul = (deger: unknown, derinlik = 0): string | null => {
   if (derinlik > 6 || deger === null || typeof deger !== 'object') return null;
   if (Array.isArray(deger)) {
-    for (const oge of deger) { const b = negatifBul(oge, derinlik + 1); if (b) return b; }
+    for (const oge of deger) {
+      const b = negatifBul(oge, derinlik + 1);
+      if (b) return b;
+    }
     return null;
   }
   for (const [anahtar, v] of Object.entries(deger as Record<string, unknown>)) {
     if (TUTAR_ALANLARI.has(anahtar) && (typeof v === 'number' || (typeof v === 'string' && v.trim() !== '')) && Number(v) < 0) return anahtar;
-    if (v !== null && typeof v === 'object') { const b = negatifBul(v, derinlik + 1); if (b) return b; }
+    if (v !== null && typeof v === 'object') {
+      const b = negatifBul(v, derinlik + 1);
+      if (b) return b;
+    }
   }
   return null;
 };

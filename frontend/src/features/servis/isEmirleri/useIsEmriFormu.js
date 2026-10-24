@@ -21,7 +21,10 @@ export const useIsEmriFormu = ({ yenile }) => {
   const [error, setError] = useState('');
   const [musteriOptions, setMusteriOptions] = useState([]);
 
-  const kapat = () => { setModalOpen(false); setEditId(null); };
+  const kapat = () => {
+    setModalOpen(false);
+    setEditId(null);
+  };
 
   const openModal = () => {
     setEditId(null);
@@ -44,7 +47,9 @@ export const useIsEmriFormu = ({ yenile }) => {
       setNewParca(bosParca());
       setStokOptions([]);
       setModalOpen(true);
-    } catch { setError('İş emri yüklenemedi'); }
+    } catch {
+      setError('İş emri yüklenemedi');
+    }
   };
 
   const addParca = () => {
@@ -58,17 +63,20 @@ export const useIsEmriFormu = ({ yenile }) => {
 
   // Aksesuar ve yedek parça stoğundan parça ara (isim, marka veya stok kodu/barkod ile)
   const handleStokSearch = async (q) => {
-    if (!q || q.trim().length < 2) { sonStokAra.iptal(); setStokOptions([]); return; }
+    if (!q || q.trim().length < 2) {
+      sonStokAra.iptal();
+      setStokOptions([]);
+      return;
+    }
     try {
-      const sonuc = await sonStokAra(Promise.all([
-        aksesuarStokService.search(q.trim()).catch(() => ({ data: [] })),
-        yedekParcaStokService.search(q.trim()).catch(() => ({ data: [] })),
-      ]));
+      const sonuc = await sonStokAra(
+        Promise.all([aksesuarStokService.search(q.trim()).catch(() => ({ data: [] })), yedekParcaStokService.search(q.trim()).catch(() => ({ data: [] }))]),
+      );
       if (!sonuc) return;
       const [aks, yedek] = sonuc;
       setStokOptions([
-        ...(aks.data || []).map(s => ({ ...s, stok_kaynak: 'Aksesuar Stok' })),
-        ...(yedek.data || []).map(s => ({ ...s, stok_kaynak: 'Yedek Parça Stok' })),
+        ...(aks.data || []).map((s) => ({ ...s, stok_kaynak: 'Aksesuar Stok' })),
+        ...(yedek.data || []).map((s) => ({ ...s, stok_kaynak: 'Yedek Parça Stok' })),
       ]);
     } catch {}
   };
@@ -91,20 +99,25 @@ export const useIsEmriFormu = ({ yenile }) => {
     if (e.key !== 'Enter') return;
     const kod = (newParca.takilan_parca || '').trim();
     if (!kod) return;
-    const kaynaklar = kod.startsWith('9')
-      ? [yedekParcaStokService, aksesuarStokService]
-      : [aksesuarStokService, yedekParcaStokService];
+    const kaynaklar = kod.startsWith('9') ? [yedekParcaStokService, aksesuarStokService] : [aksesuarStokService, yedekParcaStokService];
     for (const servis of kaynaklar) {
       try {
         const res = await servis.getByBarkod(kod);
-        if (res.data) { e.preventDefault(); selectStok(res.data); return; }
+        if (res.data) {
+          e.preventDefault();
+          selectStok(res.data);
+          return;
+        }
       } catch {}
     }
   };
 
   const handleMusteriSearch = async (query) => {
     if (query.length < 2) return;
-    try { const res = await sonAra(musteriService.search(query)); if (res) setMusteriOptions(res.data); } catch {}
+    try {
+      const res = await sonAra(musteriService.search(query));
+      if (res) setMusteriOptions(res.data);
+    } catch {}
   };
 
   const handleMusteriSelect = (musteri) => {
@@ -115,9 +128,12 @@ export const useIsEmriFormu = ({ yenile }) => {
 
   const handleSave = async () => {
     setError('');
-    if (!formData.musteri_ad_soyad.trim()) { setError('Ad Soyad zorunlu'); return; }
+    if (!formData.musteri_ad_soyad.trim()) {
+      setError('Ad Soyad zorunlu');
+      return;
+    }
     try {
-      const payload = { ...formData, parcalar, kalan_odeme: formData.odeme_tamamlandi ? 0 : (formData.kalan_odeme || 0) };
+      const payload = { ...formData, parcalar, kalan_odeme: formData.odeme_tamamlandi ? 0 : formData.kalan_odeme || 0 };
       delete payload.odeme_tamamlandi;
       if (editId) {
         await isEmriService.update(editId, payload);
@@ -127,13 +143,33 @@ export const useIsEmriFormu = ({ yenile }) => {
       setModalOpen(false);
       setEditId(null);
       yenile();
-    } catch (err) { setError(err.response?.data?.message || 'Kaydetme hatası'); }
+    } catch (err) {
+      setError(err.response?.data?.message || 'Kaydetme hatası');
+    }
   };
 
   return {
-    modalOpen, editId, error, kapat, openModal, openEditModal, handleSave,
-    formData, setFormData, parcalar, newParca, setNewParca, stokOptions,
-    musteriOptions, setMusteriOptions, addParca, removeParca,
-    handleStokSearch, selectStok, handleParcaKeyDown, handleMusteriSearch, handleMusteriSelect,
+    modalOpen,
+    editId,
+    error,
+    kapat,
+    openModal,
+    openEditModal,
+    handleSave,
+    formData,
+    setFormData,
+    parcalar,
+    newParca,
+    setNewParca,
+    stokOptions,
+    musteriOptions,
+    setMusteriOptions,
+    addParca,
+    removeParca,
+    handleStokSearch,
+    selectStok,
+    handleParcaKeyDown,
+    handleMusteriSearch,
+    handleMusteriSelect,
   };
 };

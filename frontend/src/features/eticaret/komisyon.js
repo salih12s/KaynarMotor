@@ -38,22 +38,25 @@ export const hesaplaKomisyon = (satisFiyati, alisFiyati, komisyonOrani, kdvOrani
   const kargoKDV = kargo - kargo / (1 + kdv / 100);
 
   let komisyonTutari, komisyonKDV, hizmetBedeli, hizmetKDV, stopaj;
-  let odemeBedeli = 0, islemBedeli = 0, odemIslemKDV = 0;
-  let pazarlamaHizmet = 0, pazarlamaHizmetKDV = 0;
+  let odemeBedeli = 0,
+    islemBedeli = 0,
+    odemIslemKDV = 0;
+  let pazarlamaHizmet = 0,
+    pazarlamaHizmetKDV = 0;
 
   if (platformTipi === 'hepsiburada') {
     // Komisyon = satış × komisyon%, sonra KDV eklenir; ödeme %0,96 ve işlem %0,315 bedeli (KDV dahil); stopaj KDV hariç satışın %1
-    komisyonTutari = satis * komisyon / 100 * (1 + kdv / 100);
+    komisyonTutari = ((satis * komisyon) / 100) * (1 + kdv / 100);
     komisyonKDV = komisyonTutari - komisyonTutari / (1 + kdv / 100);
     odemeBedeli = satis * 0.0096;
     islemBedeli = satis * 0.00315;
-    odemIslemKDV = (odemeBedeli + islemBedeli) - (odemeBedeli + islemBedeli) / (1 + kdv / 100);
+    odemIslemKDV = odemeBedeli + islemBedeli - (odemeBedeli + islemBedeli) / (1 + kdv / 100);
     hizmetBedeli = odemeBedeli + islemBedeli;
     hizmetKDV = odemIslemKDV;
     stopaj = kdvHaricSatis * 0.01;
   } else if (platformTipi === 'n11') {
     // Komisyon KDV dahil gömülü; pazarlama ve hizmet gideri %1,258 (KDV dahil); stopaj KDV hariç satışın %1
-    komisyonTutari = satis * komisyon / 100;
+    komisyonTutari = (satis * komisyon) / 100;
     komisyonKDV = komisyonTutari - komisyonTutari / (1 + kdv / 100);
     pazarlamaHizmet = satis * 0.01258;
     pazarlamaHizmetKDV = pazarlamaHizmet - pazarlamaHizmet / (1 + kdv / 100);
@@ -62,14 +65,14 @@ export const hesaplaKomisyon = (satisFiyati, alisFiyati, komisyonOrani, kdvOrani
     stopaj = kdvHaricSatis * 0.01;
   } else if (platformTipi === 'shoppier') {
     // Yalnızca komisyon (hizmet bedeli ve stopaj yok)
-    komisyonTutari = satis * komisyon / 100;
+    komisyonTutari = (satis * komisyon) / 100;
     komisyonKDV = komisyonTutari - komisyonTutari / (1 + kdv / 100);
     hizmetBedeli = 0;
     hizmetKDV = 0;
     stopaj = 0;
   } else {
     // Trendyol (varsayılan): hizmet bedeli %0,347; stopaj KDV hariç komisyonun %7,7'si
-    komisyonTutari = satis * komisyon / 100;
+    komisyonTutari = (satis * komisyon) / 100;
     komisyonKDV = komisyonTutari - komisyonTutari / (1 + kdv / 100);
     hizmetBedeli = satis * 0.00347;
     hizmetKDV = hizmetBedeli - hizmetBedeli / (1 + kdv / 100);
@@ -79,22 +82,37 @@ export const hesaplaKomisyon = (satisFiyati, alisFiyati, komisyonOrani, kdvOrani
   const toplamKomisyon = komisyonTutari + hizmetBedeli + stopaj;
   const odenecekKDV = satistanKDV - alisKDV - kargoKDV - komisyonKDV - hizmetKDV;
   const netKar = satis - alis - kargo - komisyonTutari - hizmetBedeli - stopaj - odenecekKDV;
-  const karOrani = alis > 0 ? (netKar / alis * 100) : 0;                       // KDV dahil alışa göre
-  const yatirimGeriDonus = kdvHaricAlis > 0 ? (netKar / kdvHaricAlis * 100) : 0; // KDV hariç alışa göre
+  const karOrani = alis > 0 ? (netKar / alis) * 100 : 0; // KDV dahil alışa göre
+  const yatirimGeriDonus = kdvHaricAlis > 0 ? (netKar / kdvHaricAlis) * 100 : 0; // KDV hariç alışa göre
 
   const r = (v) => Math.round(v * 100) / 100;
   return {
-    platformTipi, satis, alis, komisyon, kdv, kargo, miktar,
+    platformTipi,
+    satis,
+    alis,
+    komisyon,
+    kdv,
+    kargo,
+    miktar,
     kdvHaricSatis: r(kdvHaricSatis),
     komisyonTutari: r(komisyonTutari * miktar),
     toplamKomisyon: r(toplamKomisyon * miktar),
     toplamKesinti: r(toplamKomisyon * miktar), // toplamKomisyon ile aynı (eski ad)
     komisyonKDV: r(komisyonKDV * miktar),
-    hizmetBedeli: r(hizmetBedeli * miktar), hizmetKDV: r(hizmetKDV * miktar), stopaj: r(stopaj * miktar),
-    odemeBedeli: r(odemeBedeli * miktar), islemBedeli: r(islemBedeli * miktar), odemIslemKDV: r(odemIslemKDV * miktar),
-    pazarlamaHizmet: r(pazarlamaHizmet * miktar), pazarlamaHizmetKDV: r(pazarlamaHizmetKDV * miktar),
-    satistanKDV: r(satistanKDV * miktar), alisKDV: r(alisKDV * miktar), kargoKDV: r(kargoKDV * miktar),
+    hizmetBedeli: r(hizmetBedeli * miktar),
+    hizmetKDV: r(hizmetKDV * miktar),
+    stopaj: r(stopaj * miktar),
+    odemeBedeli: r(odemeBedeli * miktar),
+    islemBedeli: r(islemBedeli * miktar),
+    odemIslemKDV: r(odemIslemKDV * miktar),
+    pazarlamaHizmet: r(pazarlamaHizmet * miktar),
+    pazarlamaHizmetKDV: r(pazarlamaHizmetKDV * miktar),
+    satistanKDV: r(satistanKDV * miktar),
+    alisKDV: r(alisKDV * miktar),
+    kargoKDV: r(kargoKDV * miktar),
     odenecekKDV: r(odenecekKDV * miktar),
-    netKar: r(netKar * miktar), karOrani: r(karOrani), yatirimGeriDonus: r(yatirimGeriDonus),
+    netKar: r(netKar * miktar),
+    karOrani: r(karOrani),
+    yatirimGeriDonus: r(yatirimGeriDonus),
   };
 };

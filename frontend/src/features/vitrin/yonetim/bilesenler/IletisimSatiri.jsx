@@ -8,21 +8,32 @@ const IletisimSatiri = ({ curIletisim, onIletisim, onYeni }) => {
   return (
     <Paper sx={{ p: 2, mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
       <Box>
-        <Typography variant="subtitle2" color="text.secondary">Bu kategori için iletişim</Typography>
+        <Typography variant="subtitle2" color="text.secondary">
+          Bu kategori için iletişim
+        </Typography>
         {curIletisim && (curIletisim.personel_adi || curIletisim.telefon) ? (
           <Typography variant="body1" fontWeight="500">
             {curIletisim.personel_adi || '—'} {curIletisim.telefon ? `• ${curIletisim.telefon}` : ''}
             {(curIletisim.personel_adi_2 || curIletisim.telefon_2) && (
-              <><br />{curIletisim.personel_adi_2 || '—'} {curIletisim.telefon_2 ? `• ${curIletisim.telefon_2}` : ''}</>
+              <>
+                <br />
+                {curIletisim.personel_adi_2 || '—'} {curIletisim.telefon_2 ? `• ${curIletisim.telefon_2}` : ''}
+              </>
             )}
           </Typography>
         ) : (
-          <Typography variant="body2" color="text.secondary">Henüz tanımlanmadı</Typography>
+          <Typography variant="body2" color="text.secondary">
+            Henüz tanımlanmadı
+          </Typography>
         )}
       </Box>
       <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
-        <Button variant="outlined" startIcon={<PhoneIcon />} onClick={onIletisim}>Personel / Telefon</Button>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={onYeni}>İlan Ekle</Button>
+        <Button variant="outlined" startIcon={<PhoneIcon />} onClick={onIletisim}>
+          Personel / Telefon
+        </Button>
+        <Button variant="contained" startIcon={<AddIcon />} onClick={onYeni}>
+          İlan Ekle
+        </Button>
       </Stack>
     </Paper>
   );

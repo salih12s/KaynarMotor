@@ -30,8 +30,8 @@ const ServisGecmisi = () => {
     })();
   }, [token]);
 
-  const durumLabel = (d) => d === 'tamamlandi' ? 'Tamamlandı' : d === 'devam_ediyor' ? 'Devam Ediyor' : 'Beklemede';
-  const durumRenk = (d) => d === 'tamamlandi' ? 'success' : d === 'devam_ediyor' ? 'info' : 'warning';
+  const durumLabel = (d) => (d === 'tamamlandi' ? 'Tamamlandı' : d === 'devam_ediyor' ? 'Devam Ediyor' : 'Beklemede');
+  const durumRenk = (d) => (d === 'tamamlandi' ? 'success' : d === 'devam_ediyor' ? 'info' : 'warning');
   const fmtPlaka = (p) => String(p || '').replace(/^(\d{2})([A-Z]+)(\d+)$/, '$1 $2 $3');
 
   return (
@@ -39,8 +39,14 @@ const ServisGecmisi = () => {
       <AppBar position="static" sx={{ bgcolor: '#1a1a1a' }} elevation={3}>
         <Toolbar sx={{ gap: 1 }}>
           <span className="kmt-logo-wrap" style={{ width: 31, height: 34, overflow: 'hidden', display: 'inline-flex', alignItems: 'center', flexShrink: 0 }}>
-            <img className="kmt-logo" src="/KaynarMotor.png" alt="Kaynar Motor" width="31" height="34"
-              style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', filter: 'brightness(0) invert(1)' }} />
+            <img
+              className="kmt-logo"
+              src="/KaynarMotor.png"
+              alt="Kaynar Motor"
+              width="31"
+              height="34"
+              style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', filter: 'brightness(0) invert(1)' }}
+            />
           </span>
           <Typography variant="h6" fontWeight="bold" sx={{ letterSpacing: 1, fontSize: { xs: 16, md: 20 } }}>
             KAYNAR <span style={{ color: RED }}>MOTOR</span>
@@ -50,7 +56,9 @@ const ServisGecmisi = () => {
 
       <Box sx={{ flex: 1, p: { xs: 2, md: 3 }, maxWidth: 760, mx: 'auto', width: '100%' }}>
         {loading ? (
-          <Box sx={{ textAlign: 'center', py: 6 }}><CircularProgress sx={{ color: RED }} /></Box>
+          <Box sx={{ textAlign: 'center', py: 6 }}>
+            <CircularProgress sx={{ color: RED }} />
+          </Box>
         ) : error ? (
           <Paper sx={{ p: 4, textAlign: 'center', color: 'text.secondary', borderRadius: 3 }}>
             <Typography>{error}</Typography>
@@ -60,9 +68,13 @@ const ServisGecmisi = () => {
             <Paper sx={{ p: 2, mb: 2, borderRadius: 3, textAlign: 'center', bgcolor: '#fff' }}>
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
                 <MotoIcon sx={{ color: RED, fontSize: 32 }} />
-                <Typography variant="h4" fontWeight="bold" sx={{ letterSpacing: 2 }}>{fmtPlaka(data.plaka)}</Typography>
+                <Typography variant="h4" fontWeight="bold" sx={{ letterSpacing: 2 }}>
+                  {fmtPlaka(data.plaka)}
+                </Typography>
               </Box>
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>Servis Geçmişi</Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                Servis Geçmişi
+              </Typography>
             </Paper>
 
             {data.servisler.length === 0 ? (
@@ -77,25 +89,32 @@ const ServisGecmisi = () => {
                       <BuildIcon sx={{ color: RED, fontSize: 20 }} />
                       <Typography fontWeight="bold">{tarihYaz(s.tarih)}</Typography>
                       {(s.marka || s.model_tip) && (
-                        <Typography variant="body2" color="text.secondary">{[s.marka, s.model_tip].filter(Boolean).join(' ')}</Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          {[s.marka, s.model_tip].filter(Boolean).join(' ')}
+                        </Typography>
                       )}
                     </Box>
                     <Chip label={durumLabel(s.durum)} size="small" color={durumRenk(s.durum)} />
                   </Box>
                   {s.km ? (
-                    <Typography variant="caption" color="text.secondary">KM: {sayiYaz(s.km)}</Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      KM: {sayiYaz(s.km)}
+                    </Typography>
                   ) : null}
                   <Divider sx={{ my: 1 }} />
                   {s.islemler.length > 0 ? (
                     <Box component="ul" sx={{ m: 0, pl: 2.5 }}>
                       {s.islemler.map((p, j) => (
                         <Typography component="li" variant="body2" key={j} sx={{ py: 0.25 }}>
-                          {p.islem}{(p.adet || 1) > 1 ? ` (x${p.adet})` : ''}
+                          {p.islem}
+                          {(p.adet || 1) > 1 ? ` (x${p.adet})` : ''}
                         </Typography>
                       ))}
                     </Box>
                   ) : (
-                    <Typography variant="body2" color="text.secondary">İşlem detayı girilmemiş.</Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      İşlem detayı girilmemiş.
+                    </Typography>
                   )}
                   <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
                     <Typography fontWeight="bold" sx={{ color: RED }}>

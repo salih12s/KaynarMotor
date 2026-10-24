@@ -24,7 +24,10 @@ export const useMotorFormu = ({ yenile }) => {
     setError('');
     try {
       const payload = { ...formData };
-      if (!payload.yatirimci) { payload.yatirimci_id = null; payload.yatirimci_kar_orani = 0; }
+      if (!payload.yatirimci) {
+        payload.yatirimci_id = null;
+        payload.yatirimci_kar_orani = 0;
+      }
       let belgeHatalari = [];
       if (dialog.data) {
         await ikinciElMotorService.update(dialog.data.id, payload);
@@ -38,7 +41,9 @@ export const useMotorFormu = ({ yenile }) => {
       if (belgeHatalari.length) {
         alert(`Motor kaydedildi ancak şu belgeler yüklenemedi:\n${belgeHatalari.join('\n')}\n\nMotoru düzenleyerek tekrar ekleyebilirsiniz.`);
       }
-    } catch (err) { setError(err.response?.data?.message || 'Hata oluştu'); }
+    } catch (err) {
+      setError(err.response?.data?.message || 'Hata oluştu');
+    }
   };
 
   return { dialog, kapat, openDialog, handleSave, formData, setFormData, error, bekleyenBelgeler, setBekleyenBelgeler };

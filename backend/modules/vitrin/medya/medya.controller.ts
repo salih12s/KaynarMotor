@@ -16,7 +16,8 @@ const medyaBasliklari = (res: Response) => {
 };
 
 /** Metin hata yanıtlı sarmalayıcı: beklenmeyen hata günlüğe yazılır, 500 "Sunucu hatası" metni döner. */
-const medyaSarmala = (baglam: string, isleyici: (req: Request, res: Response) => unknown, onbellekYok: boolean): RequestHandler =>
+const medyaSarmala =
+  (baglam: string, isleyici: (req: Request, res: Response) => unknown, onbellekYok: boolean): RequestHandler =>
   async (req, res) => {
     try {
       await isleyici(req, res);
@@ -33,66 +34,78 @@ const bulunamadi = (res: Response, mesaj: string, kisaOnbellek: boolean) => {
 };
 
 /** GET /iletisim-gorsel/:kategori - hizmet sayfası görselini binary servis et. */
-export const iletisimGorseli = medyaSarmala('Vitrin iletişim görsel hatası:', async (req, res) => {
-  const sonuc = await servis.iletisimGorseliBul(pool, String(req.params.kategori));
-  if (sonuc.tur === 'yok') return bulunamadi(res, 'Görsel bulunamadı', false);
-  if (sonuc.tur === 'gecersiz') return bulunamadi(res, 'Geçersiz görsel', false);
-  medyaBasliklari(res);
-  res.set('Content-Type', sonuc.medya.mime);
-  res.set('Cache-Control', 'public, max-age=3600');
-  res.send(sonuc.medya.buffer);
-}, false);
+export const iletisimGorseli = medyaSarmala(
+  'Vitrin iletişim görsel hatası:',
+  async (req, res) => {
+    const sonuc = await servis.iletisimGorseliBul(pool, String(req.params.kategori));
+    if (sonuc.tur === 'yok') return bulunamadi(res, 'Görsel bulunamadı', false);
+    if (sonuc.tur === 'gecersiz') return bulunamadi(res, 'Geçersiz görsel', false);
+    medyaBasliklari(res);
+    res.set('Content-Type', sonuc.medya.mime);
+    res.set('Cache-Control', 'public, max-age=3600');
+    res.send(sonuc.medya.buffer);
+  },
+  false,
+);
 
 /** GET /gorsel/:id - görseli binary olarak servis et (tarayıcı önbelleğe alır). */
-export const gorsel = medyaSarmala('Vitrin görsel hatası:', async (req, res) => {
-  const id = String(req.params.id);
-  const etag = `"vitrin-gorsel-${id}"`;
-  const kalici = { 'Cache-Control': KALICI_ONBELLEK, ETag: etag };
-  if (req.headers['if-none-match'] === etag) return res.set(kalici).status(304).end();
+export const gorsel = medyaSarmala(
+  'Vitrin görsel hatası:',
+  async (req, res) => {
+    const id = String(req.params.id);
+    const etag = `"vitrin-gorsel-${id}"`;
+    const kalici = { 'Cache-Control': KALICI_ONBELLEK, ETag: etag };
+    if (req.headers['if-none-match'] === etag) return res.set(kalici).status(304).end();
 
-  const sonuc = await servis.gorselBul(pool, id);
-  if (sonuc.tur === 'yok') return bulunamadi(res, 'Görsel bulunamadı', true);
-  if (sonuc.tur === 'gecersiz') return bulunamadi(res, 'Geçersiz görsel', true);
-  medyaBasliklari(res);
-  res.set(kalici).set('Content-Type', sonuc.medya.mime);
-  res.send(sonuc.medya.buffer);
-}, true);
+    const sonuc = await servis.gorselBul(pool, id);
+    if (sonuc.tur === 'yok') return bulunamadi(res, 'Görsel bulunamadı', true);
+    if (sonuc.tur === 'gecersiz') return bulunamadi(res, 'Geçersiz görsel', true);
+    medyaBasliklari(res);
+    res.set(kalici).set('Content-Type', sonuc.medya.mime);
+    res.send(sonuc.medya.buffer);
+  },
+  true,
+);
 
 /** GET /video/:id - yüklenen videoyu HTTP Range destekli (akıcı) servis et. */
-export const video = medyaSarmala('Vitrin video hatası:', async (req, res) => {
-  const id = String(req.params.id);
-  const etag = `"vitrin-video-${id}"`;
-  if (!req.headers.range && req.headers['if-none-match'] === etag) {
-    return res.set({ 'Cache-Control': KALICI_ONBELLEK, ETag: etag }).status(304).end();
-  }
-  const sonuc = await servis.videoBul(pool, id);
-  if (sonuc.tur === 'yok') return bulunamadi(res, 'Video bulunamadı', true);
-  if (sonuc.tur === 'gecersiz') return bulunamadi(res, 'Geçersiz video', true);
+export const video = medyaSarmala(
+  'Vitrin video hatası:',
+  async (req, res) => {
+    const id = String(req.params.id);
+    const etag = `"vitrin-video-${id}"`;
+    if (!req.headers.range && req.headers['if-none-match'] === etag) {
+      return res.set({ 'Cache-Control': KALICI_ONBELLEK, ETag: etag }).status(304).end();
+    }
+    const sonuc = await servis.videoBul(pool, id);
+    if (sonuc.tur === 'yok') return bulunamadi(res, 'Video bulunamadı', true);
+    if (sonuc.tur === 'gecersiz') return bulunamadi(res, 'Geçersiz video', true);
 
-  const { mime, buffer } = sonuc.medya;
-  res.set({ 'Cache-Control': KALICI_ONBELLEK, ETag: etag });
-  medyaBasliklari(res);
-  const toplam = buffer.length;
+    const { mime, buffer } = sonuc.medya;
+    res.set({ 'Cache-Control': KALICI_ONBELLEK, ETag: etag });
+    medyaBasliklari(res);
+    const toplam = buffer.length;
 
-  // Tarayıcı parça (Range) istediyse 206 ile sadece o aralığı gönder → kasmaz, sarılabilir
-  if (req.headers.range) {
-    const { baslangic, bitis } = servis.aralikCoz(req.headers.range, toplam);
-    const parca = buffer.subarray(baslangic, bitis + 1);
-    res.status(206).set({
-      'Content-Range': `bytes ${baslangic}-${bitis}/${toplam}`,
-      'Accept-Ranges': 'bytes',
-      'Content-Length': String(parca.length),
+    // Tarayıcı parça (Range) istediyse 206 ile sadece o aralığı gönder → kasmaz, sarılabilir
+    if (req.headers.range) {
+      const { baslangic, bitis } = servis.aralikCoz(req.headers.range, toplam);
+      const parca = buffer.subarray(baslangic, bitis + 1);
+      res.status(206).set({
+        'Content-Range': `bytes ${baslangic}-${bitis}/${toplam}`,
+        'Accept-Ranges': 'bytes',
+        'Content-Length': String(parca.length),
+        'Content-Type': mime,
+        'Cache-Control': KALICI_ONBELLEK,
+      });
+      return res.end(parca);
+    }
+
+    res.set({
       'Content-Type': mime,
+      'Content-Length': String(toplam),
+      'Accept-Ranges': 'bytes',
       'Cache-Control': KALICI_ONBELLEK,
     });
-    return res.end(parca);
-  }
-
-  res.set({
-    'Content-Type': mime,
-    'Content-Length': String(toplam),
-    'Accept-Ranges': 'bytes',
-    'Cache-Control': KALICI_ONBELLEK,
-  });
-  res.end(buffer);
-}, true);
+    res.end(buffer);
+  },
+  true,
+);

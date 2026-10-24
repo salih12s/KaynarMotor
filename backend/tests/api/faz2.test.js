@@ -13,10 +13,17 @@ const { sunucuBaslat, dbsizSunucuBaslat, kullaniciOlustur } = require('./yardimc
 
 const SON = Date.now().toString(36);
 const num = (v) => Number(v);
-let s, api, admin, sayac = 0;
+let s,
+  api,
+  admin,
+  sayac = 0;
 const benzersiz = (onek) => `${onek}${SON}${++sayac}`;
 
-before(async () => { s = await sunucuBaslat(); api = s.api; admin = s.admin; });
+before(async () => {
+  s = await sunucuBaslat();
+  api = s.api;
+  admin = s.admin;
+});
 after(() => s && s.durdur());
 
 const aksesuarStok = async (giren = 10) => {
@@ -27,9 +34,18 @@ const aksesuarStok = async (giren = 10) => {
   return { id: r.govde.id, kod, ad };
 };
 const stokOku = async (yol, kod) => (await api('GET', `${yol}/barkod/${kod}`, undefined, admin)).govde;
-const satisYap = (ad, adet, durum = 'tamamlandi', ek = {}) => api('POST', '/api/aksesuarlar', {
-  ad_soyad: benzersiz('Müşteri F2 '), durum, parcalar: [{ urun_adi: ad, adet, maliyet: 300, satis_fiyati: 700 }], ...ek,
-}, admin);
+const satisYap = (ad, adet, durum = 'tamamlandi', ek = {}) =>
+  api(
+    'POST',
+    '/api/aksesuarlar',
+    {
+      ad_soyad: benzersiz('Müşteri F2 '),
+      durum,
+      parcalar: [{ urun_adi: ad, adet, maliyet: 300, satis_fiyati: 700 }],
+      ...ek,
+    },
+    admin,
+  );
 
 // ---------------------------------------------------------------- #3
 describe('#3 stok düzenleme ve içe aktarma satışları silmez', () => {
@@ -39,7 +55,12 @@ describe('#3 stok düzenleme ve içe aktarma satışları silmez', () => {
     const once = await stokOku('/api/aksesuar-stok', st.kod);
     assert.equal(num(once.mevcut), 6);
     assert.equal(num(once.cikan_miktar), 4);
-    const r = await api('PUT', `/api/aksesuar-stok/${st.id}`, { stok_kodu: st.kod, stok_adi: st.ad, alis_fiyati: 300, satis_fiyati: 750, giren_miktar: 10 }, admin);
+    const r = await api(
+      'PUT',
+      `/api/aksesuar-stok/${st.id}`,
+      { stok_kodu: st.kod, stok_adi: st.ad, alis_fiyati: 300, satis_fiyati: 750, giren_miktar: 10 },
+      admin,
+    );
     assert.equal(r.durum, 200);
     const sonra = await stokOku('/api/aksesuar-stok', st.kod);
     assert.equal(num(sonra.mevcut), 6);
@@ -70,7 +91,12 @@ describe('#3 stok düzenleme ve içe aktarma satışları silmez', () => {
 
   it('aksesuar: /toplu ile yeni kod eklenirse mevcut = giren', async () => {
     const kod = benzersiz('F2N').slice(0, 19);
-    await api('POST', '/api/aksesuar-stok/toplu', { stoklar: [{ stok_kodu: kod, stok_adi: `Yeni ${kod}`, giren_miktar: 8, alis_fiyati: 1, satis_fiyati: 2 }] }, admin);
+    await api(
+      'POST',
+      '/api/aksesuar-stok/toplu',
+      { stoklar: [{ stok_kodu: kod, stok_adi: `Yeni ${kod}`, giren_miktar: 8, alis_fiyati: 1, satis_fiyati: 2 }] },
+      admin,
+    );
     const y = await stokOku('/api/aksesuar-stok', kod);
     assert.equal(num(y.mevcut), 8);
     assert.equal(num(y.cikan_miktar), 0);
@@ -78,10 +104,20 @@ describe('#3 stok düzenleme ve içe aktarma satışları silmez', () => {
 
   it('yedek parça: satıştan sonra fiyat düzeltince mevcut stok değişmez', async () => {
     const kod = benzersiz('F2Y').slice(0, 19);
-    const st = await api('POST', '/api/yedek-parca-stok', { stok_kodu: kod, stok_adi: `Balata ${kod}`, giren_miktar: 10, alis_fiyati: 50, satis_fiyati: 120 }, admin);
+    const st = await api(
+      'POST',
+      '/api/yedek-parca-stok',
+      { stok_kodu: kod, stok_adi: `Balata ${kod}`, giren_miktar: 10, alis_fiyati: 50, satis_fiyati: 120 },
+      admin,
+    );
     assert.equal(st.durum, 201);
     await api('POST', '/api/yedek-parcalar', { urun_adi: 'Balata', alis_fiyati: 200, satis_fiyati: 480, stok_id: st.govde.id, adet: 4 }, admin);
-    await api('PUT', `/api/yedek-parca-stok/${st.govde.id}`, { stok_kodu: kod, stok_adi: `Balata ${kod}`, giren_miktar: 10, alis_fiyati: 50, satis_fiyati: 125 }, admin);
+    await api(
+      'PUT',
+      `/api/yedek-parca-stok/${st.govde.id}`,
+      { stok_kodu: kod, stok_adi: `Balata ${kod}`, giren_miktar: 10, alis_fiyati: 50, satis_fiyati: 125 },
+      admin,
+    );
     const sonra = await stokOku('/api/yedek-parca-stok', kod);
     assert.equal(num(sonra.mevcut), 6);
     assert.equal(num(sonra.cikan_miktar), 4);
@@ -92,7 +128,12 @@ describe('#3 stok düzenleme ve içe aktarma satışları silmez', () => {
 describe('#10 adet tutarlılığı ve doğrulaması', () => {
   it('adet boşsa toplam ve kayıtlı satır tutarlı (1 adet) ve stoktan 1 düşer', async () => {
     const st = await aksesuarStok(10);
-    const r = await api('POST', '/api/aksesuarlar', { ad_soyad: benzersiz('X '), durum: 'tamamlandi', parcalar: [{ urun_adi: st.ad, adet: '', maliyet: 100, satis_fiyati: 200 }] }, admin);
+    const r = await api(
+      'POST',
+      '/api/aksesuarlar',
+      { ad_soyad: benzersiz('X '), durum: 'tamamlandi', parcalar: [{ urun_adi: st.ad, adet: '', maliyet: 100, satis_fiyati: 200 }] },
+      admin,
+    );
     assert.equal(r.durum, 201);
     assert.equal(num(r.govde.toplam_satis), 200);
     assert.equal(num(r.govde.toplam_maliyet), 100);
@@ -112,7 +153,12 @@ describe('#10 adet tutarlılığı ve doğrulaması', () => {
   });
 
   it('iş emri parçası, yedek parça satışı ve e-ticaret satışında da adet doğrulanır', async () => {
-    const ie = await api('POST', '/api/is-emirleri', { musteri_ad_soyad: 'Adet Test', telefon: '05550009911', parcalar: [{ takilan_parca: 'p', adet: -1, birim_fiyat: 10, maliyet: 5 }] }, admin);
+    const ie = await api(
+      'POST',
+      '/api/is-emirleri',
+      { musteri_ad_soyad: 'Adet Test', telefon: '05550009911', parcalar: [{ takilan_parca: 'p', adet: -1, birim_fiyat: 10, maliyet: 5 }] },
+      admin,
+    );
     assert.equal(ie.durum, 400);
     const yp = await api('POST', '/api/yedek-parcalar', { urun_adi: 'x', satis_fiyati: 1, adet: 0.5 }, admin);
     assert.equal(yp.durum, 400);
@@ -210,7 +256,12 @@ describe('#18 silme: kayıtlar korunarak silinir (FK 500 vermez)', () => {
 
   it('motor silinince bağlı vitrin ilanı yayından kalkar ve bağlantısı kopar', async () => {
     const m = await api('POST', '/api/ikinci-el-motor', { plaka: benzersiz('34M').slice(0, 12), marka: 'X', alis_fiyati: 1, durum: 'stokta' }, admin);
-    const v = await api('POST', '/api/vitrin', { kategori: 'motor', baslik: benzersiz('Bağlı ilan '), segment: 'Naked', stok_motor_id: m.govde.id, yayinda: true }, admin);
+    const v = await api(
+      'POST',
+      '/api/vitrin',
+      { kategori: 'motor', baslik: benzersiz('Bağlı ilan '), segment: 'Naked', stok_motor_id: m.govde.id, yayinda: true },
+      admin,
+    );
     const d = await api('DELETE', `/api/ikinci-el-motor/${m.govde.id}`, undefined, admin);
     assert.equal(d.durum, 200);
     const ilan = (await api('GET', `/api/vitrin/${v.govde.id}`, undefined, admin)).govde;
@@ -224,8 +275,19 @@ describe('#18 silme: kayıtlar korunarak silinir (FK 500 vermez)', () => {
 // ---------------------------------------------------------------- #32
 describe("#32 e-ticaret satışında boş metin ('') stok_id / platform_id", () => {
   let platformId;
-  before(async () => { platformId = (await api('GET', '/api/eticaret/platformlar', undefined, admin)).govde[0].id; });
-  const govde = (ek) => ({ urun_adi: benzersiz('Manuel '), alis_fiyati: 100, satis_fiyati: 200, komisyon_orani: 10, kdv_orani: 20, kargo_ucreti: 0, adet: 1, ...ek });
+  before(async () => {
+    platformId = (await api('GET', '/api/eticaret/platformlar', undefined, admin)).govde[0].id;
+  });
+  const govde = (ek) => ({
+    urun_adi: benzersiz('Manuel '),
+    alis_fiyati: 100,
+    satis_fiyati: 200,
+    komisyon_orani: 10,
+    kdv_orani: 20,
+    kargo_ucreti: 0,
+    adet: 1,
+    ...ek,
+  });
 
   it("stok_id='' (manuel giriş) kaydedilir", async () => {
     const r = await api('POST', '/api/eticaret', govde({ stok_id: '', platform_id: platformId }), admin);
@@ -259,15 +321,14 @@ describe("#32 e-ticaret satışında boş metin ('') stok_id / platform_id", () 
 // ---------------------------------------------------------------- #19
 describe('#19 veritabanı erişilemezken uçlar yanıtsız kalmaz', () => {
   let d;
-  before(async () => { d = await dbsizSunucuBaslat(); });
+  before(async () => {
+    d = await dbsizSunucuBaslat();
+  });
   after(() => d && d.durdur());
 
   const hizliYanit = async (yontem, yol, govde) => {
     const t0 = Date.now();
-    const r = await Promise.race([
-      d.api(yontem, yol, govde, d.token),
-      new Promise((c) => setTimeout(() => c({ durum: 'ZAMAN AŞIMI' }), 8000)),
-    ]);
+    const r = await Promise.race([d.api(yontem, yol, govde, d.token), new Promise((c) => setTimeout(() => c({ durum: 'ZAMAN AŞIMI' }), 8000))]);
     return { ...r, sure: Date.now() - t0 };
   };
 

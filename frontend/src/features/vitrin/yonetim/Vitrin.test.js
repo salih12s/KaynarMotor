@@ -14,9 +14,20 @@ import { useAuth } from '../../auth/AuthContext';
 
 jest.mock('../vitrinApi', () => ({
   vitrinService: {
-    getAllAdmin: jest.fn(), getIletisim: jest.fn(), getSegmentler: jest.fn(), getYuklemeSiniri: jest.fn(), getById: jest.fn(),
-    create: jest.fn(), update: jest.fn(), delete: jest.fn(), reorder: jest.fn(), setPublished: jest.fn(), moveToPosition: jest.fn(),
-    updateIletisim: jest.fn(), gorselUrl: jest.fn(), iletisimGorselUrl: jest.fn(),
+    getAllAdmin: jest.fn(),
+    getIletisim: jest.fn(),
+    getSegmentler: jest.fn(),
+    getYuklemeSiniri: jest.fn(),
+    getById: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    delete: jest.fn(),
+    reorder: jest.fn(),
+    setPublished: jest.fn(),
+    moveToPosition: jest.fn(),
+    updateIletisim: jest.fn(),
+    gorselUrl: jest.fn(),
+    iletisimGorselUrl: jest.fn(),
   },
 }));
 jest.mock('../../motor/motorApi', () => ({ ikinciElMotorService: { getAll: jest.fn() } }));
@@ -24,10 +35,37 @@ jest.mock('../../aksesuar/aksesuarApi', () => ({ aksesuarStokService: { getAll: 
 jest.mock('../../auth/AuthContext', () => ({ useAuth: jest.fn() }));
 jest.mock('../../motor/SatisBelgeleri', () => ({ BelgeBolumu: ({ motorId }) => <div>BELGE-BOLUMU-{motorId}</div> }));
 
-
 // ---- Sabit test verisi -------------------------------------------------------------------------------------------
-const U1 = { id: 1, baslik: 'NMAX Fırsat', marka: 'Yamaha', model: 'NMAX', yil: 2021, segment: 'Scooter', motor_cc: 155, km: 12000, fiyat: 150000, yayinda: true, ilan_no: 7, motor_durumu: 'ikinci_el', one_cikan: true, stok_motor_id: 5, kapak_gorsel_id: 11, siralama: 0 };
-const U2 = { id: 2, baslik: 'PCX Sıfır', marka: 'Honda', model: 'PCX', yil: 2023, segment: 'Scooter', fiyat: 210000, yayinda: true, motor_durumu: 'sifir', siralama: 1 };
+const U1 = {
+  id: 1,
+  baslik: 'NMAX Fırsat',
+  marka: 'Yamaha',
+  model: 'NMAX',
+  yil: 2021,
+  segment: 'Scooter',
+  motor_cc: 155,
+  km: 12000,
+  fiyat: 150000,
+  yayinda: true,
+  ilan_no: 7,
+  motor_durumu: 'ikinci_el',
+  one_cikan: true,
+  stok_motor_id: 5,
+  kapak_gorsel_id: 11,
+  siralama: 0,
+};
+const U2 = {
+  id: 2,
+  baslik: 'PCX Sıfır',
+  marka: 'Honda',
+  model: 'PCX',
+  yil: 2023,
+  segment: 'Scooter',
+  fiyat: 210000,
+  yayinda: true,
+  motor_durumu: 'sifir',
+  siralama: 1,
+};
 const U3 = { id: 3, baslik: 'Küçük Chopper', segment: 'Chopper', fiyat: 99000, yayinda: false, motor_durumu: 'ikinci_el', siralama: 2 };
 const MOTORLAR = [U1, U2, U3];
 const ILETISIM = [
@@ -35,7 +73,19 @@ const ILETISIM = [
   { kategori: 'bakim_servis', personel_adi: 'Usta Ali', telefon: '0555', baslik: 'Bakım Atölyesi', aciklama: 'Randevu alın', gorsel_var: false },
 ];
 const STOK_MOTORLAR = [
-  { id: 5, plaka: '34ABC123', marka: 'Yamaha', model: 'NMAX', yil: 2021, km: 12000, liste_fiyati: 150000, durum: 'stokta', vitrin_baslik: 'NMAX Temiz', vitrin_segment: 'Scooter', vitrin_cc: 155 },
+  {
+    id: 5,
+    plaka: '34ABC123',
+    marka: 'Yamaha',
+    model: 'NMAX',
+    yil: 2021,
+    km: 12000,
+    liste_fiyati: 150000,
+    durum: 'stokta',
+    vitrin_baslik: 'NMAX Temiz',
+    vitrin_segment: 'Scooter',
+    vitrin_cc: 155,
+  },
   { id: 6, plaka: '06SATILDI', marka: 'Honda', model: 'X', durum: 'tamamlandi' },
 ];
 const STOK_AKSESUAR = [{ id: 1, stok_adi: 'Kask', marka: 'LS2', kategori: 'Kask', beden: 'L', renk: 'Siyah', satis_fiyati: 2500 }];
@@ -44,7 +94,9 @@ const DETAY_U1 = { ...U1, aciklama: 'Temiz', video_url: '', hasar_kaydi: 'Yok', 
 // ---- Yardımcılar -------------------------------------------------------------------------------------------------
 const kur = ({ rol = 'admin', user = {}, liste = {} } = {}) => {
   useAuth.mockReturnValue({ user: { rol, ...user } });
-  vitrinService.getAllAdmin.mockImplementation(async ({ kategori }) => ({ data: (liste[kategori] ?? (kategori === 'motor' ? MOTORLAR : [])).map((x) => ({ ...x })) }));
+  vitrinService.getAllAdmin.mockImplementation(async ({ kategori }) => ({
+    data: (liste[kategori] ?? (kategori === 'motor' ? MOTORLAR : [])).map((x) => ({ ...x })),
+  }));
   vitrinService.getIletisim.mockResolvedValue({ data: ILETISIM });
   vitrinService.getSegmentler.mockResolvedValue({ data: [{ ad: 'Chopper' }, { ad: 'Scooter' }, { ad: 'Naked' }] });
   vitrinService.getYuklemeSiniri.mockResolvedValue({ data: { video_mb: 1 } });
@@ -81,14 +133,22 @@ beforeEach(() => {
   jest.spyOn(window, 'confirm').mockImplementation(() => true);
   jest.spyOn(console, 'error').mockImplementation(() => {});
 });
-afterEach(() => { jest.restoreAllMocks(); });
+afterEach(() => {
+  jest.restoreAllMocks();
+});
 
 // ---- Sekmeler ve roller ------------------------------------------------------------------------------------------
 describe('Vitrin: sekmeler ve roller', () => {
   test('admin 6 kategori sekmesi görür; ilk açılışta motor ilanlarını ister', async () => {
     await ekranAc();
-    expect(screen.getAllByRole('tab').map((t) => t.textContent)).toEqual(
-      ['Motor Satışı', 'Aksesuar', 'Yedek Parça', 'Bakım / Servis', 'Nakliye / Yol Kurtarma', 'Araç Sigortası']);
+    expect(screen.getAllByRole('tab').map((t) => t.textContent)).toEqual([
+      'Motor Satışı',
+      'Aksesuar',
+      'Yedek Parça',
+      'Bakım / Servis',
+      'Nakliye / Yol Kurtarma',
+      'Araç Sigortası',
+    ]);
     expect(vitrinService.getAllAdmin).toHaveBeenCalledWith({ kategori: 'motor' });
   });
 
@@ -159,12 +219,15 @@ describe('Vitrin: ilan listesi', () => {
     await user.type(kutu, 'yamaha 2021');
     expect(screen.getByText('NMAX Fırsat')).toBeInTheDocument();
     expect(screen.queryByText('PCX Sıfır')).not.toBeInTheDocument();
-    await user.clear(kutu); await user.type(kutu, 'iln-0007');
+    await user.clear(kutu);
+    await user.type(kutu, 'iln-0007');
     expect(screen.getByText('NMAX Fırsat')).toBeInTheDocument();
     expect(screen.queryByText('PCX Sıfır')).not.toBeInTheDocument();
-    await user.clear(kutu); await user.type(kutu, 'PCX');
+    await user.clear(kutu);
+    await user.type(kutu, 'PCX');
     expect(screen.getByText('PCX Sıfır')).toBeInTheDocument();
-    await user.clear(kutu); await user.type(kutu, 'yamaha 2023'); // marka bir ilanda, yıl başka ilanda: HER kelime aynı ilanda olmalı
+    await user.clear(kutu);
+    await user.type(kutu, 'yamaha 2023'); // marka bir ilanda, yıl başka ilanda: HER kelime aynı ilanda olmalı
     expect(screen.getByText('"yamaha 2023" ile eşleşen ilan yayında yok.')).toBeInTheDocument();
   });
 
@@ -198,7 +261,8 @@ describe('Vitrin: sıralama', () => {
     const kutu1 = screen.getByLabelText('NMAX Fırsat sıra numarası');
     expect(kutu1).toHaveValue(1);
     expect(screen.getByLabelText('PCX Sıfır sıra numarası')).toHaveValue(2);
-    await user.clear(kutu1); await user.type(kutu1, '2');
+    await user.clear(kutu1);
+    await user.type(kutu1, '2');
     await user.click(within(kart('NMAX Fırsat')).getByRole('button', { name: 'Değiştir' }));
     await waitFor(() => expect(vitrinService.moveToPosition).toHaveBeenCalledWith(1, 2));
     expect(await screen.findByText('İlan 2. sıraya taşındı')).toBeInTheDocument();
@@ -207,10 +271,12 @@ describe('Vitrin: sıralama', () => {
   test('admin: aralık dışı numara uyarı verir, sunucuya gitmez; aynı sıra sessizce yok sayılır', async () => {
     const user = await ekranAc();
     const kutu1 = screen.getByLabelText('NMAX Fırsat sıra numarası');
-    await user.clear(kutu1); await user.type(kutu1, '5');
+    await user.clear(kutu1);
+    await user.type(kutu1, '5');
     await user.click(within(kart('NMAX Fırsat')).getByRole('button', { name: 'Değiştir' }));
     expect(await screen.findByText('Sıra numarası 1 ile 2 arasında olmalı')).toBeInTheDocument();
-    await user.clear(kutu1); await user.type(kutu1, '1');
+    await user.clear(kutu1);
+    await user.type(kutu1, '1');
     await user.click(within(kart('NMAX Fırsat')).getByRole('button', { name: 'Değiştir' }));
     expect(vitrinService.moveToPosition).not.toHaveBeenCalled();
   });
@@ -321,9 +387,25 @@ describe('Vitrin: yeni ilan formu', () => {
     await user.click(within(p).getByRole('button', { name: 'Kaydet' }));
     await waitFor(() => expect(vitrinService.create).toHaveBeenCalled());
     expect(vitrinService.create.mock.calls[0][0]).toEqual({
-      baslik: 'Deneme İlan', aciklama: '', fiyat: '', video_url: '', marka: '', model: '', yil: '', segment: 'Naked', motor_cc: '', km: '',
-      hasar_kaydi: '', motor_durumu: 'ikinci_el', yayinda: true, siralama: 3, one_cikan: false, stok_motor_id: null, rubik_link: '',
-      kategori: 'motor', gorseller: [],
+      baslik: 'Deneme İlan',
+      aciklama: '',
+      fiyat: '',
+      video_url: '',
+      marka: '',
+      model: '',
+      yil: '',
+      segment: 'Naked',
+      motor_cc: '',
+      km: '',
+      hasar_kaydi: '',
+      motor_durumu: 'ikinci_el',
+      yayinda: true,
+      siralama: 3,
+      one_cikan: false,
+      stok_motor_id: null,
+      rubik_link: '',
+      kategori: 'motor',
+      gorseller: [],
     });
     expect(await screen.findByText('Kaydedildi')).toBeInTheDocument();
     await bekleDialogKapanana();
@@ -366,7 +448,8 @@ describe('Vitrin: yeni ilan formu', () => {
     const p = await yeniAc(user);
     await user.click(within(p).getByRole('button', { name: 'Sıfır' }));
     yaziVar('Sitede müşteri "Sıfır" seçtiğinde bu ilan listelenir.');
-    await user.type(alan('Başlık *'), 'Y'); await user.type(alan('Segment *'), 'Naked');
+    await user.type(alan('Başlık *'), 'Y');
+    await user.type(alan('Segment *'), 'Naked');
     await user.click(within(p).getByRole('button', { name: 'Kaydet' }));
     await waitFor(() => expect(vitrinService.create).toHaveBeenCalled());
     expect(vitrinService.create.mock.calls[0][0].motor_durumu).toBe('sifir');
@@ -433,7 +516,9 @@ describe('Vitrin: ilan düzenleme, görseller ve video', () => {
     await user.click(within(p).getAllByTitle('Vitrin fotoğrafı yap')[0]); // 2. görseli kapak yap
     expect(within(p).getAllByTitle('Vitrin fotoğrafı yap')).toHaveLength(2);
     await user.click(within(p).getAllByTitle('Sağa kaydır')[0]);
-    const kapat = within(p).getAllByTestId('CloseIcon').filter((x) => x.closest('[draggable="true"]'));
+    const kapat = within(p)
+      .getAllByTestId('CloseIcon')
+      .filter((x) => x.closest('[draggable="true"]'));
     expect(kapat).toHaveLength(3);
     await user.click(kapat[2]); // sonuncuyu sil
     expect(imgs()).toHaveLength(2);
@@ -473,7 +558,8 @@ describe('Vitrin: ilan düzenleme, görseller ve video', () => {
 
     fireEvent.change(girdi(), { target: { files: [new File(['abc'], 'tanitim.mp4', { type: 'video/mp4' })] } });
     expect(await within(p).findByText('tanitim.mp4')).toBeInTheDocument();
-    await user.type(alan('Başlık *'), 'Videolu'); await user.type(alan('Segment *'), 'Naked');
+    await user.type(alan('Başlık *'), 'Videolu');
+    await user.type(alan('Segment *'), 'Naked');
     await user.click(within(p).getByRole('button', { name: 'Kaydet' }));
     await waitFor(() => expect(vitrinService.create).toHaveBeenCalled());
     expect(vitrinService.create.mock.calls[0][0].video).toMatch(/^data:video\/mp4;base64,/);
@@ -500,11 +586,19 @@ describe('Vitrin: iletişim ve hizmet sayfası', () => {
     expect(within(p).getByLabelText('Personel Adı')).toHaveValue('Satış Ahmet');
     expect(within(p).getByLabelText('Not (opsiyonel)')).toHaveValue('Not 1');
     expect(within(p).queryByLabelText('Başlık')).not.toBeInTheDocument(); // başlık yalnız hizmet sayfalarında
-    await user.clear(within(p).getByLabelText('Telefon')); await user.type(within(p).getByLabelText('Telefon'), '0540');
+    await user.clear(within(p).getByLabelText('Telefon'));
+    await user.type(within(p).getByLabelText('Telefon'), '0540');
     await user.click(within(p).getByRole('button', { name: 'Kaydet' }));
-    await waitFor(() => expect(vitrinService.updateIletisim).toHaveBeenCalledWith('motor', {
-      personel_adi: 'Satış Ahmet', telefon: '0540', personel_adi_2: 'Ayşe', telefon_2: '0533', aciklama: 'Not 1', baslik: '',
-    }));
+    await waitFor(() =>
+      expect(vitrinService.updateIletisim).toHaveBeenCalledWith('motor', {
+        personel_adi: 'Satış Ahmet',
+        telefon: '0540',
+        personel_adi_2: 'Ayşe',
+        telefon_2: '0533',
+        aciklama: 'Not 1',
+        baslik: '',
+      }),
+    );
     expect(await screen.findByText('Kaydedildi')).toBeInTheDocument();
   });
 
@@ -522,6 +616,11 @@ describe('Vitrin: iletişim ve hizmet sayfası', () => {
     expect(within(p).getByLabelText('Başlık')).toHaveValue('Bakım Atölyesi');
     expect(within(p).getByRole('button', { name: 'Görsel Yükle' })).toBeInTheDocument();
     await user.click(within(p).getByRole('button', { name: 'Kaydet' }));
-    await waitFor(() => expect(vitrinService.updateIletisim).toHaveBeenCalledWith('bakim_servis', expect.objectContaining({ baslik: 'Bakım Atölyesi', personel_adi: 'Usta Ali' })));
+    await waitFor(() =>
+      expect(vitrinService.updateIletisim).toHaveBeenCalledWith(
+        'bakim_servis',
+        expect.objectContaining({ baslik: 'Bakım Atölyesi', personel_adi: 'Usta Ali' }),
+      ),
+    );
   });
 });

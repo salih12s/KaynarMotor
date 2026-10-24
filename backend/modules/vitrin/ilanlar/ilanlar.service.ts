@@ -8,13 +8,21 @@ import { BulunamadiHatasi, GecersizIstek, YetkiHatasi, bosuNull } from '../../..
 import type { BaglamDb, Kullanici, Veritabani } from '../../../core/tipler';
 import * as repo from './ilanlar.repository';
 import type { IlanAlanlari, ListeFiltresi } from './ilanlar.repository';
-import type {
-  IlanGuncelleGovdesi, IlanOlusturGovdesi, IlanSorgusu, SiraGovdesi, SiralaGovdesi, YayinGovdesi,
-} from './ilanlar.schemas';
+import type { IlanGuncelleGovdesi, IlanOlusturGovdesi, IlanSorgusu, SiraGovdesi, SiralaGovdesi, YayinGovdesi } from './ilanlar.schemas';
 import { segmentiGaranti } from '../iletisim/iletisim.service';
 import {
-  IZINLI_VIDEO, KATEGORILER, MOTOR_DURUMLARI, baglantiHatasi, cokBuyukMesaji, hamMb, kategoriYetkiliMi, medyaHatasi,
-  motorDurumu, numOrNull, paketAsimi, parseDataUrl,
+  IZINLI_VIDEO,
+  KATEGORILER,
+  MOTOR_DURUMLARI,
+  baglantiHatasi,
+  cokBuyukMesaji,
+  hamMb,
+  kategoriYetkiliMi,
+  medyaHatasi,
+  motorDurumu,
+  numOrNull,
+  paketAsimi,
+  parseDataUrl,
 } from '../vitrinOrtak';
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -134,11 +142,24 @@ export const siraAyarla = async (db: BaglamDb, id: number, govde: SiraGovdesi) =
 
 /** Gövdeden ilan alanlarını normalize eder. `yayinda`/`siralama` çağıranın belirlediği değerlerle gelir. */
 const ilanAlanlari = (g: IlanOlusturGovdesi, yayinda: unknown, siralama: unknown): IlanAlanlari => ({
-  kategori: g.kategori, baslik: g.baslik, aciklama: bosuNull(g.aciklama), fiyat: numOrNull(g.fiyat) || 0, video_url: bosuNull(g.video_url),
-  marka: bosuNull(g.marka), model: bosuNull(g.model), yil: numOrNull(g.yil), segment: bosuNull(g.segment),
-  motor_cc: numOrNull(g.motor_cc), km: numOrNull(g.km), yayinda, siralama,
-  one_cikan: g.one_cikan === true, stok_motor_id: numOrNull(g.stok_motor_id), rubik_link: bosuNull(g.rubik_link),
-  hasar_kaydi: bosuNull(g.hasar_kaydi), motor_durumu: motorDurumu(g.kategori, g.motor_durumu),
+  kategori: g.kategori,
+  baslik: g.baslik,
+  aciklama: bosuNull(g.aciklama),
+  fiyat: numOrNull(g.fiyat) || 0,
+  video_url: bosuNull(g.video_url),
+  marka: bosuNull(g.marka),
+  model: bosuNull(g.model),
+  yil: numOrNull(g.yil),
+  segment: bosuNull(g.segment),
+  motor_cc: numOrNull(g.motor_cc),
+  km: numOrNull(g.km),
+  yayinda,
+  siralama,
+  one_cikan: g.one_cikan === true,
+  stok_motor_id: numOrNull(g.stok_motor_id),
+  rubik_link: bosuNull(g.rubik_link),
+  hasar_kaydi: bosuNull(g.hasar_kaydi),
+  motor_durumu: motorDurumu(g.kategori, g.motor_durumu),
 });
 
 /** Medya, bağlantı ve boyut denetimleri (hepsi veritabanına yazmadan ÖNCE). */
@@ -213,11 +234,11 @@ export const ilanGuncelle = async (db: BaglamDb, id: number, govde: IlanGuncelle
   try {
     await db.withTransaction(async (tx) => {
       // Yayın durumu ve sıra yalnızca admin tarafından değişir (PATCH /yayin ve /sira uçlarıyla aynı kural)
-      await repo.ilanGuncelle(tx, id, ilanAlanlari(
-        govde,
-        adminMi ? govde.yayinda !== false : mevcut.yayinda,
-        adminMi ? (numOrNull(govde.siralama) || 0) : mevcut.siralama
-      ));
+      await repo.ilanGuncelle(
+        tx,
+        id,
+        ilanAlanlari(govde, adminMi ? govde.yayinda !== false : mevcut.yayinda, adminMi ? numOrNull(govde.siralama) || 0 : mevcut.siralama),
+      );
 
       // gorseller alanı gönderildiyse görselleri tamamen yenile
       if (Array.isArray(gorseller)) {

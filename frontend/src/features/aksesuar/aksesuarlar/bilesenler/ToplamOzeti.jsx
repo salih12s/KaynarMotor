@@ -9,18 +9,33 @@ const ToplamOzeti = ({ a, karGor }) => {
     <>
       <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 1 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          <Typography variant="body2" color="text.secondary">Ara Toplam: {sayiYaz(toplamSatis)} ₺</Typography>
+          <Typography variant="body2" color="text.secondary">
+            Ara Toplam: {sayiYaz(toplamSatis)} ₺
+          </Typography>
           <TextField
-            size="small" label="İndirim (₺)" type="number" value={formData.indirim}
-            onChange={e => setFormData({ ...formData, indirim: e.target.value })}
+            size="small"
+            label="İndirim (₺)"
+            type="number"
+            value={formData.indirim}
+            onChange={(e) => setFormData({ ...formData, indirim: e.target.value })}
             sx={{ width: 150 }}
             InputProps={{ startAdornment: <InputAdornment position="start">₺</InputAdornment> }}
           />
         </Box>
-        {indirim > 0 && <Typography variant="body2" sx={{ color: '#c62828' }}>İndirim: −{sayiYaz(indirim)} ₺</Typography>}
+        {indirim > 0 && (
+          <Typography variant="body2" sx={{ color: '#c62828' }}>
+            İndirim: −{sayiYaz(indirim)} ₺
+          </Typography>
+        )}
         <Box sx={{ display: 'flex', gap: 3 }}>
-          <Typography>Toplam: <strong>{sayiYaz(netToplam)} ₺</strong></Typography>
-          {karGor && <Typography sx={{ color: kar >= 0 ? 'green' : 'red' }}>Kâr: <strong>{sayiYaz(kar)} ₺</strong></Typography>}
+          <Typography>
+            Toplam: <strong>{sayiYaz(netToplam)} ₺</strong>
+          </Typography>
+          {karGor && (
+            <Typography sx={{ color: kar >= 0 ? 'green' : 'red' }}>
+              Kâr: <strong>{sayiYaz(kar)} ₺</strong>
+            </Typography>
+          )}
         </Box>
       </Box>
     </>

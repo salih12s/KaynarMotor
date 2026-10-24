@@ -43,8 +43,8 @@ ilanlar.put('/:id', ...vitrinYazma, kontrolcu.ilanGuncelle);
 ilanlar.delete('/:id', ...vitrinYazma, kontrolcu.ilanSil);
 
 const router = Router();
-router.use(vitrinMedyaRoutes);     // /gorsel/:id, /video/:id, /iletisim-gorsel/:kategori
-router.use(vitrinIletisimRoutes);  // /segmentler, /iletisim, PUT /iletisim/:kategori
-router.use(ilanlar);               // geri kalan her şey (en genel yol '/:id' en sonda)
+router.use(vitrinMedyaRoutes); // /gorsel/:id, /video/:id, /iletisim-gorsel/:kategori
+router.use(vitrinIletisimRoutes); // /segmentler, /iletisim, PUT /iletisim/:kategori
+router.use(ilanlar); // geri kalan her şey (en genel yol '/:id' en sonda)
 
 export default router;

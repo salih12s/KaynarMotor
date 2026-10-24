@@ -20,7 +20,8 @@ let s, api, admin, pVitrin, pYetkisiz;
 
 before(async () => {
   s = await sunucuBaslat();
-  api = s.api; admin = s.admin;
+  api = s.api;
+  admin = s.admin;
   pVitrin = await kullaniciOlustur(api, admin, `f1_vitrin_${SON}`, 'personel', { motor_vitrin_yetkisi: true });
   pYetkisiz = await kullaniciOlustur(api, admin, `f1_yok_${SON}`, 'personel');
 });
@@ -29,13 +30,35 @@ after(() => s && s.durdur());
 // ---------------------------------------------------------------- #26 / #27
 describe('#26/#27 motor PUT: gönderilmeyen alanlar korunur', () => {
   const SATIS = {
-    plaka: `34F1${SON}`.slice(0, 12), marka: 'Yamaha', model: 'R25', yil: 2020, km: 5000,
-    alis_fiyati: 100000, satis_fiyati: 150000, noter_alis: 1000, noter_satis: 5000, masraflar: 2000,
-    alici_adi: 'Ali Veli', alici_tc: '11111111111', alici_telefon: '05551112233', alici_adres: 'Adres 1',
-    odeme_sekli: 'havale', durum: 'tamamlandi', kalan_odeme: 20000, yevmiye_no: '55',
-    komisyoncu_adi: 'Komisyoncu K', komisyoncu_telefon: '05329998877', komisyoncu_tutari: 3000,
-    liste_fiyati: 160000, stok_tipi: 'konsinye', odeme_detaylari: [{ tip: 'Nakit', tutar: 130000 }],
-    satici_adi: 'Satici S', satici_tc: '22222222222', tarih: '2026-09-01', satis_tarihi: '2026-10-01', aciklama: 'ilk not',
+    plaka: `34F1${SON}`.slice(0, 12),
+    marka: 'Yamaha',
+    model: 'R25',
+    yil: 2020,
+    km: 5000,
+    alis_fiyati: 100000,
+    satis_fiyati: 150000,
+    noter_alis: 1000,
+    noter_satis: 5000,
+    masraflar: 2000,
+    alici_adi: 'Ali Veli',
+    alici_tc: '11111111111',
+    alici_telefon: '05551112233',
+    alici_adres: 'Adres 1',
+    odeme_sekli: 'havale',
+    durum: 'tamamlandi',
+    kalan_odeme: 20000,
+    yevmiye_no: '55',
+    komisyoncu_adi: 'Komisyoncu K',
+    komisyoncu_telefon: '05329998877',
+    komisyoncu_tutari: 3000,
+    liste_fiyati: 160000,
+    stok_tipi: 'konsinye',
+    odeme_detaylari: [{ tip: 'Nakit', tutar: 130000 }],
+    satici_adi: 'Satici S',
+    satici_tc: '22222222222',
+    tarih: '2026-09-01',
+    satis_tarihi: '2026-10-01',
+    aciklama: 'ilk not',
   };
   const motorGetir = async (id) => (await api('GET', `/api/ikinci-el-motor/${id}`, undefined, admin)).govde;
   const yeniMotor = async (ek = {}) => {
@@ -47,13 +70,32 @@ describe('#26/#27 motor PUT: gönderilmeyen alanlar korunur', () => {
   it('MotorStok formunun gövdesi (satış alanları yok) satılmış motorun satış verisini silmez', async () => {
     const id = await yeniMotor();
     // MotorStok.jsx'in handleSave'inin gönderdiği alanlar: satış alanı YOK
-    const r = await api('PUT', `/api/ikinci-el-motor/${id}`, {
-      plaka: SATIS.plaka, marka: 'Yamaha', model: 'R25', yil: 2020, km: 5000,
-      alis_fiyati: 100000, noter_alis: 1000, masraflar: 2000, liste_fiyati: 160000,
-      satici_adi: 'Satici S', satici_tc: '22222222222', durum: 'tamamlandi', stok_tipi: 'konsinye',
-      aciklama: 'fatura düzeltildi', tarih: '2026-09-01', fatura_kesildi: true,
-      yatirimci: false, yatirimci_id: null, yatirimci_kar_orani: 0,
-    }, admin);
+    const r = await api(
+      'PUT',
+      `/api/ikinci-el-motor/${id}`,
+      {
+        plaka: SATIS.plaka,
+        marka: 'Yamaha',
+        model: 'R25',
+        yil: 2020,
+        km: 5000,
+        alis_fiyati: 100000,
+        noter_alis: 1000,
+        masraflar: 2000,
+        liste_fiyati: 160000,
+        satici_adi: 'Satici S',
+        satici_tc: '22222222222',
+        durum: 'tamamlandi',
+        stok_tipi: 'konsinye',
+        aciklama: 'fatura düzeltildi',
+        tarih: '2026-09-01',
+        fatura_kesildi: true,
+        yatirimci: false,
+        yatirimci_id: null,
+        yatirimci_kar_orani: 0,
+      },
+      admin,
+    );
     assert.equal(r.durum, 200);
     const m = await motorGetir(id);
     // değişmesi gerekenler
@@ -76,15 +118,43 @@ describe('#26/#27 motor PUT: gönderilmeyen alanlar korunur', () => {
 
   it('IkinciElMotor formunun gövdesi (liste_fiyati ve stok_tipi yok) bu alanları sıfırlamaz', async () => {
     const id = await yeniMotor({ plaka: `34G1${SON}`.slice(0, 12) });
-    const r = await api('PUT', `/api/ikinci-el-motor/${id}`, {
-      plaka: `34G1${SON}`.slice(0, 12), marka: 'Yamaha', model: 'R25', km: 5000, yil: 2020,
-      alis_fiyati: 100000, satis_fiyati: 150000, noter_alis: 1000, noter_satis: 5000, masraflar: 2000,
-      alici_adi: 'Ali Veli', alici_tc: '11111111111', alici_telefon: '05551112233', alici_adres: 'Adres 1',
-      aciklama: 'x', satici_adi: 'Satici S', satici_tc: '22222222222',
-      komisyoncu_adi: 'Komisyoncu K', komisyoncu_telefon: '05329998877', komisyoncu_tutari: 3000,
-      durum: 'tamamlandi', odeme_sekli: 'havale', kalan_odeme: 20000, fatura_kesildi: false, yevmiye_no: '55',
-      tarih: '2026-09-01', satis_tarihi: '2026-10-01', yatirimci_id: '', yatirimci_kar: '', yatirimci_adi: '',
-    }, admin);
+    const r = await api(
+      'PUT',
+      `/api/ikinci-el-motor/${id}`,
+      {
+        plaka: `34G1${SON}`.slice(0, 12),
+        marka: 'Yamaha',
+        model: 'R25',
+        km: 5000,
+        yil: 2020,
+        alis_fiyati: 100000,
+        satis_fiyati: 150000,
+        noter_alis: 1000,
+        noter_satis: 5000,
+        masraflar: 2000,
+        alici_adi: 'Ali Veli',
+        alici_tc: '11111111111',
+        alici_telefon: '05551112233',
+        alici_adres: 'Adres 1',
+        aciklama: 'x',
+        satici_adi: 'Satici S',
+        satici_tc: '22222222222',
+        komisyoncu_adi: 'Komisyoncu K',
+        komisyoncu_telefon: '05329998877',
+        komisyoncu_tutari: 3000,
+        durum: 'tamamlandi',
+        odeme_sekli: 'havale',
+        kalan_odeme: 20000,
+        fatura_kesildi: false,
+        yevmiye_no: '55',
+        tarih: '2026-09-01',
+        satis_tarihi: '2026-10-01',
+        yatirimci_id: '',
+        yatirimci_kar: '',
+        yatirimci_adi: '',
+      },
+      admin,
+    );
     assert.equal(r.durum, 200);
     const m = await motorGetir(id);
     assert.equal(m.stok_tipi, 'konsinye');
@@ -171,7 +241,7 @@ describe('#2 vitrin medya türleri', () => {
     assert.equal(r.durum, 400);
   });
 
-  it('veritabanında kalmış eski kötü MIME\'lı kayıt sunulmaz (404)', async () => {
+  it("veritabanında kalmış eski kötü MIME'lı kayıt sunulmaz (404)", async () => {
     const { pool } = require('../../core/veritabani/db');
     const olustur = await api('POST', '/api/vitrin', ilan({ baslik: `f1 eski ${SON}` }), pVitrin.token);
     const ekle = await pool.query('INSERT INTO vitrin_gorseller (urun_id, data, sira) VALUES ($1, $2, 0)', [olustur.govde.id, HTML]);
@@ -217,7 +287,7 @@ describe('#20 istemci hataları 500 olmaz', () => {
     assert.equal(r.durum, 403);
   });
 
-  it('izinli Origin ve Origin\'siz istek çalışmaya devam eder', async () => {
+  it("izinli Origin ve Origin'siz istek çalışmaya devam eder", async () => {
     assert.equal((await hamIstek(s.url, 'GET', '/api/health', { Origin: 'http://localhost:3000' })).durum, 200);
     assert.equal((await hamIstek(s.url, 'GET', '/api/health')).durum, 200);
   });

@@ -21,9 +21,12 @@ export const detay = sarmala('Aksesuar detay hatası:', async (req, res) => {
 export const olustur = sarmala('Aksesuar oluşturma hatası:', async (req, res) => {
   const kayit = await servis.olustur(pool, dogrula(satisGovdesi, req.body), req.user);
   await logAktivite({
-    kullanici_id: req.user.id, kullanici_adi: req.user.kullanici_adi,
-    islem_tipi: ISLEM_TIPLERI.AKSESUAR_OLUSTUR, islem_detay: `Aksesuar satış #${kayit.id}`,
-    hedef_tablo: 'aksesuarlar', hedef_id: kayit.id,
+    kullanici_id: req.user.id,
+    kullanici_adi: req.user.kullanici_adi,
+    islem_tipi: ISLEM_TIPLERI.AKSESUAR_OLUSTUR,
+    islem_detay: `Aksesuar satış #${kayit.id}`,
+    hedef_tablo: 'aksesuarlar',
+    hedef_id: kayit.id,
   });
   res.status(201).json(kayit);
 });
@@ -32,9 +35,12 @@ export const guncelle = sarmala('Aksesuar güncelleme hatası:', async (req, res
   const id = Number(req.params.id);
   const kayit = await servis.guncelle(pool, id, dogrula(satisGovdesi, req.body));
   await logAktivite({
-    kullanici_id: req.user.id, kullanici_adi: req.user.kullanici_adi,
-    islem_tipi: ISLEM_TIPLERI.AKSESUAR_GUNCELLE, islem_detay: `Aksesuar satış #${id} güncellendi`,
-    hedef_tablo: 'aksesuarlar', hedef_id: id,
+    kullanici_id: req.user.id,
+    kullanici_adi: req.user.kullanici_adi,
+    islem_tipi: ISLEM_TIPLERI.AKSESUAR_GUNCELLE,
+    islem_detay: `Aksesuar satış #${id} güncellendi`,
+    hedef_tablo: 'aksesuarlar',
+    hedef_id: id,
   });
   res.json(kayit);
 });
@@ -45,9 +51,12 @@ export const sil = sarmala('Aksesuar silme hatası:', async (req, res) => {
   // Para içeren bir satışın silinmesi iz bırakır (olmayan kayıt için günlük yazılmaz)
   if (vardi) {
     await logAktivite({
-      kullanici_id: req.user.id, kullanici_adi: req.user.kullanici_adi,
-      islem_tipi: ISLEM_TIPLERI.AKSESUAR_SIL, islem_detay: `Aksesuar satış #${id} silindi`,
-      hedef_tablo: 'aksesuarlar', hedef_id: id,
+      kullanici_id: req.user.id,
+      kullanici_adi: req.user.kullanici_adi,
+      islem_tipi: ISLEM_TIPLERI.AKSESUAR_SIL,
+      islem_detay: `Aksesuar satış #${id} silindi`,
+      hedef_tablo: 'aksesuarlar',
+      hedef_id: id,
     });
   }
   res.json({ message: 'Aksesuar satışı silindi' });

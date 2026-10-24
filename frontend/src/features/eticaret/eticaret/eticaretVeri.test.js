@@ -5,7 +5,7 @@
 import { karEtiketi, formatTL, bosSatisForm, satistanForm, bosPlatformForm, platformdanForm, platformSuz, hesaplaToplamKar } from './eticaretVeri';
 import { hesaplaKomisyon, detectPlatform } from '../komisyon';
 
-describe('karEtiketi: yalnızca admin\'e gösterilecek etiketler', () => {
+describe("karEtiketi: yalnızca admin'e gösterilecek etiketler", () => {
   test('kâr ve yatırım geri dönüşü içeren etiketler (büyük/küçük harf farkı olmadan)', () => {
     for (const e of ['Kâr Oranı', 'Yat. Geri Dönüş Oranı', 'Yat. Geri Dönüş', 'Net Kâr']) expect(karEtiketi(e)).toBe(true);
   });
@@ -32,14 +32,26 @@ describe('form dönüşümleri', () => {
   });
 
   test('satistanForm: boşlar "", KDV yoksa "20" ama 0 geçerli bir KDV\'dir, tarih yyyy-aa-gg', () => {
-    expect(satistanForm({ urun_adi: 'A', tarih: '2026-10-02T12:00:00' })).toMatchObject({ urun_adi: 'A', stok_id: '', kdv_orani: '20', kargo_ucreti: '0', adet: 1, tarih: '2026-10-02' });
+    expect(satistanForm({ urun_adi: 'A', tarih: '2026-10-02T12:00:00' })).toMatchObject({
+      urun_adi: 'A',
+      stok_id: '',
+      kdv_orani: '20',
+      kargo_ucreti: '0',
+      adet: 1,
+      tarih: '2026-10-02',
+    });
     expect(satistanForm({ kdv_orani: 0 }).kdv_orani).toBe(0);
     expect(satistanForm({}).tarih).toBe('');
   });
 
   test('platform formları', () => {
     expect(bosPlatformForm()).toEqual({ platform_adi: '', komisyon_orani: '', kdv_orani: '20', kargo_ucreti: '0' });
-    expect(platformdanForm({ platform_adi: 'N11', komisyon_orani: 10, kdv_orani: 18, kargo_ucreti: 30 })).toEqual({ platform_adi: 'N11', komisyon_orani: 10, kdv_orani: 18, kargo_ucreti: 30 });
+    expect(platformdanForm({ platform_adi: 'N11', komisyon_orani: 10, kdv_orani: 18, kargo_ucreti: 30 })).toEqual({
+      platform_adi: 'N11',
+      komisyon_orani: 10,
+      kdv_orani: 18,
+      kargo_ucreti: 30,
+    });
     expect(platformdanForm({ platform_adi: 'X', komisyon_orani: 5 })).toEqual({ platform_adi: 'X', komisyon_orani: 5, kdv_orani: '20', kargo_ucreti: '0' });
   });
 });
@@ -56,7 +68,11 @@ describe('platformSuz ve hesaplaToplamKar', () => {
   });
 
   test('toplam kâr satır satır hesaplaKomisyon net kârlarının toplamıdır; boş liste 0', () => {
-    const beklenen = satislar.reduce((t, s) => t + hesaplaKomisyon(s.satis_fiyati, s.alis_fiyati, s.komisyon_orani, s.kdv_orani, s.kargo_ucreti, s.adet, detectPlatform(s.platform_adi)).netKar, 0);
+    const beklenen = satislar.reduce(
+      (t, s) =>
+        t + hesaplaKomisyon(s.satis_fiyati, s.alis_fiyati, s.komisyon_orani, s.kdv_orani, s.kargo_ucreti, s.adet, detectPlatform(s.platform_adi)).netKar,
+      0,
+    );
     expect(hesaplaToplamKar(satislar)).toBeCloseTo(beklenen);
     expect(hesaplaToplamKar([])).toBe(0);
   });

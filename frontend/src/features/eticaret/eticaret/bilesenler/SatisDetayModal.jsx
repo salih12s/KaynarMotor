@@ -16,42 +16,79 @@ const SatisDetayModal = ({ open, data, onClose, onDuzenle, isMobile, karGor }) =
   return (
     <Dialog {...dialogProps}>
       <DialogTitle sx={{ bgcolor: '#C62828', color: 'white', py: 1.5, display: 'flex', alignItems: 'center' }}>
-        <Typography variant="h6" fontWeight="bold" sx={{ flexGrow: 1 }}>E-Ticaret Satış Detayı</Typography>
-        <IconButton onClick={onClose} sx={{ color: 'white' }}><CloseIcon /></IconButton>
+        <Typography variant="h6" fontWeight="bold" sx={{ flexGrow: 1 }}>
+          E-Ticaret Satış Detayı
+        </Typography>
+        <IconButton onClick={onClose} sx={{ color: 'white' }}>
+          <CloseIcon />
+        </IconButton>
       </DialogTitle>
       <DialogContent dividers>
         {/* Ürün Bilgileri */}
         <Grid container spacing={2} sx={{ mb: 3, mt: 0.5 }}>
           <Grid size={{ xs: 12, md: 4 }}>
             <Paper sx={{ p: 1.5, bgcolor: '#fafafa' }}>
-              <Typography variant="subtitle2" color="#C62828" fontWeight="bold" gutterBottom>Ürün Bilgileri</Typography>
+              <Typography variant="subtitle2" color="#C62828" fontWeight="bold" gutterBottom>
+                Ürün Bilgileri
+              </Typography>
               <Divider sx={{ mb: 1 }} />
-              <Typography variant="body2"><strong>Ürün:</strong> {s.urun_adi}</Typography>
-              <Typography variant="body2"><strong>Platform:</strong> {s.platform_adi || '-'}</Typography>
-              <Typography variant="body2"><strong>Adet:</strong> {s.adet}</Typography>
-              <Typography variant="body2"><strong>Tarih:</strong> {tarihYaz(s.tarih)}</Typography>
+              <Typography variant="body2">
+                <strong>Ürün:</strong> {s.urun_adi}
+              </Typography>
+              <Typography variant="body2">
+                <strong>Platform:</strong> {s.platform_adi || '-'}
+              </Typography>
+              <Typography variant="body2">
+                <strong>Adet:</strong> {s.adet}
+              </Typography>
+              <Typography variant="body2">
+                <strong>Tarih:</strong> {tarihYaz(s.tarih)}
+              </Typography>
             </Paper>
           </Grid>
           <Grid size={{ xs: 12, md: 4 }}>
             <Paper sx={{ p: 1.5, bgcolor: '#fafafa' }}>
-              <Typography variant="subtitle2" color="#C62828" fontWeight="bold" gutterBottom>Fiyat Bilgileri</Typography>
+              <Typography variant="subtitle2" color="#C62828" fontWeight="bold" gutterBottom>
+                Fiyat Bilgileri
+              </Typography>
               <Divider sx={{ mb: 1 }} />
-              <Typography variant="body2"><strong>Satış Fiyatı:</strong> {formatTL(s.satis_fiyati)} ₺</Typography>
-              <Typography variant="body2"><strong>Alış Fiyatı:</strong> {formatTL(s.alis_fiyati)} ₺</Typography>
-              <Typography variant="body2"><strong>Komisyon:</strong> %{parseFloat(s.komisyon_orani || 0).toFixed(2)}</Typography>
-              <Typography variant="body2"><strong>KDV:</strong> %{parseFloat(s.kdv_orani || 20).toFixed(2)}</Typography>
-              <Typography variant="body2"><strong>Kargo:</strong> {formatTL(s.kargo_ucreti)} ₺</Typography>
-            </Paper>
-          </Grid>
-          {karGor && (
-          <Grid size={{ xs: 12, md: 4 }}>
-            <Paper sx={{ p: 2, bgcolor: h.netKar >= 0 ? '#e8f5e9' : '#ffebee', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-              <Typography variant="body2" color="text.secondary">Net Kâr</Typography>
-              <Typography variant="h4" fontWeight="bold" sx={{ color: h.netKar >= 0 ? '#2e7d32' : '#c62828' }}>
-                {formatTL(h.netKar)} ₺
+              <Typography variant="body2">
+                <strong>Satış Fiyatı:</strong> {formatTL(s.satis_fiyati)} ₺
+              </Typography>
+              <Typography variant="body2">
+                <strong>Alış Fiyatı:</strong> {formatTL(s.alis_fiyati)} ₺
+              </Typography>
+              <Typography variant="body2">
+                <strong>Komisyon:</strong> %{parseFloat(s.komisyon_orani || 0).toFixed(2)}
+              </Typography>
+              <Typography variant="body2">
+                <strong>KDV:</strong> %{parseFloat(s.kdv_orani || 20).toFixed(2)}
+              </Typography>
+              <Typography variant="body2">
+                <strong>Kargo:</strong> {formatTL(s.kargo_ucreti)} ₺
               </Typography>
             </Paper>
           </Grid>
+          {karGor && (
+            <Grid size={{ xs: 12, md: 4 }}>
+              <Paper
+                sx={{
+                  p: 2,
+                  bgcolor: h.netKar >= 0 ? '#e8f5e9' : '#ffebee',
+                  textAlign: 'center',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'center',
+                }}
+              >
+                <Typography variant="body2" color="text.secondary">
+                  Net Kâr
+                </Typography>
+                <Typography variant="h4" fontWeight="bold" sx={{ color: h.netKar >= 0 ? '#2e7d32' : '#c62828' }}>
+                  {formatTL(h.netKar)} ₺
+                </Typography>
+              </Paper>
+            </Grid>
           )}
         </Grid>
 
@@ -92,18 +129,26 @@ const SatisDetayModal = ({ open, data, onClose, onDuzenle, isMobile, karGor }) =
                   { label: 'KDV', value: `${formatTL(h.odenecekKDV)} ₺` },
                 ];
               }
-              return items.filter(item => karGor || !karEtiketi(item.label)).map((item, i) => (
-                <Grid size={{ xs: 4, md: 2 }} key={i}>
-                  <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>{item.label}</Typography>
-                  <Typography variant="body1" fontWeight="bold">{item.value}</Typography>
-                </Grid>
-              ));
+              return items
+                .filter((item) => karGor || !karEtiketi(item.label))
+                .map((item, i) => (
+                  <Grid size={{ xs: 4, md: 2 }} key={i}>
+                    <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
+                      {item.label}
+                    </Typography>
+                    <Typography variant="body1" fontWeight="bold">
+                      {item.value}
+                    </Typography>
+                  </Grid>
+                ));
             })()}
           </Grid>
         </Paper>
 
         {/* KDV Detayları - Platform bazlı */}
-        <Typography variant="subtitle1" fontWeight="bold" color="#C62828" gutterBottom>KDV Detayları</Typography>
+        <Typography variant="subtitle1" fontWeight="bold" color="#C62828" gutterBottom>
+          KDV Detayları
+        </Typography>
         <Paper sx={{ p: 2, bgcolor: '#fafafa', borderTop: '3px solid #C62828' }}>
           <Grid container spacing={2} textAlign="center">
             {(() => {
@@ -123,8 +168,12 @@ const SatisDetayModal = ({ open, data, onClose, onDuzenle, isMobile, karGor }) =
               kdvItems.push({ label: 'Ödenecek KDV', value: `${formatTL(h.odenecekKDV)} ₺` });
               return kdvItems.map((item, i) => (
                 <Grid size={{ xs: 4, md: 2 }} key={i}>
-                  <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>{item.label}</Typography>
-                  <Typography variant="body1" fontWeight="bold">{item.value}</Typography>
+                  <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
+                    {item.label}
+                  </Typography>
+                  <Typography variant="body1" fontWeight="bold">
+                    {item.value}
+                  </Typography>
                 </Grid>
               ));
             })()}
@@ -132,7 +181,16 @@ const SatisDetayModal = ({ open, data, onClose, onDuzenle, isMobile, karGor }) =
         </Paper>
       </DialogContent>
       <DialogActions>
-        <Button onClick={() => { onClose(); onDuzenle(s); }} variant="outlined" startIcon={<EditIcon />}>Düzenle</Button>
+        <Button
+          onClick={() => {
+            onClose();
+            onDuzenle(s);
+          }}
+          variant="outlined"
+          startIcon={<EditIcon />}
+        >
+          Düzenle
+        </Button>
         <Button onClick={onClose}>Kapat</Button>
       </DialogActions>
     </Dialog>

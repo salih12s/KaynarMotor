@@ -6,7 +6,11 @@
  *
  * Kayıtlar değişmez (yeni medya yeni kimlikle eklenir); yine de silinen medya sonsuza dek sunulmasın diye `omurMs` sonra düşer.
  */
-interface Kayit<T> { deger: T; bayt: number; dogum: number }
+interface Kayit<T> {
+  deger: T;
+  bayt: number;
+  dogum: number;
+}
 
 export class MedyaOnbellegi<T = unknown> {
   azamiBayt: number;
@@ -26,8 +30,12 @@ export class MedyaOnbellegi<T = unknown> {
   get(anahtar: string): T | undefined {
     const k = this.kayitlar.get(anahtar);
     if (!k) return undefined;
-    if (this.simdi() - k.dogum > this.omurMs) { this._sil(anahtar); return undefined; }
-    this.kayitlar.delete(anahtar); this.kayitlar.set(anahtar, k); // en son kullanılana taşı
+    if (this.simdi() - k.dogum > this.omurMs) {
+      this._sil(anahtar);
+      return undefined;
+    }
+    this.kayitlar.delete(anahtar);
+    this.kayitlar.set(anahtar, k); // en son kullanılana taşı
     return k.deger;
   }
 

@@ -46,10 +46,18 @@ export const CustomThemeProvider = ({ children }) => {
   }, [currentTheme]);
 
   return (
-    <ThemeContext.Provider value={{
-      theme, currentTheme, themeConfigs,
-      setDefaultTheme, setAksesuarTheme, setMotorTheme, setEticaretTheme, setYedekParcaTheme
-    }}>
+    <ThemeContext.Provider
+      value={{
+        theme,
+        currentTheme,
+        themeConfigs,
+        setDefaultTheme,
+        setAksesuarTheme,
+        setMotorTheme,
+        setEticaretTheme,
+        setYedekParcaTheme,
+      }}
+    >
       {children}
     </ThemeContext.Provider>
   );

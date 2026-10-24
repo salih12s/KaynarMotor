@@ -35,11 +35,15 @@ function baglantiKorumasi() {
   if (!process.env.ADMIN_INITIAL_PASSWORD) throw new Error('ADMIN_INITIAL_PASSWORD tanımlı değil (test ortamındaki admin şifresi).');
 }
 
-const bosPort = () => new Promise((coz, red) => {
-  const s = net.createServer();
-  s.listen(0, '127.0.0.1', () => { const { port } = s.address(); s.close(() => coz(port)); });
-  s.on('error', red);
-});
+const bosPort = () =>
+  new Promise((coz, red) => {
+    const s = net.createServer();
+    s.listen(0, '127.0.0.1', () => {
+      const { port } = s.address();
+      s.close(() => coz(port));
+    });
+    s.on('error', red);
+  });
 
 const bekle = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -59,10 +63,15 @@ async function sunucuBaslat() {
     try {
       const r = await api('POST', '/api/auth/login', { kullanici_adi: 'admin', sifre: process.env.ADMIN_INITIAL_PASSWORD });
       if (r.durum === 200) admin = r.govde.token;
-    } catch { /* sunucu henüz dinlemiyor */ }
+    } catch {
+      /* sunucu henüz dinlemiyor */
+    }
     if (!admin) await bekle(500);
   }
-  if (!admin) { cocuk.kill(); throw new Error('Sunucu/admin hazır olmadı (DB ayarlarını ve ADMIN_INITIAL_PASSWORD değerini kontrol edin).'); }
+  if (!admin) {
+    cocuk.kill();
+    throw new Error('Sunucu/admin hazır olmadı (DB ayarlarını ve ADMIN_INITIAL_PASSWORD değerini kontrol edin).');
+  }
   return { url, api, admin, durdur: () => cocuk.kill() };
 }
 
@@ -79,7 +88,11 @@ async function dbsizSunucuBaslat() {
   });
   const url = `http://127.0.0.1:${port}`;
   for (let i = 0; i < 60; i++) {
-    try { if ((await fetch(url + '/api/health')).ok) break; } catch { /* henüz dinlemiyor */ }
+    try {
+      if ((await fetch(url + '/api/health')).ok) break;
+    } catch {
+      /* henüz dinlemiyor */
+    }
     await bekle(250);
   }
   const jwt = require(path.join(BACKEND, 'node_modules', 'jsonwebtoken'));
@@ -93,22 +106,31 @@ function istemci(url) {
     const r = await fetch(url + yol, {
       method: yontem,
       headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: 'Bearer ' + token } : {}), ...(ek.basliklar || {}) },
-      body: govde === undefined ? undefined : (typeof govde === 'string' ? govde : JSON.stringify(govde)),
+      body: govde === undefined ? undefined : typeof govde === 'string' ? govde : JSON.stringify(govde),
     });
     const metin = await r.text();
-    let j; try { j = JSON.parse(metin); } catch { j = metin; }
+    let j;
+    try {
+      j = JSON.parse(metin);
+    } catch {
+      j = metin;
+    }
     return { durum: r.status, govde: j, basliklar: r.headers };
   };
 }
 
 // fetch'in yasakladığı başlıklar için (Origin) ham http isteği
-const hamIstek = (url, yontem, yol, basliklar = {}) => new Promise((coz, red) => {
-  const u = new URL(url + yol);
-  const r = http.request({ hostname: u.hostname, port: u.port, path: u.pathname + u.search, method: yontem, headers: basliklar }, (res) => {
-    let veri = ''; res.on('data', (d) => (veri += d)); res.on('end', () => coz({ durum: res.statusCode, govde: veri }));
+const hamIstek = (url, yontem, yol, basliklar = {}) =>
+  new Promise((coz, red) => {
+    const u = new URL(url + yol);
+    const r = http.request({ hostname: u.hostname, port: u.port, path: u.pathname + u.search, method: yontem, headers: basliklar }, (res) => {
+      let veri = '';
+      res.on('data', (d) => (veri += d));
+      res.on('end', () => coz({ durum: res.statusCode, govde: veri }));
+    });
+    r.on('error', red);
+    r.end();
   });
-  r.on('error', red); r.end();
-});
 
 // Benzersiz kullanıcı oluştur (admin ile), yetkileri ver, giriş yap
 async function kullaniciOlustur(api, admin, ad, rol, yetkiler = {}) {

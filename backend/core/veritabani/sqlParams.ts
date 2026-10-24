@@ -245,10 +245,7 @@ export function compileQuery(text: string, params: unknown[] = [], degerler?: un
  * UPDATE ... RETURNING değilse null döner.
  */
 export function splitUpdateReturning(text: string): { update: string; select: string } | null {
-  const match =
-    /^\s*UPDATE\s+([A-Za-z_][A-Za-z0-9_]*)\s+SET\s+([\s\S]+?)\s+WHERE\s+([\s\S]+?)\s+RETURNING\s+([\s\S]+?)\s*;?\s*$/i.exec(
-      text
-    );
+  const match = /^\s*UPDATE\s+([A-Za-z_][A-Za-z0-9_]*)\s+SET\s+([\s\S]+?)\s+WHERE\s+([\s\S]+?)\s+RETURNING\s+([\s\S]+?)\s*;?\s*$/i.exec(text);
   if (!match) return null;
   const [, table, setClause, whereClause, returning] = match as unknown as string[];
   return {

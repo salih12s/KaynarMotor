@@ -15,9 +15,14 @@ export const sonIstek = () => {
     const kimlik = ++sayac;
     return vaat.then(
       (deger) => (kimlik === sayac ? deger : null),
-      (hata) => { if (kimlik === sayac) throw hata; return null; }
+      (hata) => {
+        if (kimlik === sayac) throw hata;
+        return null;
+      },
     );
   };
-  koru.iptal = () => { sayac++; };
+  koru.iptal = () => {
+    sayac++;
+  };
   return koru;
 };

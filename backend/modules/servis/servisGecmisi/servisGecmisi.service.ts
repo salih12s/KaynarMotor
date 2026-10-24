@@ -9,7 +9,9 @@ import * as repo from './servisGecmisi.repository';
 
 /** Plakaya bağlı QR token'ı (yoksa oluşturur). Plaka büyük harfe ve A-Z0-9'a indirgenir. */
 export const qrTokenAl = async (db: Veritabani, hamPlaka: unknown) => {
-  const plaka = String(hamPlaka || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+  const plaka = String(hamPlaka || '')
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, '');
   if (!plaka) throw new GecersizIstek('Plaka gerekli');
   await repo.tokenEkleYoksa(db, plaka, crypto.randomBytes(8).toString('hex'));
   return repo.tokenOku(db, plaka);
@@ -39,9 +41,7 @@ export const gecmisiGetir = async (db: Veritabani, hamToken: unknown) => {
       teslim_tarihi: s.teslim_tarihi,
       tamamlama_tarihi: s.tamamlama_tarihi,
       toplam_tutar: s.gercek_toplam_ucret,
-      islemler: parcalar
-        .filter((p: any) => p.is_emri_id === s.id)
-        .map((p: any) => ({ islem: p.takilan_parca, adet: p.adet })),
+      islemler: parcalar.filter((p: any) => p.is_emri_id === s.id).map((p: any) => ({ islem: p.takilan_parca, adet: p.adet })),
     })),
   };
 };

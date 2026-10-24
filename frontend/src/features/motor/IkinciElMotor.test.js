@@ -32,9 +32,69 @@ const mockNavigate = jest.fn();
 jest.mock('react-router-dom', () => ({ useNavigate: () => mockNavigate, useLocation: () => mockLocation }), { virtual: true });
 
 // ---- Sabit test verisi -------------------------------------------------------------------------------------------
-const S1 = { id: 1, plaka: '34SAT111', marka: 'Honda', model: 'PCX', yil: 2020, km: 10000, durum: 'tamamlandi', alis_fiyati: 50000, satis_fiyati: 60000, noter_alis: 40000, noter_satis: 55000, masraflar: 1000, kar: 9000, satici_adi: 'Ali Veli', satici_tc: '111', alici_adi: 'Ahmet Alıcı', alici_tc: '999', alici_telefon: '0555', alici_adres: 'Kadıköy', tarih: '2026-09-01T12:00:00', satis_tarihi: '2026-10-05T12:00:00', odeme_sekli: 'nakit', fatura_kesildi: true, yevmiye_no: 'Y1', kalan_odeme: 0, komisyoncu_adi: 'Kom A', komisyoncu_telefon: '0532', komisyoncu_tutari: 500, aciklama: 'Temiz' };
-const S2 = { id: 2, plaka: '06SAT222', marka: 'Yamaha', model: 'NMAX', durum: 'tamamlandi', alis_fiyati: 70000, satis_fiyati: 80000, noter_alis: 0, noter_satis: 0, kar: 8000, alici_adi: 'Zeynep Z', satis_tarihi: '2026-09-20T12:00:00', kalan_odeme: '2500', yatirimci_id: 9 };
-const ST1 = { id: 3, plaka: '16STK333', marka: 'Suzuki', model: 'Burgman', yil: 2019, km: 5000, durum: 'stokta', alis_fiyati: 30000, noter_alis: 25000, satici_adi: 'Veli S', satici_tc: '222', tarih: '2026-09-10T12:00:00', yatirimci_id: 9, yatirimci_kar: '' };
+const S1 = {
+  id: 1,
+  plaka: '34SAT111',
+  marka: 'Honda',
+  model: 'PCX',
+  yil: 2020,
+  km: 10000,
+  durum: 'tamamlandi',
+  alis_fiyati: 50000,
+  satis_fiyati: 60000,
+  noter_alis: 40000,
+  noter_satis: 55000,
+  masraflar: 1000,
+  kar: 9000,
+  satici_adi: 'Ali Veli',
+  satici_tc: '111',
+  alici_adi: 'Ahmet Alıcı',
+  alici_tc: '999',
+  alici_telefon: '0555',
+  alici_adres: 'Kadıköy',
+  tarih: '2026-09-01T12:00:00',
+  satis_tarihi: '2026-10-05T12:00:00',
+  odeme_sekli: 'nakit',
+  fatura_kesildi: true,
+  yevmiye_no: 'Y1',
+  kalan_odeme: 0,
+  komisyoncu_adi: 'Kom A',
+  komisyoncu_telefon: '0532',
+  komisyoncu_tutari: 500,
+  aciklama: 'Temiz',
+};
+const S2 = {
+  id: 2,
+  plaka: '06SAT222',
+  marka: 'Yamaha',
+  model: 'NMAX',
+  durum: 'tamamlandi',
+  alis_fiyati: 70000,
+  satis_fiyati: 80000,
+  noter_alis: 0,
+  noter_satis: 0,
+  kar: 8000,
+  alici_adi: 'Zeynep Z',
+  satis_tarihi: '2026-09-20T12:00:00',
+  kalan_odeme: '2500',
+  yatirimci_id: 9,
+};
+const ST1 = {
+  id: 3,
+  plaka: '16STK333',
+  marka: 'Suzuki',
+  model: 'Burgman',
+  yil: 2019,
+  km: 5000,
+  durum: 'stokta',
+  alis_fiyati: 30000,
+  noter_alis: 25000,
+  satici_adi: 'Veli S',
+  satici_tc: '222',
+  tarih: '2026-09-10T12:00:00',
+  yatirimci_id: 9,
+  yatirimci_kar: '',
+};
 const ST2 = { id: 4, plaka: '41KAP444', marka: 'BMW', model: 'R', durum: 'kapora', tarih: '2026-09-11T12:00:00' };
 const PERTE = { id: 5, plaka: '01PER555', marka: 'KTM', durum: 'perte' };
 const HEPSI = [S2, ST1, S1, ST2, PERTE]; // sunucu sırası karışık
@@ -72,11 +132,18 @@ const ekranAc = async (secenek = {}) => {
 };
 
 const satir = (plaka) => screen.getByRole('row', { name: new RegExp(plaka) });
-const hucreler = (row) => within(row).getAllByRole('cell').map((c) => c.textContent);
+const hucreler = (row) =>
+  within(row)
+    .getAllByRole('cell')
+    .map((c) => c.textContent);
 const basliklar = () => screen.getAllByRole('columnheader').map((h) => h.textContent);
 const ikon = (kapsam, ad) => within(kapsam).getByTestId(ad);
 const alan = (etiket) => screen.getByLabelText(etiket);
-const plakalar = () => screen.getAllByRole('row').slice(1).map((r) => within(r).getAllByRole('cell')[0].textContent);
+const plakalar = () =>
+  screen
+    .getAllByRole('row')
+    .slice(1)
+    .map((r) => within(r).getAllByRole('cell')[0].textContent);
 const bekleDialogKapanana = () => waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
 
 beforeEach(() => {
@@ -85,15 +152,45 @@ beforeEach(() => {
   jest.spyOn(window, 'confirm').mockImplementation(() => true);
   jest.spyOn(console, 'error').mockImplementation(() => {});
 });
-afterEach(() => { jest.restoreAllMocks(); });
+afterEach(() => {
+  jest.restoreAllMocks();
+});
 
 // ---- Rol matrisi ve liste ----------------------------------------------------------------------------------------
 describe('İkinci El Motor: roller, liste ve süzgeçler', () => {
   test('admin: tüm sütunlar (alım ve kâr dahil), satış listesi tarihe göre yeniden eskiye; stoktaki motorlar listede yok', async () => {
     await ekranAc();
-    expect(basliklar()).toEqual(['Plaka', 'Marka', 'Model', 'Yıl', 'KM', 'Alım (₺)', 'Satış (₺)', 'Noter Alış (₺)', 'Noter Satış (₺)', 'Kâr (₺)', 'Alıcı', 'Satış Tarihi', 'İşlemler']);
+    expect(basliklar()).toEqual([
+      'Plaka',
+      'Marka',
+      'Model',
+      'Yıl',
+      'KM',
+      'Alım (₺)',
+      'Satış (₺)',
+      'Noter Alış (₺)',
+      'Noter Satış (₺)',
+      'Kâr (₺)',
+      'Alıcı',
+      'Satış Tarihi',
+      'İşlemler',
+    ]);
     expect(plakalar()).toEqual(['34SAT111', '06SAT222']); // 05.10 -> 20.09; stokta/kapora/perte yok
-    expect(hucreler(satir('34SAT111'))).toEqual(['34SAT111', 'Honda', 'PCX', '2020', '10.000', '50.000', '60.000', '40.000', '55.000', '9.000', 'Ahmet Alıcı', '05.10.2026', '']);
+    expect(hucreler(satir('34SAT111'))).toEqual([
+      '34SAT111',
+      'Honda',
+      'PCX',
+      '2020',
+      '10.000',
+      '50.000',
+      '60.000',
+      '40.000',
+      '55.000',
+      '9.000',
+      'Ahmet Alıcı',
+      '05.10.2026',
+      '',
+    ]);
     expect(screen.getByRole('button', { name: 'Motor Satış' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: "Excel'e Aktar" })).toBeInTheDocument();
     expect(screen.getAllByTestId('DeleteIcon')).toHaveLength(2);
@@ -106,7 +203,20 @@ describe('İkinci El Motor: roller, liste ve süzgeçler', () => {
 
   test('muhasebeci SALT OKUNUR: alım, noter ve alıcı bilgisi var; kâr, ekleme, düzenleme ve silme yok', async () => {
     await ekranAc({ user: MUHASEBE });
-    expect(basliklar()).toEqual(['Plaka', 'Marka', 'Model', 'Yıl', 'KM', 'Alım (₺)', 'Satış (₺)', 'Noter Alış (₺)', 'Noter Satış (₺)', 'Alıcı', 'Satış Tarihi', 'İşlemler']);
+    expect(basliklar()).toEqual([
+      'Plaka',
+      'Marka',
+      'Model',
+      'Yıl',
+      'KM',
+      'Alım (₺)',
+      'Satış (₺)',
+      'Noter Alış (₺)',
+      'Noter Satış (₺)',
+      'Alıcı',
+      'Satış Tarihi',
+      'İşlemler',
+    ]);
     expect(screen.queryByText(/^Kâr:/)).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Motor Satış' })).not.toBeInTheDocument();
     expect(screen.queryAllByTestId('EditIcon')).toHaveLength(0);
@@ -134,7 +244,8 @@ describe('İkinci El Motor: roller, liste ve süzgeçler', () => {
     const kutu = screen.getByPlaceholderText('Plaka, marka, model veya satıcı adı ile ara...');
     await user.type(kutu, 'zeynep');
     expect(plakalar()).toEqual(['06SAT222']);
-    await user.clear(kutu); await user.type(kutu, 'ali veli');
+    await user.clear(kutu);
+    await user.type(kutu, 'ali veli');
     expect(plakalar()).toEqual(['34SAT111']);
     await user.clear(kutu);
     fireEvent.change(screen.getByLabelText('Başlangıç'), { target: { value: '2026-10-01' } });
@@ -169,11 +280,20 @@ describe('İkinci El Motor: Excel dışa aktarma', () => {
   const aktar = async (user) => {
     let blob;
     let dosyaAdi;
-    global.URL.createObjectURL = jest.fn((b) => { blob = b; return 'blob:x'; });
+    global.URL.createObjectURL = jest.fn((b) => {
+      blob = b;
+      return 'blob:x';
+    });
     global.URL.revokeObjectURL = jest.fn();
-    jest.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function () { dosyaAdi = this.download; });
+    jest.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function () {
+      dosyaAdi = this.download;
+    });
     await user.click(screen.getByRole('button', { name: "Excel'e Aktar" }));
-    const metin = await new Promise((coz) => { const r = new FileReader(); r.onload = () => coz(r.result); r.readAsText(blob); });
+    const metin = await new Promise((coz) => {
+      const r = new FileReader();
+      r.onload = () => coz(r.result);
+      r.readAsText(blob);
+    });
     return { metin, dosyaAdi };
   };
 
@@ -321,7 +441,8 @@ describe('İkinci El Motor: satış formu', () => {
     const p = await yeniAc(user);
     await user.click(within(p).getByRole('checkbox', { name: 'Ödeme Tamamlandı' }));
     await user.type(alan('Kalan Ödeme (₺)'), '2500');
-    await user.type(alan('Plaka *'), 'X'); await user.type(alan('Marka *'), 'Y');
+    await user.type(alan('Plaka *'), 'X');
+    await user.type(alan('Marka *'), 'Y');
     await user.click(within(p).getByRole('button', { name: 'Kaydet' }));
     await waitFor(() => expect(ikinciElMotorService.create).toHaveBeenCalled());
     expect(ikinciElMotorService.create.mock.calls[0][0].kalan_odeme).toBe('2500');
@@ -352,7 +473,8 @@ describe('İkinci El Motor: satış formu', () => {
     let p = await yeniAc(user);
     await user.click(within(p).getByRole('button', { name: /BELGE-EKLE \(0\)/ }));
     bekleyenBelgeleriYukle.mockResolvedValue(['ruhsat.pdf: büyük']);
-    await user.type(alan('Plaka *'), 'X'); await user.type(alan('Marka *'), 'Y');
+    await user.type(alan('Plaka *'), 'X');
+    await user.type(alan('Marka *'), 'Y');
     await user.click(within(p).getByRole('button', { name: 'Kaydet' }));
     await waitFor(() => expect(bekleyenBelgeleriYukle).toHaveBeenCalledWith(99, [{ name: 'ruhsat.pdf' }]));
     await waitFor(() => expect(window.alert).toHaveBeenCalledWith(expect.stringContaining('ruhsat.pdf: büyük')));
@@ -360,7 +482,8 @@ describe('İkinci El Motor: satış formu', () => {
 
     ikinciElMotorService.create.mockRejectedValue({ response: { data: { message: 'Plaka çakışıyor' } } });
     p = await yeniAc(user);
-    await user.type(alan('Plaka *'), 'Z'); await user.type(alan('Marka *'), 'Y');
+    await user.type(alan('Plaka *'), 'Z');
+    await user.type(alan('Marka *'), 'Y');
     await user.click(within(p).getByRole('button', { name: 'Kaydet' }));
     expect(await within(p).findByText('Plaka çakışıyor')).toBeInTheDocument();
   });
@@ -402,9 +525,20 @@ describe('İkinci El Motor: satış formu', () => {
 
 describe('İkinci El Motor: mobil görünüm', () => {
   beforeEach(() => {
-    window.matchMedia = (q) => ({ matches: true, media: q, onchange: null, addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {}, dispatchEvent: () => false });
+    window.matchMedia = (q) => ({
+      matches: true,
+      media: q,
+      onchange: null,
+      addEventListener() {},
+      removeEventListener() {},
+      addListener() {},
+      removeListener() {},
+      dispatchEvent: () => false,
+    });
   });
-  afterEach(() => { delete window.matchMedia; });
+  afterEach(() => {
+    delete window.matchMedia;
+  });
 
   test('kart listesi: alım ve kâr yetkiye göre; karta dokunmak detayı açar', async () => {
     const user = await ekranAc();

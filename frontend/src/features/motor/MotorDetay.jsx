@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import {
-  Box, Paper, Typography, Grid, Chip, IconButton, Button, Divider, useMediaQuery, useTheme
-} from '@mui/material';
+import { Box, Paper, Typography, Grid, Chip, IconButton, Button, Divider, useMediaQuery, useTheme } from '@mui/material';
 import BackIcon from '@mui/icons-material/ArrowBack';
 import PrintIcon from '@mui/icons-material/Print';
 import { useReactToPrint } from 'react-to-print';
@@ -20,7 +18,12 @@ const MotorDetay = () => {
 
   useEffect(() => {
     const load = async () => {
-      try { const res = await ikinciElMotorService.getById(id); setData(res.data); } catch { navigate('/ikinci-el-motor'); }
+      try {
+        const res = await ikinciElMotorService.getById(id);
+        setData(res.data);
+      } catch {
+        navigate('/ikinci-el-motor');
+      }
     };
     load();
   }, [id]);
@@ -52,9 +55,21 @@ const MotorDetay = () => {
   return (
     <Box>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3, flexWrap: 'wrap' }}>
-        <IconButton onClick={() => navigate('/ikinci-el-motor')}><BackIcon /></IconButton>
-        <Typography variant="h5" fontWeight="bold" sx={{ flexGrow: 1 }}>Motor Satış Detay</Typography>
-        <Button startIcon={<PrintIcon />} variant="contained" size={isMobile ? 'small' : 'medium'} onClick={handlePrint} sx={{ bgcolor: '#C62828', '&:hover': { bgcolor: '#b71c1c' } }}>Yazdır</Button>
+        <IconButton onClick={() => navigate('/ikinci-el-motor')}>
+          <BackIcon />
+        </IconButton>
+        <Typography variant="h5" fontWeight="bold" sx={{ flexGrow: 1 }}>
+          Motor Satış Detay
+        </Typography>
+        <Button
+          startIcon={<PrintIcon />}
+          variant="contained"
+          size={isMobile ? 'small' : 'medium'}
+          onClick={handlePrint}
+          sx={{ bgcolor: '#C62828', '&:hover': { bgcolor: '#b71c1c' } }}
+        >
+          Yazdır
+        </Button>
       </Box>
 
       <Box ref={printRef} sx={{ p: 1 }}>
@@ -67,35 +82,51 @@ const MotorDetay = () => {
 
           <Grid container spacing={3}>
             <Grid size={{ xs: 12, md: 6 }}>
-              <Typography variant="subtitle1" fontWeight="bold" color="primary" gutterBottom>Motor Bilgileri</Typography>
+              <Typography variant="subtitle1" fontWeight="bold" color="primary" gutterBottom>
+                Motor Bilgileri
+              </Typography>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Typography variant="body2" color="text.secondary">Plaka:</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Plaka:
+                  </Typography>
                   <Typography fontWeight="bold">{data.plaka || '-'}</Typography>
                 </Box>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Typography variant="body2" color="text.secondary">Marka:</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Marka:
+                  </Typography>
                   <Typography>{data.marka || '-'}</Typography>
                 </Box>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Typography variant="body2" color="text.secondary">Model:</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Model:
+                  </Typography>
                   <Typography>{data.model || '-'}</Typography>
                 </Box>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Typography variant="body2" color="text.secondary">KM:</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    KM:
+                  </Typography>
                   <Typography>{data.km ? sayiYaz(data.km) : '-'}</Typography>
                 </Box>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Typography variant="body2" color="text.secondary">Tarih:</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Tarih:
+                  </Typography>
                   <Typography>{tarihYaz(data.tarih)}</Typography>
                 </Box>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Typography variant="body2" color="text.secondary">Ödeme Şekli:</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Ödeme Şekli:
+                  </Typography>
                   <Typography>{data.odeme_sekli || 'Nakit'}</Typography>
                 </Box>
                 {data.yevmiye_no && (
                   <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <Typography variant="body2" color="text.secondary">Yevmiye No:</Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Yevmiye No:
+                    </Typography>
                     <Typography fontWeight="bold">{data.yevmiye_no}</Typography>
                   </Box>
                 )}
@@ -103,22 +134,32 @@ const MotorDetay = () => {
             </Grid>
 
             <Grid size={{ xs: 12, md: 6 }}>
-              <Typography variant="subtitle1" fontWeight="bold" color="primary" gutterBottom>Alıcı Bilgileri</Typography>
+              <Typography variant="subtitle1" fontWeight="bold" color="primary" gutterBottom>
+                Alıcı Bilgileri
+              </Typography>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Typography variant="body2" color="text.secondary">Ad Soyad:</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Ad Soyad:
+                  </Typography>
                   <Typography fontWeight="bold">{data.alici_adi || '-'}</Typography>
                 </Box>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Typography variant="body2" color="text.secondary">TC No:</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    TC No:
+                  </Typography>
                   <Typography>{data.alici_tc || '-'}</Typography>
                 </Box>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Typography variant="body2" color="text.secondary">Telefon:</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Telefon:
+                  </Typography>
                   <Typography>{data.alici_telefon || '-'}</Typography>
                 </Box>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Typography variant="body2" color="text.secondary">Adres:</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Adres:
+                  </Typography>
                   <Typography>{data.alici_adres || '-'}</Typography>
                 </Box>
               </Box>
@@ -128,24 +169,32 @@ const MotorDetay = () => {
 
         {data.komisyoncu_adi && (
           <Paper sx={{ p: 3, mb: 3 }}>
-            <Typography variant="subtitle1" fontWeight="bold" color="primary" gutterBottom>Komisyoncu</Typography>
+            <Typography variant="subtitle1" fontWeight="bold" color="primary" gutterBottom>
+              Komisyoncu
+            </Typography>
             <Divider sx={{ mb: 2 }} />
             <Grid container spacing={2}>
               <Grid size={{ xs: 12, md: 4 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Typography variant="body2" color="text.secondary">Ad Soyad:</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Ad Soyad:
+                  </Typography>
                   <Typography fontWeight="bold">{data.komisyoncu_adi}</Typography>
                 </Box>
               </Grid>
               <Grid size={{ xs: 12, md: 4 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Typography variant="body2" color="text.secondary">Telefon:</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Telefon:
+                  </Typography>
                   <Typography>{data.komisyoncu_telefon || '-'}</Typography>
                 </Box>
               </Grid>
               <Grid size={{ xs: 12, md: 4 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Typography variant="body2" color="text.secondary">Tutar:</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Tutar:
+                  </Typography>
                   <Typography fontWeight="bold">₺{sayiYaz(data.komisyoncu_tutari)}</Typography>
                 </Box>
               </Grid>
@@ -154,61 +203,99 @@ const MotorDetay = () => {
         )}
 
         <Paper sx={{ p: 3, mb: 3 }}>
-          <Typography variant="subtitle1" fontWeight="bold" color="primary" gutterBottom>Finansal Detaylar</Typography>
+          <Typography variant="subtitle1" fontWeight="bold" color="primary" gutterBottom>
+            Finansal Detaylar
+          </Typography>
           <Divider sx={{ mb: 2 }} />
           <Grid container spacing={2}>
             <Grid size={{ xs: 6, md: 3 }}>
               <Paper sx={{ p: 2, textAlign: 'center', bgcolor: '#ffebee', borderLeft: '4px solid #C62828' }}>
-                <Typography variant="body2" color="text.secondary">Alış Fiyatı</Typography>
-                <Typography variant="h6" fontWeight="bold" sx={{ color: '#C62828' }}>₺{formatTL(alis)}</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Alış Fiyatı
+                </Typography>
+                <Typography variant="h6" fontWeight="bold" sx={{ color: '#C62828' }}>
+                  ₺{formatTL(alis)}
+                </Typography>
               </Paper>
             </Grid>
             <Grid size={{ xs: 6, md: 3 }}>
               <Paper sx={{ p: 2, textAlign: 'center', bgcolor: '#ffebee', borderLeft: '4px solid #C62828' }}>
-                <Typography variant="body2" color="text.secondary">Satış Fiyatı</Typography>
-                <Typography variant="h6" fontWeight="bold" sx={{ color: '#C62828' }}>₺{formatTL(satis)}</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Satış Fiyatı
+                </Typography>
+                <Typography variant="h6" fontWeight="bold" sx={{ color: '#C62828' }}>
+                  ₺{formatTL(satis)}
+                </Typography>
               </Paper>
             </Grid>
             <Grid size={{ xs: 6, md: 3 }}>
               <Paper sx={{ p: 2, textAlign: 'center', bgcolor: '#fce4ec', borderLeft: '4px solid #c62828' }}>
-                <Typography variant="body2" color="text.secondary">Noter Alış</Typography>
-                <Typography variant="h6" fontWeight="bold" sx={{ color: '#c62828' }}>₺{formatTL(noterAlis)}</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Noter Alış
+                </Typography>
+                <Typography variant="h6" fontWeight="bold" sx={{ color: '#c62828' }}>
+                  ₺{formatTL(noterAlis)}
+                </Typography>
               </Paper>
             </Grid>
             <Grid size={{ xs: 6, md: 3 }}>
               <Paper sx={{ p: 2, textAlign: 'center', bgcolor: '#fce4ec', borderLeft: '4px solid #c62828' }}>
-                <Typography variant="body2" color="text.secondary">Noter Satış</Typography>
-                <Typography variant="h6" fontWeight="bold" sx={{ color: '#c62828' }}>₺{formatTL(noterSatis)}</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Noter Satış
+                </Typography>
+                <Typography variant="h6" fontWeight="bold" sx={{ color: '#c62828' }}>
+                  ₺{formatTL(noterSatis)}
+                </Typography>
               </Paper>
             </Grid>
             <Grid size={{ xs: 6, md: 4 }}>
               <Paper sx={{ p: 2, textAlign: 'center', bgcolor: '#ffebee', borderLeft: '4px solid #C62828' }}>
-                <Typography variant="body2" color="text.secondary">Masraflar (Tamir, Bakım vb.)</Typography>
-                <Typography variant="h6" fontWeight="bold" sx={{ color: '#C62828' }}>₺{formatTL(masraflar)}</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Masraflar (Tamir, Bakım vb.)
+                </Typography>
+                <Typography variant="h6" fontWeight="bold" sx={{ color: '#C62828' }}>
+                  ₺{formatTL(masraflar)}
+                </Typography>
               </Paper>
             </Grid>
             <Grid size={{ xs: 6, md: 4 }}>
               <Paper sx={{ p: 2, textAlign: 'center', bgcolor: '#ffebee', borderLeft: '4px solid #C62828' }}>
-                <Typography variant="body2" color="text.secondary">Toplam Maliyet</Typography>
-                <Typography variant="h6" fontWeight="bold" sx={{ color: '#C62828' }}>₺{formatTL(toplamMaliyet)}</Typography>
-                <Typography variant="caption" color="text.secondary">Alış + Noter Alış + Masraflar</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Toplam Maliyet
+                </Typography>
+                <Typography variant="h6" fontWeight="bold" sx={{ color: '#C62828' }}>
+                  ₺{formatTL(toplamMaliyet)}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Alış + Noter Alış + Masraflar
+                </Typography>
               </Paper>
             </Grid>
             {karGor && (
-            <Grid size={{ xs: 12, md: 4 }}>
-              <Paper sx={{ p: 2, textAlign: 'center', bgcolor: kar >= 0 ? '#e8f5e9' : '#ffebee', borderLeft: `4px solid ${kar >= 0 ? '#2e7d32' : '#C62828'}` }}>
-                <Typography variant="body2" color="text.secondary">NET KÂR</Typography>
-                <Typography variant="h5" fontWeight="bold" sx={{ color: kar >= 0 ? '#2e7d32' : '#C62828' }}>₺{formatTL(kar)}</Typography>
-                <Typography variant="caption" color="text.secondary">Satış - (Alış + Noter Alış + Noter Satış + Masraflar)</Typography>
-              </Paper>
-            </Grid>
+              <Grid size={{ xs: 12, md: 4 }}>
+                <Paper
+                  sx={{ p: 2, textAlign: 'center', bgcolor: kar >= 0 ? '#e8f5e9' : '#ffebee', borderLeft: `4px solid ${kar >= 0 ? '#2e7d32' : '#C62828'}` }}
+                >
+                  <Typography variant="body2" color="text.secondary">
+                    NET KÂR
+                  </Typography>
+                  <Typography variant="h5" fontWeight="bold" sx={{ color: kar >= 0 ? '#2e7d32' : '#C62828' }}>
+                    ₺{formatTL(kar)}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Satış - (Alış + Noter Alış + Noter Satış + Masraflar)
+                  </Typography>
+                </Paper>
+              </Grid>
             )}
           </Grid>
         </Paper>
 
         {data.aciklama && (
           <Paper sx={{ p: 3 }}>
-            <Typography variant="subtitle1" fontWeight="bold" color="primary" gutterBottom>Açıklama</Typography>
+            <Typography variant="subtitle1" fontWeight="bold" color="primary" gutterBottom>
+              Açıklama
+            </Typography>
             <Typography>{data.aciklama}</Typography>
           </Paper>
         )}

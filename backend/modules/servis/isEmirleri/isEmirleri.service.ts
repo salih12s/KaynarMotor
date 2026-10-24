@@ -17,7 +17,11 @@ import type { ParcaSatiri } from './isEmirleri.repository';
  * parca_kodu yedek_parca_stok'ta yoksa (ör. aksesuar stok kodu veya serbest metin) sorgu hiçbir satırı etkilemez.
  * Stok eksiye düşebilir, iade tam geri verir (shared/stok).
  */
-const yedekParcaStokAyarla = async (db: Veritabani, parcalar: Array<Pick<ParcaSatiri, 'parca_kodu' | 'adet'> | ParcaGovdesi> | null | undefined, yon: 1 | -1) => {
+const yedekParcaStokAyarla = async (
+  db: Veritabani,
+  parcalar: Array<Pick<ParcaSatiri, 'parca_kodu' | 'adet'> | ParcaGovdesi> | null | undefined,
+  yon: 1 | -1,
+) => {
   for (const parca of parcalar || []) {
     const kod = String(parca.parca_kodu || '').trim();
     if (!kod) continue;
@@ -36,8 +40,12 @@ const parcalariYaz = async (db: Veritabani, isEmriId: number, parcalar: ParcaGov
       const maliyet = bosuSifir(parca.maliyet);
       const parcaToplamFiyat = adet * birimFiyat;
       await repo.parcaEkle(db, isEmriId, {
-        parca_kodu: parca.parca_kodu, takilan_parca: parca.takilan_parca,
-        adet, birim_fiyat: birimFiyat, maliyet, toplam_fiyat: parcaToplamFiyat,
+        parca_kodu: parca.parca_kodu,
+        takilan_parca: parca.takilan_parca,
+        adet,
+        birim_fiyat: birimFiyat,
+        maliyet,
+        toplam_fiyat: parcaToplamFiyat,
       });
       toplamFiyat += parcaToplamFiyat;
       toplamMaliyet += adet * maliyet;
@@ -73,12 +81,24 @@ export const olustur = async (db: BaglamDb, govde: IsEmriOlusturGovdesi, kullani
     const musteriId = govde.telefon ? await upsertMusteri(govde.musteri_ad_soyad, govde.telefon, govde.adres, tx) : null;
 
     const isEmri = await repo.ekle(tx, {
-      fisNo, musteriId,
-      musteri_ad_soyad: govde.musteri_ad_soyad, adres: govde.adres, telefon: govde.telefon, km: bosuSifir(govde.km),
-      model_tip: govde.model_tip, marka: govde.marka, aciklama: govde.aciklama, ariza_sikayetler: govde.ariza_sikayetler,
-      tahmini_teslim_tarihi: bosuNull(govde.tahmini_teslim_tarihi), tahmini_toplam_ucret: bosuSifir(govde.tahmini_toplam_ucret),
-      durum: (govde.durum as string) || 'beklemede', odeme_detaylari: govde.odeme_detaylari, kalan_odeme: bosuSifir(govde.kalan_odeme),
-      olusturan_kullanici_id: kullanici.id, olusturan_kisi: kullanici.ad_soyad, teslim_eden_teknisyen: kullanici.ad_soyad,
+      fisNo,
+      musteriId,
+      musteri_ad_soyad: govde.musteri_ad_soyad,
+      adres: govde.adres,
+      telefon: govde.telefon,
+      km: bosuSifir(govde.km),
+      model_tip: govde.model_tip,
+      marka: govde.marka,
+      aciklama: govde.aciklama,
+      ariza_sikayetler: govde.ariza_sikayetler,
+      tahmini_teslim_tarihi: bosuNull(govde.tahmini_teslim_tarihi),
+      tahmini_toplam_ucret: bosuSifir(govde.tahmini_toplam_ucret),
+      durum: (govde.durum as string) || 'beklemede',
+      odeme_detaylari: govde.odeme_detaylari,
+      kalan_odeme: bosuSifir(govde.kalan_odeme),
+      olusturan_kullanici_id: kullanici.id,
+      olusturan_kisi: kullanici.ad_soyad,
+      teslim_eden_teknisyen: kullanici.ad_soyad,
       plaka: bosuNull(govde.plaka),
       // Doğrudan "tamamlandı" açılan iş emri de tamamlama tarihi almalı (PUT ve aksesuar POST'u gibi); aksi halde
       // günlük rapor ve fiş-kâr raporu (DATE(tamamlama_tarihi)) bu kaydı hiç görmez
@@ -114,13 +134,25 @@ export const guncelle = async (db: BaglamDb, id: number, govde: IsEmriGuncelleGo
     const musteriId = govde.telefon ? await upsertMusteri(govde.musteri_ad_soyad, govde.telefon, govde.adres, tx) : null;
 
     await repo.guncelle(tx, id, {
-      musteri_ad_soyad: govde.musteri_ad_soyad, adres: govde.adres, telefon: govde.telefon, km: bosuSifir(govde.km),
-      model_tip: govde.model_tip, marka: govde.marka, aciklama: govde.aciklama, ariza_sikayetler: govde.ariza_sikayetler,
-      tahmini_teslim_tarihi: bosuNull(govde.tahmini_teslim_tarihi), tahmini_toplam_ucret: bosuSifir(govde.tahmini_toplam_ucret),
-      durum: govde.durum, odeme_detaylari: govde.odeme_detaylari,
-      teslim_alan_ad_soyad: govde.teslim_alan_ad_soyad, teslim_eden_teknisyen: govde.teslim_eden_teknisyen,
-      teslim_tarihi: bosuNull(govde.teslim_tarihi), tamamlama_tarihi: tamamlamaTarihi,
-      kalan_odeme: bosuSifir(govde.kalan_odeme), plaka: bosuNull(govde.plaka), musteriId,
+      musteri_ad_soyad: govde.musteri_ad_soyad,
+      adres: govde.adres,
+      telefon: govde.telefon,
+      km: bosuSifir(govde.km),
+      model_tip: govde.model_tip,
+      marka: govde.marka,
+      aciklama: govde.aciklama,
+      ariza_sikayetler: govde.ariza_sikayetler,
+      tahmini_teslim_tarihi: bosuNull(govde.tahmini_teslim_tarihi),
+      tahmini_toplam_ucret: bosuSifir(govde.tahmini_toplam_ucret),
+      durum: govde.durum,
+      odeme_detaylari: govde.odeme_detaylari,
+      teslim_alan_ad_soyad: govde.teslim_alan_ad_soyad,
+      teslim_eden_teknisyen: govde.teslim_eden_teknisyen,
+      teslim_tarihi: bosuNull(govde.teslim_tarihi),
+      tamamlama_tarihi: tamamlamaTarihi,
+      kalan_odeme: bosuSifir(govde.kalan_odeme),
+      plaka: bosuNull(govde.plaka),
+      musteriId,
     });
 
     // Parçaları yeniden oluştur: önce eski parçaların yedek parça stok düşümünü geri al

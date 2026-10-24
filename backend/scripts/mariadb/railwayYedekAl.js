@@ -30,9 +30,7 @@ function arg(ad, varsayilan) {
 }
 
 const envDosyasi = path.resolve(arg('--env', path.join(__dirname, '..', '..', '.env')));
-const cikti = path.resolve(
-  arg('--cikti', path.join(process.env.USERPROFILE || process.env.HOME, 'KaynarMariaDB', 'railway-yedek'))
-);
+const cikti = path.resolve(arg('--cikti', path.join(process.env.USERPROFILE || process.env.HOME, 'KaynarMariaDB', 'railway-yedek')));
 
 const repoKok = path.resolve(__dirname, '..', '..', '..');
 if (cikti.toLowerCase().startsWith(repoKok.toLowerCase())) {
@@ -90,12 +88,8 @@ async function main() {
       WHERE tc.table_schema = 'public' AND tc.constraint_type = 'PRIMARY KEY'
       ORDER BY tc.table_name, kcu.ordinal_position`)
   ).rows;
-  const indeksler = (
-    await client.query(`SELECT tablename, indexname, indexdef FROM pg_indexes WHERE schemaname = 'public' ORDER BY 1, 2`)
-  ).rows;
-  const diziler = (
-    await client.query(`SELECT sequencename, last_value FROM pg_sequences WHERE schemaname = 'public'`)
-  ).rows;
+  const indeksler = (await client.query(`SELECT tablename, indexname, indexdef FROM pg_indexes WHERE schemaname = 'public' ORDER BY 1, 2`)).rows;
+  const diziler = (await client.query(`SELECT sequencename, last_value FROM pg_sequences WHERE schemaname = 'public'`)).rows;
   const yabanciAnahtarlar = (
     await client.query(`
       SELECT tc.table_name, kcu.column_name, ccu.table_name AS ref_table, ccu.column_name AS ref_column, rc.delete_rule
@@ -109,7 +103,7 @@ async function main() {
 
   fs.writeFileSync(
     path.join(cikti, '_sema.json'),
-    JSON.stringify({ surum, alinma: new Date().toISOString(), kolonlar, birincil, indeksler, diziler, yabanciAnahtarlar }, null, 1)
+    JSON.stringify({ surum, alinma: new Date().toISOString(), kolonlar, birincil, indeksler, diziler, yabanciAnahtarlar }, null, 1),
   );
 
   const tablolar = [...new Set(kolonlar.map((k) => k.table_name))];
@@ -127,10 +121,7 @@ async function main() {
     for (;;) {
       let r;
       if (pk.length === 1 && son !== null) {
-        r = await client.query(
-          `SELECT * FROM "${tablo}" WHERE "${pk[0]}" > $1 ORDER BY ${sirala} LIMIT ${parti}`,
-          [son]
-        );
+        r = await client.query(`SELECT * FROM "${tablo}" WHERE "${pk[0]}" > $1 ORDER BY ${sirala} LIMIT ${parti}`, [son]);
       } else if (pk.length === 1) {
         r = await client.query(`SELECT * FROM "${tablo}" ORDER BY ${sirala} LIMIT ${parti}`);
       } else {

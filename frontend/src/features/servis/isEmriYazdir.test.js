@@ -21,7 +21,7 @@ const temelIsEmri = {
 };
 
 describe('escapeHtml', () => {
-  test('HTML\'de özel anlamı olan beş karakteri kaçışlar', () => {
+  test("HTML'de özel anlamı olan beş karakteri kaçışlar", () => {
     expect(escapeHtml('<a href="x" title=\'y\'>&</a>')).toBe('&lt;a href=&quot;x&quot; title=&#39;y&#39;&gt;&amp;&lt;/a&gt;');
   });
 
@@ -67,7 +67,11 @@ describe('isEmriYazdirHtml', () => {
   });
 
   test('sayısal alanlara yazılmış metin de kaçışlanır (fis_no, adet)', () => {
-    const html = isEmriYazdirHtml({ ...temelIsEmri, fis_no: '<i>1</i>', parcalar: [{ takilan_parca: 'x', adet: '<u>2</u>', birim_fiyat: 1, toplam_fiyat: 1 }] });
+    const html = isEmriYazdirHtml({
+      ...temelIsEmri,
+      fis_no: '<i>1</i>',
+      parcalar: [{ takilan_parca: 'x', adet: '<u>2</u>', birim_fiyat: 1, toplam_fiyat: 1 }],
+    });
     expect(html).not.toContain('<i>1</i>');
     expect(html).not.toContain('<u>2</u>');
   });

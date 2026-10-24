@@ -28,17 +28,33 @@ export const aralik = async (db: Veritabani, sorgu: AralikSorgusu) => {
   const { baslangic, bitis } = sorgu;
   if (!baslangic || !bitis) throw new GecersizIstek('Başlangıç ve bitiş tarihi gerekli');
 
-  const isEmirleri = await parcalariEkle(db, await repo.aralikIsEmirleri(db, baslangic, bitis), 'parcalar', 'is_emri_id',
-    ['takilan_parca', 'adet', 'birim_fiyat', 'toplam_fiyat', 'maliyet'], ['birim_fiyat', 'toplam_fiyat', 'maliyet']);
-  const aksesuarlar = await parcalariEkle(db, await repo.aralikAksesuarlar(db, baslangic, bitis), 'aksesuar_parcalar', 'aksesuar_id',
-    ['urun_adi', 'adet', 'maliyet', 'satis_fiyati'], ['maliyet', 'satis_fiyati']);
+  const isEmirleri = await parcalariEkle(
+    db,
+    await repo.aralikIsEmirleri(db, baslangic, bitis),
+    'parcalar',
+    'is_emri_id',
+    ['takilan_parca', 'adet', 'birim_fiyat', 'toplam_fiyat', 'maliyet'],
+    ['birim_fiyat', 'toplam_fiyat', 'maliyet'],
+  );
+  const aksesuarlar = await parcalariEkle(
+    db,
+    await repo.aralikAksesuarlar(db, baslangic, bitis),
+    'aksesuar_parcalar',
+    'aksesuar_id',
+    ['urun_adi', 'adet', 'maliyet', 'satis_fiyati'],
+    ['maliyet', 'satis_fiyati'],
+  );
   const motorlar = await repo.aralikMotorlar(db, baslangic, bitis);
   const eticaret = await repo.aralikEticaret(db, baslangic, bitis);
   const yedekParcalar = await repo.aralikYedekParcalar(db, baslangic, bitis);
   const stok = await repo.motorStokToplami(db);
 
   return aralikHesapla(baslangic, bitis, {
-    isEmirleri, aksesuarlar, motorlar, eticaret, yedekParcalar,
+    isEmirleri,
+    aksesuarlar,
+    motorlar,
+    eticaret,
+    yedekParcalar,
     motorStokToplam: parseFloat(stok.toplam_alis || 0),
   });
 };

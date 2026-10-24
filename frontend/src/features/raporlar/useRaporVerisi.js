@@ -30,13 +30,31 @@ export const useRaporVerisi = ({ yatirimci, admin }) => {
   const [yatirimciOzet, setYatirimciOzet] = useState([]);
 
   // Hızlı tarih ön ayarları — filtreyi tek tıkla veri olan aralığa taşımak için
-  const aralik = (b, e) => { setBaslangic(yerelTarih(b)); setBitis(yerelTarih(e)); };
+  const aralik = (b, e) => {
+    setBaslangic(yerelTarih(b));
+    setBitis(yerelTarih(e));
+  };
   const presetler = {
-    bugun: () => { const t = new Date(); aralik(t, t); },
-    buAy: () => { const t = new Date(); aralik(new Date(t.getFullYear(), t.getMonth(), 1), new Date(t.getFullYear(), t.getMonth() + 1, 0)); },
-    gecenAy: () => { const t = new Date(); aralik(new Date(t.getFullYear(), t.getMonth() - 1, 1), new Date(t.getFullYear(), t.getMonth(), 0)); },
-    buYil: () => { const t = new Date(); aralik(new Date(t.getFullYear(), 0, 1), new Date(t.getFullYear(), 11, 31)); },
-    gecenYil: () => { const t = new Date(); aralik(new Date(t.getFullYear() - 1, 0, 1), new Date(t.getFullYear() - 1, 11, 31)); },
+    bugun: () => {
+      const t = new Date();
+      aralik(t, t);
+    },
+    buAy: () => {
+      const t = new Date();
+      aralik(new Date(t.getFullYear(), t.getMonth(), 1), new Date(t.getFullYear(), t.getMonth() + 1, 0));
+    },
+    gecenAy: () => {
+      const t = new Date();
+      aralik(new Date(t.getFullYear(), t.getMonth() - 1, 1), new Date(t.getFullYear(), t.getMonth(), 0));
+    },
+    buYil: () => {
+      const t = new Date();
+      aralik(new Date(t.getFullYear(), 0, 1), new Date(t.getFullYear(), 11, 31));
+    },
+    gecenYil: () => {
+      const t = new Date();
+      aralik(new Date(t.getFullYear() - 1, 0, 1), new Date(t.getFullYear() - 1, 11, 31));
+    },
   };
 
   const loadRapor = async () => {
@@ -72,9 +90,19 @@ export const useRaporVerisi = ({ yatirimci, admin }) => {
     if (yatirimci) return;
     loadRapor();
     loadFisKar();
-    raporService.getPersoneller().then(r => setPersoneller(r.data)).catch(() => {});
-    aksesuarStokService.getAll().then(r => setStokOptions(r.data)).catch(() => {});
-    if (admin) raporService.getYatirimciOzet(baslangic, bitis).then(r => setYatirimciOzet(r.data)).catch(() => {});
+    raporService
+      .getPersoneller()
+      .then((r) => setPersoneller(r.data))
+      .catch(() => {});
+    aksesuarStokService
+      .getAll()
+      .then((r) => setStokOptions(r.data))
+      .catch(() => {});
+    if (admin)
+      raporService
+        .getYatirimciOzet(baslangic, bitis)
+        .then((r) => setYatirimciOzet(r.data))
+        .catch(() => {});
   }, [baslangic, bitis]);
 
   return { baslangic, bitis, setBaslangic, setBitis, presetler, rapor, fisKar, loading, error, personeller, stokOptions, yatirimciOzet };

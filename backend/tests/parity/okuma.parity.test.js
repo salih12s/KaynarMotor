@@ -15,9 +15,7 @@ const { describe, it, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
-const {
-  SUNUCULAR, veritabanlariniHazirla, sunucuBaslat, hazirOlmayiBekle, istek, girisYap, kiyasla, sunuculariKapat,
-} = require('./ortam');
+const { SUNUCULAR, veritabanlariniHazirla, sunucuBaslat, hazirOlmayiBekle, istek, girisYap, kiyasla, sunuculariKapat } = require('./ortam');
 
 const ROLLER = ['p_admin', 'p_personel', 'p_kisitli', 'p_yatirimci', 'p_yat_vitrin', 'p_muhasebeci', 'p_servis', 'p_vitrin'];
 const YEDEK = path.join(process.env.USERPROFILE || process.env.HOME, 'KaynarMariaDB', 'railway-yedek');
@@ -25,9 +23,14 @@ const kehanet = JSON.parse(fs.readFileSync(path.join(YEDEK, '_sira.json'), 'utf8
 
 // Eleman sırasından bağımsız karşılaştırılacak uçlar (bkz. dosya başı)
 const SIRASIZ = [
-  /^\/api\/ikinci-el-motor(\?|$)/, /^\/api\/raporlar\/(gunluk|aralik|yatirimci-rapor|yatirimci-ozet|personeller)/,
-  /^\/api\/aksesuar-stok(\/ara|$)/, /^\/api\/yedek-parcalar$/, /^\/api\/musteriler\/ara\//, /^\/api\/vitrin\/markalar/,
-  /^\/api\/auth\/(personel-listesi|yatirimcilar)$/, /^\/api\/eticaret\/platformlar$/,
+  /^\/api\/ikinci-el-motor(\?|$)/,
+  /^\/api\/raporlar\/(gunluk|aralik|yatirimci-rapor|yatirimci-ozet|personeller)/,
+  /^\/api\/aksesuar-stok(\/ara|$)/,
+  /^\/api\/yedek-parcalar$/,
+  /^\/api\/musteriler\/ara\//,
+  /^\/api\/vitrin\/markalar/,
+  /^\/api\/auth\/(personel-listesi|yatirimcilar)$/,
+  /^\/api\/eticaret\/platformlar$/,
 ];
 // Aktivite günlüğüne testin kendi girişleri yazılır (iki sunucuda milisaniye farkıyla): yalnızca onların zamanı yok sayılır.
 const ILK_GUN_SAYISI = 3150;
@@ -36,7 +39,8 @@ const DONUSTUR = {
 };
 const donusturFonksiyonu = (yol) => {
   if (DONUSTUR[yol]) return DONUSTUR[yol];
-  if (/^\/api\/auth\/users\/\d+\/activity-logs$/.test(yol)) return (j) => (Array.isArray(j) ? j.map((r) => (r.id > ILK_GUN_SAYISI ? { ...r, created_at: 'X' } : r)) : j);
+  if (/^\/api\/auth\/users\/\d+\/activity-logs$/.test(yol))
+    return (j) => (Array.isArray(j) ? j.map((r) => (r.id > ILK_GUN_SAYISI ? { ...r, created_at: 'X' } : r)) : j);
   return undefined;
 };
 
@@ -87,40 +91,101 @@ describe('okuma uçları: eski (PostgreSQL) ve yeni (MariaDB) sunucu', { timeout
     ids.musteriler = musteriler;
 
     yollar = [
-      '/api/auth/verify', '/api/auth/personel-listesi', '/api/auth/users', '/api/auth/yatirimcilar', '/api/auth/activity-logs',
+      '/api/auth/verify',
+      '/api/auth/personel-listesi',
+      '/api/auth/users',
+      '/api/auth/yatirimcilar',
+      '/api/auth/activity-logs',
       ...ornek(kullanicilar, 4).map((id) => `/api/auth/users/${id}/activity-logs`),
-      '/api/musteriler', '/api/musteriler/ara/MEHMET', '/api/musteriler/ara/karateke', '/api/musteriler/ara/05321',
-      '/api/musteriler/telefon/05321234567', '/api/musteriler/telefon/5051234567', '/api/musteriler/telefon/123',
-      ...ornek(musteriler).map((id) => `/api/musteriler/${id}`), '/api/musteriler/999999',
-      '/api/is-emirleri', '/api/is-emirleri?durum=tamamlandi', '/api/is-emirleri?durum=beklemede',
-      '/api/is-emirleri?baslangic=2026-09-01&bitis=2026-10-12', '/api/is-emirleri?baslangic=2026-01-01', '/api/is-emirleri?bitis=2026-03-01',
-      '/api/is-emirleri/next-fis-no/preview', ...ornek(isEmirleri).map((id) => `/api/is-emirleri/${id}`), '/api/is-emirleri/999999',
-      '/api/aksesuarlar', '/api/aksesuarlar/stats/genel', ...ornek(aksesuarlar).map((id) => `/api/aksesuarlar/${id}`), '/api/aksesuarlar/999999',
-      '/api/aksesuar-stok', '/api/aksesuar-stok/ara?q=beyaz', '/api/aksesuar-stok/ara?q=KASK', '/api/aksesuar-stok/next-stok-kodu',
-      ...stok.slice(0, 4).map((s) => `/api/aksesuar-stok/barkod/${s.stok_kodu}`), '/api/aksesuar-stok/barkod/yok-boyle-kod',
-      '/api/ikinci-el-motor', '/api/ikinci-el-motor/stats/ozet', '/api/ikinci-el-motor?durum=stokta', '/api/ikinci-el-motor?durum=tamamlandi',
-      '/api/ikinci-el-motor?baslangic=2026-01-01&bitis=2026-06-30', ...ornek(motorlar, 8).map((id) => `/api/ikinci-el-motor/${id}`), '/api/ikinci-el-motor/999999',
-      '/api/satis-belgeleri/arsiv', ...ornek(motorlar, 4).map((id) => `/api/satis-belgeleri/motor/${id}`),
+      '/api/musteriler',
+      '/api/musteriler/ara/MEHMET',
+      '/api/musteriler/ara/karateke',
+      '/api/musteriler/ara/05321',
+      '/api/musteriler/telefon/05321234567',
+      '/api/musteriler/telefon/5051234567',
+      '/api/musteriler/telefon/123',
+      ...ornek(musteriler).map((id) => `/api/musteriler/${id}`),
+      '/api/musteriler/999999',
+      '/api/is-emirleri',
+      '/api/is-emirleri?durum=tamamlandi',
+      '/api/is-emirleri?durum=beklemede',
+      '/api/is-emirleri?baslangic=2026-09-01&bitis=2026-10-12',
+      '/api/is-emirleri?baslangic=2026-01-01',
+      '/api/is-emirleri?bitis=2026-03-01',
+      '/api/is-emirleri/next-fis-no/preview',
+      ...ornek(isEmirleri).map((id) => `/api/is-emirleri/${id}`),
+      '/api/is-emirleri/999999',
+      '/api/aksesuarlar',
+      '/api/aksesuarlar/stats/genel',
+      ...ornek(aksesuarlar).map((id) => `/api/aksesuarlar/${id}`),
+      '/api/aksesuarlar/999999',
+      '/api/aksesuar-stok',
+      '/api/aksesuar-stok/ara?q=beyaz',
+      '/api/aksesuar-stok/ara?q=KASK',
+      '/api/aksesuar-stok/next-stok-kodu',
+      ...stok.slice(0, 4).map((s) => `/api/aksesuar-stok/barkod/${s.stok_kodu}`),
+      '/api/aksesuar-stok/barkod/yok-boyle-kod',
+      '/api/ikinci-el-motor',
+      '/api/ikinci-el-motor/stats/ozet',
+      '/api/ikinci-el-motor?durum=stokta',
+      '/api/ikinci-el-motor?durum=tamamlandi',
+      '/api/ikinci-el-motor?baslangic=2026-01-01&bitis=2026-06-30',
+      ...ornek(motorlar, 8).map((id) => `/api/ikinci-el-motor/${id}`),
+      '/api/ikinci-el-motor/999999',
+      '/api/satis-belgeleri/arsiv',
+      ...ornek(motorlar, 4).map((id) => `/api/satis-belgeleri/motor/${id}`),
       ...arsiv.flatMap((g) => g.belgeler.map((b) => `/api/satis-belgeleri/${b.id}/indir`)),
-      '/api/eticaret/platformlar', '/api/eticaret/stats', '/api/eticaret', ...ornek(eticaret).map((id) => `/api/eticaret/${id}`),
-      '/api/yedek-parcalar', ...ornek(yedekParcalar, 4).map((id) => `/api/yedek-parcalar/${id}`),
-      '/api/yedek-parca-stok', '/api/yedek-parca-stok/ara?q=ya', '/api/yedek-parca-stok/next-stok-kodu', '/api/yedek-parca-stok/barkod/9000000000001',
-      '/api/raporlar/genel', '/api/raporlar/gunluk', '/api/raporlar/gunluk?tarih=2026-10-10', '/api/raporlar/gunluk?tarih=2026-09-15',
-      '/api/raporlar/aralik?baslangic=2026-09-01&bitis=2026-10-12', '/api/raporlar/aralik?baslangic=2026-01-01&bitis=2026-12-31',
-      '/api/raporlar/aralik?baslangic=2025-01-01&bitis=2025-12-31', '/api/raporlar/aralik',
-      '/api/raporlar/fis-kar', '/api/raporlar/fis-kar?baslangic=2026-09-01&bitis=2026-10-12', '/api/raporlar/personeller',
-      '/api/raporlar/yatirimci-rapor', '/api/raporlar/yatirimci-rapor?yatirimci_id=9004',
+      '/api/eticaret/platformlar',
+      '/api/eticaret/stats',
+      '/api/eticaret',
+      ...ornek(eticaret).map((id) => `/api/eticaret/${id}`),
+      '/api/yedek-parcalar',
+      ...ornek(yedekParcalar, 4).map((id) => `/api/yedek-parcalar/${id}`),
+      '/api/yedek-parca-stok',
+      '/api/yedek-parca-stok/ara?q=ya',
+      '/api/yedek-parca-stok/next-stok-kodu',
+      '/api/yedek-parca-stok/barkod/9000000000001',
+      '/api/raporlar/genel',
+      '/api/raporlar/gunluk',
+      '/api/raporlar/gunluk?tarih=2026-10-10',
+      '/api/raporlar/gunluk?tarih=2026-09-15',
+      '/api/raporlar/aralik?baslangic=2026-09-01&bitis=2026-10-12',
+      '/api/raporlar/aralik?baslangic=2026-01-01&bitis=2026-12-31',
+      '/api/raporlar/aralik?baslangic=2025-01-01&bitis=2025-12-31',
+      '/api/raporlar/aralik',
+      '/api/raporlar/fis-kar',
+      '/api/raporlar/fis-kar?baslangic=2026-09-01&bitis=2026-10-12',
+      '/api/raporlar/personeller',
+      '/api/raporlar/yatirimci-rapor',
+      '/api/raporlar/yatirimci-rapor?yatirimci_id=9004',
       '/api/raporlar/yatirimci-rapor?yatirimci_id=9004&baslangic=2026-01-01&bitis=2026-12-31',
-      '/api/raporlar/yatirimci-ozet', '/api/raporlar/yatirimci-ozet?baslangic=2026-01-01&bitis=2026-12-31',
+      '/api/raporlar/yatirimci-ozet',
+      '/api/raporlar/yatirimci-ozet?baslangic=2026-01-01&bitis=2026-12-31',
       '/api/veresiye',
-      '/api/vitrin/segmentler', '/api/vitrin/iletisim', '/api/vitrin', '/api/vitrin?hepsi=1', '/api/vitrin?kategori=motor', '/api/vitrin?kategori=aksesuar',
-      '/api/vitrin?kategori=motor&durum=ikinci_el', '/api/vitrin?kategori=motor&durum=sifir', '/api/vitrin?q=honda', '/api/vitrin?q=KASK', '/api/vitrin?marka=honda',
-      '/api/vitrin?cc_min=100&cc_max=250', '/api/vitrin?km_max=20000', '/api/vitrin?segment=Scooter',
-      '/api/vitrin/markalar', '/api/vitrin/markalar?durum=ikinci_el', '/api/vitrin/markalar?durum=sifir',
+      '/api/vitrin/segmentler',
+      '/api/vitrin/iletisim',
+      '/api/vitrin',
+      '/api/vitrin?hepsi=1',
+      '/api/vitrin?kategori=motor',
+      '/api/vitrin?kategori=aksesuar',
+      '/api/vitrin?kategori=motor&durum=ikinci_el',
+      '/api/vitrin?kategori=motor&durum=sifir',
+      '/api/vitrin?q=honda',
+      '/api/vitrin?q=KASK',
+      '/api/vitrin?marka=honda',
+      '/api/vitrin?cc_min=100&cc_max=250',
+      '/api/vitrin?km_max=20000',
+      '/api/vitrin?segment=Scooter',
+      '/api/vitrin/markalar',
+      '/api/vitrin/markalar?durum=ikinci_el',
+      '/api/vitrin/markalar?durum=sifir',
       ...ornek(vitrin, 6).map((id) => `/api/vitrin/${id}`),
       ...vitrin.slice(0, 3).map((v) => `/api/vitrin/gorsel/${v.kapak_gorsel_id}`),
-      '/api/vitrin/iletisim-gorsel/motor', '/api/vitrin/iletisim-gorsel/nakliye', '/api/vitrin/video/1',
-      ...qr.map((tk) => `/api/servis-gecmisi/${tk}`), '/api/servis-gecmisi/yok',
+      '/api/vitrin/iletisim-gorsel/motor',
+      '/api/vitrin/iletisim-gorsel/nakliye',
+      '/api/vitrin/video/1',
+      ...qr.map((tk) => `/api/servis-gecmisi/${tk}`),
+      '/api/servis-gecmisi/yok',
     ].filter((y) => !/\/null$/.test(y));
   });
 
@@ -152,10 +217,13 @@ describe('okuma uçları: eski (PostgreSQL) ve yeni (MariaDB) sunucu', { timeout
       for (let i = 1; i < satirlar.length; i++) {
         const a = anahtar(satirlar[i - 1]);
         const b = anahtar(satirlar[i]);
-        if (a !== null && b !== null && a < b) { ihlaller.push(`${ad}: #${i} (${a} < ${b})`); break; }
+        if (a !== null && b !== null && a < b) {
+          ihlaller.push(`${ad}: #${i} (${a} < ${b})`);
+          break;
+        }
       }
     };
-    const motorAnahtar = (r) => (r.tamamlama_tarihi || r.created_at || null);
+    const motorAnahtar = (r) => r.tamamlama_tarihi || r.created_at || null;
     const satisAnahtar = (r) => String(r.satis_tarihi || r.tamamlama_tarihi || '');
     azalan('motor listesi', await al('/api/ikinci-el-motor'), motorAnahtar);
     azalan('motor listesi (tamamlandı)', await al('/api/ikinci-el-motor?durum=tamamlandi'), motorAnahtar);
@@ -204,7 +272,9 @@ describe('okuma uçları: eski (PostgreSQL) ve yeni (MariaDB) sunucu', { timeout
     for (const q of ['a', 'e', 'mehmet']) {
       const beklenen = hepsi
         .filter((m) => (m.ad_soyad || '').toLowerCase().includes(q) || (m.telefon || '').toLowerCase().includes(q))
-        .map((m) => n(m.ad_soyad)).sort((x, y) => x - y).slice(0, 20);
+        .map((m) => n(m.ad_soyad))
+        .sort((x, y) => x - y)
+        .slice(0, 20);
       const gelen = (await al(`/api/musteriler/ara/${q}`)).map((m) => n(m.ad_soyad));
       if (JSON.stringify(beklenen) !== JSON.stringify(gelen)) ihlaller.push(`/api/musteriler/ara/${q}: ilk 20 kayıt kehanetle uyuşmuyor`);
     }
@@ -230,7 +300,10 @@ function rapor(tumFarklar) {
 async function qrTokenleri() {
   const { Client } = require('pg');
   const env = {};
-  for (const l of fs.readFileSync(SUNUCULAR.ref.env, 'utf8').split(/\r?\n/)) { const m = /^([A-Z_]+)=(.*)$/.exec(l); if (m) env[m[1]] = m[2]; }
+  for (const l of fs.readFileSync(SUNUCULAR.ref.env, 'utf8').split(/\r?\n/)) {
+    const m = /^([A-Z_]+)=(.*)$/.exec(l);
+    if (m) env[m[1]] = m[2];
+  }
   const c = new Client({ host: env.DB_HOST, port: +env.DB_PORT, database: env.DB_NAME, user: env.DB_USER, password: env.DB_PASSWORD });
   await c.connect();
   const r = await c.query('SELECT token FROM servis_qr_tokenler ORDER BY id LIMIT 4');

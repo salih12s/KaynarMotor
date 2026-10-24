@@ -98,7 +98,7 @@ test('ISO biçimi olmayan ya da başka metin içindeki tarihe dokunulmaz', () =>
 
 test('hazır ifade modu: değerler ? ile yer değiştirir, sırayla toplanır; LIMIT ve ANY metne yazılır', () => {
   const degerler = [];
-  const sql = compileQuery("INSERT INTO t (a, b, c, d) VALUES ($1, $2, $3, $1) RETURNING id", ['x', Buffer.from([1, 2]), true, ], degerler);
+  const sql = compileQuery('INSERT INTO t (a, b, c, d) VALUES ($1, $2, $3, $1) RETURNING id', ['x', Buffer.from([1, 2]), true], degerler);
   assert.equal(sql, 'INSERT INTO t (a, b, c, d) VALUES (?, ?, ?, ?) RETURNING id');
   assert.deepEqual(degerler, ['x', Buffer.from([1, 2]), '1', 'x']);
   const d2 = [];

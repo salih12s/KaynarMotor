@@ -34,33 +34,67 @@ const MotorStok = () => {
   const [secondaryFilter, setSecondaryFilter] = useState(null);
 
   const detayAc = async (id) => {
-    try { const res = await ikinciElMotorService.getById(id); setDetayModal({ open: true, data: res.data }); } catch {}
+    try {
+      const res = await ikinciElMotorService.getById(id);
+      setDetayModal({ open: true, data: res.data });
+    } catch {}
   };
 
   const filteredMotorlar = filtrele(motorlar, { isYatirimci, activeFilter, secondaryFilter, search });
 
   return (
     <Box>
-      <IstatistikCipleri motorlar={motorlar} isYatirimci={isYatirimci} canEdit={canEdit}
-        activeFilter={activeFilter} setActiveFilter={setActiveFilter} secondaryFilter={secondaryFilter} setSecondaryFilter={setSecondaryFilter}
-        onYeni={() => form.openDialog()} />
+      <IstatistikCipleri
+        motorlar={motorlar}
+        isYatirimci={isYatirimci}
+        canEdit={canEdit}
+        activeFilter={activeFilter}
+        setActiveFilter={setActiveFilter}
+        secondaryFilter={secondaryFilter}
+        setSecondaryFilter={setSecondaryFilter}
+        onYeni={() => form.openDialog()}
+      />
 
       <Paper sx={{ p: 2, mb: 2 }}>
-        <TextField size="small" fullWidth placeholder="Plaka, marka, model veya satıcı adı ile ara..." value={search}
+        <TextField
+          size="small"
+          fullWidth
+          placeholder="Plaka, marka, model veya satıcı adı ile ara..."
+          value={search}
           onChange={(e) => setSearch(e.target.value)}
-          InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon /></InputAdornment> }} />
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon />
+              </InputAdornment>
+            ),
+          }}
+        />
       </Paper>
 
-      <MotorListesi filteredMotorlar={filteredMotorlar} isMobile={isMobile} perms={perms}
-        onDetay={detayAc} onHizliSatis={hs.openHizliSatis} onDuzenle={form.openDialog} onSil={sil} />
+      <MotorListesi
+        filteredMotorlar={filteredMotorlar}
+        isMobile={isMobile}
+        perms={perms}
+        onDetay={detayAc}
+        onHizliSatis={hs.openHizliSatis}
+        onDuzenle={form.openDialog}
+        onSil={sil}
+      />
 
       <MotorFormModal form={form} perms={perms} yatirimcilar={yatirimcilar} musteri={musteri} isMobile={isMobile} />
 
       <HizliSatisModal hs={hs} perms={perms} musteri={musteri} isMobile={isMobile} />
 
       {/* Motor Detay Modal */}
-      <StokDetayModal open={detayModal.open} data={detayModal.data} onClose={() => setDetayModal({ open: false, data: null })} printRef={printRef} isMobile={isMobile}
-        perms={{ canAlis, canListe, canMusteri, canKar, isYatirimci: isYatirimciSahip, canBelge: canEdit }} />
+      <StokDetayModal
+        open={detayModal.open}
+        data={detayModal.data}
+        onClose={() => setDetayModal({ open: false, data: null })}
+        printRef={printRef}
+        isMobile={isMobile}
+        perms={{ canAlis, canListe, canMusteri, canKar, isYatirimci: isYatirimciSahip, canBelge: canEdit }}
+      />
     </Box>
   );
 };

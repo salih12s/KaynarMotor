@@ -49,15 +49,12 @@ export const logAktivite = async (params: AktiviteParametreleri) => {
   try {
     // Object parametre
     if (typeof params === 'object' && !Array.isArray(params)) {
-      const {
-        kullanici_id, kullanici_adi, islem_tipi, islem_detay,
-        hedef_tablo, hedef_id, ip_adresi, tarayici_bilgisi
-      } = params;
+      const { kullanici_id, kullanici_adi, islem_tipi, islem_detay, hedef_tablo, hedef_id, ip_adresi, tarayici_bilgisi } = params;
 
       await pool.query(
         `INSERT INTO aktivite_log (kullanici_id, kullanici_adi, islem_tipi, islem_detay, hedef_tablo, hedef_id, ip_adresi, tarayici_bilgisi)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-        [kullanici_id, kullanici_adi, islem_tipi, islem_detay, hedef_tablo, hedef_id, ip_adresi, tarayici_bilgisi]
+        [kullanici_id, kullanici_adi, islem_tipi, islem_detay, hedef_tablo, hedef_id, ip_adresi, tarayici_bilgisi],
       );
     }
   } catch (error) {

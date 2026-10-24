@@ -22,9 +22,18 @@ const sorgular = (db, parca) => db.cagrilar.filter((c) => c.sql.includes(parca))
 describe('kategori yetki matrisi (saf)', () => {
   it('admin hepsini yönetir; motor yetkilisi yalnız motor; aksesuar yetkilisi yalnız aksesuar; diğer kategoriler yalnız admin', () => {
     for (const k of ortak.KATEGORILER) assert.equal(ortak.kategoriYetkiliMi(ADMIN, k), true, `admin ${k}`);
-    assert.deepEqual(ortak.KATEGORILER.filter((k) => ortak.kategoriYetkiliMi(MOTORCU, k)), ['motor']);
-    assert.deepEqual(ortak.KATEGORILER.filter((k) => ortak.kategoriYetkiliMi(AKSESUARCI, k)), ['aksesuar']);
-    assert.deepEqual(ortak.KATEGORILER.filter((k) => ortak.kategoriYetkiliMi(kul('personel'), k)), []);
+    assert.deepEqual(
+      ortak.KATEGORILER.filter((k) => ortak.kategoriYetkiliMi(MOTORCU, k)),
+      ['motor'],
+    );
+    assert.deepEqual(
+      ortak.KATEGORILER.filter((k) => ortak.kategoriYetkiliMi(AKSESUARCI, k)),
+      ['aksesuar'],
+    );
+    assert.deepEqual(
+      ortak.KATEGORILER.filter((k) => ortak.kategoriYetkiliMi(kul('personel'), k)),
+      [],
+    );
   });
   it('kullanıcı yoksa ya da kategori bilinmiyorsa yetki yok (admin hariç)', () => {
     assert.equal(ortak.kategoriYetkiliMi(null, 'motor'), false);
@@ -48,13 +57,13 @@ describe('motor durumu ve sayı yardımcıları (saf)', () => {
 });
 
 describe('medya doğrulama (saf)', () => {
-  it('dataUrlMime: türü base64\'ü çözmeden okur; küçük harfe çevirir; geçersizde null', () => {
+  it("dataUrlMime: türü base64'ü çözmeden okur; küçük harfe çevirir; geçersizde null", () => {
     assert.equal(ortak.dataUrlMime(PNG), 'image/png');
     assert.equal(ortak.dataUrlMime('data:IMAGE/PNG;base64,AAAA'), 'image/png');
     for (const kotu of ['image/png', 'data:image/png,AAAA', '', null, 5]) assert.equal(ortak.dataUrlMime(kotu), null, String(kotu));
   });
 
-  it('görsel yalnız JPEG/PNG/WebP/GIF; video yalnız MP4/WebM/OGG/MOV (text/html XSS\'i engellenir)', () => {
+  it("görsel yalnız JPEG/PNG/WebP/GIF; video yalnız MP4/WebM/OGG/MOV (text/html XSS'i engellenir)", () => {
     assert.equal(ortak.medyaHatasi([PNG], undefined), null);
     assert.equal(ortak.medyaHatasi([PNG, 'data:text/html;base64,AAAA'], undefined), 'Görseller yalnızca JPEG, PNG, WebP veya GIF olabilir');
     assert.equal(ortak.medyaHatasi([PNG, 'düz metin'], undefined), 'Görseller yalnızca JPEG, PNG, WebP veya GIF olabilir');
@@ -127,7 +136,10 @@ describe('medya servisi: önbellek ve güvenlik', () => {
 
   it('hizmet sayfası görseli: kayıt/görsel yoksa "yok", geçersizse "gecersiz", geçerliyse bulunur (bellekte tutulmaz)', async () => {
     assert.deepEqual(await medya.iletisimGorseliBul(sahteDb(), 'motor'), { tur: 'yok' });
-    assert.equal((await medya.iletisimGorseliBul(sahteDb([['FROM vitrin_kategori_iletisim', [{ gorsel: 'data:text/html;base64,AA' }]]]), 'motor')).tur, 'gecersiz');
+    assert.equal(
+      (await medya.iletisimGorseliBul(sahteDb([['FROM vitrin_kategori_iletisim', [{ gorsel: 'data:text/html;base64,AA' }]]]), 'motor')).tur,
+      'gecersiz',
+    );
     assert.equal((await medya.iletisimGorseliBul(sahteDb([['FROM vitrin_kategori_iletisim', [{ gorsel: PNG }]]]), 'motor')).tur, 'bulundu');
   });
 });
@@ -163,22 +175,38 @@ describe('liste filtreleri', () => {
 });
 
 describe('ilan detayı: yayında olmayan ilan gizlidir', () => {
-  const kayit = (yayinda) => sahteDb([['FROM vitrin_urunleri WHERE id', [{ id: 5, yayinda }]], ['FROM vitrin_gorseller', [{ id: 11 }, { id: 12 }]]]);
+  const kayit = (yayinda) =>
+    sahteDb([
+      ['FROM vitrin_urunleri WHERE id', [{ id: 5, yayinda }]],
+      ['FROM vitrin_gorseller', [{ id: 11 }, { id: 12 }]],
+    ]);
 
   it('olmayan ilan 404', async () => {
-    await assert.rejects(servis.ilanDetay(sahteDb(), 5, async () => null), (h) => h.status === 404 && h.message === 'Kayıt bulunamadı');
+    await assert.rejects(
+      servis.ilanDetay(sahteDb(), 5, async () => null),
+      (h) => h.status === 404 && h.message === 'Kayıt bulunamadı',
+    );
   });
 
   it('yayındaki ilan herkese açık; kullanıcı sorgulanmaz; görsel id listesi eklenir', async () => {
     let soruldu = false;
-    const r = await servis.ilanDetay(kayit(true), 5, async () => { soruldu = true; return null; });
+    const r = await servis.ilanDetay(kayit(true), 5, async () => {
+      soruldu = true;
+      return null;
+    });
     assert.equal(soruldu, false);
     assert.deepEqual(r.gorsel_idler, [11, 12]);
   });
 
   it('yayında OLMAYAN ilan: anonim ve yetkisiz 404; admin ve vitrin yetkilisi görür', async () => {
-    await assert.rejects(servis.ilanDetay(kayit(false), 5, async () => null), (h) => h.status === 404);
-    await assert.rejects(servis.ilanDetay(kayit(false), 5, async () => kul('personel')), (h) => h.status === 404);
+    await assert.rejects(
+      servis.ilanDetay(kayit(false), 5, async () => null),
+      (h) => h.status === 404,
+    );
+    await assert.rejects(
+      servis.ilanDetay(kayit(false), 5, async () => kul('personel')),
+      (h) => h.status === 404,
+    );
     assert.equal((await servis.ilanDetay(kayit(false), 5, async () => ADMIN)).id, 5);
     assert.equal((await servis.ilanDetay(kayit(false), 5, async () => AKSESUARCI)).id, 5);
   });
@@ -193,7 +221,10 @@ describe('sıralama', () => {
     await assert.rejects(servis.sirala(db, govde(), AKSESUARCI), (h) => h.status === 403 && h.message === 'Bu kategori için vitrin yetkiniz yok');
     await assert.rejects(servis.sirala(db, govde({ urun_ids: [] }), ADMIN), (h) => h.message === 'Sıralanacak ilan listesi geçersiz');
     await assert.rejects(servis.sirala(db, govde({ urun_ids: 'x' }), ADMIN), (h) => h.message === 'Sıralanacak ilan listesi geçersiz');
-    await assert.rejects(servis.sirala(db, govde({ urun_ids: Array.from({ length: 1001 }, (_, i) => i + 1) }), ADMIN), (h) => h.message === 'Sıralanacak ilan listesi geçersiz');
+    await assert.rejects(
+      servis.sirala(db, govde({ urun_ids: Array.from({ length: 1001 }, (_, i) => i + 1) }), ADMIN),
+      (h) => h.message === 'Sıralanacak ilan listesi geçersiz',
+    );
     await assert.rejects(servis.sirala(db, govde({ urun_ids: [1, 1] }), ADMIN), (h) => h.message === 'İlan listesinde geçersiz veya tekrar eden kayıt var');
     await assert.rejects(servis.sirala(db, govde({ urun_ids: [1, 'x'] }), ADMIN), (h) => h.message === 'İlan listesinde geçersiz veya tekrar eden kayıt var');
     await assert.rejects(servis.sirala(db, govde({ urun_ids: [1, -2] }), ADMIN), (h) => h.status === 400);
@@ -217,14 +248,19 @@ describe('sıralama', () => {
 });
 
 describe('doğrudan sıraya taşıma ve yayın durumu', () => {
-  const siraDb = (idler) => sahteDb([
-    ['COALESCE(yayinda, FALSE) AS yayinda', [{ id: 4, kategori: 'motor', yayinda: true }]],
-    ['FOR UPDATE', idler.map((id) => ({ id }))],
-  ]);
+  const siraDb = (idler) =>
+    sahteDb([
+      ['COALESCE(yayinda, FALSE) AS yayinda', [{ id: 4, kategori: 'motor', yayinda: true }]],
+      ['FOR UPDATE', idler.map((id) => ({ id }))],
+    ]);
 
   it('doğrulama: geçersiz sıra numarası 400 (0, negatif, ondalık, metin)', async () => {
     for (const sira of [0, -1, 1.5, 'abc', undefined]) {
-      await assert.rejects(servis.siraAyarla(sahteDb(), 4, { sira }), (h) => h.status === 400 && h.message === 'Sıra numarası 1 veya daha büyük olmalı', String(sira));
+      await assert.rejects(
+        servis.siraAyarla(sahteDb(), 4, { sira }),
+        (h) => h.status === 400 && h.message === 'Sıra numarası 1 veya daha büyük olmalı',
+        String(sira),
+      );
     }
   });
 
@@ -252,17 +288,23 @@ describe('doğrudan sıraya taşıma ve yayın durumu', () => {
   it('yayın durumu: boolean olmalı (400); olmayan ilan 404; başarılı {id, yayinda} döner', async () => {
     await assert.rejects(servis.yayinDurumuAyarla(sahteDb(), 4, { yayinda: 'true' }), (h) => h.status === 400 && h.message === 'Yayın durumu geçersiz');
     await assert.rejects(servis.yayinDurumuAyarla(sahteDb(), 4, { yayinda: true }), (h) => h.status === 404 && h.message === 'Kayıt bulunamadı');
-    const db = sahteDb([['UPDATE vitrin_urunleri v', [{}]], ['SELECT id, yayinda FROM vitrin_urunleri', [{ id: 4, yayinda: true }]]]);
+    const db = sahteDb([
+      ['UPDATE vitrin_urunleri v', [{}]],
+      ['SELECT id, yayinda FROM vitrin_urunleri', [{ id: 4, yayinda: true }]],
+    ]);
     assert.deepEqual(await servis.yayinDurumuAyarla(db, 4, { yayinda: true }), { id: 4, yayinda: true });
     assert.deepEqual(db.olaylar, ['BEGIN', 'COMMIT']);
   });
 
   it('yayına alınan ilan eski sırasını değil yayındaki listenin SONUNU alır (SQL kuralı)', async () => {
-    const db = sahteDb([['UPDATE vitrin_urunleri v', [{}]], ['SELECT id, yayinda', [{ id: 4, yayinda: true }]]]);
+    const db = sahteDb([
+      ['UPDATE vitrin_urunleri v', [{}]],
+      ['SELECT id, yayinda', [{ id: 4, yayinda: true }]],
+    ]);
     await servis.yayinDurumuAyarla(db, 4, { yayinda: true });
     const sql = db.cagrilar[0].sql;
     assert.match(sql, /COALESCE\(MAX\(s\.siralama\), -1\) \+ 1/);
-    assert.ok(sql.indexOf('siralama = CASE') < sql.indexOf('yayinda = $1'), 'siralama yayinda\'dan ÖNCE yazılır (MariaDB soldan sağa)');
+    assert.ok(sql.indexOf('siralama = CASE') < sql.indexOf('yayinda = $1'), "siralama yayinda'dan ÖNCE yazılır (MariaDB soldan sağa)");
   });
 });
 
@@ -277,12 +319,21 @@ describe('ilan yazma doğrulamaları (veritabanına gitmeden reddedilenler)', ()
     assert.equal(db.cagrilar.length, 0);
   });
 
-  it('oluşturma: kötü görsel/video MIME\'ı ve javascript: bağlantısı 400', async () => {
+  it("oluşturma: kötü görsel/video MIME'ı ve javascript: bağlantısı 400", async () => {
     const db = sahteDb();
-    await assert.rejects(servis.ilanOlustur(db, { ...geçerli, gorseller: ['data:text/html;base64,AAAA'] }, ADMIN), (h) => h.status === 400 && /Görseller yalnızca/.test(h.message));
+    await assert.rejects(
+      servis.ilanOlustur(db, { ...geçerli, gorseller: ['data:text/html;base64,AAAA'] }, ADMIN),
+      (h) => h.status === 400 && /Görseller yalnızca/.test(h.message),
+    );
     await assert.rejects(servis.ilanOlustur(db, { ...geçerli, video: 'data:text/html;base64,AAAA' }, ADMIN), (h) => /Video yalnızca/.test(h.message));
-    await assert.rejects(servis.ilanOlustur(db, { ...geçerli, rubik_link: 'javascript:alert(1)' }, ADMIN), (h) => h.message === 'Ödeme linki http:// veya https:// ile başlamalıdır');
-    await assert.rejects(servis.ilanOlustur(db, { ...geçerli, video_url: 'ftp://x' }, ADMIN), (h) => h.message === 'Video linki http:// veya https:// ile başlamalıdır');
+    await assert.rejects(
+      servis.ilanOlustur(db, { ...geçerli, rubik_link: 'javascript:alert(1)' }, ADMIN),
+      (h) => h.message === 'Ödeme linki http:// veya https:// ile başlamalıdır',
+    );
+    await assert.rejects(
+      servis.ilanOlustur(db, { ...geçerli, video_url: 'ftp://x' }, ADMIN),
+      (h) => h.message === 'Video linki http:// veya https:// ile başlamalıdır',
+    );
     assert.equal(db.cagrilar.length, 0);
   });
 
@@ -291,7 +342,11 @@ describe('ilan yazma doğrulamaları (veritabanına gitmeden reddedilenler)', ()
     const aksesuarIlani = sahteDb([['FROM vitrin_urunleri WHERE id', [{ id: 5, kategori: 'aksesuar', yayinda: true, siralama: 1 }]]]);
     await assert.rejects(servis.ilanGuncelle(aksesuarIlani, 5, { ...geçerli, kategori: 'aksesuar' }, MOTORCU), (h) => h.status === 403);
     const motorIlani = sahteDb([['FROM vitrin_urunleri WHERE id', [{ id: 5, kategori: 'motor', yayinda: true, siralama: 1 }]]]);
-    await assert.rejects(servis.ilanGuncelle(motorIlani, 5, { ...geçerli, kategori: 'aksesuar' }, MOTORCU), (h) => h.status === 403, 'motor ilanını aksesuara taşıyamaz');
+    await assert.rejects(
+      servis.ilanGuncelle(motorIlani, 5, { ...geçerli, kategori: 'aksesuar' }, MOTORCU),
+      (h) => h.status === 403,
+      'motor ilanını aksesuara taşıyamaz',
+    );
   });
 
   it('silme: personel başka kategorideki ilanı silemez (403); olmayan ilan sessizce başarılı', async () => {
@@ -306,8 +361,12 @@ describe('ilan yazma doğrulamaları (veritabanına gitmeden reddedilenler)', ()
 
 describe('segmentler ve iletişim', () => {
   it('segment adı boş/metin değil 400 "Segment adı zorunlu"; var olanı ekleyince mevcut kaydı döner', async () => {
-    for (const ad of ['', '   ', undefined, 5]) await assert.rejects(iletisim.segmentEkle(sahteDb(), { ad }), (h) => h.status === 400 && h.message === 'Segment adı zorunlu', String(ad));
-    const db = sahteDb([['MAX(sira)', [{ s: 9 }]], ['SELECT id, ad FROM vitrin_segmentler WHERE ad', [{ id: 3, ad: 'Scooter' }]]]);
+    for (const ad of ['', '   ', undefined, 5])
+      await assert.rejects(iletisim.segmentEkle(sahteDb(), { ad }), (h) => h.status === 400 && h.message === 'Segment adı zorunlu', String(ad));
+    const db = sahteDb([
+      ['MAX(sira)', [{ s: 9 }]],
+      ['SELECT id, ad FROM vitrin_segmentler WHERE ad', [{ id: 3, ad: 'Scooter' }]],
+    ]);
     assert.deepEqual(await iletisim.segmentEkle(db, { ad: ' Scooter ' }), { id: 3, ad: 'Scooter' });
     assert.deepEqual(sorgular(db, 'INSERT IGNORE')[0].params, ['Scooter', 9], 'sıra = mevcut en büyük + 1');
   });
@@ -321,15 +380,29 @@ describe('segmentler ve iletişim', () => {
   });
 
   it('iletişim: gorsel_var 1/0 → true/false', async () => {
-    const db = sahteDb([['FROM vitrin_kategori_iletisim', [{ kategori: 'motor', gorsel_var: 1 }, { kategori: 'sigorta', gorsel_var: '0' }]]]);
-    assert.deepEqual((await iletisim.iletisimleriListele(db)).map((r) => r.gorsel_var), [true, false]);
+    const db = sahteDb([
+      [
+        'FROM vitrin_kategori_iletisim',
+        [
+          { kategori: 'motor', gorsel_var: 1 },
+          { kategori: 'sigorta', gorsel_var: '0' },
+        ],
+      ],
+    ]);
+    assert.deepEqual(
+      (await iletisim.iletisimleriListele(db)).map((r) => r.gorsel_var),
+      [true, false],
+    );
   });
 
   it('iletişim kaydı: geçersiz kategori 400, yetkisiz kategori 403, kötü görsel 400', async () => {
     const db = sahteDb();
     await assert.rejects(iletisim.iletisimKaydet(db, 'x', {}, ADMIN), (h) => h.message === 'Geçersiz kategori');
     await assert.rejects(iletisim.iletisimKaydet(db, 'motor', {}, AKSESUARCI), (h) => h.status === 403);
-    await assert.rejects(iletisim.iletisimKaydet(db, 'motor', { gorsel: 'data:text/html;base64,AAAA' }, ADMIN), (h) => h.message === 'Görsel yalnızca JPEG, PNG, WebP veya GIF olabilir');
+    await assert.rejects(
+      iletisim.iletisimKaydet(db, 'motor', { gorsel: 'data:text/html;base64,AAAA' }, ADMIN),
+      (h) => h.message === 'Görsel yalnızca JPEG, PNG, WebP veya GIF olabilir',
+    );
     assert.equal(db.cagrilar.length, 0);
   });
 });

@@ -20,8 +20,16 @@ export const useSatisFormu = ({ salt, yenile }) => {
   const [musteriOptions, setMusteriOptions] = useState([]);
 
   const searchMusteri = async (query) => {
-    if (!query || query.length < 2) { setMusteriOptions([]); return; }
-    try { const res = await sonAra(musteriService.search(query)); if (res) setMusteriOptions(res.data); } catch { setMusteriOptions([]); }
+    if (!query || query.length < 2) {
+      setMusteriOptions([]);
+      return;
+    }
+    try {
+      const res = await sonAra(musteriService.search(query));
+      if (res) setMusteriOptions(res.data);
+    } catch {
+      setMusteriOptions([]);
+    }
   };
 
   const kapat = () => setDialog({ open: false, data: null });
@@ -39,7 +47,7 @@ export const useSatisFormu = ({ salt, yenile }) => {
     setError('');
     setKaydediliyor(true);
     try {
-      const payload = { ...formData, kalan_odeme: formData.odeme_tamamlandi ? 0 : (formData.kalan_odeme || 0) };
+      const payload = { ...formData, kalan_odeme: formData.odeme_tamamlandi ? 0 : formData.kalan_odeme || 0 };
       delete payload.odeme_tamamlandi;
       let motorId;
       if (dialog.data) {
@@ -62,7 +70,9 @@ export const useSatisFormu = ({ salt, yenile }) => {
       if (belgeHatalari.length) {
         alert(`Satış kaydedildi ancak şu belgeler yüklenemedi:\n${belgeHatalari.join('\n')}\n\nSatışın detayından tekrar ekleyebilirsiniz.`);
       }
-    } catch (err) { setError(err.response?.data?.message || 'Hata oluştu'); }
+    } catch (err) {
+      setError(err.response?.data?.message || 'Hata oluştu');
+    }
     setKaydediliyor(false);
   };
 
@@ -76,12 +86,9 @@ export const useSatisFormu = ({ salt, yenile }) => {
       const res = await musteriService.searchByPhone(tel);
       const m = res.data;
       if (!m) return;
-      setFormData(prev => {
+      setFormData((prev) => {
         if (target === 'alici') {
-          return { ...prev,
-            alici_adi: prev.alici_adi || m.ad_soyad || '',
-            alici_adres: prev.alici_adres || m.adres || ''
-          };
+          return { ...prev, alici_adi: prev.alici_adi || m.ad_soyad || '', alici_adres: prev.alici_adres || m.adres || '' };
         }
         if (target === 'komisyoncu') {
           return { ...prev, komisyoncu_adi: prev.komisyoncu_adi || m.ad_soyad || '' };
@@ -92,7 +99,20 @@ export const useSatisFormu = ({ salt, yenile }) => {
   };
 
   return {
-    dialog, kapat, openDialog, handleSave, formData, setFormData, error, bekleyenBelgeler, setBekleyenBelgeler, kaydediliyor,
-    setSelectedStokId, musteriOptions, searchMusteri, autofillByPhone, canliKar,
+    dialog,
+    kapat,
+    openDialog,
+    handleSave,
+    formData,
+    setFormData,
+    error,
+    bekleyenBelgeler,
+    setBekleyenBelgeler,
+    kaydediliyor,
+    setSelectedStokId,
+    musteriOptions,
+    searchMusteri,
+    autofillByPhone,
+    canliKar,
   };
 };

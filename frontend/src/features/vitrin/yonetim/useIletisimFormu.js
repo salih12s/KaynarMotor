@@ -13,11 +13,16 @@ export const useIletisimFormu = ({ kategori, iletisim, yenileIletisim, bildir })
   const openIletisim = () => {
     const cur = iletisim[kategori] || {};
     setIletForm({
-      personel_adi: cur.personel_adi || '', telefon: cur.telefon || '',
-      personel_adi_2: cur.personel_adi_2 || '', telefon_2: cur.telefon_2 || '',
-      aciklama: cur.aciklama || '', baslik: cur.baslik || ''
+      personel_adi: cur.personel_adi || '',
+      telefon: cur.telefon || '',
+      personel_adi_2: cur.personel_adi_2 || '',
+      telefon_2: cur.telefon_2 || '',
+      aciklama: cur.aciklama || '',
+      baslik: cur.baslik || '',
     });
-    setIletGorsel(null); setIletGorselSil(false); setIletGorselVar(!!cur.gorsel_var);
+    setIletGorsel(null);
+    setIletGorselSil(false);
+    setIletGorselVar(!!cur.gorsel_var);
     setIletDlg(true);
   };
 
@@ -25,11 +30,19 @@ export const useIletisimFormu = ({ kategori, iletisim, yenileIletisim, bildir })
     const file = (e.target.files || [])[0];
     e.target.value = '';
     if (!file) return;
-    try { const data = await resizeImage(file, 1280, 0.75); setIletGorsel(data); setIletGorselSil(false); }
-    catch { bildir('Görsel işlenemedi', 'error'); }
+    try {
+      const data = await resizeImage(file, 1280, 0.75);
+      setIletGorsel(data);
+      setIletGorselSil(false);
+    } catch {
+      bildir('Görsel işlenemedi', 'error');
+    }
   };
 
-  const removeIletGorsel = () => { setIletGorsel(null); if (iletGorselVar) setIletGorselSil(true); };
+  const removeIletGorsel = () => {
+    setIletGorsel(null);
+    if (iletGorselVar) setIletGorselSil(true);
+  };
 
   const handleSaveIletisim = async () => {
     try {
@@ -40,10 +53,24 @@ export const useIletisimFormu = ({ kategori, iletisim, yenileIletisim, bildir })
       setIletDlg(false);
       bildir('Kaydedildi');
       yenileIletisim();
-    } catch { bildir('Kaydedilemedi', 'error'); }
+    } catch {
+      bildir('Kaydedilemedi', 'error');
+    }
   };
 
   const kapat = () => setIletDlg(false);
 
-  return { iletDlg, kapat, iletForm, setIletForm, iletGorsel, iletGorselVar, iletGorselSil, openIletisim, handleIletGorsel, removeIletGorsel, handleSaveIletisim };
+  return {
+    iletDlg,
+    kapat,
+    iletForm,
+    setIletForm,
+    iletGorsel,
+    iletGorselVar,
+    iletGorselSil,
+    openIletisim,
+    handleIletGorsel,
+    removeIletGorsel,
+    handleSaveIletisim,
+  };
 };

@@ -8,15 +8,17 @@ export const isEmriYazdirHtml = (data) => {
   const toplamFiyat = parcalar.reduce((t, p) => t + parseFloat(p.toplam_fiyat || 0), 0);
   const durumLabel = (d) => (d === 'tamamlandi' ? 'Tamamlandı' : d === 'devam_ediyor' ? 'Devam Ediyor' : 'Beklemede');
 
-  const parcaRows = parcalar.map((p) => {
-    const pSatis = parseFloat(p.toplam_fiyat || 0);
-    return `<tr>
+  const parcaRows = parcalar
+    .map((p) => {
+      const pSatis = parseFloat(p.toplam_fiyat || 0);
+      return `<tr>
       <td style="padding:6px;border:1px solid #ddd">${e(p.takilan_parca)}</td>
       <td style="padding:6px;border:1px solid #ddd;text-align:center">${e(p.adet)}</td>
       <td style="padding:6px;border:1px solid #ddd;text-align:right">₺${sayiYaz(p.birim_fiyat)}</td>
       <td style="padding:6px;border:1px solid #ddd;text-align:right;font-weight:bold">₺${sayiYaz(pSatis)}</td>
     </tr>`;
-  }).join('');
+    })
+    .join('');
 
   return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>İş Emri #${e(data.fis_no)}</title>
   <style>
@@ -72,12 +74,16 @@ export const isEmriYazdirHtml = (data) => {
   ${data.aciklama ? `<div class="section"><div class="section-title">Açıklama</div><div>${e(data.aciklama)}</div></div>` : ''}
   <div class="section">
     <div class="section-title">Parçalar ve İşçilik</div>
-    ${parcalar.length > 0 ? `
+    ${
+      parcalar.length > 0
+        ? `
       <table><thead><tr>
         <th>Takılan Parça</th><th style="text-align:center">Adet</th><th style="text-align:right">Birim Fiyat</th><th style="text-align:right">Toplam</th>
       </tr></thead><tbody>${parcaRows}</tbody></table>
       <div class="total-box">Toplam: ₺${sayiYaz(toplamFiyat)}</div>
-    ` : '<div style="text-align:center;color:#999;padding:10px">Parça kaydı yok</div>'}
+    `
+        : '<div style="text-align:center;color:#999;padding:10px">Parça kaydı yok</div>'
+    }
   </div>
   ${data.odeme_detaylari ? `<div class="section"><div class="section-title">Ödeme Detayları</div><div>${e(data.odeme_detaylari)}</div></div>` : ''}
   <div class="footer">

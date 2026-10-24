@@ -16,17 +16,23 @@ const TaksitHesaplaDialogIc = ({ open, onClose, isMobile }) => {
   const kalan = nakitNum - pesinatNum;
   const sonuc = hesaplaTaksit(nakitNum, pesinatNum);
 
-  const temizle = () => { setNakit(''); setPesinat(''); };
+  const temizle = () => {
+    setNakit('');
+    setPesinat('');
+  };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth fullScreen={isMobile}
-      PaperProps={{ sx: { borderRadius: isMobile ? 0 : 3 } }}>
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth fullScreen={isMobile} PaperProps={{ sx: { borderRadius: isMobile ? 0 : 3 } }}>
       <Box sx={{ bgcolor: '#1a1a1a', color: '#fff', px: 3, py: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <CalculateIcon />
-          <Typography variant="h6" fontWeight="bold">Taksit Hesaplama</Typography>
+          <Typography variant="h6" fontWeight="bold">
+            Taksit Hesaplama
+          </Typography>
         </Box>
-        <IconButton onClick={onClose} sx={{ color: '#fff' }}><CloseIcon /></IconButton>
+        <IconButton onClick={onClose} sx={{ color: '#fff' }}>
+          <CloseIcon />
+        </IconButton>
       </Box>
       <DialogContent sx={{ p: { xs: 2, sm: 3 } }}>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
@@ -34,8 +40,12 @@ const TaksitHesaplaDialogIc = ({ open, onClose, isMobile }) => {
         </Typography>
         <Stack spacing={1.5}>
           <ParaInput label="Nakit Fiyat" value={nakit} onChange={setNakit} autoFocus />
-          <ParaInput label="Peşinat / Peşin Ödeme" value={pesinat} onChange={setPesinat}
-            helperText={pesinatNum > 0 ? `Kalan tutar: ${fmtTL(Math.max(kalan, 0))}` : 'İsteğe bağlı — boş bırakılırsa nakit fiyat üzerinden hesaplanır'} />
+          <ParaInput
+            label="Peşinat / Peşin Ödeme"
+            value={pesinat}
+            onChange={setPesinat}
+            helperText={pesinatNum > 0 ? `Kalan tutar: ${fmtTL(Math.max(kalan, 0))}` : 'İsteğe bağlı — boş bırakılırsa nakit fiyat üzerinden hesaplanır'}
+          />
         </Stack>
 
         {nakitNum > 0 && !sonuc && (
@@ -51,8 +61,12 @@ const TaksitHesaplaDialogIc = ({ open, onClose, isMobile }) => {
                 <Typography variant="body2" color="text.secondary">
                   Nakit <span style={{ textDecoration: 'line-through' }}>{fmtTL(nakitNum)}</span> − Peşinat {fmtTL(pesinatNum)}
                 </Typography>
-                <Typography variant="h6" fontWeight="bold" sx={{ color: RED }}>{fmtTL(Math.max(kalan, 0))}</Typography>
-                <Typography variant="caption" color="text.secondary">Taksitler bu tutar üzerinden hesaplanır</Typography>
+                <Typography variant="h6" fontWeight="bold" sx={{ color: RED }}>
+                  {fmtTL(Math.max(kalan, 0))}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Taksitler bu tutar üzerinden hesaplanır
+                </Typography>
               </Paper>
             )}
             <TaksitTablo sonuc={sonuc} isMobile={isMobile} />
@@ -60,7 +74,9 @@ const TaksitHesaplaDialogIc = ({ open, onClose, isMobile }) => {
         )}
 
         <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
-          <Button onClick={temizle} sx={{ color: '#666' }}>Temizle</Button>
+          <Button onClick={temizle} sx={{ color: '#666' }}>
+            Temizle
+          </Button>
         </Box>
       </DialogContent>
     </Dialog>
@@ -68,6 +84,10 @@ const TaksitHesaplaDialogIc = ({ open, onClose, isMobile }) => {
 };
 
 // Pencere açık zeminli hazır bir ekran olduğu için sayfanın koyu temasından ayrı, açık temayla gösterilir
-const TaksitHesaplaDialog = (props) => <VitrinAcikTema><TaksitHesaplaDialogIc {...props} /></VitrinAcikTema>;
+const TaksitHesaplaDialog = (props) => (
+  <VitrinAcikTema>
+    <TaksitHesaplaDialogIc {...props} />
+  </VitrinAcikTema>
+);
 
 export default TaksitHesaplaDialog;

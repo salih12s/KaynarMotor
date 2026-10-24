@@ -10,9 +10,20 @@ const Sekmeler = ({ tab, setTab, platformFiltre, setPlatformFiltre, platformlar 
         <Tab label="Platformlar" />
       </Tabs>
       {tab === 0 && (
-        <TextField select size="small" value={platformFiltre} onChange={e => setPlatformFiltre(e.target.value)} sx={{ minWidth: { xs: '100%', sm: 160 }, mr: { xs: 0, sm: 2 }, mb: { xs: 1, sm: 0 }, mx: { xs: 1, sm: 0 } }} label="Platform Filtre">
+        <TextField
+          select
+          size="small"
+          value={platformFiltre}
+          onChange={(e) => setPlatformFiltre(e.target.value)}
+          sx={{ minWidth: { xs: '100%', sm: 160 }, mr: { xs: 0, sm: 2 }, mb: { xs: 1, sm: 0 }, mx: { xs: 1, sm: 0 } }}
+          label="Platform Filtre"
+        >
           <MenuItem value="">Tümü</MenuItem>
-          {platformlar.map(p => <MenuItem key={p.id} value={p.id}>{p.platform_adi}</MenuItem>)}
+          {platformlar.map((p) => (
+            <MenuItem key={p.id} value={p.id}>
+              {p.platform_adi}
+            </MenuItem>
+          ))}
         </TextField>
       )}
     </Paper>

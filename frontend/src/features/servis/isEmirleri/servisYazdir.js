@@ -5,10 +5,12 @@ import { isEmriYazdirHtml } from '../isEmriYazdir';
 // Motorun üzerine yapıştırılacak servis geçmişi QR etiketi — müşteri okutunca
 // sadece o plakanın servis geçmişini gösteren halka açık sayfa açılır.
 export const printServisQr = async (plaka) => {
-  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => (
-    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
-  ));
-  const temiz = esc(String(plaka || '').trim().toUpperCase());
+  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+  const temiz = esc(
+    String(plaka || '')
+      .trim()
+      .toUpperCase(),
+  );
   if (!temiz) {
     alert('Bu iş emrinde plaka kayıtlı değil. QR oluşturmak için önce plaka girin.');
     return;

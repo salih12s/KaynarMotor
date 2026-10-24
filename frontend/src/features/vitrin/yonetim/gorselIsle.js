@@ -6,10 +6,16 @@ export const resizeImage = (file, maxSize = 1280, quality = 0.7) =>
       const img = new Image();
       img.onload = () => {
         let { width, height } = img;
-        if (width > height && width > maxSize) { height = Math.round(height * maxSize / width); width = maxSize; }
-        else if (height > maxSize) { width = Math.round(width * maxSize / height); height = maxSize; }
+        if (width > height && width > maxSize) {
+          height = Math.round((height * maxSize) / width);
+          width = maxSize;
+        } else if (height > maxSize) {
+          width = Math.round((width * maxSize) / height);
+          height = maxSize;
+        }
         const canvas = document.createElement('canvas');
-        canvas.width = width; canvas.height = height;
+        canvas.width = width;
+        canvas.height = height;
         canvas.getContext('2d').drawImage(img, 0, 0, width, height);
         resolve(canvas.toDataURL('image/jpeg', quality));
       };

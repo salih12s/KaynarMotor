@@ -14,16 +14,17 @@ import { jsonSatir, pgJsonZaman, grupla } from '../core/veritabani/sqlText';
  * (ör. aksesuar_id) da çıktıda kalır; json_build_object(...) ile seçilenlerde kalmaz.
  */
 export async function parcalariEkle(
-  db: Veritabani, kayitlar: any[], tablo: string, anahtar: string, kolonlar: string[], sayiKolonlari: string[] = [], { anahtariTut = false }: { anahtariTut?: boolean } = {}
+  db: Veritabani,
+  kayitlar: any[],
+  tablo: string,
+  anahtar: string,
+  kolonlar: string[],
+  sayiKolonlari: string[] = [],
+  { anahtariTut = false }: { anahtariTut?: boolean } = {},
 ): Promise<any[]> {
   if (kayitlar.length === 0) return kayitlar;
-  const secilen = [anahtar, ...kolonlar.filter((k) => k !== anahtar)]
-    .map((k) => (k.endsWith('_at') ? `CAST(${k} AS CHAR) AS ${k}` : k))
-    .join(', ');
-  const sonuc = await db.query(
-    `SELECT ${secilen} FROM ${tablo} WHERE ${anahtar} = ANY($1) ORDER BY id`,
-    [kayitlar.map((r) => r.id)]
-  );
+  const secilen = [anahtar, ...kolonlar.filter((k) => k !== anahtar)].map((k) => (k.endsWith('_at') ? `CAST(${k} AS CHAR) AS ${k}` : k)).join(', ');
+  const sonuc = await db.query(`SELECT ${secilen} FROM ${tablo} WHERE ${anahtar} = ANY($1) ORDER BY id`, [kayitlar.map((r) => r.id)]);
   const harita = grupla(sonuc.rows, anahtar);
   return kayitlar.map((r) => ({
     ...r,

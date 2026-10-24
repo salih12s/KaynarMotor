@@ -18,11 +18,7 @@
  */
 export function orderByText(column: string): string {
   const harfRakam = `REGEXP_REPLACE(${column}, '(*UCP)[^[:alnum:]̀-ͯ]', '')`;
-  return (
-    `(${column} IS NULL), ` +
-    `WEIGHT_STRING(${harfRakam} COLLATE utf8mb4_uca1400_as_cs), ` +
-    `${column} COLLATE utf8mb4_nopad_bin`
-  );
+  return `(${column} IS NULL), ` + `WEIGHT_STRING(${harfRakam} COLLATE utf8mb4_uca1400_as_cs), ` + `${column} COLLATE utf8mb4_nopad_bin`;
 }
 
 /**
@@ -48,7 +44,10 @@ export function jsonSatir(satir: Record<string, any>, sayiKolonlari: string[] = 
  */
 export function pgJsonZaman(metin: unknown): string | null {
   if (metin === null || metin === undefined) return null;
-  return String(metin).replace(' ', 'T').replace(/(\.\d*?)0+$/, '$1').replace(/\.$/, '');
+  return String(metin)
+    .replace(' ', 'T')
+    .replace(/(\.\d*?)0+$/, '$1')
+    .replace(/\.$/, '');
 }
 
 /** Satırları `anahtar` kolonuna göre gruplar: Map(anahtar -> satır dizisi). */

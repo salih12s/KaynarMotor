@@ -15,14 +15,25 @@ export const useMotorStok = ({ user }) => {
   };
 
   const loadYatirimcilar = async () => {
-    try { const res = await authService.getYatirimcilar(); setYatirimcilar(res.data); } catch {}
+    try {
+      const res = await authService.getYatirimcilar();
+      setYatirimcilar(res.data);
+    } catch {}
   };
 
-  useEffect(() => { loadData(); if (user?.rol === 'admin') loadYatirimcilar(); }, []); // eslint-disable-line
+  useEffect(() => {
+    loadData();
+    if (user?.rol === 'admin') loadYatirimcilar();
+  }, []); // eslint-disable-line
 
   const handleDelete = async (id) => {
     if (!window.confirm('Bu kaydı silmek istediğinizden emin misiniz?')) return;
-    try { await ikinciElMotorService.delete(id); loadData(); } catch (err) { alert(err.response?.data?.message || 'Hata'); }
+    try {
+      await ikinciElMotorService.delete(id);
+      loadData();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Hata');
+    }
   };
 
   return { motorlar, yatirimcilar, yenile: loadData, sil: handleDelete };

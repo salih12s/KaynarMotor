@@ -74,23 +74,32 @@ export const giris = async (db: Veritabani, govde: GirisGovdesi) => {
   if (kullanici.onay_durumu !== 'onaylandi') throw new IstemciHatasi('Hesabınız henüz onaylanmadı', 403);
 
   // sv: şifre parmak izi; şifre sıfırlanınca bu token geçersiz olur (core/middleware/auth)
-  const token = jwt.sign(
-    { id: kullanici.id, kullanici_adi: kullanici.kullanici_adi, sv: sifreParmagi(kullanici.sifre) },
-    process.env.JWT_SECRET as string,
-    { expiresIn: '24h', algorithm: 'HS256' }
-  );
+  const token = jwt.sign({ id: kullanici.id, kullanici_adi: kullanici.kullanici_adi, sv: sifreParmagi(kullanici.sifre) }, process.env.JWT_SECRET as string, {
+    expiresIn: '24h',
+    algorithm: 'HS256',
+  });
 
   return {
     token,
     user: {
-      id: kullanici.id, kullanici_adi: kullanici.kullanici_adi, ad_soyad: kullanici.ad_soyad, rol: kullanici.rol,
-      aksesuar_yetkisi: kullanici.aksesuar_yetkisi, motor_satis_yetkisi: kullanici.motor_satis_yetkisi,
-      eticaret_yetkisi: kullanici.eticaret_yetkisi, servis_yetkisi: kullanici.servis_yetkisi,
-      aksesuar_stok_yetkisi: kullanici.aksesuar_stok_yetkisi, yedek_parca_yetkisi: kullanici.yedek_parca_yetkisi,
-      motor_vitrin_yetkisi: kullanici.motor_vitrin_yetkisi, aksesuar_vitrin_yetkisi: kullanici.aksesuar_vitrin_yetkisi,
-      liste_fiyati_gor: kullanici.liste_fiyati_gor, alis_fiyati_gor: kullanici.alis_fiyati_gor,
-      satis_fiyati_gor: kullanici.satis_fiyati_gor, kar_gor: kullanici.kar_gor,
-      musteri_gor: kullanici.musteri_gor, satis_gecmisi_gor: kullanici.satis_gecmisi_gor,
+      id: kullanici.id,
+      kullanici_adi: kullanici.kullanici_adi,
+      ad_soyad: kullanici.ad_soyad,
+      rol: kullanici.rol,
+      aksesuar_yetkisi: kullanici.aksesuar_yetkisi,
+      motor_satis_yetkisi: kullanici.motor_satis_yetkisi,
+      eticaret_yetkisi: kullanici.eticaret_yetkisi,
+      servis_yetkisi: kullanici.servis_yetkisi,
+      aksesuar_stok_yetkisi: kullanici.aksesuar_stok_yetkisi,
+      yedek_parca_yetkisi: kullanici.yedek_parca_yetkisi,
+      motor_vitrin_yetkisi: kullanici.motor_vitrin_yetkisi,
+      aksesuar_vitrin_yetkisi: kullanici.aksesuar_vitrin_yetkisi,
+      liste_fiyati_gor: kullanici.liste_fiyati_gor,
+      alis_fiyati_gor: kullanici.alis_fiyati_gor,
+      satis_fiyati_gor: kullanici.satis_fiyati_gor,
+      kar_gor: kullanici.kar_gor,
+      musteri_gor: kullanici.musteri_gor,
+      satis_gecmisi_gor: kullanici.satis_gecmisi_gor,
       motor_satis_gor: kullanici.motor_satis_gor,
     },
   };

@@ -24,18 +24,47 @@ jest.mock('react-router-dom', () => ({ useNavigate: () => mockNavigate, useLocat
 
 // ---- Sabit test verisi -------------------------------------------------------------------------------------------
 const BUGUN = new Date().toISOString();
-const A1 = { id: 1, ad_soyad: 'Ayşe Yılmaz', telefon: '05551112233', toplam_satis: 2000, kar: 400, durum: 'tamamlandi', satis_tarihi: '2026-10-02T12:00:00', olusturan_kisi: 'ofis' };
+const A1 = {
+  id: 1,
+  ad_soyad: 'Ayşe Yılmaz',
+  telefon: '05551112233',
+  toplam_satis: 2000,
+  kar: 400,
+  durum: 'tamamlandi',
+  satis_tarihi: '2026-10-02T12:00:00',
+  olusturan_kisi: 'ofis',
+};
 const A2 = { id: 2, ad_soyad: 'Veli Demir', telefon: '05332223344', toplam_satis: 1000, kar: -50, durum: 'beklemede', satis_tarihi: BUGUN };
 const A3 = { id: 3, ad_soyad: 'Zeynep Kaya', toplam_satis: 500, kar: 100, durum: 'beklemede', created_at: '2026-09-15T12:00:00' };
 const LISTE = [A1, A2, A3];
 const STATS = { toplam_gelir: 3500, toplam_kar: 450 };
 const STOK = [
-  { id: 10, stok_adi: 'Kask LS2', stok_kodu: 'K-1', mevcut: 5, alis_fiyati: '1600', satis_fiyati: '2000', marka: 'LS2', beden: 'L', renk: 'Siyah', platform: 'Trendyol' },
+  {
+    id: 10,
+    stok_adi: 'Kask LS2',
+    stok_kodu: 'K-1',
+    mevcut: 5,
+    alis_fiyati: '1600',
+    satis_fiyati: '2000',
+    marka: 'LS2',
+    beden: 'L',
+    renk: 'Siyah',
+    platform: 'Trendyol',
+  },
   { id: 11, stok_adi: 'Eldiven', stok_kodu: 'E-1', mevcut: 3, alis_fiyati: 300, satis_fiyati: 500 },
 ];
 const DETAY1 = {
-  ...A1, odeme_sekli: 'nakit', aciklama: 'Acil', odeme_detaylari: 'Nakit', kalan_odeme: 500, indirim: 200, created_at: '2026-10-01T12:00:00',
-  parcalar: [{ stok_id: 10, urun_adi: 'Kask LS2', adet: 1, maliyet: 1600, satis_fiyati: 2000 }, { stok_id: 11, urun_adi: 'Eldiven', adet: 2, maliyet: 300, satis_fiyati: 500 }],
+  ...A1,
+  odeme_sekli: 'nakit',
+  aciklama: 'Acil',
+  odeme_detaylari: 'Nakit',
+  kalan_odeme: 500,
+  indirim: 200,
+  created_at: '2026-10-01T12:00:00',
+  parcalar: [
+    { stok_id: 10, urun_adi: 'Kask LS2', adet: 1, maliyet: 1600, satis_fiyati: 2000 },
+    { stok_id: 11, urun_adi: 'Eldiven', adet: 2, maliyet: 300, satis_fiyati: 500 },
+  ],
 };
 // Detay: brüt 2000 + 1000 = 3000, maliyet 1600 + 600 = 2200, indirim 200 -> net 2800, kâr 600
 
@@ -61,11 +90,18 @@ const ekranAc = async (secenek = {}) => {
   return user;
 };
 const satir = (ad) => screen.getByRole('row', { name: new RegExp(ad) });
-const hucreler = (row) => within(row).getAllByRole('cell').map((c) => c.textContent);
+const hucreler = (row) =>
+  within(row)
+    .getAllByRole('cell')
+    .map((c) => c.textContent);
 const basliklar = () => screen.getAllByRole('columnheader').map((h) => h.textContent);
 const ikon = (kapsam, ad) => within(kapsam).getByTestId(ad);
 const alan = (etiket) => screen.getByLabelText(etiket);
-const adlar = () => screen.getAllByRole('row').slice(1).map((r) => within(r).getAllByRole('cell')[0].textContent);
+const adlar = () =>
+  screen
+    .getAllByRole('row')
+    .slice(1)
+    .map((r) => within(r).getAllByRole('cell')[0].textContent);
 const yazi = (metin) => screen.getByText((_, el) => (el.tagName === 'P' || el.tagName === 'SPAN') && el.textContent === metin);
 const bekleDialogKapanana = () => waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
 const yeniAc = async (user) => {
@@ -84,13 +120,16 @@ beforeEach(() => {
   jest.spyOn(window, 'confirm').mockImplementation(() => true);
   jest.spyOn(console, 'error').mockImplementation(() => {});
 });
-afterEach(() => { jest.restoreAllMocks(); });
+afterEach(() => {
+  jest.restoreAllMocks();
+});
 
 // ---- Liste -------------------------------------------------------------------------------------------------------
 describe('Aksesuarlar: liste', () => {
   test('istatistik çipleri; kâr çipi yalnızca kâr yetkisi olana', async () => {
     await ekranAc();
-    for (const t of ['Toplam: 3', 'Bugün: 1', 'Beklemede: 2', 'İşlemde: 0', 'Tamamlandı: 1', 'İptal: 0', '₺3.500', 'Kâr: ₺450']) expect(screen.getByText(t)).toBeInTheDocument();
+    for (const t of ['Toplam: 3', 'Bugün: 1', 'Beklemede: 2', 'İşlemde: 0', 'Tamamlandı: 1', 'İptal: 0', '₺3.500', 'Kâr: ₺450'])
+      expect(screen.getByText(t)).toBeInTheDocument();
   });
 
   test('kâr yetkisi yoksa kâr çipi ve Kâr sütunu görünmez', async () => {
@@ -111,7 +150,8 @@ describe('Aksesuarlar: liste', () => {
     const kutu = screen.getByPlaceholderText('Ad veya telefon ara...');
     await user.type(kutu, 'veli');
     expect(adlar()).toEqual(['Veli Demir']);
-    await user.clear(kutu); await user.type(kutu, '0555');
+    await user.clear(kutu);
+    await user.type(kutu, '0555');
     expect(adlar()).toEqual(['Ayşe Yılmaz']);
     await user.clear(kutu);
     fireEvent.change(screen.getByLabelText('Başlangıç Tarihi'), { target: { value: '2026-10-01' } });
@@ -150,7 +190,18 @@ describe('Aksesuarlar: detay penceresi', () => {
     const p = await screen.findByRole('dialog');
     expect(aksesuarService.getById).toHaveBeenCalledWith(1);
     expect(within(p).getByText('Aksesuar Satış Detayı')).toBeInTheDocument();
-    expect(hucreler(within(p).getByRole('row', { name: /Kask LS2/ }))).toEqual(['Kask LS2', 'LS2', 'Trendyol', 'L', 'Siyah', '1', '₺1.600', '₺2.000', '₺2.000', '₺400']);
+    expect(hucreler(within(p).getByRole('row', { name: /Kask LS2/ }))).toEqual([
+      'Kask LS2',
+      'LS2',
+      'Trendyol',
+      'L',
+      'Siyah',
+      '1',
+      '₺1.600',
+      '₺2.000',
+      '₺2.000',
+      '₺400',
+    ]);
     expect(hucreler(within(p).getByRole('row', { name: /Eldiven/ }))).toEqual(['Eldiven', '-', '-', '-', '-', '2', '₺600', '₺1.000', '₺1.000', '₺400']);
     expect(yazi('Ara Toplam: ₺3.000')).toBeInTheDocument();
     expect(yazi('İndirim: −₺200')).toBeInTheDocument();
@@ -213,9 +264,12 @@ describe('Aksesuarlar: satış formu', () => {
     await stokSec(user, p, 0, 'Kask LS2 (Stok: 5)');
     const satirNo = within(p).getAllByRole('row')[1];
     const [adet, maliyet, satis] = within(satirNo).getAllByRole('spinbutton');
-    expect(adet).toHaveValue(1); expect(maliyet).toHaveValue(1600); expect(satis).toHaveValue(2000);
+    expect(adet).toHaveValue(1);
+    expect(maliyet).toHaveValue(1600);
+    expect(satis).toHaveValue(2000);
     expect(within(satirNo).getAllByRole('cell')[4]).toHaveTextContent('2.000 ₺');
-    await user.clear(adet); await user.type(adet, '2');
+    await user.clear(adet);
+    await user.type(adet, '2');
     expect(yazi('Ara Toplam: 4.000 ₺')).toBeInTheDocument();
     expect(yazi('Toplam: 4.000 ₺')).toBeInTheDocument();
     expect(yazi('Kâr: 800 ₺')).toBeInTheDocument(); // 4000 - 2 x 1600
@@ -230,7 +284,8 @@ describe('Aksesuarlar: satış formu', () => {
     expect(yazi('İndirim: −150 ₺')).toBeInTheDocument();
     expect(yazi('Toplam: 1.850 ₺')).toBeInTheDocument();
     expect(yazi('Kâr: 250 ₺')).toBeInTheDocument();
-    await user.clear(alan('İndirim (₺)')); await user.type(alan('İndirim (₺)'), '99999');
+    await user.clear(alan('İndirim (₺)'));
+    await user.type(alan('İndirim (₺)'), '99999');
     expect(yazi('İndirim: −2.000 ₺')).toBeInTheDocument(); // 2.000'e kırpılır
     expect(yazi('Toplam: 0 ₺')).toBeInTheDocument();
   });
@@ -354,9 +409,20 @@ describe('Aksesuarlar: kalan ödeme dönüşümü', () => {
 
 describe('Aksesuarlar: mobil görünüm', () => {
   beforeEach(() => {
-    window.matchMedia = (q) => ({ matches: true, media: q, onchange: null, addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {}, dispatchEvent: () => false });
+    window.matchMedia = (q) => ({
+      matches: true,
+      media: q,
+      onchange: null,
+      addEventListener() {},
+      removeEventListener() {},
+      addListener() {},
+      removeListener() {},
+      dispatchEvent: () => false,
+    });
   });
-  afterEach(() => { delete window.matchMedia; });
+  afterEach(() => {
+    delete window.matchMedia;
+  });
 
   test('kart listesi: kâr yetkiye göre; süzgeç sonucu boşsa bilgi kutusu; karta dokunmak detayı açar', async () => {
     const user = await ekranAc();

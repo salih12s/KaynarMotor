@@ -9,14 +9,18 @@ const VideoAlani = ({ f, videoLimitMb }) => {
   const { videoFile, videoAdi, videoVar, videoSil, videoYukleniyor, removeVideo, handleVideoFile } = f;
   return (
     <Box sx={{ border: '1px solid #e0e0e0', borderRadius: 2, p: 1.5 }}>
-      <Typography variant="subtitle2" sx={{ mb: 1 }}>Tanıtım Videosu</Typography>
+      <Typography variant="subtitle2" sx={{ mb: 1 }}>
+        Tanıtım Videosu
+      </Typography>
       {videoFile || (videoVar && !videoSil) ? (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
           <PlayCircleIcon color="error" />
           <Typography variant="body2" sx={{ flex: 1, minWidth: 120 }}>
-            {videoFile ? (videoAdi || 'Yeni video seçildi') : 'Yüklü video mevcut'}
+            {videoFile ? videoAdi || 'Yeni video seçildi' : 'Yüklü video mevcut'}
           </Typography>
-          <Button size="small" color="error" startIcon={<DeleteIcon />} onClick={removeVideo}>Kaldır</Button>
+          <Button size="small" color="error" startIcon={<DeleteIcon />} onClick={removeVideo}>
+            Kaldır
+          </Button>
           <Button size="small" variant="outlined" component="label" startIcon={<MovieIcon />}>
             Değiştir
             <input type="file" hidden accept="video/*" onChange={handleVideoFile} />

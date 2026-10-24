@@ -12,12 +12,17 @@ const assert = require('node:assert/strict');
 const { sunucuBaslat, kullaniciOlustur } = require('./yardimci');
 
 const SON = Date.now().toString(36);
-let s, api, admin, sayac = 0;
+let s,
+  api,
+  admin,
+  sayac = 0;
 const benzersiz = (onek) => `${onek}${SON}${++sayac}`;
 const k = {}; // rol/yetki -> { id, token }
 
 before(async () => {
-  s = await sunucuBaslat(); api = s.api; admin = s.admin;
+  s = await sunucuBaslat();
+  api = s.api;
+  admin = s.admin;
   k.yatirimci = await kullaniciOlustur(api, admin, benzersiz('f6_yat_'), 'yatirimci');
   k.muhasebeci = await kullaniciOlustur(api, admin, benzersiz('f6_muh_'), 'muhasebeci');
   k.bos = await kullaniciOlustur(api, admin, benzersiz('f6_bos_'), 'personel');
@@ -80,13 +85,35 @@ describe('#39 yatırımcı motor kayıtlarında salt okunur ve karşı taraf kim
   let motorId, motorPlaka;
   before(async () => {
     motorPlaka = benzersiz('34F6').slice(0, 12);
-    const r = await api('POST', '/api/ikinci-el-motor', {
-      plaka: motorPlaka, marka: 'Yamaha', model: 'R25', yil: 2020, km: 5000,
-      alis_fiyati: 100000, satis_fiyati: 150000, masraflar: 2000, durum: 'tamamlandi',
-      alici_adi: 'Ali Veli', alici_tc: '11111111111', alici_telefon: '05551112233', alici_adres: 'Gizli adres',
-      satici_adi: 'Satici S', satici_tc: '22222222222', komisyoncu_adi: 'Komisyoncu K', komisyoncu_telefon: '05329998877',
-      komisyoncu_tutari: 3000, yatirimci_id: k.yatirimci.id, yatirimci_kar: 5000, tarih: '2026-09-01', satis_tarihi: '2026-10-01',
-    }, admin);
+    const r = await api(
+      'POST',
+      '/api/ikinci-el-motor',
+      {
+        plaka: motorPlaka,
+        marka: 'Yamaha',
+        model: 'R25',
+        yil: 2020,
+        km: 5000,
+        alis_fiyati: 100000,
+        satis_fiyati: 150000,
+        masraflar: 2000,
+        durum: 'tamamlandi',
+        alici_adi: 'Ali Veli',
+        alici_tc: '11111111111',
+        alici_telefon: '05551112233',
+        alici_adres: 'Gizli adres',
+        satici_adi: 'Satici S',
+        satici_tc: '22222222222',
+        komisyoncu_adi: 'Komisyoncu K',
+        komisyoncu_telefon: '05329998877',
+        komisyoncu_tutari: 3000,
+        yatirimci_id: k.yatirimci.id,
+        yatirimci_kar: 5000,
+        tarih: '2026-09-01',
+        satis_tarihi: '2026-10-01',
+      },
+      admin,
+    );
     assert.equal(r.durum, 201);
     motorId = r.govde.id;
   });
@@ -94,7 +121,8 @@ describe('#39 yatırımcı motor kayıtlarında salt okunur ve karşı taraf kim
   it('kendi motorunu görür ama alıcı/satıcı/komisyoncu kimliği ve iletişimi gizlidir', async () => {
     const r = await api('GET', `/api/ikinci-el-motor/${motorId}`, undefined, k.yatirimci.token);
     assert.equal(r.durum, 200);
-    for (const alan of ['plaka', 'marka', 'model', 'alis_fiyati', 'satis_fiyati', 'yatirimci_kar']) assert.ok(r.govde[alan] !== undefined && r.govde[alan] !== null, `${alan} görünmeli`);
+    for (const alan of ['plaka', 'marka', 'model', 'alis_fiyati', 'satis_fiyati', 'yatirimci_kar'])
+      assert.ok(r.govde[alan] !== undefined && r.govde[alan] !== null, `${alan} görünmeli`);
     for (const alan of ['alici_adi', 'alici_tc', 'alici_telefon', 'alici_adres', 'satici_adi', 'satici_tc', 'komisyoncu_adi', 'komisyoncu_telefon']) {
       assert.ok(r.govde[alan] === null || r.govde[alan] === undefined, `${alan} sızıyor: ${r.govde[alan]}`);
     }
@@ -124,7 +152,7 @@ describe('#39 yatırımcı motor kayıtlarında salt okunur ve karşı taraf kim
   });
 });
 
-describe('#40 yatırımcı listesi yalnız admin\'e açık', () => {
+describe("#40 yatırımcı listesi yalnız admin'e açık", () => {
   it('admin dışındaki herkes 403 alır, admin listeyi görür', async () => {
     const d = await durumlar('GET', '/api/auth/yatirimcilar', ['yatirimci', 'muhasebeci', 'bos', 'motor']);
     for (const [ad, durum] of Object.entries(d)) assert.equal(durum, 403, `${ad} -> ${durum}`);

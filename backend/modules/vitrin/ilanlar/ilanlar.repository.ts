@@ -4,10 +4,24 @@ import type { SqlSonuc, Veritabani } from '../../../core/tipler';
 
 /** INSERT/UPDATE için hazır (normalize edilmiş) ilan alanları. */
 export interface IlanAlanlari {
-  kategori: unknown; baslik: unknown; aciklama: unknown; fiyat: number; video_url: unknown;
-  marka: unknown; model: unknown; yil: number | null; segment: unknown; motor_cc: number | null; km: number | null;
-  yayinda: unknown; siralama: unknown; one_cikan: boolean; stok_motor_id: number | null; rubik_link: unknown;
-  hasar_kaydi: unknown; motor_durumu: string | null;
+  kategori: unknown;
+  baslik: unknown;
+  aciklama: unknown;
+  fiyat: number;
+  video_url: unknown;
+  marka: unknown;
+  model: unknown;
+  yil: number | null;
+  segment: unknown;
+  motor_cc: number | null;
+  km: number | null;
+  yayinda: unknown;
+  siralama: unknown;
+  one_cikan: boolean;
+  stok_motor_id: number | null;
+  rubik_link: unknown;
+  hasar_kaydi: unknown;
+  motor_durumu: string | null;
 }
 
 export interface ListeFiltresi {
@@ -33,14 +47,35 @@ export const ilanlariListele = async (db: Veritabani, f: ListeFiltresi) => {
   // Public istek: sadece yayında olanlar. (admin yönetim için hepsi=1 + token gönderilebilir)
   if (!f.hepsi) sorgu += ' AND yayinda = TRUE';
 
-  if (f.kategori) { params.push(f.kategori); sorgu += ` AND kategori = $${params.length}`; }
-  if (f.segment) { params.push(f.segment); sorgu += ` AND segment = $${params.length}`; }
-  if (f.durum) { params.push(f.durum); sorgu += ` AND motor_durumu = $${params.length}`; }
+  if (f.kategori) {
+    params.push(f.kategori);
+    sorgu += ` AND kategori = $${params.length}`;
+  }
+  if (f.segment) {
+    params.push(f.segment);
+    sorgu += ` AND segment = $${params.length}`;
+  }
+  if (f.durum) {
+    params.push(f.durum);
+    sorgu += ` AND motor_durumu = $${params.length}`;
+  }
   // Marka: sitede markalar listeden seçilir → birebir (büyük/küçük harf ve boşluk duyarsız) eşleşme
-  if (f.marka) { params.push(String(f.marka).trim()); sorgu += ` AND UPPER(TRIM(marka)) = UPPER($${params.length})`; }
-  if (f.cc_min) { params.push(Number(f.cc_min)); sorgu += ` AND motor_cc >= $${params.length}`; }
-  if (f.cc_max) { params.push(Number(f.cc_max)); sorgu += ` AND motor_cc <= $${params.length}`; }
-  if (f.km_max) { params.push(Number(f.km_max)); sorgu += ` AND km <= $${params.length}`; }
+  if (f.marka) {
+    params.push(String(f.marka).trim());
+    sorgu += ` AND UPPER(TRIM(marka)) = UPPER($${params.length})`;
+  }
+  if (f.cc_min) {
+    params.push(Number(f.cc_min));
+    sorgu += ` AND motor_cc >= $${params.length}`;
+  }
+  if (f.cc_max) {
+    params.push(Number(f.cc_max));
+    sorgu += ` AND motor_cc <= $${params.length}`;
+  }
+  if (f.km_max) {
+    params.push(Number(f.km_max));
+    sorgu += ` AND km <= $${params.length}`;
+  }
   if (f.q) {
     params.push(`%${f.q}%`);
     sorgu += ` AND (LOWER(baslik) LIKE LOWER($${params.length}) OR LOWER(aciklama) LIKE LOWER($${params.length}) OR LOWER(marka) LIKE LOWER($${params.length}) OR LOWER(model) LIKE LOWER($${params.length}))`;
@@ -65,18 +100,24 @@ export const markalariListele = async (db: Veritabani, durum?: string) => {
                         ROW_NUMBER() OVER (PARTITION BY UPPER(TRIM(marka)) ORDER BY ${orderByText('TRIM(marka)')}) AS sira
                  FROM vitrin_urunleri
                  WHERE kategori = 'motor' AND yayinda = TRUE AND COALESCE(TRIM(marka), '') <> ''`;
-  if (durum) { params.push(durum); sorgu += ` AND motor_durumu = $1`; }
+  if (durum) {
+    params.push(durum);
+    sorgu += ` AND motor_durumu = $1`;
+  }
   sorgu += ` GROUP BY TRIM(marka)
                ) t WHERE sira = 1 ORDER BY ${orderByText('marka')}`;
   return (await db.query<{ marka: string; adet: string | number }>(sorgu, params)).rows;
 };
 
 export const ilanBul = async (db: Veritabani, id: number) =>
-  (await db.query(
-    `SELECT id, ilan_no, kategori, baslik, aciklama, fiyat, video_url, video_dosya_id, kapak_gorsel_id,
+  (
+    await db.query(
+      `SELECT id, ilan_no, kategori, baslik, aciklama, fiyat, video_url, video_dosya_id, kapak_gorsel_id,
             marka, model, yil, segment, motor_cc, km, motor_durumu, hasar_kaydi, yayinda, siralama, one_cikan, stok_motor_id, rubik_link, created_at
-     FROM vitrin_urunleri WHERE id = $1`, [id]
-  )).rows[0] ?? null;
+     FROM vitrin_urunleri WHERE id = $1`,
+      [id],
+    )
+  ).rows[0] ?? null;
 
 export const gorselIdleri = async (db: Veritabani, urunId: number): Promise<number[]> =>
   (await db.query<{ id: number }>('SELECT id FROM vitrin_gorseller WHERE urun_id = $1 ORDER BY sira ASC, id ASC', [urunId])).rows.map((r) => r.id);
@@ -100,7 +141,7 @@ export const siralamaYaz = (db: Veritabani, ids: number[], kategori: string): Pr
   return db.query(
     `UPDATE vitrin_urunleri SET siralama = CASE id ${durumlar} END, updated_at = CURRENT_TIMESTAMP
      WHERE id IN (${liste}) AND kategori = $1`,
-    [kategori, ...ids]
+    [kategori, ...ids],
   );
 };
 
@@ -110,8 +151,9 @@ export const siralamaYaz = (db: Veritabani, ids: number[], kategori: string): Pr
  * yayinda'nın ESKİ değerine bakar; bu yüzden yayinda'dan ÖNCE yazılır. Etkilenen satır sayısı döner.
  */
 export const yayinDurumunuYaz = async (db: Veritabani, id: number, yayinda: boolean): Promise<number> =>
-  (await db.query(
-    `UPDATE vitrin_urunleri v
+  (
+    await db.query(
+      `UPDATE vitrin_urunleri v
      SET siralama = CASE
            WHEN $1 AND NOT COALESCE(v.yayinda, FALSE) THEN (
              SELECT COALESCE(MAX(s.siralama), -1) + 1 FROM vitrin_urunleri s
@@ -120,38 +162,64 @@ export const yayinDurumunuYaz = async (db: Veritabani, id: number, yayinda: bool
          yayinda = $1,
          updated_at = CURRENT_TIMESTAMP
      WHERE v.id = $2`,
-    [yayinda, id]
-  )).rowCount;
+      [yayinda, id],
+    )
+  ).rowCount;
 
 /** UPDATE ... RETURNING MariaDB'de yok: ayrı SELECT (aynı transaction'da). */
 export const yayinDurumuOku = async (db: Veritabani, id: number) =>
   (await db.query<{ id: number; yayinda: boolean }>('SELECT id, yayinda FROM vitrin_urunleri WHERE id = $1', [id])).rows[0] ?? null;
 
 export const siraBilgisi = async (db: Veritabani, id: number) =>
-  (await db.query<{ id: number; kategori: string; yayinda: boolean }>(
-    'SELECT id, kategori, COALESCE(yayinda, FALSE) AS yayinda FROM vitrin_urunleri WHERE id = $1', [id]
-  )).rows[0] ?? null;
+  (
+    await db.query<{ id: number; kategori: string; yayinda: boolean }>(
+      'SELECT id, kategori, COALESCE(yayinda, FALSE) AS yayinda FROM vitrin_urunleri WHERE id = $1',
+      [id],
+    )
+  ).rows[0] ?? null;
 
 /** Aynı gruptaki (yayındakiler kendi arasında, arşivdekiler kendi arasında) ilanlar, kilitli, vitrin sırasıyla. */
 export const grupIdleriniKilitle = async (db: Veritabani, kategori: string, yayinda: boolean): Promise<number[]> =>
-  (await db.query<{ id: number | string }>(
-    `SELECT id FROM vitrin_urunleri
+  (
+    await db.query<{ id: number | string }>(
+      `SELECT id FROM vitrin_urunleri
      WHERE kategori = $1 AND COALESCE(yayinda, FALSE) = $2
      ORDER BY siralama ASC, one_cikan DESC, created_at DESC, id DESC
      FOR UPDATE`,
-    [kategori, yayinda]
-  )).rows.map((r) => Number(r.id));
+      [kategori, yayinda],
+    )
+  ).rows.map((r) => Number(r.id));
 
 // ---------- Yazma ----------
 
 export const ilanEkle = async (db: Veritabani, a: IlanAlanlari): Promise<{ id: number; ilan_no: number }> =>
-  (await db.query<{ id: number; ilan_no: number }>(
-    `INSERT INTO vitrin_urunleri
+  (
+    await db.query<{ id: number; ilan_no: number }>(
+      `INSERT INTO vitrin_urunleri
       (kategori, baslik, aciklama, fiyat, video_url, marka, model, yil, segment, motor_cc, km, yayinda, siralama, one_cikan, stok_motor_id, rubik_link, hasar_kaydi, motor_durumu)
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18) RETURNING id, ilan_no`,
-    [a.kategori, a.baslik, a.aciklama, a.fiyat, a.video_url, a.marka, a.model, a.yil, a.segment, a.motor_cc, a.km,
-     a.yayinda, a.siralama, a.one_cikan, a.stok_motor_id, a.rubik_link, a.hasar_kaydi, a.motor_durumu]
-  )).rows[0]!;
+      [
+        a.kategori,
+        a.baslik,
+        a.aciklama,
+        a.fiyat,
+        a.video_url,
+        a.marka,
+        a.model,
+        a.yil,
+        a.segment,
+        a.motor_cc,
+        a.km,
+        a.yayinda,
+        a.siralama,
+        a.one_cikan,
+        a.stok_motor_id,
+        a.rubik_link,
+        a.hasar_kaydi,
+        a.motor_durumu,
+      ],
+    )
+  ).rows[0]!;
 
 export const ilanGuncelle = async (db: Veritabani, id: number, a: IlanAlanlari) => {
   await db.query(
@@ -160,8 +228,27 @@ export const ilanGuncelle = async (db: Veritabani, id: number, a: IlanAlanlari) 
       marka=$6, model=$7, yil=$8, segment=$9, motor_cc=$10, km=$11,
       yayinda=$12, siralama=$13, one_cikan=$14, stok_motor_id=$15, rubik_link=$16, hasar_kaydi=$18, motor_durumu=$19, updated_at=CURRENT_TIMESTAMP
      WHERE id=$17`,
-    [a.kategori, a.baslik, a.aciklama, a.fiyat, a.video_url, a.marka, a.model, a.yil, a.segment, a.motor_cc, a.km,
-     a.yayinda, a.siralama, a.one_cikan, a.stok_motor_id, a.rubik_link, id, a.hasar_kaydi, a.motor_durumu]
+    [
+      a.kategori,
+      a.baslik,
+      a.aciklama,
+      a.fiyat,
+      a.video_url,
+      a.marka,
+      a.model,
+      a.yil,
+      a.segment,
+      a.motor_cc,
+      a.km,
+      a.yayinda,
+      a.siralama,
+      a.one_cikan,
+      a.stok_motor_id,
+      a.rubik_link,
+      id,
+      a.hasar_kaydi,
+      a.motor_durumu,
+    ],
   );
 };
 

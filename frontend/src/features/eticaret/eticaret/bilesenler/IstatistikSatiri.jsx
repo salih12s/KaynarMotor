@@ -16,8 +16,22 @@ const IstatistikSatiri = ({ stats, hesaplananToplamKar, karGor, isAdmin, tab, on
         <Chip key={i} label={c.label} sx={{ bgcolor: c.bg, color: c.color, fontWeight: 'bold', fontSize: '0.8rem', borderLeft: `4px solid ${c.color}` }} />
       ))}
       <Box sx={{ flexGrow: 1 }} />
-      {tab === 0 && <Button variant="contained" size="large" startIcon={<AddIcon />} onClick={onYeniSatis} sx={{ bgcolor: '#C62828', '&:hover': { bgcolor: '#b71c1c' } }}>Yeni Satış</Button>}
-      {tab === 1 && isAdmin && <Button variant="contained" size="large" startIcon={<AddIcon />} onClick={onYeniPlatform} sx={{ bgcolor: '#C62828', '&:hover': { bgcolor: '#b71c1c' } }}>Yeni Platform</Button>}
+      {tab === 0 && (
+        <Button variant="contained" size="large" startIcon={<AddIcon />} onClick={onYeniSatis} sx={{ bgcolor: '#C62828', '&:hover': { bgcolor: '#b71c1c' } }}>
+          Yeni Satış
+        </Button>
+      )}
+      {tab === 1 && isAdmin && (
+        <Button
+          variant="contained"
+          size="large"
+          startIcon={<AddIcon />}
+          onClick={onYeniPlatform}
+          sx={{ bgcolor: '#C62828', '&:hover': { bgcolor: '#b71c1c' } }}
+        >
+          Yeni Platform
+        </Button>
+      )}
     </Box>
   );
 };

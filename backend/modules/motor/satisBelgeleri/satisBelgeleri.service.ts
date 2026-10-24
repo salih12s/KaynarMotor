@@ -13,8 +13,8 @@ export const MAX_BOYUT = 10 * 1024 * 1024; // dosya başına 10 MB
 const MAX_ADET = 30; // satış başına
 
 const baslar = (buf: Buffer, bytes: number[]) => bytes.every((b, i) => buf[i] === b);
-const OLE2 = [0xD0, 0xCF, 0x11, 0xE0]; // eski .doc / .xls
-const ZIP = [0x50, 0x4B]; // .docx / .xlsx (zip kapsayıcı)
+const OLE2 = [0xd0, 0xcf, 0x11, 0xe0]; // eski .doc / .xls
+const ZIP = [0x50, 0x4b]; // .docx / .xlsx (zip kapsayıcı)
 
 /**
  * İzin verilen türler. mime istemciden alınmaz, uzantıdan çıkarılır; ayrıca dosyanın ilk baytları uzantıyla uyuşmalı
@@ -26,15 +26,18 @@ const TURLER: Record<string, { mime: string; gecerli: (b: Buffer) => boolean }> 
   docx: { mime: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', gecerli: (b) => baslar(b, ZIP) },
   xls: { mime: 'application/vnd.ms-excel', gecerli: (b) => baslar(b, OLE2) },
   xlsx: { mime: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', gecerli: (b) => baslar(b, ZIP) },
-  jpg: { mime: 'image/jpeg', gecerli: (b) => baslar(b, [0xFF, 0xD8, 0xFF]) },
-  jpeg: { mime: 'image/jpeg', gecerli: (b) => baslar(b, [0xFF, 0xD8, 0xFF]) },
-  png: { mime: 'image/png', gecerli: (b) => baslar(b, [0x89, 0x50, 0x4E, 0x47]) },
+  jpg: { mime: 'image/jpeg', gecerli: (b) => baslar(b, [0xff, 0xd8, 0xff]) },
+  jpeg: { mime: 'image/jpeg', gecerli: (b) => baslar(b, [0xff, 0xd8, 0xff]) },
+  png: { mime: 'image/png', gecerli: (b) => baslar(b, [0x89, 0x50, 0x4e, 0x47]) },
 };
 
 /** Dosya adından yol ayracı/denetim karakterlerini atar, 200 karaktere kırpar. Boşsa "belge". */
 export const temizAd = (s: unknown): string =>
   // eslint-disable-next-line no-control-regex
-  String(s || '').replace(/[\\/\u0000-\u001f<>:"|?*]+/g, '_').trim().slice(0, 200) || 'belge';
+  String(s || '')
+    .replace(/[\\/\u0000-\u001f<>:"|?*]+/g, '_')
+    .trim()
+    .slice(0, 200) || 'belge';
 
 export const pozitifId = (v: unknown): number | null => {
   const n = Number(v);
@@ -49,8 +52,14 @@ export const arsivGrupla = (satirlar: ArsivSatiri[]) => {
     let g = harita.get(r.motor_id);
     if (!g) {
       g = {
-        motor_id: r.motor_id, plaka: r.plaka, marka: r.marka, model: r.model, durum: r.durum,
-        alis_tarihi: r.alis_tarihi, satis_tarihi: r.satis_tarihi, belgeler: [],
+        motor_id: r.motor_id,
+        plaka: r.plaka,
+        marka: r.marka,
+        model: r.model,
+        durum: r.durum,
+        alis_tarihi: r.alis_tarihi,
+        satis_tarihi: r.satis_tarihi,
+        belgeler: [],
       };
       harita.set(r.motor_id, g);
       gruplar.push(g);
@@ -68,10 +77,7 @@ export const motorBelgeleri = async (db: Veritabani, motorIdHam: unknown) => {
   return repo.motorBelgeleri(db, motorId);
 };
 
-export const yukle = async (
-  db: Veritabani,
-  girdi: { motorIdHam: unknown; dosyaAdiHam: unknown; icerik: unknown; kullanici: Kullanici }
-) => {
+export const yukle = async (db: Veritabani, girdi: { motorIdHam: unknown; dosyaAdiHam: unknown; icerik: unknown; kullanici: Kullanici }) => {
   const motorId = pozitifId(girdi.motorIdHam);
   if (!motorId) throw new GecersizIstek('Geçersiz satış');
   const buf = girdi.icerik;
@@ -93,8 +99,12 @@ export const yukle = async (
 
   try {
     return await repo.ekle(db, {
-      motorId, dosyaAdi, mime: tur.mime, icerik: buf,
-      yukleyenId: girdi.kullanici.id || null, yukleyenAdi: girdi.kullanici.kullanici_adi || null,
+      motorId,
+      dosyaAdi,
+      mime: tur.mime,
+      icerik: buf,
+      yukleyenId: girdi.kullanici.id || null,
+      yukleyenAdi: girdi.kullanici.kullanici_adi || null,
     });
   } catch (hata) {
     if (paketHatasi(hata)) throw new GecersizIstek('Dosya çok büyük', 413);

@@ -12,10 +12,9 @@ export const AuthProvider = ({ children }) => {
       const savedToken = localStorage.getItem('token');
       if (savedToken) {
         try {
-          const response = await fetch(
-            `${process.env.REACT_APP_API_URL || 'http://localhost:5100/api'}/auth/verify`,
-            { headers: { Authorization: `Bearer ${savedToken}` } }
-          );
+          const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5100/api'}/auth/verify`, {
+            headers: { Authorization: `Bearer ${savedToken}` },
+          });
           if (response.ok) {
             const data = await response.json();
             setUser(data.user);
@@ -46,11 +45,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('user');
   };
 
-  return (
-    <AuthContext.Provider value={{ user, token, loading, login, logout }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={{ user, token, loading, login, logout }}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => useContext(AuthContext);

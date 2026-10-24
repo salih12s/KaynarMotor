@@ -21,38 +21,68 @@ const URL = `http://127.0.0.1:${PORT}`;
 
 // Yerelde .env.mariadb.kopya dosyasından; CI'da (dosya yok) aynı anahtarlar ortam değişkenlerinden okunur.
 const env = fs.existsSync(ENV_DOSYASI)
-  ? Object.fromEntries(fs.readFileSync(ENV_DOSYASI, 'utf8').split(/\r?\n/).map((l) => /^([A-Z_]+)=(.*)$/.exec(l)).filter(Boolean).map((m) => [m[1], m[2]]))
+  ? Object.fromEntries(
+      fs
+        .readFileSync(ENV_DOSYASI, 'utf8')
+        .split(/\r?\n/)
+        .map((l) => /^([A-Z_]+)=(.*)$/.exec(l))
+        .filter(Boolean)
+        .map((m) => [m[1], m[2]]),
+    )
   : Object.fromEntries(['DB_PORT', 'DB_NAME', 'DB_USER', 'DB_PASSWORD', 'JWT_SECRET'].map((k) => [k, process.env[k]]));
 
 test('paket: zip açılır, üretim modunda başlar, arayüz ve API çalışır', { timeout: 120000 }, async (t) => {
   assert.ok(fs.existsSync(ZIP), `önce paket üretin: ${ZIP}`);
   const klasor = fs.mkdtempSync(path.join(os.tmpdir(), 'kaynar-paket-'));
   // Windows'un tar'ı zip açar; Linux/macOS'ta (CI) `unzip` kullanılır.
-  const ac = process.platform === 'win32'
-    ? spawnSync(path.join(process.env.SystemRoot || 'C:\\Windows', 'System32', 'tar.exe'), ['-xf', ZIP, '-C', klasor])
-    : spawnSync('unzip', ['-q', ZIP, '-d', klasor]);
+  const ac =
+    process.platform === 'win32'
+      ? spawnSync(path.join(process.env.SystemRoot || 'C:\\Windows', 'System32', 'tar.exe'), ['-xf', ZIP, '-C', klasor])
+      : spawnSync('unzip', ['-q', ZIP, '-d', klasor]);
   assert.equal(ac.status, 0, 'zip açılamadı');
 
   // Hostinger'ın yaptığı gibi: yalnızca ortam değişkenleri (NODE_ENV BİLEREK verilmez: paket kendisi production olur)
   const calisanEnv = {
-    PATH: process.env.PATH, SystemRoot: process.env.SystemRoot, TZ: 'UTC',
-    PORT: String(PORT), DB_HOST: '127.0.0.1', DB_PORT: env.DB_PORT, DB_NAME: env.DB_NAME, DB_USER: env.DB_USER, DB_PASSWORD: env.DB_PASSWORD,
-    JWT_SECRET: env.JWT_SECRET, FRONTEND_URL: URL,
+    PATH: process.env.PATH,
+    SystemRoot: process.env.SystemRoot,
+    TZ: 'UTC',
+    PORT: String(PORT),
+    DB_HOST: '127.0.0.1',
+    DB_PORT: env.DB_PORT,
+    DB_NAME: env.DB_NAME,
+    DB_USER: env.DB_USER,
+    DB_PASSWORD: env.DB_PASSWORD,
+    JWT_SECRET: env.JWT_SECRET,
+    FRONTEND_URL: URL,
   };
   const log = [];
   const cocuk = spawn(process.execPath, ['dist/main.cjs'], { cwd: klasor, env: calisanEnv, stdio: ['ignore', 'pipe', 'pipe'] });
   cocuk.stdout.on('data', (d) => log.push(String(d)));
   cocuk.stderr.on('data', (d) => log.push(String(d)));
-  t.after(() => { cocuk.kill(); try { fs.rmSync(klasor, { recursive: true, force: true }); } catch { /* geçici klasör */ } });
+  t.after(() => {
+    cocuk.kill();
+    try {
+      fs.rmSync(klasor, { recursive: true, force: true });
+    } catch {
+      /* geçici klasör */
+    }
+  });
 
   // Hazır olana kadar bekle
   let hazir = false;
   for (let i = 0; i < 100 && !hazir; i++) {
-    try { hazir = (await fetch(`${URL}/api/health`)).ok; } catch { await new Promise((r) => setTimeout(r, 200)); }
+    try {
+      hazir = (await fetch(`${URL}/api/health`)).ok;
+    } catch {
+      await new Promise((r) => setTimeout(r, 200));
+    }
   }
   assert.ok(hazir, `sunucu başlamadı:\n${log.join('')}`);
 
-  const al = async (yol, secenek) => { const r = await fetch(URL + yol, secenek); return { r, metin: await r.text() }; };
+  const al = async (yol, secenek) => {
+    const r = await fetch(URL + yol, secenek);
+    return { r, metin: await r.text() };
+  };
 
   // Sağlık
   assert.equal((await al('/api/health')).r.status, 200);
@@ -99,7 +129,11 @@ test('paket: zip açılır, üretim modunda başlar, arayüz ve API çalışır'
   // CORS: bilinen kaynak geçer, bilinmeyen reddedilir; aynı kaynaktan yazma isteği (Origin başlıklı) çalışır
   const baskaKaynak = await fetch(`${URL}/api/vitrin/segmentler`, { headers: { Origin: 'https://kotu-site.example' } });
   assert.notEqual(baskaKaynak.status, 200, 'bilinmeyen kaynak reddedilmeli');
-  const ayniKaynak = await fetch(`${URL}/api/auth/login`, { method: 'POST', headers: { 'Content-Type': 'application/json', Origin: URL }, body: JSON.stringify({ kullanici_adi: 'yok', sifre: 'x' }) });
+  const ayniKaynak = await fetch(`${URL}/api/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Origin: URL },
+    body: JSON.stringify({ kullanici_adi: 'yok', sifre: 'x' }),
+  });
   assert.equal(ayniKaynak.status, 401, 'aynı kaynaktan POST CORS yüzünden düşmemeli');
 
   // Güvenlik başlıkları

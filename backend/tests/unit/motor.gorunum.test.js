@@ -7,26 +7,73 @@ const assert = require('node:assert/strict');
 const { sanitizeMotor, sanitizeOzet, motorKapsami, muhasebeMotorGorur } = require('../../modules/motor/ikinciElMotor/ikinciElMotor.gorunum');
 
 const kul = (rol, ek = {}) => ({
-  id: 10, rol, motor_satis_yetkisi: false, alis_fiyati_gor: false, satis_fiyati_gor: false, musteri_gor: false,
-  liste_fiyati_gor: false, satis_gecmisi_gor: false, kar_gor: false, motor_satis_gor: false, ...ek,
+  id: 10,
+  rol,
+  motor_satis_yetkisi: false,
+  alis_fiyati_gor: false,
+  satis_fiyati_gor: false,
+  musteri_gor: false,
+  liste_fiyati_gor: false,
+  satis_gecmisi_gor: false,
+  kar_gor: false,
+  motor_satis_gor: false,
+  ...ek,
 });
 
 const satir = {
-  id: 1, plaka: '34ABC123', marka: 'Honda', model: 'PCX', yil: 2021, km: 5000, durum: 'tamamlandi', stok_tipi: 'sahip',
-  tarih: '2026-08-01', fatura_kesildi: true,
-  alis_fiyati: 100000, noter_alis: 90000, masraflar: 2000,
-  satis_fiyati: 150000, noter_satis: 120000, kalan_odeme: 0, odeme_detaylari: '[]', odeme_sekli: 'nakit',
-  satis_tarihi: '2026-09-01', tamamlama_tarihi: 'T', yevmiye_no: 'Y1', aciklama: 'not',
-  alici_adi: 'Ali', alici_tc: '111', alici_telefon: '0555', alici_adres: 'adres', satici_adi: 'Veli', satici_tc: '222',
-  komisyoncu_adi: 'K', komisyoncu_telefon: '0532', komisyoncu_tutari: 3000,
-  kar: 45000, yatirimci_id: 10, yatirimci_kar: 5000, yatirimci_kar_orani: 10, liste_fiyati: 160000,
+  id: 1,
+  plaka: '34ABC123',
+  marka: 'Honda',
+  model: 'PCX',
+  yil: 2021,
+  km: 5000,
+  durum: 'tamamlandi',
+  stok_tipi: 'sahip',
+  tarih: '2026-08-01',
+  fatura_kesildi: true,
+  alis_fiyati: 100000,
+  noter_alis: 90000,
+  masraflar: 2000,
+  satis_fiyati: 150000,
+  noter_satis: 120000,
+  kalan_odeme: 0,
+  odeme_detaylari: '[]',
+  odeme_sekli: 'nakit',
+  satis_tarihi: '2026-09-01',
+  tamamlama_tarihi: 'T',
+  yevmiye_no: 'Y1',
+  aciklama: 'not',
+  alici_adi: 'Ali',
+  alici_tc: '111',
+  alici_telefon: '0555',
+  alici_adres: 'adres',
+  satici_adi: 'Veli',
+  satici_tc: '222',
+  komisyoncu_adi: 'K',
+  komisyoncu_telefon: '0532',
+  komisyoncu_tutari: 3000,
+  kar: 45000,
+  yatirimci_id: 10,
+  yatirimci_kar: 5000,
+  yatirimci_kar_orani: 10,
+  liste_fiyati: 160000,
   yeni_kolon_ileride_eklenecek: 'gizli kalmali',
 };
 const var_ = (nesne, alanlar) => alanlar.every((a) => a in nesne);
 const yok = (nesne, alanlar) => alanlar.every((a) => !(a in nesne) || nesne[a] === null);
 
 const KAR = ['kar', 'yatirimci_id', 'yatirimci_kar', 'yatirimci_kar_orani'];
-const MUSTERI = ['alici_adi', 'alici_tc', 'alici_telefon', 'alici_adres', 'satici_adi', 'satici_tc', 'komisyoncu_adi', 'komisyoncu_telefon', 'komisyoncu_tutari'];
+const MUSTERI = [
+  'alici_adi',
+  'alici_tc',
+  'alici_telefon',
+  'alici_adres',
+  'satici_adi',
+  'satici_tc',
+  'komisyoncu_adi',
+  'komisyoncu_telefon',
+  'komisyoncu_tutari',
+];
 const ALIS = ['alis_fiyati', 'noter_alis', 'masraflar'];
 const SATIS = ['satis_fiyati', 'noter_satis', 'kalan_odeme', 'odeme_detaylari', 'odeme_sekli', 'satis_tarihi', 'tamamlama_tarihi', 'yevmiye_no', 'aciklama'];
 

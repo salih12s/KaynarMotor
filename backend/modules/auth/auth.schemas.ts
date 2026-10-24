@@ -28,11 +28,20 @@ export const sifreGovdesi = z.object({
 
 /** PATCH /users/:id/yetkiler gövdesi: yalnızca bilinen yetki bayrakları dikkate alınır (service izinli listeyi uygular). */
 export const YETKI_ALANLARI = [
-  'liste_fiyati_gor', 'alis_fiyati_gor', 'satis_fiyati_gor',
-  'kar_gor', 'musteri_gor', 'satis_gecmisi_gor',
-  'aksesuar_yetkisi', 'motor_satis_yetkisi', 'eticaret_yetkisi',
-  'servis_yetkisi', 'aksesuar_stok_yetkisi', 'yedek_parca_yetkisi',
-  'motor_vitrin_yetkisi', 'aksesuar_vitrin_yetkisi',
+  'liste_fiyati_gor',
+  'alis_fiyati_gor',
+  'satis_fiyati_gor',
+  'kar_gor',
+  'musteri_gor',
+  'satis_gecmisi_gor',
+  'aksesuar_yetkisi',
+  'motor_satis_yetkisi',
+  'eticaret_yetkisi',
+  'servis_yetkisi',
+  'aksesuar_stok_yetkisi',
+  'yedek_parca_yetkisi',
+  'motor_vitrin_yetkisi',
+  'aksesuar_vitrin_yetkisi',
   'motor_satis_gor',
 ] as const;
 

@@ -21,11 +21,27 @@ const Aksesuarlar = () => {
     <Box>
       <IstatistikSatiri satislar={a.satislar} stats={a.stats} karGor={karGor} onYeni={() => a.openDialog()} />
       <Suzgecler aksSearch={aksSearch} setAksSearch={setAksSearch} aksStart={aksStart} setAksStart={setAksStart} aksEnd={aksEnd} setAksEnd={setAksEnd} />
-      <SatisListesi satislar={a.satislar} aksSearch={aksSearch} aksStart={aksStart} aksEnd={aksEnd} isMobile={isMobile} karGor={karGor}
-        onDetay={a.detayAc} onDuzenle={a.openDialog} onSil={a.handleDelete} />
+      <SatisListesi
+        satislar={a.satislar}
+        aksSearch={aksSearch}
+        aksStart={aksStart}
+        aksEnd={aksEnd}
+        isMobile={isMobile}
+        karGor={karGor}
+        onDetay={a.detayAc}
+        onDuzenle={a.openDialog}
+        onSil={a.handleDelete}
+      />
       <SatisFormModal a={a} isMobile={isMobile} karGor={karGor} />
-      <SatisDetayModal open={a.detayDialog.open} data={a.detayDialog.data} onClose={() => a.setDetayDialog({ open: false, data: null })}
-        onDuzenle={a.openDialog} stokOptions={a.stokOptions} karGor={karGor} isMobile={isMobile} />
+      <SatisDetayModal
+        open={a.detayDialog.open}
+        data={a.detayDialog.data}
+        onClose={() => a.setDetayDialog({ open: false, data: null })}
+        onDuzenle={a.openDialog}
+        stokOptions={a.stokOptions}
+        karGor={karGor}
+        isMobile={isMobile}
+      />
     </Box>
   );
 };

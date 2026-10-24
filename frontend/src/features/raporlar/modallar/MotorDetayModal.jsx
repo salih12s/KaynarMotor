@@ -18,35 +18,61 @@ const MotorDetayModal = ({ open, data, onClose, isMobile }) => {
   const kar = toplamKar - yatirimciPayi;
   return (
     <Dialog {...dialogProps}>
-      <DialogTitle sx={{ bgcolor: '#C62828', color: 'white', py: 1.5 }}>
-        Motor Satış Detayı - {m.plaka}
-      </DialogTitle>
+      <DialogTitle sx={{ bgcolor: '#C62828', color: 'white', py: 1.5 }}>Motor Satış Detayı - {m.plaka}</DialogTitle>
       <DialogContent dividers>
         <Grid container spacing={2} sx={{ mb: 2, mt: 0.5 }}>
           <Grid size={{ xs: 12, md: 4 }}>
             <Paper sx={{ p: 1.5, bgcolor: '#fafafa' }}>
-              <Typography variant="subtitle2" color="#C62828" fontWeight="bold" gutterBottom>Araç Bilgileri</Typography>
-              <Typography variant="body2"><strong>Plaka:</strong> {m.plaka || '-'}</Typography>
-              <Typography variant="body2"><strong>Marka:</strong> {m.marka || '-'}</Typography>
-              <Typography variant="body2"><strong>Model:</strong> {m.model || '-'}</Typography>
-              <Typography variant="body2"><strong>Yıl:</strong> {m.yil || '-'}</Typography>
-              <Typography variant="body2"><strong>KM:</strong> {m.km ? sayiYaz(m.km) + ' km' : '-'}</Typography>
+              <Typography variant="subtitle2" color="#C62828" fontWeight="bold" gutterBottom>
+                Araç Bilgileri
+              </Typography>
+              <Typography variant="body2">
+                <strong>Plaka:</strong> {m.plaka || '-'}
+              </Typography>
+              <Typography variant="body2">
+                <strong>Marka:</strong> {m.marka || '-'}
+              </Typography>
+              <Typography variant="body2">
+                <strong>Model:</strong> {m.model || '-'}
+              </Typography>
+              <Typography variant="body2">
+                <strong>Yıl:</strong> {m.yil || '-'}
+              </Typography>
+              <Typography variant="body2">
+                <strong>KM:</strong> {m.km ? sayiYaz(m.km) + ' km' : '-'}
+              </Typography>
             </Paper>
           </Grid>
           <Grid size={{ xs: 12, md: 4 }}>
             <Paper sx={{ p: 1.5, bgcolor: '#fafafa' }}>
-              <Typography variant="subtitle2" color="#C62828" fontWeight="bold" gutterBottom>Satıcı Bilgileri</Typography>
-              <Typography variant="body2"><strong>Ad Soyad:</strong> {m.satici_adi || '-'}</Typography>
-              <Typography variant="body2"><strong>TC:</strong> {m.satici_tc || '-'}</Typography>
+              <Typography variant="subtitle2" color="#C62828" fontWeight="bold" gutterBottom>
+                Satıcı Bilgileri
+              </Typography>
+              <Typography variant="body2">
+                <strong>Ad Soyad:</strong> {m.satici_adi || '-'}
+              </Typography>
+              <Typography variant="body2">
+                <strong>TC:</strong> {m.satici_tc || '-'}
+              </Typography>
             </Paper>
           </Grid>
           <Grid size={{ xs: 12, md: 4 }}>
             <Paper sx={{ p: 1.5, bgcolor: '#fafafa' }}>
-              <Typography variant="subtitle2" color="#C62828" fontWeight="bold" gutterBottom>Alıcı Bilgileri</Typography>
-              <Typography variant="body2"><strong>Ad Soyad:</strong> {m.alici_adi || '-'}</Typography>
-              <Typography variant="body2"><strong>TC:</strong> {m.alici_tc || '-'}</Typography>
-              <Typography variant="body2"><strong>Telefon:</strong> {m.alici_telefon || '-'}</Typography>
-              <Typography variant="body2"><strong>Adres:</strong> {m.alici_adres || '-'}</Typography>
+              <Typography variant="subtitle2" color="#C62828" fontWeight="bold" gutterBottom>
+                Alıcı Bilgileri
+              </Typography>
+              <Typography variant="body2">
+                <strong>Ad Soyad:</strong> {m.alici_adi || '-'}
+              </Typography>
+              <Typography variant="body2">
+                <strong>TC:</strong> {m.alici_tc || '-'}
+              </Typography>
+              <Typography variant="body2">
+                <strong>Telefon:</strong> {m.alici_telefon || '-'}
+              </Typography>
+              <Typography variant="body2">
+                <strong>Adres:</strong> {m.alici_adres || '-'}
+              </Typography>
             </Paper>
           </Grid>
         </Grid>
@@ -54,60 +80,118 @@ const MotorDetayModal = ({ open, data, onClose, isMobile }) => {
         <Grid container spacing={2} sx={{ mb: 2 }}>
           <Grid size={{ xs: 12, md: 6 }}>
             <Paper sx={{ p: 1.5, bgcolor: '#fafafa' }}>
-              <Typography variant="subtitle2" color="#C62828" fontWeight="bold" gutterBottom>Fiyat Bilgileri</Typography>
+              <Typography variant="subtitle2" color="#C62828" fontWeight="bold" gutterBottom>
+                Fiyat Bilgileri
+              </Typography>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 0.3, borderBottom: '1px dotted #eee' }}>
-                <Typography variant="body2" color="text.secondary">Alış Fiyatı:</Typography>
-                <Typography variant="body2" fontWeight="bold">{formatTL(alis)} ₺</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Alış Fiyatı:
+                </Typography>
+                <Typography variant="body2" fontWeight="bold">
+                  {formatTL(alis)} ₺
+                </Typography>
               </Box>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 0.3, borderBottom: '1px dotted #eee' }}>
-                <Typography variant="body2" color="text.secondary">Satış Fiyatı:</Typography>
-                <Typography variant="body2" fontWeight="bold">{formatTL(satis)} ₺</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Satış Fiyatı:
+                </Typography>
+                <Typography variant="body2" fontWeight="bold">
+                  {formatTL(satis)} ₺
+                </Typography>
               </Box>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 0.3, borderBottom: '1px dotted #eee' }}>
-                <Typography variant="body2" color="text.secondary">Masraflar:</Typography>
-                <Typography variant="body2" fontWeight="bold">{formatTL(masraf)} ₺</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Masraflar:
+                </Typography>
+                <Typography variant="body2" fontWeight="bold">
+                  {formatTL(masraf)} ₺
+                </Typography>
               </Box>
-              {yatirimciPayi > 0 && <>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 0.3, borderBottom: '1px dotted #eee' }}>
-                  <Typography variant="body2" color="text.secondary">Toplam Kâr:</Typography>
-                  <Typography variant="body2" fontWeight="bold">{formatTL(toplamKar)} ₺</Typography>
-                </Box>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 0.3, borderBottom: '1px dotted #eee' }}>
-                  <Typography variant="body2" color="text.secondary">Yatırımcı Payı:</Typography>
-                  <Typography variant="body2" fontWeight="bold" sx={{ color: '#1565C0' }}>- {formatTL(yatirimciPayi)} ₺</Typography>
-                </Box>
-              </>}
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 0.3, mt: 0.5, bgcolor: kar >= 0 ? '#e8f5e9' : '#ffebee', px: 1, borderRadius: 1 }}>
-                <Typography variant="body2" fontWeight="bold">Net Kâr (Payınız):</Typography>
-                <Typography variant="body2" fontWeight="bold" sx={{ color: karColor(kar) }}>{formatTL(kar)} ₺</Typography>
+              {yatirimciPayi > 0 && (
+                <>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 0.3, borderBottom: '1px dotted #eee' }}>
+                    <Typography variant="body2" color="text.secondary">
+                      Toplam Kâr:
+                    </Typography>
+                    <Typography variant="body2" fontWeight="bold">
+                      {formatTL(toplamKar)} ₺
+                    </Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 0.3, borderBottom: '1px dotted #eee' }}>
+                    <Typography variant="body2" color="text.secondary">
+                      Yatırımcı Payı:
+                    </Typography>
+                    <Typography variant="body2" fontWeight="bold" sx={{ color: '#1565C0' }}>
+                      - {formatTL(yatirimciPayi)} ₺
+                    </Typography>
+                  </Box>
+                </>
+              )}
+              <Box
+                sx={{ display: 'flex', justifyContent: 'space-between', py: 0.3, mt: 0.5, bgcolor: kar >= 0 ? '#e8f5e9' : '#ffebee', px: 1, borderRadius: 1 }}
+              >
+                <Typography variant="body2" fontWeight="bold">
+                  Net Kâr (Payınız):
+                </Typography>
+                <Typography variant="body2" fontWeight="bold" sx={{ color: karColor(kar) }}>
+                  {formatTL(kar)} ₺
+                </Typography>
               </Box>
             </Paper>
           </Grid>
           <Grid size={{ xs: 12, md: 6 }}>
             <Paper sx={{ p: 1.5, bgcolor: '#fafafa' }}>
-              <Typography variant="subtitle2" color="#C62828" fontWeight="bold" gutterBottom>Noter Bilgileri</Typography>
+              <Typography variant="subtitle2" color="#C62828" fontWeight="bold" gutterBottom>
+                Noter Bilgileri
+              </Typography>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 0.3, borderBottom: '1px dotted #eee' }}>
-                <Typography variant="body2" color="text.secondary">Noter Alış:</Typography>
-                <Typography variant="body2" fontWeight="bold">{formatTL(noterAlis)} ₺</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Noter Alış:
+                </Typography>
+                <Typography variant="body2" fontWeight="bold">
+                  {formatTL(noterAlis)} ₺
+                </Typography>
               </Box>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 0.3, borderBottom: '1px dotted #eee' }}>
-                <Typography variant="body2" color="text.secondary">Noter Satış:</Typography>
-                <Typography variant="body2" fontWeight="bold">{formatTL(noterSatis)} ₺</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Noter Satış:
+                </Typography>
+                <Typography variant="body2" fontWeight="bold">
+                  {formatTL(noterSatis)} ₺
+                </Typography>
               </Box>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 0.3, borderBottom: '1px dotted #eee' }}>
-                <Typography variant="body2" color="text.secondary">Ödeme Şekli:</Typography>
-                <Typography variant="body2" fontWeight="bold">{m.odeme_sekli || 'nakit'}</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Ödeme Şekli:
+                </Typography>
+                <Typography variant="body2" fontWeight="bold">
+                  {m.odeme_sekli || 'nakit'}
+                </Typography>
               </Box>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 0.3, alignItems: 'center' }}>
-                <Typography variant="body2" color="text.secondary">Fatura:</Typography>
-                <Chip size="small" label={m.fatura_kesildi ? '✓ Kesildi' : '✗ Kesilmedi'}
-                  sx={{ bgcolor: m.fatura_kesildi ? '#e8f5e9' : '#ffebee', color: m.fatura_kesildi ? '#2e7d32' : '#d32f2f', fontWeight: 'bold', fontSize: '0.75rem' }} />
+                <Typography variant="body2" color="text.secondary">
+                  Fatura:
+                </Typography>
+                <Chip
+                  size="small"
+                  label={m.fatura_kesildi ? '✓ Kesildi' : '✗ Kesilmedi'}
+                  sx={{
+                    bgcolor: m.fatura_kesildi ? '#e8f5e9' : '#ffebee',
+                    color: m.fatura_kesildi ? '#2e7d32' : '#d32f2f',
+                    fontWeight: 'bold',
+                    fontSize: '0.75rem',
+                  }}
+                />
               </Box>
               {m.yevmiye_no && (
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 0.3 }}>
-                <Typography variant="body2" color="text.secondary">Yevmiye No:</Typography>
-                <Typography variant="body2" fontWeight="bold">{m.yevmiye_no}</Typography>
-              </Box>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 0.3 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    Yevmiye No:
+                  </Typography>
+                  <Typography variant="body2" fontWeight="bold">
+                    {m.yevmiye_no}
+                  </Typography>
+                </Box>
               )}
             </Paper>
           </Grid>
@@ -116,25 +200,41 @@ const MotorDetayModal = ({ open, data, onClose, isMobile }) => {
         <Grid container spacing={2}>
           <Grid size={{ xs: 12, md: 6 }}>
             <Paper sx={{ p: 1.5, bgcolor: '#fafafa' }}>
-              <Typography variant="subtitle2" color="#C62828" fontWeight="bold" gutterBottom>Tarih Bilgileri</Typography>
-              <Typography variant="body2"><strong>Kayıt Tarihi:</strong> {formatDate(m.tarih || m.created_at)}</Typography>
-              <Typography variant="body2"><strong>Satış Tarihi:</strong> {formatDate(m.satis_tarihi || m.tamamlama_tarihi)}</Typography>
+              <Typography variant="subtitle2" color="#C62828" fontWeight="bold" gutterBottom>
+                Tarih Bilgileri
+              </Typography>
+              <Typography variant="body2">
+                <strong>Kayıt Tarihi:</strong> {formatDate(m.tarih || m.created_at)}
+              </Typography>
+              <Typography variant="body2">
+                <strong>Satış Tarihi:</strong> {formatDate(m.satis_tarihi || m.tamamlama_tarihi)}
+              </Typography>
             </Paper>
           </Grid>
           {m.komisyoncu_adi && (
             <Grid size={{ xs: 12, md: 6 }}>
               <Paper sx={{ p: 1.5, bgcolor: '#fff8e1', borderLeft: '3px solid #f57f17' }}>
-                <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#f57f17' }} gutterBottom>Komisyoncu</Typography>
-                <Typography variant="body2"><strong>Ad Soyad:</strong> {m.komisyoncu_adi}</Typography>
-                <Typography variant="body2"><strong>Telefon:</strong> {m.komisyoncu_telefon || '-'}</Typography>
-                <Typography variant="body2"><strong>Tutar:</strong> ₺{sayiYaz(m.komisyoncu_tutari)}</Typography>
+                <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#f57f17' }} gutterBottom>
+                  Komisyoncu
+                </Typography>
+                <Typography variant="body2">
+                  <strong>Ad Soyad:</strong> {m.komisyoncu_adi}
+                </Typography>
+                <Typography variant="body2">
+                  <strong>Telefon:</strong> {m.komisyoncu_telefon || '-'}
+                </Typography>
+                <Typography variant="body2">
+                  <strong>Tutar:</strong> ₺{sayiYaz(m.komisyoncu_tutari)}
+                </Typography>
               </Paper>
             </Grid>
           )}
           {m.aciklama && (
             <Grid size={{ xs: 12, md: 6 }}>
               <Paper sx={{ p: 1.5, bgcolor: '#e3f2fd', borderLeft: '3px solid #1565C0' }}>
-                <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#1565C0' }}>Açıklama</Typography>
+                <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#1565C0' }}>
+                  Açıklama
+                </Typography>
                 <Typography variant="body2">{m.aciklama}</Typography>
               </Paper>
             </Grid>

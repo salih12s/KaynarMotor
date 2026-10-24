@@ -30,18 +30,67 @@ const mockNavigate = jest.fn();
 jest.mock('react-router-dom', () => ({ useNavigate: () => mockNavigate, useLocation: () => mockLocation }), { virtual: true });
 jest.mock('qrcode', () => ({ __esModule: true, default: { toDataURL: jest.fn() } }));
 
-
 // ---- Sabit test verisi -------------------------------------------------------------------------------------------
 const BUGUN = new Date().toISOString();
-const A = { id: 1, fis_no: 101, musteri_ad_soyad: 'Ayşe Yılmaz', telefon: '05551112233', marka: 'Honda', model_tip: 'PCX', plaka: '34ABC123', durum: 'beklemede', created_at: BUGUN, gercek_toplam_ucret: 1500, toplam_maliyet: 900, kar: 600, ariza_sikayetler: 'Fren sesi', teslim_eden_teknisyen: 'Usta Mehmet' };
-const B = { id: 2, fis_no: 102, musteri_ad_soyad: 'Veli Demir', telefon: '05332223344', marka: 'Yamaha', model_tip: 'NMAX', plaka: '', durum: 'devam_ediyor', created_at: '2026-09-15T12:00:00', gercek_toplam_ucret: 1000, toplam_maliyet: 600, kar: 400, olusturan_kisi: 'ofis' };
-const C = { id: 3, fis_no: 103, musteri_ad_soyad: 'Zeynep Kaya', telefon: '', marka: 'Suzuki', model_tip: 'Burgman', plaka: '35ZZ001', durum: 'tamamlandi', created_at: '2026-10-01T12:00:00', gercek_toplam_ucret: 2500, toplam_maliyet: 1500, kar: 1000 };
+const A = {
+  id: 1,
+  fis_no: 101,
+  musteri_ad_soyad: 'Ayşe Yılmaz',
+  telefon: '05551112233',
+  marka: 'Honda',
+  model_tip: 'PCX',
+  plaka: '34ABC123',
+  durum: 'beklemede',
+  created_at: BUGUN,
+  gercek_toplam_ucret: 1500,
+  toplam_maliyet: 900,
+  kar: 600,
+  ariza_sikayetler: 'Fren sesi',
+  teslim_eden_teknisyen: 'Usta Mehmet',
+};
+const B = {
+  id: 2,
+  fis_no: 102,
+  musteri_ad_soyad: 'Veli Demir',
+  telefon: '05332223344',
+  marka: 'Yamaha',
+  model_tip: 'NMAX',
+  plaka: '',
+  durum: 'devam_ediyor',
+  created_at: '2026-09-15T12:00:00',
+  gercek_toplam_ucret: 1000,
+  toplam_maliyet: 600,
+  kar: 400,
+  olusturan_kisi: 'ofis',
+};
+const C = {
+  id: 3,
+  fis_no: 103,
+  musteri_ad_soyad: 'Zeynep Kaya',
+  telefon: '',
+  marka: 'Suzuki',
+  model_tip: 'Burgman',
+  plaka: '35ZZ001',
+  durum: 'tamamlandi',
+  created_at: '2026-10-01T12:00:00',
+  gercek_toplam_ucret: 2500,
+  toplam_maliyet: 1500,
+  kar: 1000,
+};
 const LISTE = [A, B, C];
 // Toplam 3, Bugün 1, Beklemede 1, İşlemde 1, Tamamlandı 1; gelir 5.000; kâr 2.000 (yalnızca admin)
 
 const DETAY_A = {
-  ...A, adres: 'Kadıköy', km: 12500, aciklama: 'Acil', odeme_detaylari: 'Nakit', kalan_odeme: 500, tahmini_toplam_ucret: 1500,
-  tahmini_teslim_tarihi: '2026-10-20T12:00:00', teslim_alan_ad_soyad: 'Usta Ali', olusturan_kisi: 'ofis',
+  ...A,
+  adres: 'Kadıköy',
+  km: 12500,
+  aciklama: 'Acil',
+  odeme_detaylari: 'Nakit',
+  kalan_odeme: 500,
+  tahmini_toplam_ucret: 1500,
+  tahmini_teslim_tarihi: '2026-10-20T12:00:00',
+  teslim_alan_ad_soyad: 'Usta Ali',
+  olusturan_kisi: 'ofis',
   parcalar: [{ takilan_parca: 'Fren balatası', adet: 2, birim_fiyat: 300, toplam_fiyat: 600, maliyet: 150, parca_kodu: 'AK-1' }],
 };
 const AKS_STOK = { id: 10, stok_kodu: 'AK-1', stok_adi: 'Fren Balata', mevcut: 5, satis_fiyati: 250, alis_fiyati: 150 };
@@ -59,7 +108,12 @@ const kur = ({ rol = 'admin', liste = LISTE } = {}) => {
   isEmriService.delete.mockResolvedValue({ data: {} });
   servisGecmisiService.getQrToken.mockResolvedValue({ data: { token: 'tok123' } });
   QRCode.toDataURL.mockResolvedValue('data:image/png;base64,AAA');
-  authService.getPersonelListesi.mockResolvedValue({ data: [{ id: 1, ad_soyad: 'Usta Mehmet' }, { id: 2, ad_soyad: 'Usta Ali' }] });
+  authService.getPersonelListesi.mockResolvedValue({
+    data: [
+      { id: 1, ad_soyad: 'Usta Mehmet' },
+      { id: 2, ad_soyad: 'Usta Ali' },
+    ],
+  });
   musteriService.search.mockResolvedValue({ data: [] });
   musteriService.searchByPhone.mockResolvedValue({ data: null });
   aksesuarStokService.search.mockResolvedValue({ data: [AKS_STOK] });
@@ -77,7 +131,10 @@ const ekranAc = async (secenek = {}) => {
 };
 
 const satir = (ad) => screen.getByRole('row', { name: ad });
-const hucreler = (row) => within(row).getAllByRole('cell').map((c) => c.textContent);
+const hucreler = (row) =>
+  within(row)
+    .getAllByRole('cell')
+    .map((c) => c.textContent);
 const ikon = (kapsam, ad) => within(kapsam).getByTestId(ad);
 const alan = (etiket) => screen.getByLabelText(etiket);
 // Typography: body -> <p>, caption -> <span>
@@ -92,7 +149,9 @@ beforeEach(() => {
   jest.spyOn(window, 'confirm').mockImplementation(() => true);
   jest.spyOn(console, 'error').mockImplementation(() => {});
 });
-afterEach(() => { jest.restoreAllMocks(); });
+afterEach(() => {
+  jest.restoreAllMocks();
+});
 
 // ---- Liste ve istatistik -----------------------------------------------------------------------------------------
 describe('İş Emirleri: liste', () => {
@@ -108,15 +167,37 @@ describe('İş Emirleri: liste', () => {
     expect(screen.queryByText(/^Kar:/)).not.toBeInTheDocument();
     expect(screen.queryByRole('columnheader', { name: 'Kar' })).not.toBeInTheDocument();
     expect(screen.queryAllByTestId('DeleteIcon')).toHaveLength(0);
-    expect(screen.getAllByRole('columnheader').map((h) => h.textContent)).toEqual(
-      ['Fiş No', 'Müşteri', 'Araç', 'Telefon', 'Tarih/Durum', 'Personel', 'Arıza', 'Toplam', 'Maliyet', 'İşlemler']);
+    expect(screen.getAllByRole('columnheader').map((h) => h.textContent)).toEqual([
+      'Fiş No',
+      'Müşteri',
+      'Araç',
+      'Telefon',
+      'Tarih/Durum',
+      'Personel',
+      'Arıza',
+      'Toplam',
+      'Maliyet',
+      'İşlemler',
+    ]);
   });
 
   test('admin: Kar sütunu ve her satırda silme düğmesi var; satır içeriği', async () => {
     await ekranAc();
     expect(screen.getByRole('columnheader', { name: 'Kar' })).toBeInTheDocument();
     expect(screen.getAllByTestId('DeleteIcon')).toHaveLength(3);
-    expect(hucreler(satir(/Ayşe Yılmaz/))).toEqual(['101', 'Ayşe Yılmaz', 'Honda PCX', '05551112233', `${tarihTr(BUGUN)}Bekl.`, 'Usta Mehmet', 'Fren sesi', '₺1.500', '₺900', '₺600', '']);
+    expect(hucreler(satir(/Ayşe Yılmaz/))).toEqual([
+      '101',
+      'Ayşe Yılmaz',
+      'Honda PCX',
+      '05551112233',
+      `${tarihTr(BUGUN)}Bekl.`,
+      'Usta Mehmet',
+      'Fren sesi',
+      '₺1.500',
+      '₺900',
+      '₺600',
+      '',
+    ]);
     // personel: teslim_eden yoksa oluşturan kişi; ikisi de yoksa tire
     expect(hucreler(satir(/Veli Demir/))[5]).toBe('ofis');
     expect(hucreler(satir(/Zeynep Kaya/))[5]).toBe('-');
@@ -144,13 +225,16 @@ describe('İş Emirleri: süzgeçler', () => {
     await user.type(kutu, 'veli');
     expect(screen.queryByText('Ayşe Yılmaz')).not.toBeInTheDocument();
     expect(screen.getByText('Veli Demir')).toBeInTheDocument();
-    await user.clear(kutu); await user.type(kutu, '103');
+    await user.clear(kutu);
+    await user.type(kutu, '103');
     expect(screen.getAllByRole('row')).toHaveLength(2); // başlık + Zeynep
     expect(screen.getByText('Zeynep Kaya')).toBeInTheDocument();
-    await user.clear(kutu); await user.type(kutu, '0533');
+    await user.clear(kutu);
+    await user.type(kutu, '0533');
     expect(screen.getByText('Veli Demir')).toBeInTheDocument();
     expect(screen.queryByText('Zeynep Kaya')).not.toBeInTheDocument();
-    await user.clear(kutu); await user.type(kutu, 'SUZ');
+    await user.clear(kutu);
+    await user.type(kutu, 'SUZ');
     expect(screen.getByText('Zeynep Kaya')).toBeInTheDocument();
     expect(screen.queryByText('Veli Demir')).not.toBeInTheDocument();
   });
@@ -320,9 +404,24 @@ describe('İş Emirleri: servis QR etiketi', () => {
 
 // ---- Form penceresi ----------------------------------------------------------------------------------------------
 const BOS_YUK = {
-  musteri_ad_soyad: 'Test Müşteri', telefon: '', adres: '', km: '', marka: '', model_tip: '', plaka: '',
-  tahmini_teslim_tarihi: '', tahmini_toplam_ucret: '', ariza_sikayetler: '', aciklama: '', odeme_detaylari: '', durum: 'beklemede',
-  teslim_alan_ad_soyad: '', teslim_eden_teknisyen: '', teslim_tarihi: '', kalan_odeme: 0, parcalar: [],
+  musteri_ad_soyad: 'Test Müşteri',
+  telefon: '',
+  adres: '',
+  km: '',
+  marka: '',
+  model_tip: '',
+  plaka: '',
+  tahmini_teslim_tarihi: '',
+  tahmini_toplam_ucret: '',
+  ariza_sikayetler: '',
+  aciklama: '',
+  odeme_detaylari: '',
+  durum: 'beklemede',
+  teslim_alan_ad_soyad: '',
+  teslim_eden_teknisyen: '',
+  teslim_tarihi: '',
+  kalan_odeme: 0,
+  parcalar: [],
 };
 const yeniAc = async (user) => {
   await user.click(screen.getByRole('button', { name: 'Yeni İş Emri' }));
@@ -448,8 +547,10 @@ describe('İş Emirleri: formda parça ekleme', () => {
     expect(within(p).getByText('Henüz parça eklenmedi')).toBeInTheDocument(); // adsız parça eklenmedi
 
     await user.type(within(p).getByRole('combobox', { name: /Takılan Parça/ }), 'İşçilik');
-    await user.clear(alan('Adet')); await user.type(alan('Adet'), '2');
-    await user.clear(alan('Satış Fiyatı (₺)')); await user.type(alan('Satış Fiyatı (₺)'), '300');
+    await user.clear(alan('Adet'));
+    await user.type(alan('Adet'), '2');
+    await user.clear(alan('Satış Fiyatı (₺)'));
+    await user.type(alan('Satış Fiyatı (₺)'), '300');
     await user.click(within(p).getByRole('button', { name: 'Parça Ekle' }));
     expect(hucreler(within(p).getByRole('row', { name: /İşçilik/ }))).toEqual(['İşçilik', '2', '₺600', '₺0', '₺600', '']);
     expect(alan('Adet')).toHaveValue(1); // ekleme sonrası giriş alanları sıfırlanır
@@ -569,9 +670,20 @@ describe('İş Emirleri: düzenleme', () => {
 
 describe('İş Emirleri: mobil görünüm', () => {
   beforeEach(() => {
-    window.matchMedia = (q) => ({ matches: true, media: q, onchange: null, addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {}, dispatchEvent: () => false });
+    window.matchMedia = (q) => ({
+      matches: true,
+      media: q,
+      onchange: null,
+      addEventListener() {},
+      removeEventListener() {},
+      addListener() {},
+      removeListener() {},
+      dispatchEvent: () => false,
+    });
   });
-  afterEach(() => { delete window.matchMedia; });
+  afterEach(() => {
+    delete window.matchMedia;
+  });
 
   test('tablo yerine kart listesi; kartta kâr yalnızca admin için; karta dokunmak detayı açar', async () => {
     const { user } = await ekranAc();

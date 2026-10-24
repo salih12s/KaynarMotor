@@ -90,9 +90,7 @@ export const topluEkle = async (db: BaglamDb, govde: TopluStokGovdesi): Promise<
   const stoklar = govde.stoklar;
   if (!stoklar || !Array.isArray(stoklar)) throw new GecersizIstek('Stok listesi gerekli');
 
-  const gecersiz = stoklar
-    .map((s: any, i: number) => (!metinDolu(s && s.stok_kodu) || !metinDolu(s && s.stok_adi) ? i + 1 : null))
-    .filter(Boolean);
+  const gecersiz = stoklar.map((s: any, i: number) => (!metinDolu(s && s.stok_kodu) || !metinDolu(s && s.stok_adi) ? i + 1 : null)).filter(Boolean);
   if (gecersiz.length) throw new GecersizIstek(`Stok kodu ve adı boş olamaz (satır: ${gecersiz.slice(0, 10).join(', ')})`);
 
   return db.withTransaction(async (tx) => {
@@ -100,10 +98,19 @@ export const topluEkle = async (db: BaglamDb, govde: TopluStokGovdesi): Promise<
     for (const s of stoklar as any[]) {
       const giren = tamSayi(s.giren_miktar);
       const satis = ondalik(s.satis_fiyati);
-      await repo.topluEkleVeyaGuncelle(tx, {
-        stok_kodu: s.stok_kodu, stok_adi: s.stok_adi, marka: s.marka,
-        giren_miktar: giren, birimi: s.birimi || 'Adet', alis_fiyati: ondalik(s.alis_fiyati), satis_fiyati: satis,
-      }, giren * satis);
+      await repo.topluEkleVeyaGuncelle(
+        tx,
+        {
+          stok_kodu: s.stok_kodu,
+          stok_adi: s.stok_adi,
+          marka: s.marka,
+          giren_miktar: giren,
+          birimi: s.birimi || 'Adet',
+          alis_fiyati: ondalik(s.alis_fiyati),
+          satis_fiyati: satis,
+        },
+        giren * satis,
+      );
       eklenen++;
     }
     return eklenen;

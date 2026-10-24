@@ -110,7 +110,10 @@ describe('detay ve sil', () => {
     assert.deepEqual(db.olaylar, ['BEGIN', 'COMMIT']);
     assert.match(db.cagrilar[0].sql, /UPDATE is_emirleri SET musteri_id = NULL/);
     assert.match(db.cagrilar[1].sql, /DELETE FROM musteriler/);
-    assert.deepEqual(db.cagrilar.map((c) => c.params), [[42], [42]]);
+    assert.deepEqual(
+      db.cagrilar.map((c) => c.params),
+      [[42], [42]],
+    );
   });
 
   it('sil: ikinci adım patlarsa ROLLBACK ve hata yukarı iletilir', async () => {

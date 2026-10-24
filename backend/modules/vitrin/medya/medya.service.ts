@@ -17,9 +17,7 @@ export const medyaOnbellegi = new MedyaOnbellegi<Medya>({
 /** Sunulacak medya, kayıt yok ya da kayıt var ama geçersiz (izinli olmayan tür / bozuk veri). */
 export type MedyaSonucu = { tur: 'bulundu'; medya: Medya } | { tur: 'yok' } | { tur: 'gecersiz' };
 
-const onbellekliBul = async (
-  anahtar: string, getir: () => Promise<string | null>, izinli: string[]
-): Promise<MedyaSonucu> => {
+const onbellekliBul = async (anahtar: string, getir: () => Promise<string | null>, izinli: string[]): Promise<MedyaSonucu> => {
   const bellekte = medyaOnbellegi.get(anahtar);
   if (bellekte) return { tur: 'bulundu', medya: bellekte };
   const veri = await getir();
@@ -52,6 +50,9 @@ export const aralikCoz = (rangeBasligi: string, toplam: number): { baslangic: nu
   let bitis = m && m[2] ? parseInt(m[2], 10) : toplam - 1;
   if (Number.isNaN(baslangic) || baslangic < 0) baslangic = 0;
   if (Number.isNaN(bitis) || bitis >= toplam) bitis = toplam - 1;
-  if (baslangic > bitis) { baslangic = 0; bitis = toplam - 1; }
+  if (baslangic > bitis) {
+    baslangic = 0;
+    bitis = toplam - 1;
+  }
   return { baslangic, bitis };
 };

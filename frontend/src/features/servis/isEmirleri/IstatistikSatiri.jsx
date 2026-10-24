@@ -22,7 +22,9 @@ const IstatistikSatiri = ({ istatistik: s, karGor, onYeni }) => {
         <Chip key={i} label={label} sx={{ bgcolor: '#ffebee', color: '#C62828', fontWeight: 'bold', fontSize: '0.8rem', borderLeft: '4px solid #C62828' }} />
       ))}
       <Box sx={{ flexGrow: 1 }} />
-      <Button variant="contained" size="large" startIcon={<AddIcon />} onClick={onYeni}>Yeni İş Emri</Button>
+      <Button variant="contained" size="large" startIcon={<AddIcon />} onClick={onYeni}>
+        Yeni İş Emri
+      </Button>
     </Box>
   );
 };

@@ -19,10 +19,17 @@ const { sunucuBaslat, kullaniciOlustur, sunucuArgumanlari } = require('./yardimc
 
 const SON = Date.now().toString(36);
 const num = (v) => Number(v);
-let s, api, admin, sayac = 0;
+let s,
+  api,
+  admin,
+  sayac = 0;
 const benzersiz = (onek) => `${onek}${SON}${++sayac}`;
 
-before(async () => { s = await sunucuBaslat(); api = s.api; admin = s.admin; });
+before(async () => {
+  s = await sunucuBaslat();
+  api = s.api;
+  admin = s.admin;
+});
 after(() => s && s.durdur());
 
 const PNG = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
@@ -39,8 +46,10 @@ describe('#45 medya uçları', () => {
     const c = await api('POST', '/api/vitrin', { kategori: 'aksesuar', baslik: benzersiz('F8 medya '), gorseller: [PNG] }, admin);
     assert.equal(c.durum, 201);
     const url = `${s.url}/api/vitrin/gorsel/${c.govde.kapak_gorsel_id}`;
-    const bir = await fetch(url); const iki = await fetch(url);
-    assert.equal(bir.status, 200); assert.equal(iki.status, 200);
+    const bir = await fetch(url);
+    const iki = await fetch(url);
+    assert.equal(bir.status, 200);
+    assert.equal(iki.status, 200);
     assert.equal(bir.headers.get('content-type'), 'image/png');
     assert.match(bir.headers.get('cache-control'), /immutable/);
     assert.deepEqual(Buffer.from(await bir.arrayBuffer()), Buffer.from(await iki.arrayBuffer()));
@@ -77,7 +86,13 @@ describe('#46 oturum: şifre sıfırlanınca eski token geçersiz', () => {
       env: { ...process.env, PORT: '0', NODE_ENV: 'test', JWT_SECRET: '' }, // boş değer .env dosyasının doldurmasını da engeller
       stdio: 'ignore',
     });
-    const kod = await new Promise((coz) => { cocuk.on('exit', coz); setTimeout(() => { cocuk.kill(); coz('ACIK_KALDI'); }, 8000); });
+    const kod = await new Promise((coz) => {
+      cocuk.on('exit', coz);
+      setTimeout(() => {
+        cocuk.kill();
+        coz('ACIK_KALDI');
+      }, 8000);
+    });
     assert.equal(typeof kod, 'number', 'sunucu JWT_SECRET olmadan açık kaldı');
     assert.notEqual(kod, 0);
   });
@@ -94,14 +109,34 @@ describe('#47 şifre kuralı', () => {
 
 describe('#48 yedek parça stok kodu değişince iş emri bağlantısı kopmaz', () => {
   it('stok kodu yeniden adlandırılır; iş emri silinince stok yine başlangıç değerine döner', async () => {
-    const kod = benzersiz('F8Y').slice(0, 19), yeniKod = benzersiz('F8N').slice(0, 19);
-    const st = await api('POST', '/api/yedek-parca-stok', { stok_kodu: kod, stok_adi: `Zincir ${kod}`, giren_miktar: 10, alis_fiyati: 50, satis_fiyati: 120 }, admin);
+    const kod = benzersiz('F8Y').slice(0, 19),
+      yeniKod = benzersiz('F8N').slice(0, 19);
+    const st = await api(
+      'POST',
+      '/api/yedek-parca-stok',
+      { stok_kodu: kod, stok_adi: `Zincir ${kod}`, giren_miktar: 10, alis_fiyati: 50, satis_fiyati: 120 },
+      admin,
+    );
     assert.equal(st.durum, 201);
-    const e = await api('POST', '/api/is-emirleri', { musteri_ad_soyad: benzersiz('F8 '), durum: 'beklemede', parcalar: [{ parca_kodu: kod, takilan_parca: 'Zincir', adet: 3, birim_fiyat: 120, maliyet: 50 }] }, admin);
+    const e = await api(
+      'POST',
+      '/api/is-emirleri',
+      {
+        musteri_ad_soyad: benzersiz('F8 '),
+        durum: 'beklemede',
+        parcalar: [{ parca_kodu: kod, takilan_parca: 'Zincir', adet: 3, birim_fiyat: 120, maliyet: 50 }],
+      },
+      admin,
+    );
     assert.equal(e.durum, 201);
     assert.equal(num((await api('GET', `/api/yedek-parca-stok/barkod/${kod}`, undefined, admin)).govde.mevcut), 7);
 
-    const r = await api('PUT', `/api/yedek-parca-stok/${st.govde.id}`, { stok_kodu: yeniKod, stok_adi: `Zincir ${kod}`, giren_miktar: 10, alis_fiyati: 50, satis_fiyati: 120 }, admin);
+    const r = await api(
+      'PUT',
+      `/api/yedek-parca-stok/${st.govde.id}`,
+      { stok_kodu: yeniKod, stok_adi: `Zincir ${kod}`, giren_miktar: 10, alis_fiyati: 50, satis_fiyati: 120 },
+      admin,
+    );
     assert.equal(r.durum, 200);
 
     assert.equal((await api('DELETE', `/api/is-emirleri/${e.govde.id}`, undefined, admin)).durum, 200);
@@ -111,19 +146,44 @@ describe('#48 yedek parça stok kodu değişince iş emri bağlantısı kopmaz',
 
 describe('#49 negatif tutar reddedilir', () => {
   it('iş emri parçası, aksesuar satırı, motor ve stok negatif tutarla 400 alır; sıfır geçerlidir', async () => {
-    const ie = await api('POST', '/api/is-emirleri', { musteri_ad_soyad: benzersiz('F8 '), parcalar: [{ parca_kodu: '', takilan_parca: 'x', adet: 1, birim_fiyat: -100, maliyet: 0 }] }, admin);
+    const ie = await api(
+      'POST',
+      '/api/is-emirleri',
+      { musteri_ad_soyad: benzersiz('F8 '), parcalar: [{ parca_kodu: '', takilan_parca: 'x', adet: 1, birim_fiyat: -100, maliyet: 0 }] },
+      admin,
+    );
     assert.equal(ie.durum, 400);
-    const ak = await api('POST', '/api/aksesuarlar', { ad_soyad: benzersiz('F8 '), durum: 'beklemede', parcalar: [{ urun_adi: 'x', adet: 1, maliyet: -5, satis_fiyati: 10 }] }, admin);
+    const ak = await api(
+      'POST',
+      '/api/aksesuarlar',
+      { ad_soyad: benzersiz('F8 '), durum: 'beklemede', parcalar: [{ urun_adi: 'x', adet: 1, maliyet: -5, satis_fiyati: 10 }] },
+      admin,
+    );
     assert.equal(ak.durum, 400);
     const mt = await api('POST', '/api/ikinci-el-motor', { plaka: benzersiz('34N').slice(0, 12), marka: 'X', model: 'Y', alis_fiyati: -1 }, admin);
     assert.equal(mt.durum, 400);
-    const sk = await api('POST', '/api/aksesuar-stok', { stok_kodu: benzersiz('F8S').slice(0, 19), stok_adi: 'x', giren_miktar: 1, alis_fiyati: 1, satis_fiyati: -3 }, admin);
+    const sk = await api(
+      'POST',
+      '/api/aksesuar-stok',
+      { stok_kodu: benzersiz('F8S').slice(0, 19), stok_adi: 'x', giren_miktar: 1, alis_fiyati: 1, satis_fiyati: -3 },
+      admin,
+    );
     assert.equal(sk.durum, 400);
 
-    const sifir = await api('POST', '/api/is-emirleri', { musteri_ad_soyad: benzersiz('F8 '), parcalar: [{ parca_kodu: '', takilan_parca: 'x', adet: 1, birim_fiyat: 0, maliyet: 0 }] }, admin);
+    const sifir = await api(
+      'POST',
+      '/api/is-emirleri',
+      { musteri_ad_soyad: benzersiz('F8 '), parcalar: [{ parca_kodu: '', takilan_parca: 'x', adet: 1, birim_fiyat: 0, maliyet: 0 }] },
+      admin,
+    );
     assert.equal(sifir.durum, 201);
     // kâr alanları eksi olabilir (zararına satış): engellenmez
-    const zarar = await api('POST', '/api/ikinci-el-motor', { plaka: benzersiz('34Z').slice(0, 12), marka: 'X', model: 'Y', alis_fiyati: 100, satis_fiyati: 50 }, admin);
+    const zarar = await api(
+      'POST',
+      '/api/ikinci-el-motor',
+      { plaka: benzersiz('34Z').slice(0, 12), marka: 'X', model: 'Y', alis_fiyati: 100, satis_fiyati: 50 },
+      admin,
+    );
     assert.equal(zarar.durum, 201);
     assert.ok(num(zarar.govde.kar) < 0);
   });
@@ -142,10 +202,17 @@ describe('#50 çok uzun metin 500 değil 400 verir', () => {
 describe('#51 toplu stok içe aktarma ya hep ya hiç', () => {
   it('ortadaki hatalı satır yüzünden hiçbir kayıt yazılmaz', async () => {
     const ilk = benzersiz('F8T').slice(0, 19);
-    const r = await api('POST', '/api/aksesuar-stok/toplu', { stoklar: [
-      { stok_kodu: ilk, stok_adi: 'Ilk', giren_miktar: 5, alis_fiyati: 1, satis_fiyati: 2 },
-      { stok_kodu: 'U'.repeat(60), stok_adi: 'Hatali', giren_miktar: 1, alis_fiyati: 1, satis_fiyati: 2 },
-    ] }, admin);
+    const r = await api(
+      'POST',
+      '/api/aksesuar-stok/toplu',
+      {
+        stoklar: [
+          { stok_kodu: ilk, stok_adi: 'Ilk', giren_miktar: 5, alis_fiyati: 1, satis_fiyati: 2 },
+          { stok_kodu: 'U'.repeat(60), stok_adi: 'Hatali', giren_miktar: 1, alis_fiyati: 1, satis_fiyati: 2 },
+        ],
+      },
+      admin,
+    );
     assert.equal(r.durum, 400);
     assert.equal((await api('GET', `/api/aksesuar-stok/barkod/${ilk}`, undefined, admin)).durum, 404, 'ilk satır yazılmış kalmış');
   });
@@ -163,12 +230,26 @@ describe('#52 aksesuar sıradaki stok kodu', () => {
 });
 
 describe('#53 motor güncelleme', () => {
-  const motor = (ek = {}) => ({ plaka: benzersiz('34M').slice(0, 12), marka: 'Honda', model: 'CB', alis_fiyati: 1000, satis_fiyati: 2000, durum: 'stokta', liste_fiyati: 3000, ...ek });
+  const motor = (ek = {}) => ({
+    plaka: benzersiz('34M').slice(0, 12),
+    marka: 'Honda',
+    model: 'CB',
+    alis_fiyati: 1000,
+    satis_fiyati: 2000,
+    durum: 'stokta',
+    liste_fiyati: 3000,
+    ...ek,
+  });
 
   it('satılınca bağlı ilan yayından kalkar; liste fiyatı değişince ilan fiyatı eşitlenir', async () => {
     const m = await api('POST', '/api/ikinci-el-motor', motor(), admin);
     assert.equal(m.durum, 201);
-    const ilan = await api('POST', '/api/vitrin', { kategori: 'motor', segment: 'Naked', baslik: benzersiz('F8 ilan '), fiyat: 3000, stok_motor_id: m.govde.id, yayinda: true }, admin);
+    const ilan = await api(
+      'POST',
+      '/api/vitrin',
+      { kategori: 'motor', segment: 'Naked', baslik: benzersiz('F8 ilan '), fiyat: 3000, stok_motor_id: m.govde.id, yayinda: true },
+      admin,
+    );
     assert.equal(ilan.durum, 201);
 
     assert.equal((await api('PUT', `/api/ikinci-el-motor/${m.govde.id}`, { liste_fiyati: 3500 }, admin)).durum, 200);
@@ -182,6 +263,9 @@ describe('#53 motor güncelleme', () => {
   it('eşzamanlı iki güncelleme ikisi de başarılı olur (500 yok)', async () => {
     const m = await api('POST', '/api/ikinci-el-motor', motor(), admin);
     const yanit = await Promise.all([1, 2, 3].map((i) => api('PUT', `/api/ikinci-el-motor/${m.govde.id}`, { aciklama: `not ${i}` }, admin)));
-    assert.deepEqual(yanit.map((y) => y.durum), [200, 200, 200]);
+    assert.deepEqual(
+      yanit.map((y) => y.durum),
+      [200, 200, 200],
+    );
   });
 });

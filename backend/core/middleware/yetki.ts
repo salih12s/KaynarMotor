@@ -21,25 +21,31 @@ export const YAZMA_METODLARI = ['POST', 'PUT', 'PATCH', 'DELETE'];
 
 // Verilen yetki alanlarından en az birine sahip olmayı zorunlu kılar.
 // Admin her zaman geçer.
-export const modulYetkisi = (...alanlar: YetkiAlani[]) => (req: Request, res: Response, next: NextFunction) => {
-  if (req.user.rol === 'admin') return next();
-  if (alanlar.some((alan) => req.user[alan])) return next();
-  return res.status(403).json({ message: 'Bu modül için yetkiniz yok' });
-};
+export const modulYetkisi =
+  (...alanlar: YetkiAlani[]) =>
+  (req: Request, res: Response, next: NextFunction) => {
+    if (req.user.rol === 'admin') return next();
+    if (alanlar.some((alan) => req.user[alan])) return next();
+    return res.status(403).json({ message: 'Bu modül için yetkiniz yok' });
+  };
 
 // Yalnızca yazma işlemlerinde yetki arar; GET istekleri serbest bırakılır.
-export const yazmaYetkisi = (...alanlar: YetkiAlani[]) => (req: Request, res: Response, next: NextFunction) => {
-  if (!YAZMA_METODLARI.includes(req.method)) return next();
-  if (req.user.rol === 'admin') return next();
-  if (alanlar.some((alan) => req.user[alan])) return next();
-  return res.status(403).json({ message: 'Bu işlem için yetkiniz yok' });
-};
+export const yazmaYetkisi =
+  (...alanlar: YetkiAlani[]) =>
+  (req: Request, res: Response, next: NextFunction) => {
+    if (!YAZMA_METODLARI.includes(req.method)) return next();
+    if (req.user.rol === 'admin') return next();
+    if (alanlar.some((alan) => req.user[alan])) return next();
+    return res.status(403).json({ message: 'Bu işlem için yetkiniz yok' });
+  };
 
 // Belirli rollere kısıtlar.
-export const rolYetkisi = (...roller: Rol[]) => (req: Request, res: Response, next: NextFunction) => {
-  if (roller.includes(req.user.rol)) return next();
-  return res.status(403).json({ message: 'Bu bölüme erişim yetkiniz yok' });
-};
+export const rolYetkisi =
+  (...roller: Rol[]) =>
+  (req: Request, res: Response, next: NextFunction) => {
+    if (roller.includes(req.user.rol)) return next();
+    return res.status(403).json({ message: 'Bu bölüme erişim yetkiniz yok' });
+  };
 
 // Vitrin yönetimi: admin VEYA motor/aksesuar vitrin yetkisi olan personel.
 // Hem route'ta hem de gövde ayrıştırılmadan önce (server.js) kullanılır.
@@ -65,7 +71,14 @@ export const motorYazmaYetkisi = (req: Request, res: Response, next: NextFunctio
 // (yatırımcı, muhasebeci, yetkisiz personel) müşteri dizinini ve stok maliyetlerini okuyamaz.
 // Yeni bir ekran bu uçları kullanacaksa yetkisini buraya ekleyin.
 export const MUSTERI_ARAYANLAR: YetkiAlani[] = ['servis_yetkisi', 'aksesuar_yetkisi', 'motor_satis_yetkisi', 'yedek_parca_yetkisi'];
-export const AKSESUAR_STOK_OKUYANLAR: YetkiAlani[] = ['aksesuar_yetkisi', 'aksesuar_stok_yetkisi', 'eticaret_yetkisi', 'servis_yetkisi', 'motor_vitrin_yetkisi', 'aksesuar_vitrin_yetkisi'];
+export const AKSESUAR_STOK_OKUYANLAR: YetkiAlani[] = [
+  'aksesuar_yetkisi',
+  'aksesuar_stok_yetkisi',
+  'eticaret_yetkisi',
+  'servis_yetkisi',
+  'motor_vitrin_yetkisi',
+  'aksesuar_vitrin_yetkisi',
+];
 export const YEDEK_PARCA_STOK_OKUYANLAR: YetkiAlani[] = ['yedek_parca_yetkisi', 'servis_yetkisi'];
 
 // Karlılık bilgisi yalnızca admin'e açıktır. Bu alanlar admin dışındaki herkesin yanıtından,
@@ -89,9 +102,7 @@ export const alanlariSil = (v: unknown, gizli: Set<string>): unknown => {
 
 export const kariGizle = (req: Request, res: Response, next: NextFunction) => {
   if (req.user && req.user.rol === 'admin') return next();
-  const gizli = (req.user && req.user.rol === 'yatirimci')
-    ? KAR_ALANLARI
-    : new Set([...KAR_ALANLARI, ...YATIRIMCI_PAYI_ALANLARI]);
+  const gizli = req.user && req.user.rol === 'yatirimci' ? KAR_ALANLARI : new Set([...KAR_ALANLARI, ...YATIRIMCI_PAYI_ALANLARI]);
   const json = res.json.bind(res);
   res.json = (govde?: any) => json(alanlariSil(govde, gizli));
   next();

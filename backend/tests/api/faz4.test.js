@@ -7,7 +7,11 @@ const assert = require('node:assert/strict');
 const { sunucuBaslat } = require('./yardimci');
 
 const SON = Date.now().toString(36);
-let s, api, admin, pool, sayac = 0;
+let s,
+  api,
+  admin,
+  pool,
+  sayac = 0;
 const benzersiz = (onek) => `${onek}${SON}${++sayac}`;
 const sql = async (q, p) => (await pool.query(q, p)).rows;
 const bekle = (ms) => new Promise((c) => setTimeout(c, ms));
@@ -23,10 +27,15 @@ const logBul = async (tablo, hedefId, tip) => {
 };
 
 before(async () => {
-  s = await sunucuBaslat(); api = s.api; admin = s.admin;
+  s = await sunucuBaslat();
+  api = s.api;
+  admin = s.admin;
   pool = require('../../core/veritabani/db').pool;
 });
-after(async () => { if (s) s.durdur(); if (pool) await pool.end(); });
+after(async () => {
+  if (s) s.durdur();
+  if (pool) await pool.end();
+});
 
 describe('#24 denetim kaydı', () => {
   it('müşteri oluşturma, güncelleme ve silme kullanıcı + hedef kayıtla günlüğe yazılır', async () => {

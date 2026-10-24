@@ -40,8 +40,7 @@ const aksesuarStokAyarla = async (db: Veritabani, hedef: { stokId: unknown; urun
  * Adet doğrulaması + tutarlılık: toplamlar, kaydedilen satır ve stok düşümü AYNI adedi kullanır (eskiden boş adet
  * toplamda 0, kayıtta 1 sayılıyordu). Doğrulama hiçbir şey değişmeden ÖNCE yapılır.
  */
-const satirlariHazirla = (parcalar: ParcaGovdesi[] | null | undefined) =>
-  (parcalar ?? []).map((p) => ({ ...p, adet: adetCoz(p.adet) }));
+const satirlariHazirla = (parcalar: ParcaGovdesi[] | null | undefined) => (parcalar ?? []).map((p) => ({ ...p, adet: adetCoz(p.adet) }));
 
 /** İndirim ürün toplamından (ve kârdan) düşülür. toplam_satis NET (indirim sonrası) saklanır. */
 const toplamlariHesapla = (satirlar: Array<{ adet: number; maliyet?: unknown; satis_fiyati?: unknown }>, indirim: unknown) => {
@@ -65,8 +64,15 @@ export const istatistik = (db: Veritabani) => repo.istatistik(db);
 
 /** Tüm satışlar; parçalar ayrı sorguyla çekilip birleştirilir (PostgreSQL'deki json_agg karşılığı). */
 export const listele = async (db: Veritabani) =>
-  parcalariEkle(db, await repo.hepsiniListele(db), 'aksesuar_parcalar', 'aksesuar_id',
-    ['id', 'stok_id', 'urun_adi', 'adet', 'maliyet', 'satis_fiyati', 'created_at'], ['maliyet', 'satis_fiyati'], { anahtariTut: true });
+  parcalariEkle(
+    db,
+    await repo.hepsiniListele(db),
+    'aksesuar_parcalar',
+    'aksesuar_id',
+    ['id', 'stok_id', 'urun_adi', 'adet', 'maliyet', 'satis_fiyati', 'created_at'],
+    ['maliyet', 'satis_fiyati'],
+    { anahtariTut: true },
+  );
 
 export const detay = async (db: Veritabani, id: number) => {
   const satis = await repo.idyeGoreBul(db, id);
@@ -82,18 +88,31 @@ export const olustur = async (db: BaglamDb, govde: SatisGovdesi, kullanici: Kull
     const { toplamMaliyet, indirimTutar, toplamSatis, kar } = toplamlariHesapla(satirlar, govde.indirim);
 
     const satis = await repo.ekle(tx, {
-      ad_soyad: govde.ad_soyad, telefon: govde.telefon, odeme_sekli: govde.odeme_sekli, aciklama: govde.aciklama,
-      durum: (govde.durum as string) || 'beklemede', odeme_detaylari: govde.odeme_detaylari,
-      satis_tarihi: govde.satis_tarihi || new Date(), toplam_maliyet: toplamMaliyet, toplam_satis: toplamSatis, kar,
+      ad_soyad: govde.ad_soyad,
+      telefon: govde.telefon,
+      odeme_sekli: govde.odeme_sekli,
+      aciklama: govde.aciklama,
+      durum: (govde.durum as string) || 'beklemede',
+      odeme_detaylari: govde.odeme_detaylari,
+      satis_tarihi: govde.satis_tarihi || new Date(),
+      toplam_maliyet: toplamMaliyet,
+      toplam_satis: toplamSatis,
+      kar,
       tamamlama_tarihi: govde.durum === 'tamamlandi' ? new Date() : null,
-      olusturan_kisi: olusturanKisi, kalan_odeme: bosuSifir(govde.kalan_odeme), indirim: indirimTutar,
+      olusturan_kisi: olusturanKisi,
+      kalan_odeme: bosuSifir(govde.kalan_odeme),
+      indirim: indirimTutar,
     });
     const id = satis.id as number;
 
     for (const p of satirlar) {
       const stokId = await stokIdCoz(tx, p.stok_id, p.urun_adi);
       await repo.parcaEkle(tx, id, {
-        stok_id: stokId, urun_adi: p.urun_adi, adet: p.adet, maliyet: bosuSifir(p.maliyet), satis_fiyati: bosuSifir(p.satis_fiyati),
+        stok_id: stokId,
+        urun_adi: p.urun_adi,
+        adet: p.adet,
+        maliyet: bosuSifir(p.maliyet),
+        satis_fiyati: bosuSifir(p.satis_fiyati),
       });
       // Tamamlandıysa stoktan düş
       if (govde.durum === 'tamamlandi') await aksesuarStokAyarla(tx, { stokId, urunAdi: p.urun_adi }, p.adet, 1);
@@ -126,7 +145,11 @@ export const guncelle = async (db: BaglamDb, id: number, govde: SatisGovdesi) =>
     for (const p of satirlar) {
       const stokId = await stokIdCoz(tx, p.stok_id, p.urun_adi);
       await repo.parcaEkle(tx, id, {
-        stok_id: stokId, urun_adi: p.urun_adi, adet: p.adet, maliyet: bosuSifir(p.maliyet), satis_fiyati: bosuSifir(p.satis_fiyati),
+        stok_id: stokId,
+        urun_adi: p.urun_adi,
+        adet: p.adet,
+        maliyet: bosuSifir(p.maliyet),
+        satis_fiyati: bosuSifir(p.satis_fiyati),
       });
       // Yeni durum tamamlandi ise stoktan düş
       if (govde.durum === 'tamamlandi') await aksesuarStokAyarla(tx, { stokId, urunAdi: p.urun_adi }, p.adet, 1);
@@ -134,11 +157,19 @@ export const guncelle = async (db: BaglamDb, id: number, govde: SatisGovdesi) =>
 
     const { toplamMaliyet, indirimTutar, toplamSatis, kar } = toplamlariHesapla(satirlar, govde.indirim);
     await repo.guncelle(tx, id, {
-      ad_soyad: govde.ad_soyad, telefon: govde.telefon, odeme_sekli: govde.odeme_sekli, aciklama: govde.aciklama,
-      durum: govde.durum, odeme_detaylari: govde.odeme_detaylari, satis_tarihi: govde.satis_tarihi,
-      toplam_maliyet: toplamMaliyet, toplam_satis: toplamSatis, kar,
+      ad_soyad: govde.ad_soyad,
+      telefon: govde.telefon,
+      odeme_sekli: govde.odeme_sekli,
+      aciklama: govde.aciklama,
+      durum: govde.durum,
+      odeme_detaylari: govde.odeme_detaylari,
+      satis_tarihi: govde.satis_tarihi,
+      toplam_maliyet: toplamMaliyet,
+      toplam_satis: toplamSatis,
+      kar,
       tamamlama_tarihi: govde.durum === 'tamamlandi' && eskiDurum !== 'tamamlandi' ? new Date() : null,
-      kalan_odeme: bosuSifir(govde.kalan_odeme), indirim: indirimTutar,
+      kalan_odeme: bosuSifir(govde.kalan_odeme),
+      indirim: indirimTutar,
     });
   });
 

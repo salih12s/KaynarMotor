@@ -10,24 +10,40 @@ import { RED, KATEGORI_ICON } from '../kategoriSabitleri';
 const MobilMenu = ({ s }) => {
   const { mobilMenu, setMobilMenu, goHome, tab, handleTab, setTaksitOpen } = s;
   return (
-    <Drawer anchor="right" open={mobilMenu} onClose={() => setMobilMenu(false)}
-      PaperProps={{ sx: { width: 260, bgcolor: '#1a1a1a', color: '#fff' } }}>
+    <Drawer anchor="right" open={mobilMenu} onClose={() => setMobilMenu(false)} PaperProps={{ sx: { width: 260, bgcolor: '#1a1a1a', color: '#fff' } }}>
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 2, py: 1.5 }}>
-        <Typography fontWeight="bold" sx={{ letterSpacing: 1 }}>KAYNAR <span style={{ color: RED }}>MOTOR</span></Typography>
-        <IconButton onClick={() => setMobilMenu(false)} sx={{ color: '#fff' }}><CloseIcon /></IconButton>
+        <Typography fontWeight="bold" sx={{ letterSpacing: 1 }}>
+          KAYNAR <span style={{ color: RED }}>MOTOR</span>
+        </Typography>
+        <IconButton onClick={() => setMobilMenu(false)} sx={{ color: '#fff' }}>
+          <CloseIcon />
+        </IconButton>
       </Box>
       <Divider sx={{ borderColor: 'rgba(255,255,255,0.12)' }} />
       <List>
         <ListItem disablePadding>
-          <ListItemButton onClick={() => { goHome(); setMobilMenu(false); }}>
-            <ListItemIcon sx={{ color: 'rgba(255,255,255,0.7)', minWidth: 38 }}><HomeIcon /></ListItemIcon>
+          <ListItemButton
+            onClick={() => {
+              goHome();
+              setMobilMenu(false);
+            }}
+          >
+            <ListItemIcon sx={{ color: 'rgba(255,255,255,0.7)', minWidth: 38 }}>
+              <HomeIcon />
+            </ListItemIcon>
             <ListItemText primary="Ana Sayfa" />
           </ListItemButton>
         </ListItem>
         {KATEGORILER.map((k, i) => (
           <ListItem disablePadding key={k.key}>
-            <ListItemButton selected={tab === i} onClick={() => { handleTab(i); setMobilMenu(false); }}
-              sx={{ '&.Mui-selected': { bgcolor: 'rgba(198,40,40,0.25)', borderLeft: `4px solid ${RED}` } }}>
+            <ListItemButton
+              selected={tab === i}
+              onClick={() => {
+                handleTab(i);
+                setMobilMenu(false);
+              }}
+              sx={{ '&.Mui-selected': { bgcolor: 'rgba(198,40,40,0.25)', borderLeft: `4px solid ${RED}` } }}
+            >
               <ListItemIcon sx={{ color: 'rgba(255,255,255,0.7)', minWidth: 38 }}>{KATEGORI_ICON[k.key]}</ListItemIcon>
               <ListItemText primary={k.label} primaryTypographyProps={{ fontWeight: tab === i ? 700 : 500 }} />
             </ListItemButton>
@@ -35,8 +51,15 @@ const MobilMenu = ({ s }) => {
         ))}
         <Divider sx={{ borderColor: 'rgba(255,255,255,0.12)', my: 0.5 }} />
         <ListItem disablePadding>
-          <ListItemButton onClick={() => { setTaksitOpen(true); setMobilMenu(false); }}>
-            <ListItemIcon sx={{ color: 'rgba(255,255,255,0.7)', minWidth: 38 }}><CalculateIcon /></ListItemIcon>
+          <ListItemButton
+            onClick={() => {
+              setTaksitOpen(true);
+              setMobilMenu(false);
+            }}
+          >
+            <ListItemIcon sx={{ color: 'rgba(255,255,255,0.7)', minWidth: 38 }}>
+              <CalculateIcon />
+            </ListItemIcon>
             <ListItemText primary="Taksit Hesapla" />
           </ListItemButton>
         </ListItem>

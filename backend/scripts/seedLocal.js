@@ -38,7 +38,9 @@ const hedefSorunlari = (env) => {
   const sorunlar = [];
   if (env.DATABASE_URL) sorunlar.push('DATABASE_URL tanımlı (uzak bir veritabanını gösteriyor olabilir)');
   if (env.NODE_ENV === 'production') sorunlar.push('NODE_ENV=production');
-  const host = String(env.DB_HOST || '').trim().toLowerCase();
+  const host = String(env.DB_HOST || '')
+    .trim()
+    .toLowerCase();
   if (!YEREL_HOSTLAR.includes(host)) sorunlar.push(`DB_HOST yerel değil: "${env.DB_HOST || '(boş)'}"`);
   return sorunlar;
 };
@@ -67,7 +69,7 @@ const FRONTEND = `http://localhost:${process.env.FRONTEND_PORT || 3100}`;
 // Sabit tohumlu sözde-rastgele üreteç (mulberry32): her çalıştırmada AYNI veri üretilir.
 let tohum = 20261004;
 const rnd = () => {
-  tohum = (tohum + 0x6D2B79F5) | 0;
+  tohum = (tohum + 0x6d2b79f5) | 0;
   let t = Math.imul(tohum ^ (tohum >>> 15), 1 | tohum);
   t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
   return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
@@ -103,11 +105,21 @@ const sahteTelefon = (i) => {
   return `0500 ${s.slice(0, 3)} ${s.slice(3, 5)} ${s.slice(5)}`;
 };
 
-const asciiYap = (s) => String(s)
-  .replace(/ı/g, 'i').replace(/İ/g, 'I').replace(/ş/g, 's').replace(/Ş/g, 'S')
-  .replace(/ğ/g, 'g').replace(/Ğ/g, 'G').replace(/ü/g, 'u').replace(/Ü/g, 'U')
-  .replace(/ö/g, 'o').replace(/Ö/g, 'O').replace(/ç/g, 'c').replace(/Ç/g, 'C')
-  .replace(/[^\x20-\x7E]/g, '');
+const asciiYap = (s) =>
+  String(s)
+    .replace(/ı/g, 'i')
+    .replace(/İ/g, 'I')
+    .replace(/ş/g, 's')
+    .replace(/Ş/g, 'S')
+    .replace(/ğ/g, 'g')
+    .replace(/Ğ/g, 'G')
+    .replace(/ü/g, 'u')
+    .replace(/Ü/g, 'U')
+    .replace(/ö/g, 'o')
+    .replace(/Ö/g, 'O')
+    .replace(/ç/g, 'c')
+    .replace(/Ç/g, 'C')
+    .replace(/[^\x20-\x7E]/g, '');
 
 // Tek sayfalık, geçerli ve çok küçük bir PDF üretir (satış belgesi örneği için).
 const ornekPdf = (satirlar) => {
@@ -122,11 +134,15 @@ const ornekPdf = (satirlar) => {
   ];
   let pdf = '%PDF-1.4\n';
   const ofsetler = [];
-  nesneler.forEach((n, i) => { ofsetler.push(Buffer.byteLength(pdf)); pdf += `${i + 1} 0 obj\n${n}\nendobj\n`; });
+  nesneler.forEach((n, i) => {
+    ofsetler.push(Buffer.byteLength(pdf));
+    pdf += `${i + 1} 0 obj\n${n}\nendobj\n`;
+  });
   const xref = Buffer.byteLength(pdf);
-  pdf += `xref\n0 ${nesneler.length + 1}\n0000000000 65535 f \n`
-    + ofsetler.map((o) => `${String(o).padStart(10, '0')} 00000 n \n`).join('')
-    + `trailer\n<< /Size ${nesneler.length + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`;
+  pdf +=
+    `xref\n0 ${nesneler.length + 1}\n0000000000 65535 f \n` +
+    ofsetler.map((o) => `${String(o).padStart(10, '0')} 00000 n \n`).join('') +
+    `trailer\n<< /Size ${nesneler.length + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`;
   return Buffer.from(pdf, 'latin1');
 };
 
@@ -163,15 +179,84 @@ const ilanGorselleri = (dosyalar, ust, alt) => {
 // ---------------------------------------------------------------------------
 // Sabit veri: kişiler, katalog, stok
 // ---------------------------------------------------------------------------
-const ADLAR = ['Ahmet', 'Mehmet', 'Mustafa', 'Ali', 'Hüseyin', 'Hasan', 'İbrahim', 'Murat', 'Serkan', 'Oğuz',
-  'Kerem', 'Barış', 'Tolga', 'Cem', 'Volkan', 'Gökhan', 'Yusuf', 'Ayşe', 'Fatma', 'Zeynep',
-  'Merve', 'Deniz', 'Ebru', 'Gizem', 'Seda', 'Uğur', 'Sinan', 'Erdem', 'Caner', 'Büşra'];
-const SOYADLAR = ['Yılmaz', 'Kaya', 'Demir', 'Çelik', 'Şahin', 'Öztürk', 'Özdemir', 'Doğan', 'Kılıç', 'Aslan',
-  'Çetin', 'Koç', 'Kurt', 'Şimşek', 'Polat', 'Korkmaz', 'Güneş', 'Aksoy', 'Tekin', 'Bulut',
-  'Yavuz', 'Acar', 'Taş', 'Güler', 'Bozkurt', 'Uysal', 'Sarı', 'Akın', 'Ateş', 'Keskin'];
-const MAHALLELER = [['Güvenevler', 'Yenişehir'], ['Limonluk', 'Yenişehir'], ['Pozcu', 'Yenişehir'],
-  ['Viranşehir', 'Mezitli'], ['Davultepe', 'Mezitli'], ['Menderes', 'Mezitli'], ['Halkkent', 'Toroslar'],
-  ['Akbelen', 'Toroslar'], ['Çilek', 'Akdeniz'], ['Kiremithane', 'Akdeniz'], ['Şehitishak', 'Tarsus'], ['Merkez', 'Erdemli']];
+const ADLAR = [
+  'Ahmet',
+  'Mehmet',
+  'Mustafa',
+  'Ali',
+  'Hüseyin',
+  'Hasan',
+  'İbrahim',
+  'Murat',
+  'Serkan',
+  'Oğuz',
+  'Kerem',
+  'Barış',
+  'Tolga',
+  'Cem',
+  'Volkan',
+  'Gökhan',
+  'Yusuf',
+  'Ayşe',
+  'Fatma',
+  'Zeynep',
+  'Merve',
+  'Deniz',
+  'Ebru',
+  'Gizem',
+  'Seda',
+  'Uğur',
+  'Sinan',
+  'Erdem',
+  'Caner',
+  'Büşra',
+];
+const SOYADLAR = [
+  'Yılmaz',
+  'Kaya',
+  'Demir',
+  'Çelik',
+  'Şahin',
+  'Öztürk',
+  'Özdemir',
+  'Doğan',
+  'Kılıç',
+  'Aslan',
+  'Çetin',
+  'Koç',
+  'Kurt',
+  'Şimşek',
+  'Polat',
+  'Korkmaz',
+  'Güneş',
+  'Aksoy',
+  'Tekin',
+  'Bulut',
+  'Yavuz',
+  'Acar',
+  'Taş',
+  'Güler',
+  'Bozkurt',
+  'Uysal',
+  'Sarı',
+  'Akın',
+  'Ateş',
+  'Keskin',
+];
+const MAHALLELER = [
+  ['Güvenevler', 'Yenişehir'],
+  ['Limonluk', 'Yenişehir'],
+  ['Pozcu', 'Yenişehir'],
+  ['Viranşehir', 'Mezitli'],
+  ['Davultepe', 'Mezitli'],
+  ['Menderes', 'Mezitli'],
+  ['Halkkent', 'Toroslar'],
+  ['Akbelen', 'Toroslar'],
+  ['Çilek', 'Akdeniz'],
+  ['Kiremithane', 'Akdeniz'],
+  ['Şehitishak', 'Tarsus'],
+  ['Merkez', 'Erdemli'],
+];
 
 const MUSTERI_SAYISI = 48;
 const musteriUret = () => {
@@ -204,10 +289,11 @@ const plakaUret = (i) => {
   for (let k = 0; ; k++) {
     const n = i + k * 101;
     const il = ILLER[n % ILLER.length];
-    const p = n % 3 === 0
-      ? `${il} ${HARF2[n % HARF2.length]} ${1000 + ((n * 397) % 9000)}`
-      : `${il} ${HARF3[n % HARF3.length]} ${100 + ((n * 53) % 900)}`;
-    if (!kullanilanPlakalar.has(p)) { kullanilanPlakalar.add(p); return p; }
+    const p = n % 3 === 0 ? `${il} ${HARF2[n % HARF2.length]} ${1000 + ((n * 397) % 9000)}` : `${il} ${HARF3[n % HARF3.length]} ${100 + ((n * 53) % 900)}`;
+    if (!kullanilanPlakalar.has(p)) {
+      kullanilanPlakalar.add(p);
+      return p;
+    }
   }
 };
 
@@ -254,84 +340,297 @@ const IKINCI_EL_NOTLAR = '• Ekspertiz raporu mevcuttur\n• Takas ve kredi kar
 
 // Sitede (vitrinde) yayınlanan motorlar. Her biri aynı zamanda stoktaki bir motordur.
 const VITRIN_MOTORLAR = [
-  { gorsel: ['cfmoto-250sr', 'cfmoto-250sr-2'], marka: 'CFMOTO', model: '250SR', yil: 2026, km: 0, cc: 249, segment: 'Racing', sifir: true, fiyat: 229000, one: true,
+  {
+    gorsel: ['cfmoto-250sr', 'cfmoto-250sr-2'],
+    marka: 'CFMOTO',
+    model: '250SR',
+    yil: 2026,
+    km: 0,
+    cc: 249,
+    segment: 'Racing',
+    sifir: true,
+    fiyat: 229000,
+    one: true,
     baslik: 'Sıfır CFMOTO 250SR ABS – 2026 Model, Hemen Teslim',
-    ozet: 'Çift kanal ABS, TFT ekran ve LED aydınlatmalı 2026 model CFMOTO 250SR. A2 ehliyetle kullanılabilir, şehir içi ve pist günleri için ideal.' },
-  { gorsel: ['honda-pcx'], marka: 'Honda', model: 'PCX 125', yil: 2026, km: 0, cc: 125, segment: 'Scooter', sifir: true, fiyat: 189500, one: true,
+    ozet: 'Çift kanal ABS, TFT ekran ve LED aydınlatmalı 2026 model CFMOTO 250SR. A2 ehliyetle kullanılabilir, şehir içi ve pist günleri için ideal.',
+  },
+  {
+    gorsel: ['honda-pcx'],
+    marka: 'Honda',
+    model: 'PCX 125',
+    yil: 2026,
+    km: 0,
+    cc: 125,
+    segment: 'Scooter',
+    sifir: true,
+    fiyat: 189500,
+    one: true,
     baslik: 'Sıfır Honda PCX 125 – Start-Stop, Akıllı Anahtar',
-    ozet: 'B ehliyetle kullanılabilen, 100 km\'de yaklaşık 2,1 litre yakan Honda PCX 125. Akıllı anahtar, start-stop ve geniş sele altı hacmi.' },
-  { gorsel: ['yamaha-nmax'], marka: 'Yamaha', model: 'NMAX 155', yil: 2026, km: 0, cc: 155, segment: 'Scooter', sifir: true, fiyat: 209000,
+    ozet: "B ehliyetle kullanılabilen, 100 km'de yaklaşık 2,1 litre yakan Honda PCX 125. Akıllı anahtar, start-stop ve geniş sele altı hacmi.",
+  },
+  {
+    gorsel: ['yamaha-nmax'],
+    marka: 'Yamaha',
+    model: 'NMAX 155',
+    yil: 2026,
+    km: 0,
+    cc: 155,
+    segment: 'Scooter',
+    sifir: true,
+    fiyat: 209000,
     baslik: 'Sıfır Yamaha NMAX 155 – ABS, Bluetooth Bağlantı',
-    ozet: 'Çift kanal ABS, çekiş kontrolü ve telefon bağlantılı gösterge paneliyle yeni NMAX 155. Stoktan hemen teslim.' },
-  { gorsel: ['honda-super-cub', 'honda-super-cub-2'], marka: 'Honda', model: 'Super Cub C125', yil: 2026, km: 0, cc: 125, segment: 'Cub', sifir: true, fiyat: 204000,
+    ozet: 'Çift kanal ABS, çekiş kontrolü ve telefon bağlantılı gösterge paneliyle yeni NMAX 155. Stoktan hemen teslim.',
+  },
+  {
+    gorsel: ['honda-super-cub', 'honda-super-cub-2'],
+    marka: 'Honda',
+    model: 'Super Cub C125',
+    yil: 2026,
+    km: 0,
+    cc: 125,
+    segment: 'Cub',
+    sifir: true,
+    fiyat: 204000,
     baslik: 'Sıfır Honda Super Cub C125 – Efsane Geri Döndü',
-    ozet: 'Yarı otomatik şanzıman, ABS ve LED farlı Super Cub C125. Dünyanın en çok üretilen motosikletinin modern yorumu.' },
-  { gorsel: ['yamaha-mt07'], marka: 'Yamaha', model: 'MT-07', yil: 2021, km: 18400, cc: 689, segment: 'Naked', fiyat: 615000, one: true, yatirimci: 'yatirimci1',
+    ozet: 'Yarı otomatik şanzıman, ABS ve LED farlı Super Cub C125. Dünyanın en çok üretilen motosikletinin modern yorumu.',
+  },
+  {
+    gorsel: ['yamaha-mt07'],
+    marka: 'Yamaha',
+    model: 'MT-07',
+    yil: 2021,
+    km: 18400,
+    cc: 689,
+    segment: 'Naked',
+    fiyat: 615000,
+    one: true,
+    yatirimci: 'yatirimci1',
     baslik: 'Yamaha MT-07 2021 – 18.400 km, Hatasız, Yetkili Servis Bakımlı',
-    ozet: 'İlk sahibinden, tüm bakımları yetkili serviste yapılmış MT-07. Lastikler ve zincir dişli seti yeni, orijinal egzoz mevcut.', hasar: 'Hasar kaydı yok' },
-  { gorsel: ['yamaha-r25'], marka: 'Yamaha', model: 'YZF-R25', yil: 2019, km: 27300, cc: 249, segment: 'Racing', fiyat: 268000,
+    ozet: 'İlk sahibinden, tüm bakımları yetkili serviste yapılmış MT-07. Lastikler ve zincir dişli seti yeni, orijinal egzoz mevcut.',
+    hasar: 'Hasar kaydı yok',
+  },
+  {
+    gorsel: ['yamaha-r25'],
+    marka: 'Yamaha',
+    model: 'YZF-R25',
+    yil: 2019,
+    km: 27300,
+    cc: 249,
+    segment: 'Racing',
+    fiyat: 268000,
     baslik: 'Yamaha YZF-R25 2019 – Bakımları Yeni, Muayene 2027',
-    ozet: 'Periyodik bakımı yeni yapıldı; yağ, filtre ve bujiler değişti. Ön-arka balatalar yeni, muayenesi 2027\'ye kadar geçerli.', hasar: '12.500 ₺ hasar kaydı (sol grenaj)' },
-  { gorsel: ['honda-cb650r'], marka: 'Honda', model: 'CB650R', yil: 2021, km: 14200, cc: 649, segment: 'Naked', fiyat: 665000,
+    ozet: "Periyodik bakımı yeni yapıldı; yağ, filtre ve bujiler değişti. Ön-arka balatalar yeni, muayenesi 2027'ye kadar geçerli.",
+    hasar: '12.500 ₺ hasar kaydı (sol grenaj)',
+  },
+  {
+    gorsel: ['honda-cb650r'],
+    marka: 'Honda',
+    model: 'CB650R',
+    yil: 2021,
+    km: 14200,
+    cc: 649,
+    segment: 'Naked',
+    fiyat: 665000,
     baslik: 'Honda CB650R 2021 – Neo Sports Café, Garaj Motoru',
-    ozet: 'Dört silindirli motoruyla CB650R. Kışın kullanılmamış, kapalı garajda muhafaza edilmiştir. İkinci anahtarı ve kitapçığı mevcut.', hasar: 'Hasar kaydı yok' },
-  { gorsel: ['kawasaki-z900', 'kawasaki-z900-2'], marka: 'Kawasaki', model: 'Z900', yil: 2022, km: 11800, cc: 948, segment: 'Naked', fiyat: 845000, one: true, yatirimci: 'yatirimci1',
+    ozet: 'Dört silindirli motoruyla CB650R. Kışın kullanılmamış, kapalı garajda muhafaza edilmiştir. İkinci anahtarı ve kitapçığı mevcut.',
+    hasar: 'Hasar kaydı yok',
+  },
+  {
+    gorsel: ['kawasaki-z900', 'kawasaki-z900-2'],
+    marka: 'Kawasaki',
+    model: 'Z900',
+    yil: 2022,
+    km: 11800,
+    cc: 948,
+    segment: 'Naked',
+    fiyat: 845000,
+    one: true,
+    yatirimci: 'yatirimci1',
     baslik: 'Kawasaki Z900 2022 – 11.800 km, Performance Paket',
-    ozet: 'Akrapovič egzoz, kısa plakalık ve grenaj koruma takılı Z900. Sürüş modları ve çekiş kontrolü sorunsuz çalışıyor.', hasar: 'Hasar kaydı yok' },
-  { gorsel: ['ktm-390-duke'], marka: 'KTM', model: '390 Duke', yil: 2020, km: 21500, cc: 373, segment: 'Naked', fiyat: 298000,
+    ozet: 'Akrapovič egzoz, kısa plakalık ve grenaj koruma takılı Z900. Sürüş modları ve çekiş kontrolü sorunsuz çalışıyor.',
+    hasar: 'Hasar kaydı yok',
+  },
+  {
+    gorsel: ['ktm-390-duke'],
+    marka: 'KTM',
+    model: '390 Duke',
+    yil: 2020,
+    km: 21500,
+    cc: 373,
+    segment: 'Naked',
+    fiyat: 298000,
     baslik: 'KTM 390 Duke 2020 – TFT Ekran, Quickshifter',
-    ozet: 'A2 ehliyete uygun, hafif ve çevik 390 Duke. Zincir dişli seti 2.000 km önce değişti, lastikler %80.' },
-  { gorsel: ['honda-africa-twin'], marka: 'Honda', model: 'CRF1100L Africa Twin', yil: 2022, km: 23600, cc: 1084, segment: 'Touring', fiyat: 1195000, yatirimci: 'yatirimci2',
+    ozet: 'A2 ehliyete uygun, hafif ve çevik 390 Duke. Zincir dişli seti 2.000 km önce değişti, lastikler %80.',
+  },
+  {
+    gorsel: ['honda-africa-twin'],
+    marka: 'Honda',
+    model: 'CRF1100L Africa Twin',
+    yil: 2022,
+    km: 23600,
+    cc: 1084,
+    segment: 'Touring',
+    fiyat: 1195000,
+    yatirimci: 'yatirimci2',
     baslik: 'Honda Africa Twin 2022 – DCT, Çantalı, Seyahate Hazır',
-    ozet: 'DCT şanzımanlı Africa Twin. Alüminyum yan çantalar, motor koruma demiri ve yüksek cam takılı. Uzun yola hazır.', hasar: 'Hasar kaydı yok' },
-  { gorsel: ['yamaha-xmax'], marka: 'Yamaha', model: 'XMAX 250', yil: 2021, km: 16900, cc: 250, segment: 'Maxi Scooter', fiyat: 305000,
+    ozet: 'DCT şanzımanlı Africa Twin. Alüminyum yan çantalar, motor koruma demiri ve yüksek cam takılı. Uzun yola hazır.',
+    hasar: 'Hasar kaydı yok',
+  },
+  {
+    gorsel: ['yamaha-xmax'],
+    marka: 'Yamaha',
+    model: 'XMAX 250',
+    yil: 2021,
+    km: 16900,
+    cc: 250,
+    segment: 'Maxi Scooter',
+    fiyat: 305000,
     baslik: 'Yamaha XMAX 250 2021 – Arka Çantalı, Tek Kullanıcı',
-    ozet: 'Arka çanta ve sırt dayama takılı XMAX 250. Varyatör kayışı ve bilyalar yeni değişti.' },
-  { gorsel: ['honda-rebel', 'honda-rebel-2'], marka: 'Honda', model: 'CMX500 Rebel', yil: 2022, km: 9700, cc: 471, segment: 'Chopper', fiyat: 478000,
+    ozet: 'Arka çanta ve sırt dayama takılı XMAX 250. Varyatör kayışı ve bilyalar yeni değişti.',
+  },
+  {
+    gorsel: ['honda-rebel', 'honda-rebel-2'],
+    marka: 'Honda',
+    model: 'CMX500 Rebel',
+    yil: 2022,
+    km: 9700,
+    cc: 471,
+    segment: 'Chopper',
+    fiyat: 478000,
     baslik: 'Honda CMX500 Rebel 2022 – 9.700 km, Sıfır Ayarında',
-    ozet: 'Alçak sele yüksekliğiyle rahat kullanım sunan Rebel 500. Hiç düşmemiş, tüm parçaları orijinal.', hasar: 'Hasar kaydı yok' },
-  { gorsel: ['vespa-primavera'], marka: 'Vespa', model: 'Primavera 150', yil: 2023, km: 6200, cc: 150, segment: 'Scooter', fiyat: 289000,
+    ozet: 'Alçak sele yüksekliğiyle rahat kullanım sunan Rebel 500. Hiç düşmemiş, tüm parçaları orijinal.',
+    hasar: 'Hasar kaydı yok',
+  },
+  {
+    gorsel: ['vespa-primavera'],
+    marka: 'Vespa',
+    model: 'Primavera 150',
+    yil: 2023,
+    km: 6200,
+    cc: 150,
+    segment: 'Scooter',
+    fiyat: 289000,
     baslik: 'Vespa Primavera 150 2023 – Beyaz, 6.200 km',
-    ozet: 'Bayan kullanıcıdan, sadece hafta sonları kullanılmış Primavera 150. Boyasız, çiziksiz.' },
-  { gorsel: ['honda-crf250l'], marka: 'Honda', model: 'CRF250L', yil: 2020, km: 19800, cc: 249, segment: 'Cross/Enduro', fiyat: 285000,
+    ozet: 'Bayan kullanıcıdan, sadece hafta sonları kullanılmış Primavera 150. Boyasız, çiziksiz.',
+  },
+  {
+    gorsel: ['honda-crf250l'],
+    marka: 'Honda',
+    model: 'CRF250L',
+    yil: 2020,
+    km: 19800,
+    cc: 249,
+    segment: 'Cross/Enduro',
+    fiyat: 285000,
     baslik: 'Honda CRF250L 2020 – Yol ve Arazi, Koruma Demirli',
-    ozet: 'Hem asfaltta hem arazide kullanılabilen CRF250L. Karter koruma ve el koruma takılı, lastikler yeni.' },
-  { gorsel: ['bajaj-dominar', 'bajaj-dominar-2'], marka: 'Bajaj', model: 'Dominar 400', yil: 2022, km: 24100, cc: 373, segment: 'Touring', fiyat: 228000,
+    ozet: 'Hem asfaltta hem arazide kullanılabilen CRF250L. Karter koruma ve el koruma takılı, lastikler yeni.',
+  },
+  {
+    gorsel: ['bajaj-dominar', 'bajaj-dominar-2'],
+    marka: 'Bajaj',
+    model: 'Dominar 400',
+    yil: 2022,
+    km: 24100,
+    cc: 373,
+    segment: 'Touring',
+    fiyat: 228000,
     baslik: 'Bajaj Dominar 400 2022 – Touring Paket, Bakımlı',
-    ozet: 'Yüksek cam, el koruma ve arka çanta demiriyle gelen Dominar 400. Uzun yol konforu arayanlar için uygun fiyatlı seçenek.', hasar: '8.200 ₺ hasar kaydı (sağ ayna, sinyal)' },
+    ozet: 'Yüksek cam, el koruma ve arka çanta demiriyle gelen Dominar 400. Uzun yol konforu arayanlar için uygun fiyatlı seçenek.',
+    hasar: '8.200 ₺ hasar kaydı (sağ ayna, sinyal)',
+  },
 ];
 
 const VITRIN_DIGER = [
-  { kategori: 'aksesuar', gorsel: ['kask'], yer: ['Full Face Kask', 'Shoei XR-1100'], fiyat: 14500, marka: 'Shoei',
+  {
+    kategori: 'aksesuar',
+    gorsel: ['kask'],
+    yer: ['Full Face Kask', 'Shoei XR-1100'],
+    fiyat: 14500,
+    marka: 'Shoei',
     baslik: 'Shoei XR-1100 Full Face Kask – M Beden',
-    aciklama: 'Fiberglas kabuk, çıkarılıp yıkanabilir iç süngerler ve Pinlock uyumlu vizör. ECE 22.05 sertifikalı.' },
-  { kategori: 'aksesuar', gorsel: ['eldiven'], yer: ['Deri Eldiven', 'Karbon korumalı'], fiyat: 3200, marka: 'Hyod',
+    aciklama: 'Fiberglas kabuk, çıkarılıp yıkanabilir iç süngerler ve Pinlock uyumlu vizör. ECE 22.05 sertifikalı.',
+  },
+  {
+    kategori: 'aksesuar',
+    gorsel: ['eldiven'],
+    yer: ['Deri Eldiven', 'Karbon korumalı'],
+    fiyat: 3200,
+    marka: 'Hyod',
     baslik: 'Deri Yarış Eldiveni – Karbon Korumalı',
-    aciklama: 'Tam deri, karbon eklem koruması ve çift bilek kapaması. L ve XL beden stokta.' },
-  { kategori: 'aksesuar', gorsel: ['eldiven-scoyco'], yer: ['Yazlık Eldiven', 'Scoyco MC29'], fiyat: 1150, marka: 'Scoyco',
+    aciklama: 'Tam deri, karbon eklem koruması ve çift bilek kapaması. L ve XL beden stokta.',
+  },
+  {
+    kategori: 'aksesuar',
+    gorsel: ['eldiven-scoyco'],
+    yer: ['Yazlık Eldiven', 'Scoyco MC29'],
+    fiyat: 1150,
+    marka: 'Scoyco',
     baslik: 'Scoyco MC29 Yazlık Eldiven – Dokunmatik Uçlu',
-    aciklama: 'Hava alan file kumaş, sert eklem koruması ve dokunmatik ekran uyumlu parmak uçları. M, L, XL.' },
-  { kategori: 'aksesuar', gorsel: ['top-case'], yer: ['Arka Çanta', 'SHAD SH33'], fiyat: 3950, marka: 'SHAD',
+    aciklama: 'Hava alan file kumaş, sert eklem koruması ve dokunmatik ekran uyumlu parmak uçları. M, L, XL.',
+  },
+  {
+    kategori: 'aksesuar',
+    gorsel: ['top-case'],
+    yer: ['Arka Çanta', 'SHAD SH33'],
+    fiyat: 3950,
+    marka: 'SHAD',
     baslik: 'SHAD SH33 Arka Çanta – 33 Litre, Montaj Dahil',
-    aciklama: 'Bir adet full face kask alır. Bağlantı plakası ile birlikte gelir, montajı mağazamızda ücretsiz yapılır.' },
-  { kategori: 'aksesuar', gorsel: [], yer: ['Koruma Demiri', 'Honda PCX 125'], fiyat: 2400, marka: 'MTR',
+    aciklama: 'Bir adet full face kask alır. Bağlantı plakası ile birlikte gelir, montajı mağazamızda ücretsiz yapılır.',
+  },
+  {
+    kategori: 'aksesuar',
+    gorsel: [],
+    yer: ['Koruma Demiri', 'Honda PCX 125'],
+    fiyat: 2400,
+    marka: 'MTR',
     baslik: 'Koruma Demiri – Honda PCX 125 (2021 ve sonrası)',
-    aciklama: 'Elektrostatik boyalı çelik koruma demiri. Delme-kesme gerektirmez, orijinal bağlantı noktalarına takılır.' },
-  { kategori: 'aksesuar', gorsel: [], yer: ['Telefon Tutucu', 'Şarjlı'], fiyat: 950, marka: 'Kaynar',
+    aciklama: 'Elektrostatik boyalı çelik koruma demiri. Delme-kesme gerektirmez, orijinal bağlantı noktalarına takılır.',
+  },
+  {
+    kategori: 'aksesuar',
+    gorsel: [],
+    yer: ['Telefon Tutucu', 'Şarjlı'],
+    fiyat: 950,
+    marka: 'Kaynar',
     baslik: 'Şarjlı Telefon Tutucu – Titreşim Önleyici',
-    aciklama: 'USB-C hızlı şarj çıkışlı, kamera sensörünü koruyan titreşim sönümleyicili telefon tutucu.' },
-  { kategori: 'yedek_parca', gorsel: [], yer: ['Zincir Dişli Seti', 'DID 520'], fiyat: 4600, marka: 'DID',
+    aciklama: 'USB-C hızlı şarj çıkışlı, kamera sensörünü koruyan titreşim sönümleyicili telefon tutucu.',
+  },
+  {
+    kategori: 'yedek_parca',
+    gorsel: [],
+    yer: ['Zincir Dişli Seti', 'DID 520'],
+    fiyat: 4600,
+    marka: 'DID',
     baslik: 'DID 520 Zincir Dişli Seti – MT-07 / YZF-R25 Uyumlu',
-    aciklama: 'O-ring zincir, ön ve arka dişli. Montaj ve zincir ayarı servisimizde yapılır.' },
-  { kategori: 'yedek_parca', gorsel: [], yer: ['Ön Fren Balatası', 'EBC FA197'], fiyat: 850, marka: 'EBC',
+    aciklama: 'O-ring zincir, ön ve arka dişli. Montaj ve zincir ayarı servisimizde yapılır.',
+  },
+  {
+    kategori: 'yedek_parca',
+    gorsel: [],
+    yer: ['Ön Fren Balatası', 'EBC FA197'],
+    fiyat: 850,
+    marka: 'EBC',
     baslik: 'EBC FA197 Ön Fren Balatası',
-    aciklama: 'Organik karışım, sessiz ve disk dostu. Honda ve Yamaha 125–250 cc modellerle uyumludur.' },
-  { kategori: 'yedek_parca', gorsel: [], yer: ['Motor Yağı', 'Motul 7100 10W-40'], fiyat: 890, marka: 'Motul',
+    aciklama: 'Organik karışım, sessiz ve disk dostu. Honda ve Yamaha 125–250 cc modellerle uyumludur.',
+  },
+  {
+    kategori: 'yedek_parca',
+    gorsel: [],
+    yer: ['Motor Yağı', 'Motul 7100 10W-40'],
+    fiyat: 890,
+    marka: 'Motul',
     baslik: 'Motul 7100 10W-40 Tam Sentetik – 1 Litre',
-    aciklama: 'Ester katkılı tam sentetik 4T motor yağı. Yağ değişimi servisimizde 15 dakikada yapılır.' },
-  { kategori: 'yedek_parca', gorsel: [], yer: ['Akü', 'Yuasa YTX9-BS'], fiyat: 2600, marka: 'Yuasa',
+    aciklama: 'Ester katkılı tam sentetik 4T motor yağı. Yağ değişimi servisimizde 15 dakikada yapılır.',
+  },
+  {
+    kategori: 'yedek_parca',
+    gorsel: [],
+    yer: ['Akü', 'Yuasa YTX9-BS'],
+    fiyat: 2600,
+    marka: 'Yuasa',
     baslik: 'Yuasa YTX9-BS Akü – 12V 8Ah',
-    aciklama: 'Bakımsız, kuru tip akü. Eski akünüzü getirin, montajı ücretsiz yapalım.' },
+    aciklama: 'Bakımsız, kuru tip akü. Eski akünüzü getirin, montajı ücretsiz yapalım.',
+  },
 ];
 
 // [anahtar, ad, marka, alış, satış, hedef mevcut stok]
@@ -405,69 +704,220 @@ const AKSESUAR_STOK = [
 // Servis işi şablonları. parcalar: [stok anahtarı, adet]; iscilik: [ad, ücret]
 // tip: bu iş hangi araca uygun ('scooter' | 'zincirli' | 'hepsi')
 const SERVIS_SABLONLARI = [
-  { tip: 'scooter', sikayet: 'Periyodik bakım zamanı geldi.', not: 'Periyodik bakım yapıldı; yağ, filtre ve buji değişti.',
-    parcalar: [['yag5100', 1], ['havafiltre', 1], ['bujiCPR8', 1]], iscilik: ['İşçilik – Periyodik bakım', 900] },
-  { tip: 'zincirli', sikayet: 'Periyodik bakım, yağ değişimi istiyor.', not: 'Yağ, yağ filtresi ve bujiler değişti. Zincir ayarı yapıldı.',
-    parcalar: [['yag7100', 3], ['filtre204', 1], ['bujiCR8E', 2]], iscilik: ['İşçilik – Periyodik bakım', 1500] },
-  { tip: 'hepsi', sikayet: 'Ön frende ses var, fren boşluğu arttı.', not: 'Ön balatalar ve fren hidroliği değişti, sistem havası alındı.',
-    parcalar: [['balataOn', 1], ['hidrolik', 1]], iscilik: ['İşçilik – Fren bakımı', 600] },
-  { tip: 'zincirli', sikayet: 'Zincirden ses geliyor, dişliler aşınmış.', not: 'Zincir dişli seti değişti, zincir yağlandı.',
-    parcalar: [['zincir428', 1], ['zincirYagi', 1]], iscilik: ['İşçilik – Zincir dişli değişimi', 900] },
-  { tip: 'scooter', sikayet: 'Kalkışta titreme ve çekiş kaybı var.', not: 'Varyatör kayışı ve bilyalar değişti, varyatör temizlendi.',
-    parcalar: [['kayisPcx', 1], ['bilya', 1]], iscilik: ['İşçilik – Varyatör bakımı', 800] },
-  { tip: 'hepsi', sikayet: 'Sabahları marş basmıyor.', not: 'Akü ölçüldü, ömrünü tamamlamış. Yeni akü takıldı, şarj sistemi kontrol edildi.',
-    parcalar: [['aku7', 1]], iscilik: ['İşçilik – Akü değişimi ve şarj kontrolü', 250] },
-  { tip: 'zincirli', sikayet: 'Lastikler bitmiş, ikisi de değişecek.', not: 'Ön ve arka lastik değişti, balans yapıldı.',
-    parcalar: [['lastikOn', 1], ['lastikArka', 1]], iscilik: ['İşçilik – Lastik değişimi ve balans', 500] },
-  { tip: 'scooter', sikayet: 'Arka lastik patlak, ön lastik de eskimiş.', not: 'İki lastik değişti, sibop ve balans yenilendi.',
-    parcalar: [['lastikScooter', 2]], iscilik: ['İşçilik – Lastik değişimi ve balans', 400] },
-  { tip: 'hepsi', sikayet: 'Sol sinyal yanmıyor, far zayıf.', not: 'Sinyaller LED ile değişti, far ampulü yenilendi, tesisat kontrol edildi.',
-    parcalar: [['sinyal', 1], ['ampul', 1]], iscilik: ['İşçilik – Elektrik arıza tespiti', 450] },
-  { tip: 'zincirli', sikayet: 'Debriyaj kaçırıyor, vites geçişleri sert.', not: 'Debriyaj balataları ve teli değişti, yağ yenilendi.',
-    parcalar: [['debriyajBalata', 1], ['debriyajTel', 1], ['yag7100', 3]], iscilik: ['İşçilik – Debriyaj revizyonu', 1400] },
-  { tip: 'hepsi', sikayet: 'Satın almadan önce genel kontrol istiyor.', not: 'Ekspertiz yapıldı: şasi düzgün, motor kuru, kompresyon normal.',
-    parcalar: [], iscilik: ['Ekspertiz ve genel kontrol', 750] },
-  { tip: 'zincirli', sikayet: 'Ön amortisörden yağ sızıyor.', not: 'Ön amortisör keçeleri ve yağı değişti.',
-    parcalar: [['amortisorYagi', 1]], iscilik: ['İşçilik – Ön amortisör revizyonu (keçe dahil)', 1800] },
-  { tip: 'hepsi', sikayet: 'Hararet yapıyor, fan geç devreye giriyor.', not: 'Soğutma sıvısı değişti, termostat ve fan müşürü kontrol edildi.',
-    parcalar: [['antifriz', 2]], iscilik: ['İşçilik – Soğutma sistemi bakımı', 550] },
-  { tip: 'hepsi', sikayet: 'Arka fren tutmuyor.', not: 'Arka balatalar değişti, disk yüzeyi temizlendi.',
-    parcalar: [['balataArka', 1]], iscilik: ['İşçilik – Arka fren bakımı', 400] },
+  {
+    tip: 'scooter',
+    sikayet: 'Periyodik bakım zamanı geldi.',
+    not: 'Periyodik bakım yapıldı; yağ, filtre ve buji değişti.',
+    parcalar: [
+      ['yag5100', 1],
+      ['havafiltre', 1],
+      ['bujiCPR8', 1],
+    ],
+    iscilik: ['İşçilik – Periyodik bakım', 900],
+  },
+  {
+    tip: 'zincirli',
+    sikayet: 'Periyodik bakım, yağ değişimi istiyor.',
+    not: 'Yağ, yağ filtresi ve bujiler değişti. Zincir ayarı yapıldı.',
+    parcalar: [
+      ['yag7100', 3],
+      ['filtre204', 1],
+      ['bujiCR8E', 2],
+    ],
+    iscilik: ['İşçilik – Periyodik bakım', 1500],
+  },
+  {
+    tip: 'hepsi',
+    sikayet: 'Ön frende ses var, fren boşluğu arttı.',
+    not: 'Ön balatalar ve fren hidroliği değişti, sistem havası alındı.',
+    parcalar: [
+      ['balataOn', 1],
+      ['hidrolik', 1],
+    ],
+    iscilik: ['İşçilik – Fren bakımı', 600],
+  },
+  {
+    tip: 'zincirli',
+    sikayet: 'Zincirden ses geliyor, dişliler aşınmış.',
+    not: 'Zincir dişli seti değişti, zincir yağlandı.',
+    parcalar: [
+      ['zincir428', 1],
+      ['zincirYagi', 1],
+    ],
+    iscilik: ['İşçilik – Zincir dişli değişimi', 900],
+  },
+  {
+    tip: 'scooter',
+    sikayet: 'Kalkışta titreme ve çekiş kaybı var.',
+    not: 'Varyatör kayışı ve bilyalar değişti, varyatör temizlendi.',
+    parcalar: [
+      ['kayisPcx', 1],
+      ['bilya', 1],
+    ],
+    iscilik: ['İşçilik – Varyatör bakımı', 800],
+  },
+  {
+    tip: 'hepsi',
+    sikayet: 'Sabahları marş basmıyor.',
+    not: 'Akü ölçüldü, ömrünü tamamlamış. Yeni akü takıldı, şarj sistemi kontrol edildi.',
+    parcalar: [['aku7', 1]],
+    iscilik: ['İşçilik – Akü değişimi ve şarj kontrolü', 250],
+  },
+  {
+    tip: 'zincirli',
+    sikayet: 'Lastikler bitmiş, ikisi de değişecek.',
+    not: 'Ön ve arka lastik değişti, balans yapıldı.',
+    parcalar: [
+      ['lastikOn', 1],
+      ['lastikArka', 1],
+    ],
+    iscilik: ['İşçilik – Lastik değişimi ve balans', 500],
+  },
+  {
+    tip: 'scooter',
+    sikayet: 'Arka lastik patlak, ön lastik de eskimiş.',
+    not: 'İki lastik değişti, sibop ve balans yenilendi.',
+    parcalar: [['lastikScooter', 2]],
+    iscilik: ['İşçilik – Lastik değişimi ve balans', 400],
+  },
+  {
+    tip: 'hepsi',
+    sikayet: 'Sol sinyal yanmıyor, far zayıf.',
+    not: 'Sinyaller LED ile değişti, far ampulü yenilendi, tesisat kontrol edildi.',
+    parcalar: [
+      ['sinyal', 1],
+      ['ampul', 1],
+    ],
+    iscilik: ['İşçilik – Elektrik arıza tespiti', 450],
+  },
+  {
+    tip: 'zincirli',
+    sikayet: 'Debriyaj kaçırıyor, vites geçişleri sert.',
+    not: 'Debriyaj balataları ve teli değişti, yağ yenilendi.',
+    parcalar: [
+      ['debriyajBalata', 1],
+      ['debriyajTel', 1],
+      ['yag7100', 3],
+    ],
+    iscilik: ['İşçilik – Debriyaj revizyonu', 1400],
+  },
+  {
+    tip: 'hepsi',
+    sikayet: 'Satın almadan önce genel kontrol istiyor.',
+    not: 'Ekspertiz yapıldı: şasi düzgün, motor kuru, kompresyon normal.',
+    parcalar: [],
+    iscilik: ['Ekspertiz ve genel kontrol', 750],
+  },
+  {
+    tip: 'zincirli',
+    sikayet: 'Ön amortisörden yağ sızıyor.',
+    not: 'Ön amortisör keçeleri ve yağı değişti.',
+    parcalar: [['amortisorYagi', 1]],
+    iscilik: ['İşçilik – Ön amortisör revizyonu (keçe dahil)', 1800],
+  },
+  {
+    tip: 'hepsi',
+    sikayet: 'Hararet yapıyor, fan geç devreye giriyor.',
+    not: 'Soğutma sıvısı değişti, termostat ve fan müşürü kontrol edildi.',
+    parcalar: [['antifriz', 2]],
+    iscilik: ['İşçilik – Soğutma sistemi bakımı', 550],
+  },
+  {
+    tip: 'hepsi',
+    sikayet: 'Arka fren tutmuyor.',
+    not: 'Arka balatalar değişti, disk yüzeyi temizlendi.',
+    parcalar: [['balataArka', 1]],
+    iscilik: ['İşçilik – Arka fren bakımı', 400],
+  },
 ];
 
 // Servise gelen araçlar: [müşteri sırası, marka, model, tip, ilk km]
 const SERVIS_ARACLARI = [
-  [0, 'Honda', 'PCX 125', 'scooter', 14200], [1, 'Yamaha', 'MT-07', 'zincirli', 21800], [2, 'Yamaha', 'NMAX 155', 'scooter', 9400],
-  [3, 'CFMOTO', '250SR', 'zincirli', 6300], [4, 'Honda', 'Activa 125', 'scooter', 31500], [5, 'Kawasaki', 'Z900', 'zincirli', 12700],
-  [6, 'Yamaha', 'YZF-R25', 'zincirli', 28900], [7, 'Mondial', 'Drift L 125', 'scooter', 17600], [8, 'Bajaj', 'Dominar 400', 'zincirli', 24400],
-  [9, 'Honda', 'Forza 250', 'scooter', 19300], [10, 'KTM', '390 Duke', 'zincirli', 15800], [11, 'Kuba', 'Çita 180R', 'zincirli', 11200],
-  [12, 'Vespa', 'Primavera 150', 'scooter', 5600], [13, 'Honda', 'CB650R', 'zincirli', 16400], [14, 'SYM', 'Jet 14 125', 'scooter', 22700],
-  [15, 'TVS', 'Apache RTR 200', 'zincirli', 34100], [16, 'Yamaha', 'XMAX 250', 'scooter', 18200], [17, 'Suzuki', 'V-Strom 650', 'zincirli', 41300],
-  [18, 'RKS', 'Bitter 50', 'scooter', 8800], [19, 'Honda', 'CRF250L', 'zincirli', 20500],
+  [0, 'Honda', 'PCX 125', 'scooter', 14200],
+  [1, 'Yamaha', 'MT-07', 'zincirli', 21800],
+  [2, 'Yamaha', 'NMAX 155', 'scooter', 9400],
+  [3, 'CFMOTO', '250SR', 'zincirli', 6300],
+  [4, 'Honda', 'Activa 125', 'scooter', 31500],
+  [5, 'Kawasaki', 'Z900', 'zincirli', 12700],
+  [6, 'Yamaha', 'YZF-R25', 'zincirli', 28900],
+  [7, 'Mondial', 'Drift L 125', 'scooter', 17600],
+  [8, 'Bajaj', 'Dominar 400', 'zincirli', 24400],
+  [9, 'Honda', 'Forza 250', 'scooter', 19300],
+  [10, 'KTM', '390 Duke', 'zincirli', 15800],
+  [11, 'Kuba', 'Çita 180R', 'zincirli', 11200],
+  [12, 'Vespa', 'Primavera 150', 'scooter', 5600],
+  [13, 'Honda', 'CB650R', 'zincirli', 16400],
+  [14, 'SYM', 'Jet 14 125', 'scooter', 22700],
+  [15, 'TVS', 'Apache RTR 200', 'zincirli', 34100],
+  [16, 'Yamaha', 'XMAX 250', 'scooter', 18200],
+  [17, 'Suzuki', 'V-Strom 650', 'zincirli', 41300],
+  [18, 'RKS', 'Bitter 50', 'scooter', 8800],
+  [19, 'Honda', 'CRF250L', 'zincirli', 20500],
 ];
 
 const DEMO_KULLANICILAR = [
   { kullanici_adi: 'servis', ad_soyad: 'Emre Yıldız', rol: 'personel', yetkiler: ['servis_yetkisi', 'yedek_parca_yetkisi'] },
   { kullanici_adi: 'usta', ad_soyad: 'Kadir Özkan', rol: 'personel', yetkiler: ['servis_yetkisi'] },
-  { kullanici_adi: 'satis', ad_soyad: 'Burak Aydın', rol: 'personel',
-    yetkiler: ['motor_satis_yetkisi', 'motor_vitrin_yetkisi', 'liste_fiyati_gor', 'musteri_gor', 'satis_gecmisi_gor'] },
-  { kullanici_adi: 'satis2', ad_soyad: 'Kaan Tekin', rol: 'personel',
-    yetkiler: ['motor_satis_yetkisi', 'liste_fiyati_gor', 'musteri_gor', 'satis_gecmisi_gor'] },
-  { kullanici_adi: 'aksesuar', ad_soyad: 'Elif Kara', rol: 'personel',
-    yetkiler: ['aksesuar_yetkisi', 'aksesuar_stok_yetkisi', 'eticaret_yetkisi', 'aksesuar_vitrin_yetkisi'] },
+  {
+    kullanici_adi: 'satis',
+    ad_soyad: 'Burak Aydın',
+    rol: 'personel',
+    yetkiler: ['motor_satis_yetkisi', 'motor_vitrin_yetkisi', 'liste_fiyati_gor', 'musteri_gor', 'satis_gecmisi_gor'],
+  },
+  {
+    kullanici_adi: 'satis2',
+    ad_soyad: 'Kaan Tekin',
+    rol: 'personel',
+    yetkiler: ['motor_satis_yetkisi', 'liste_fiyati_gor', 'musteri_gor', 'satis_gecmisi_gor'],
+  },
+  {
+    kullanici_adi: 'aksesuar',
+    ad_soyad: 'Elif Kara',
+    rol: 'personel',
+    yetkiler: ['aksesuar_yetkisi', 'aksesuar_stok_yetkisi', 'eticaret_yetkisi', 'aksesuar_vitrin_yetkisi'],
+  },
   { kullanici_adi: 'yatirimci1', ad_soyad: 'Hakan Demirtaş', rol: 'yatirimci', yetkiler: [] },
   { kullanici_adi: 'yatirimci2', ad_soyad: 'Selin Arslan', rol: 'yatirimci', yetkiler: [] },
   { kullanici_adi: 'yeni.personel', ad_soyad: 'Onur Çelik', rol: 'personel', yetkiler: [], onay: 'beklemede' },
 ];
-const YETKI_ALANLARI = ['aksesuar_yetkisi', 'motor_satis_yetkisi', 'eticaret_yetkisi', 'servis_yetkisi',
-  'aksesuar_stok_yetkisi', 'yedek_parca_yetkisi', 'motor_vitrin_yetkisi', 'aksesuar_vitrin_yetkisi',
-  'liste_fiyati_gor', 'alis_fiyati_gor', 'satis_fiyati_gor', 'kar_gor', 'musteri_gor', 'satis_gecmisi_gor'];
+const YETKI_ALANLARI = [
+  'aksesuar_yetkisi',
+  'motor_satis_yetkisi',
+  'eticaret_yetkisi',
+  'servis_yetkisi',
+  'aksesuar_stok_yetkisi',
+  'yedek_parca_yetkisi',
+  'motor_vitrin_yetkisi',
+  'aksesuar_vitrin_yetkisi',
+  'liste_fiyati_gor',
+  'alis_fiyati_gor',
+  'satis_fiyati_gor',
+  'kar_gor',
+  'musteri_gor',
+  'satis_gecmisi_gor',
+];
 
 // Boşaltılacak tablolar. kullanicilar ve vitrin_segmentler bilerek listede YOK.
-const BOSALTILACAK = ['parcalar', 'is_emirleri', 'aksesuar_parcalar', 'aksesuarlar', 'eticaret_satislar',
-  'eticaret_platformlar', 'aksesuar_stok', 'yedek_parcalar', 'yedek_parca_stok', 'satis_belgeleri',
-  'vitrin_gorseller', 'vitrin_videolar', 'vitrin_urunleri', 'vitrin_kategori_iletisim',
-  'ikinci_el_motorlar', 'servis_qr_tokenler', 'musteriler', 'aktivite_log'];
+const BOSALTILACAK = [
+  'parcalar',
+  'is_emirleri',
+  'aksesuar_parcalar',
+  'aksesuarlar',
+  'eticaret_satislar',
+  'eticaret_platformlar',
+  'aksesuar_stok',
+  'yedek_parcalar',
+  'yedek_parca_stok',
+  'satis_belgeleri',
+  'vitrin_gorseller',
+  'vitrin_videolar',
+  'vitrin_urunleri',
+  'vitrin_kategori_iletisim',
+  'ikinci_el_motorlar',
+  'servis_qr_tokenler',
+  'musteriler',
+  'aktivite_log',
+];
 
 // ---------------------------------------------------------------------------
 // Yükleme
@@ -477,7 +927,7 @@ const seed = async (client) => {
     const alanlar = Object.keys(kayit);
     const r = await client.query(
       `INSERT INTO ${tablo} (${alanlar.join(', ')}) VALUES (${alanlar.map((_, i) => `$${i + 1}`).join(', ')}) RETURNING id`,
-      alanlar.map((a) => kayit[a])
+      alanlar.map((a) => kayit[a]),
     );
     return r.rows[0].id;
   };
@@ -497,7 +947,7 @@ const seed = async (client) => {
     await client.query(
       `INSERT INTO kullanicilar (kullanici_adi, sifre, ad_soyad, rol, onay_durumu)
        VALUES ('admin', $1, $2, 'Admin', 'admin', 'onaylandi')`,
-      [await bcrypt.hash(adminSifre, 10), adminSifre]
+      [await bcrypt.hash(adminSifre, 10), adminSifre],
     );
     adminOlusturuldu = true;
   }
@@ -511,7 +961,7 @@ const seed = async (client) => {
          sifre = VALUES(sifre), ad_soyad = VALUES(ad_soyad),
          rol = VALUES(rol), onay_durumu = VALUES(onay_durumu),
          ${YETKI_ALANLARI.map((y) => `${y} = VALUES(${y})`).join(', ')}`,
-      [k.kullanici_adi, sifreHash, DEMO_SIFRE, k.ad_soyad, k.rol, k.onay || 'onaylandi', ...yetkiDegerleri]
+      [k.kullanici_adi, sifreHash, DEMO_SIFRE, k.ad_soyad, k.rol, k.onay || 'onaylandi', ...yetkiDegerleri],
     );
     const kayit = await client.query('SELECT id FROM kullanicilar WHERE kullanici_adi = $1', [k.kullanici_adi]);
     kullanicilar[k.kullanici_adi] = { id: kayit.rows[0].id, ad_soyad: k.ad_soyad, kullanici_adi: k.kullanici_adi };
@@ -534,8 +984,17 @@ const seed = async (client) => {
     const [anahtar, ad, marka, alis, satis, mevcut] = YEDEK_STOK[i];
     const kod = `9${String(i + 1).padStart(12, '0')}`;
     const id = await ekle('yedek_parca_stok', {
-      stok_kodu: kod, stok_adi: ad, marka, giren_miktar: mevcut, cikan_miktar: 0, mevcut,
-      alis_fiyati: alis, satis_fiyati: satis, envanter_degeri: mevcut * satis, created_at: gunOnce(200), updated_at: gunOnce(200),
+      stok_kodu: kod,
+      stok_adi: ad,
+      marka,
+      giren_miktar: mevcut,
+      cikan_miktar: 0,
+      mevcut,
+      alis_fiyati: alis,
+      satis_fiyati: satis,
+      envanter_degeri: mevcut * satis,
+      created_at: gunOnce(200),
+      updated_at: gunOnce(200),
     });
     yedekStok[anahtar] = { id, kod, ad, alis, satis, cikan: 0 };
   }
@@ -543,9 +1002,20 @@ const seed = async (client) => {
   for (let i = 0; i < AKSESUAR_STOK.length; i++) {
     const [ad, marka, kategori, beden, renk, alis, satis, mevcut] = AKSESUAR_STOK[i];
     const id = await ekle('aksesuar_stok', {
-      stok_kodu: String(i + 1).padStart(13, '0'), stok_adi: ad, marka, kategori, beden, renk,
-      giren_miktar: mevcut, cikan_miktar: 0, mevcut, alis_fiyati: alis, satis_fiyati: satis,
-      envanter_degeri: mevcut * satis, created_at: gunOnce(200), updated_at: gunOnce(200),
+      stok_kodu: String(i + 1).padStart(13, '0'),
+      stok_adi: ad,
+      marka,
+      kategori,
+      beden,
+      renk,
+      giren_miktar: mevcut,
+      cikan_miktar: 0,
+      mevcut,
+      alis_fiyati: alis,
+      satis_fiyati: satis,
+      envanter_degeri: mevcut * satis,
+      created_at: gunOnce(200),
+      updated_at: gunOnce(200),
     });
     aksesuarStok.push({ id, ad, alis, satis, cikan: 0 });
   }
@@ -563,11 +1033,11 @@ const seed = async (client) => {
     const sablon = uygun[j % uygun.length];
     arac.km += aralik(700, 2600);
 
-    const acilisGun = Math.round((((IS_EMRI_SAYISI - 1 - j) / (IS_EMRI_SAYISI - 1)) ** 1.35) * 118);
+    const acilisGun = Math.round(((IS_EMRI_SAYISI - 1 - j) / (IS_EMRI_SAYISI - 1)) ** 1.35 * 118);
     const acilis = gunOnce(acilisGun, 9 + (j % 8), (j * 13) % 60);
     const durum = j >= IS_EMRI_SAYISI - 2 ? 'beklemede' : j >= IS_EMRI_SAYISI - 6 ? 'devam_ediyor' : 'tamamlandi';
     // Son tamamlananların bir kısmı bugün/dün kapanır → günlük rapor boş kalmaz
-    const kapanisGun = j >= IS_EMRI_SAYISI - 9 ? (j % 2) : Math.max(acilisGun - aralik(0, 2), 0);
+    const kapanisGun = j >= IS_EMRI_SAYISI - 9 ? j % 2 : Math.max(acilisGun - aralik(0, 2), 0);
     const kapanis = durum === 'tamamlandi' ? gunOnce(kapanisGun, 17, (j * 11) % 60) : null;
 
     const kalemler = sablon.parcalar.map(([anahtar, adet]) => {
@@ -582,22 +1052,43 @@ const seed = async (client) => {
     const borclu = durum === 'tamamlandi' && VERESIYE_FISLER.includes(j);
     const kalan = borclu ? yuvarla(toplam * 0.5, 50) : 0;
     if (borclu) servisVeresiye++;
-    const odeme = durum !== 'tamamlandi' ? null
-      : borclu ? `${tl(toplam - kalan)} ₺ nakit alındı, kalan ${tl(kalan)} ₺ ay sonunda ödenecek.`
-        : ['Nakit', 'Kredi kartı (tek çekim)', 'Havale/EFT', 'Nakit', 'Kredi kartı (3 taksit)'][j % 5];
+    const odeme =
+      durum !== 'tamamlandi'
+        ? null
+        : borclu
+          ? `${tl(toplam - kalan)} ₺ nakit alındı, kalan ${tl(kalan)} ₺ ay sonunda ödenecek.`
+          : ['Nakit', 'Kredi kartı (tek çekim)', 'Havale/EFT', 'Nakit', 'Kredi kartı (3 taksit)'][j % 5];
     const teknisyen = teknisyenler[j % 3 === 0 ? 1 : 0];
 
     const id = await ekle('is_emirleri', {
-      fis_no: j + 1, musteri_id: arac.musteri.id, musteri_ad_soyad: arac.musteri.ad_soyad,
-      adres: arac.musteri.adres, telefon: arac.musteri.telefon, km: arac.km, model_tip: arac.model, marka: arac.marka,
-      plaka: arac.plaka, ariza_sikayetler: sablon.sikayet, aciklama: durum === 'tamamlandi' ? sablon.not : durum === 'devam_ediyor' ? 'İşlem sürüyor, parçalar hazırlandı.' : null,
+      fis_no: j + 1,
+      musteri_id: arac.musteri.id,
+      musteri_ad_soyad: arac.musteri.ad_soyad,
+      adres: arac.musteri.adres,
+      telefon: arac.musteri.telefon,
+      km: arac.km,
+      model_tip: arac.model,
+      marka: arac.marka,
+      plaka: arac.plaka,
+      ariza_sikayetler: sablon.sikayet,
+      aciklama: durum === 'tamamlandi' ? sablon.not : durum === 'devam_ediyor' ? 'İşlem sürüyor, parçalar hazırlandı.' : null,
       tahmini_teslim_tarihi: tarihStr(durum === 'tamamlandi' ? kapanis : gunOnce(-2 + (j % 2))),
-      tahmini_toplam_ucret: yuvarla(toplam, 50), gercek_toplam_ucret: toplam, toplam_maliyet: maliyet, kar: toplam - maliyet,
-      durum, musteri_imza: durum === 'tamamlandi', kalan_odeme: kalan, odeme_detaylari: odeme,
+      tahmini_toplam_ucret: yuvarla(toplam, 50),
+      gercek_toplam_ucret: toplam,
+      toplam_maliyet: maliyet,
+      kar: toplam - maliyet,
+      durum,
+      musteri_imza: durum === 'tamamlandi',
+      kalan_odeme: kalan,
+      odeme_detaylari: odeme,
       teslim_alan_ad_soyad: durum === 'tamamlandi' ? arac.musteri.ad_soyad : null,
-      teslim_eden_teknisyen: teknisyen.ad_soyad, teslim_tarihi: kapanis ? tarihStr(kapanis) : null,
-      olusturan_kullanici_id: teknisyen.id, olusturan_kisi: teknisyen.ad_soyad,
-      tamamlama_tarihi: kapanis, created_at: acilis, updated_at: kapanis || acilis,
+      teslim_eden_teknisyen: teknisyen.ad_soyad,
+      teslim_tarihi: kapanis ? tarihStr(kapanis) : null,
+      olusturan_kullanici_id: teknisyen.id,
+      olusturan_kisi: teknisyen.ad_soyad,
+      tamamlama_tarihi: kapanis,
+      created_at: acilis,
+      updated_at: kapanis || acilis,
     });
     for (const k of kalemler) {
       await ekle('parcalar', { is_emri_id: id, ...k, toplam_fiyat: k.adet * k.birim_fiyat, created_at: acilis });
@@ -624,9 +1115,16 @@ const seed = async (client) => {
     const m = i % 3 === 2 ? null : musteri(20 + i);
     const tarih = gunOnce(Math.round(i * 3.4), 10 + (i % 7), (i * 17) % 60);
     const id = await ekle('yedek_parcalar', {
-      urun_adi: s.ad, alis_fiyati: s.alis * adet, satis_fiyati: toplam, adet, stok_id: s.id,
-      musteri_adi: m ? m.ad_soyad : null, musteri_telefon: m ? m.telefon : null,
-      kalan_odeme: (i === 4 || i === 13) && m ? yuvarla(toplam * 0.5, 50) : 0, created_at: tarih, updated_at: tarih,
+      urun_adi: s.ad,
+      alis_fiyati: s.alis * adet,
+      satis_fiyati: toplam,
+      adet,
+      stok_id: s.id,
+      musteri_adi: m ? m.ad_soyad : null,
+      musteri_telefon: m ? m.telefon : null,
+      kalan_odeme: (i === 4 || i === 13) && m ? yuvarla(toplam * 0.5, 50) : 0,
+      created_at: tarih,
+      updated_at: tarih,
     });
     logla(kullanicilar.servis, 'YEDEK_PARCA_OLUSTUR', `Yedek parça satışı: ${s.ad}`, 'yedek_parcalar', id, tarih);
   }
@@ -652,17 +1150,32 @@ const seed = async (client) => {
     const borclu = durum === 'tamamlandi' && [6, 14, 22].includes(i) && m;
     const kalan = borclu ? yuvarla(toplam * 0.4, 50) : 0;
     const id = await ekle('aksesuarlar', {
-      ad_soyad: m ? m.ad_soyad : 'Perakende Müşteri', telefon: m ? m.telefon : null,
+      ad_soyad: m ? m.ad_soyad : 'Perakende Müşteri',
+      telefon: m ? m.telefon : null,
       odeme_sekli: ['Nakit', 'Kredi Kartı', 'Havale/EFT', 'Kredi Kartı'][i % 4],
       aciklama: durum === 'beklemede' ? 'Ürün ayrıldı, müşteri hafta içi teslim alacak.' : null,
-      durum, kalan_odeme: kalan, indirim,
+      durum,
+      kalan_odeme: kalan,
+      indirim,
       odeme_detaylari: borclu ? `${tl(toplam - kalan)} ₺ ödendi, kalan ${tl(kalan)} ₺ maaş günü ödenecek.` : null,
-      satis_tarihi: tarihStr(tarih), toplam_maliyet: maliyet, toplam_satis: toplam, kar: toplam - maliyet,
-      tamamlama_tarihi: durum === 'tamamlandi' ? tarih : null, olusturan_kisi: kullanicilar.aksesuar.ad_soyad,
-      created_at: tarih, updated_at: tarih,
+      satis_tarihi: tarihStr(tarih),
+      toplam_maliyet: maliyet,
+      toplam_satis: toplam,
+      kar: toplam - maliyet,
+      tamamlama_tarihi: durum === 'tamamlandi' ? tarih : null,
+      olusturan_kisi: kullanicilar.aksesuar.ad_soyad,
+      created_at: tarih,
+      updated_at: tarih,
     });
     for (const k of kalemler) {
-      await ekle('aksesuar_parcalar', { aksesuar_id: id, urun_adi: k.stok.ad, adet: k.adet, maliyet: k.stok.alis, satis_fiyati: k.stok.satis, created_at: tarih });
+      await ekle('aksesuar_parcalar', {
+        aksesuar_id: id,
+        urun_adi: k.stok.ad,
+        adet: k.adet,
+        maliyet: k.stok.alis,
+        satis_fiyati: k.stok.satis,
+        created_at: tarih,
+      });
       if (durum === 'tamamlandi') k.stok.cikan += k.adet; // uygulama stoğu yalnızca tamamlanan satışta düşer
     }
     logla(kullanicilar.aksesuar, 'AKSESUAR_OLUSTUR', `Aksesuar satışı: ${kalemler.map((k) => k.stok.ad).join(', ')}`, 'aksesuarlar', id, tarih);
@@ -670,7 +1183,12 @@ const seed = async (client) => {
 
   // --- E-ticaret ---
   const platformlar = [];
-  for (const [ad, komisyon, kargo] of [['Trendyol', 21, 85], ['Hepsiburada', 18, 90], ['N11', 14, 80], ['Shopier', 5, 75]]) {
+  for (const [ad, komisyon, kargo] of [
+    ['Trendyol', 21, 85],
+    ['Hepsiburada', 18, 90],
+    ['N11', 14, 80],
+    ['Shopier', 5, 75],
+  ]) {
     const id = await ekle('eticaret_platformlar', { platform_adi: ad, komisyon_orani: komisyon, kdv_orani: 20, kargo_ucreti: kargo });
     platformlar.push({ id, ad, komisyon, kargo });
   }
@@ -684,9 +1202,21 @@ const seed = async (client) => {
     const tarih = gunOnce(i * 2, 12 + (i % 6), (i * 23) % 60);
     s.cikan += adet;
     const id = await ekle('eticaret_satislar', {
-      stok_id: s.id, platform_id: p.id, urun_adi: s.ad, alis_fiyati: s.alis, satis_fiyati: satis,
-      komisyon_orani: p.komisyon, komisyon_tutari: hesap.komisyonTutari, kdv_orani: 20, kargo_ucreti: p.kargo,
-      kar: hesap.netKar, adet, tarih: tarihStr(tarih), durum: 'tamamlandi', created_at: tarih, updated_at: tarih,
+      stok_id: s.id,
+      platform_id: p.id,
+      urun_adi: s.ad,
+      alis_fiyati: s.alis,
+      satis_fiyati: satis,
+      komisyon_orani: p.komisyon,
+      komisyon_tutari: hesap.komisyonTutari,
+      kdv_orani: 20,
+      kargo_ucreti: p.kargo,
+      kar: hesap.netKar,
+      adet,
+      tarih: tarihStr(tarih),
+      durum: 'tamamlandi',
+      created_at: tarih,
+      updated_at: tarih,
     });
     logla(kullanicilar.aksesuar, 'ETICARET_SATIS_OLUSTUR', `E-ticaret satışı: ${s.ad} (${p.ad})`, 'eticaret_satislar', id, tarih);
   }
@@ -702,8 +1232,17 @@ const seed = async (client) => {
   // --- Motorlar ---
   const motorEkle = async (m) => {
     const id = await ekle('ikinci_el_motorlar', {
-      stok_tipi: 'sahip', odeme_sekli: 'nakit', masraflar: 0, satis_fiyati: 0, noter_satis: 0, kalan_odeme: 0,
-      komisyoncu_tutari: 0, yatirimci_kar: 0, yatirimci_kar_orani: 0, fatura_kesildi: false, eski_kayit: false,
+      stok_tipi: 'sahip',
+      odeme_sekli: 'nakit',
+      masraflar: 0,
+      satis_fiyati: 0,
+      noter_satis: 0,
+      kalan_odeme: 0,
+      komisyoncu_tutari: 0,
+      yatirimci_kar: 0,
+      yatirimci_kar_orani: 0,
+      fatura_kesildi: false,
+      eski_kayit: false,
       ...m,
       kar: (m.satis_fiyati || 0) - (m.alis_fiyati || 0) - (m.masraflar || 0) - (m.komisyoncu_tutari || 0),
     });
@@ -724,14 +1263,29 @@ const seed = async (client) => {
     const notlar = v.sifir ? SIFIR_NOTLAR : IKINCI_EL_NOTLAR;
     v.aciklamaTam = `${v.ozet}\n\n${notlar}\n\nKaynar Motor güvencesiyle.`;
     const id = await motorEkle({
-      tarih: tarihStr(gunOnce(alisGun)), plaka: v.sifir ? 'PLAKASIZ' : plakaUret(plakaSira++), marka: v.marka, model: v.model,
-      yil: v.yil, km: v.km, alis_fiyati: alis, noter_alis: v.sifir ? 0 : yuvarla(alis * 0.7, 5000),
-      masraflar: v.sifir ? 0 : sec([0, 1500, 2500, 4000]), liste_fiyati: v.fiyat, durum: 'stokta',
-      satici_adi: v.sifir ? `${v.marka} Türkiye Distribütörü` : satici.ad_soyad, satici_tc: v.sifir ? null : satici.tc,
+      tarih: tarihStr(gunOnce(alisGun)),
+      plaka: v.sifir ? 'PLAKASIZ' : plakaUret(plakaSira++),
+      marka: v.marka,
+      model: v.model,
+      yil: v.yil,
+      km: v.km,
+      alis_fiyati: alis,
+      noter_alis: v.sifir ? 0 : yuvarla(alis * 0.7, 5000),
+      masraflar: v.sifir ? 0 : sec([0, 1500, 2500, 4000]),
+      liste_fiyati: v.fiyat,
+      durum: 'stokta',
+      satici_adi: v.sifir ? `${v.marka} Türkiye Distribütörü` : satici.ad_soyad,
+      satici_tc: v.sifir ? null : satici.tc,
       aciklama: v.sifir ? 'Sıfır araç, distribütör faturalı.' : 'Ekspertizi yapıldı, vitrine alındı.',
-      yatirimci_id: v.yatirimci ? kullanicilar[v.yatirimci].id : null, yatirimci_kar_orani: v.yatirimci ? 50 : 0,
-      vitrin_baslik: v.baslik, vitrin_aciklama: v.aciklamaTam, vitrin_segment: v.segment, vitrin_cc: v.cc, vitrin_hasar: v.hasar || null,
-      created_at: gunOnce(alisGun, 11, i * 3), updated_at: gunOnce(alisGun, 11, i * 3),
+      yatirimci_id: v.yatirimci ? kullanicilar[v.yatirimci].id : null,
+      yatirimci_kar_orani: v.yatirimci ? 50 : 0,
+      vitrin_baslik: v.baslik,
+      vitrin_aciklama: v.aciklamaTam,
+      vitrin_segment: v.segment,
+      vitrin_cc: v.cc,
+      vitrin_hasar: v.hasar || null,
+      created_at: gunOnce(alisGun, 11, i * 3),
+      updated_at: gunOnce(alisGun, 11, i * 3),
     });
     vitrinMotorIdleri.push(id);
     sayac.stokta++;
@@ -739,8 +1293,12 @@ const seed = async (client) => {
 
   // 2) Diğer motorlar: satılanlar ve farklı durumlardaki stok
   const PLAN = [
-    ...Array(34).fill('tamamlandi'), ...Array(5).fill('konsinye'), ...Array(3).fill('kapora'),
-    ...Array(2).fill('depo_serviste'), ...Array(4).fill('devir_bekliyor'), ...Array(3).fill('perte'),
+    ...Array(34).fill('tamamlandi'),
+    ...Array(5).fill('konsinye'),
+    ...Array(3).fill('kapora'),
+    ...Array(2).fill('depo_serviste'),
+    ...Array(4).fill('devir_bekliyor'),
+    ...Array(3).fill('perte'),
   ];
   const sonSatilanlar = []; // satış belgesi ve arşiv ilanı örnekleri için
   for (let i = 0; i < PLAN.length; i++) {
@@ -771,29 +1329,68 @@ const seed = async (client) => {
       if (borclu) motorVeresiye++;
       const odenen = satis - kalan;
       const [odemeSekli, odemeler] = borclu
-        ? ['taksit', [{ tip: 'Nakit', tutar: yuvarla(odenen * 0.6, 1000) }, { tip: 'Kart', tutar: odenen - yuvarla(odenen * 0.6, 1000) }]]
+        ? [
+            'taksit',
+            [
+              { tip: 'Nakit', tutar: yuvarla(odenen * 0.6, 1000) },
+              { tip: 'Kart', tutar: odenen - yuvarla(odenen * 0.6, 1000) },
+            ],
+          ]
         : [
-          ['nakit', [{ tip: 'Nakit', tutar: satis }]],
-          ['havale', [{ tip: 'Havale/EFT', tutar: satis }]],
-          ['kredi_karti', [{ tip: 'Nakit', tutar: yuvarla(satis * 0.4, 1000) }, { tip: 'Kart', tutar: satis - yuvarla(satis * 0.4, 1000) }]],
-          ['kredi_karti', [{ tip: 'Kart', tutar: satis }]],
-          ['havale', [{ tip: 'Nakit', tutar: yuvarla(satis * 0.5, 1000) }, { tip: 'Havale/EFT', tutar: satis - yuvarla(satis * 0.5, 1000) }]],
-        ][s % 5];
+            ['nakit', [{ tip: 'Nakit', tutar: satis }]],
+            ['havale', [{ tip: 'Havale/EFT', tutar: satis }]],
+            [
+              'kredi_karti',
+              [
+                { tip: 'Nakit', tutar: yuvarla(satis * 0.4, 1000) },
+                { tip: 'Kart', tutar: satis - yuvarla(satis * 0.4, 1000) },
+              ],
+            ],
+            ['kredi_karti', [{ tip: 'Kart', tutar: satis }]],
+            [
+              'havale',
+              [
+                { tip: 'Nakit', tutar: yuvarla(satis * 0.5, 1000) },
+                { tip: 'Havale/EFT', tutar: satis - yuvarla(satis * 0.5, 1000) },
+              ],
+            ],
+          ][s % 5];
       const komisyoncu = komisyon ? musteri(40 + s) : null;
       const satisZamani = gunOnce(satisGun, 10 + (s % 8), (s * 7) % 60);
       const id = await motorEkle({
-        ...temel, tarih: tarihStr(gunOnce(alisGun)), stok_tipi: konsinye ? 'konsinye' : 'sahip', durum: 'tamamlandi',
-        alis_fiyati: alis, noter_alis: yuvarla(alis * 0.7, 5000), satis_fiyati: satis, noter_satis: yuvarla(satis * 0.7, 5000), masraflar: masraf,
-        alici_adi: alici.ad_soyad, alici_tc: alici.tc, alici_telefon: alici.telefon, alici_adres: alici.adres,
-        odeme_sekli: odemeSekli, odeme_detaylari: JSON.stringify(odemeler), kalan_odeme: kalan,
-        satis_tarihi: tarihStr(satisZamani), tamamlama_tarihi: satisZamani,
-        fatura_kesildi: s % 3 !== 0, yevmiye_no: String(10000 + ((s * 457) % 89999)),
-        komisyoncu_adi: komisyoncu ? komisyoncu.ad_soyad : null, komisyoncu_telefon: komisyoncu ? komisyoncu.telefon : null, komisyoncu_tutari: komisyon,
-        yatirimci_id: yatirimci ? kullanicilar[yatirimci].id : null, yatirimci_kar_orani: yatirimci ? oran : 0,
-        yatirimci_kar: yatirimci ? yuvarla(Math.max(kar, 0) * oran / 100, 500) : 0,
-        aciklama: borclu ? `Kalan ${tl(kalan)} ₺ iki taksitte ödenecek.` : ['Takasla alınmıştı, bakımı yapılıp satıldı.', null, 'İkinci anahtarı ve kitapçığı teslim edildi.', null][s % 4],
-        vitrin_segment: segment, vitrin_cc: cc,
-        created_at: gunOnce(alisGun, 11, (s * 5) % 60), updated_at: satisZamani,
+        ...temel,
+        tarih: tarihStr(gunOnce(alisGun)),
+        stok_tipi: konsinye ? 'konsinye' : 'sahip',
+        durum: 'tamamlandi',
+        alis_fiyati: alis,
+        noter_alis: yuvarla(alis * 0.7, 5000),
+        satis_fiyati: satis,
+        noter_satis: yuvarla(satis * 0.7, 5000),
+        masraflar: masraf,
+        alici_adi: alici.ad_soyad,
+        alici_tc: alici.tc,
+        alici_telefon: alici.telefon,
+        alici_adres: alici.adres,
+        odeme_sekli: odemeSekli,
+        odeme_detaylari: JSON.stringify(odemeler),
+        kalan_odeme: kalan,
+        satis_tarihi: tarihStr(satisZamani),
+        tamamlama_tarihi: satisZamani,
+        fatura_kesildi: s % 3 !== 0,
+        yevmiye_no: String(10000 + ((s * 457) % 89999)),
+        komisyoncu_adi: komisyoncu ? komisyoncu.ad_soyad : null,
+        komisyoncu_telefon: komisyoncu ? komisyoncu.telefon : null,
+        komisyoncu_tutari: komisyon,
+        yatirimci_id: yatirimci ? kullanicilar[yatirimci].id : null,
+        yatirimci_kar_orani: yatirimci ? oran : 0,
+        yatirimci_kar: yatirimci ? yuvarla((Math.max(kar, 0) * oran) / 100, 500) : 0,
+        aciklama: borclu
+          ? `Kalan ${tl(kalan)} ₺ iki taksitte ödenecek.`
+          : ['Takasla alınmıştı, bakımı yapılıp satıldı.', null, 'İkinci anahtarı ve kitapçığı teslim edildi.', null][s % 4],
+        vitrin_segment: segment,
+        vitrin_cc: cc,
+        created_at: gunOnce(alisGun, 11, (s * 5) % 60),
+        updated_at: satisZamani,
       });
       logla(kullanicilar.satis, 'MOTOR_SATIS_GUNCELLE', `2. El Motor #${id} güncellendi`, 'ikinci_el_motorlar', id, satisZamani);
       if (s < 4) sonSatilanlar.push({ id, marka, model, yil, km, cc, segment, plaka: temel.plaka, satis, alici: alici.ad_soyad, satisZamani });
@@ -803,44 +1400,95 @@ const seed = async (client) => {
     const alisGun = aralik(4, 55);
     const alis = yuvarla(liste * (0.84 + rnd() * 0.06), 1000);
     const ortak = {
-      ...temel, tarih: tarihStr(gunOnce(alisGun)), alis_fiyati: alis, noter_alis: yuvarla(alis * 0.7, 5000),
-      vitrin_segment: segment, vitrin_cc: cc, created_at: gunOnce(alisGun, 12, (i * 9) % 60), updated_at: gunOnce(alisGun, 12, (i * 9) % 60),
+      ...temel,
+      tarih: tarihStr(gunOnce(alisGun)),
+      alis_fiyati: alis,
+      noter_alis: yuvarla(alis * 0.7, 5000),
+      vitrin_segment: segment,
+      vitrin_cc: cc,
+      created_at: gunOnce(alisGun, 12, (i * 9) % 60),
+      updated_at: gunOnce(alisGun, 12, (i * 9) % 60),
     };
     if (tur === 'konsinye') {
-      await motorEkle({ ...ortak, stok_tipi: 'konsinye', durum: 'stokta', alis_fiyati: yuvarla(liste * 0.92, 1000), noter_alis: 0,
-        aciklama: `Konsinye: sahibi ${tl(yuvarla(liste * 0.92, 1000))} ₺ istiyor, satılınca ödenecek.` });
+      await motorEkle({
+        ...ortak,
+        stok_tipi: 'konsinye',
+        durum: 'stokta',
+        alis_fiyati: yuvarla(liste * 0.92, 1000),
+        noter_alis: 0,
+        aciklama: `Konsinye: sahibi ${tl(yuvarla(liste * 0.92, 1000))} ₺ istiyor, satılınca ödenecek.`,
+      });
     } else if (tur === 'kapora') {
       const kapora = sec([5000, 10000, 15000]);
-      await motorEkle({ ...ortak, durum: 'kapora', satis_fiyati: liste, alici_adi: alici.ad_soyad, alici_telefon: alici.telefon,
+      await motorEkle({
+        ...ortak,
+        durum: 'kapora',
+        satis_fiyati: liste,
+        alici_adi: alici.ad_soyad,
+        alici_telefon: alici.telefon,
         odeme_detaylari: JSON.stringify([{ tip: 'Nakit', tutar: kapora }]),
-        aciklama: `${tl(kapora)} ₺ kapora alındı. Kalan tutar noter günü ödenecek.` });
+        aciklama: `${tl(kapora)} ₺ kapora alındı. Kalan tutar noter günü ödenecek.`,
+      });
     } else if (tur === 'depo_serviste') {
-      await motorEkle({ ...ortak, durum: 'depo_serviste', masraflar: sec([2500, 4000]),
-        aciklama: 'Serviste: zincir dişli seti ve ön balatalar değişiyor, sonra vitrine alınacak.' });
+      await motorEkle({
+        ...ortak,
+        durum: 'depo_serviste',
+        masraflar: sec([2500, 4000]),
+        aciklama: 'Serviste: zincir dişli seti ve ön balatalar değişiyor, sonra vitrine alınacak.',
+      });
     } else if (tur === 'devir_bekliyor') {
       const satisGun = aralik(1, 9);
-      await motorEkle({ ...ortak, durum: 'devir_bekliyor', satis_fiyati: liste, noter_satis: yuvarla(liste * 0.7, 5000),
-        alici_adi: alici.ad_soyad, alici_tc: alici.tc, alici_telefon: alici.telefon, alici_adres: alici.adres,
-        odeme_sekli: 'havale', odeme_detaylari: JSON.stringify([{ tip: 'Havale/EFT', tutar: liste }]),
-        satis_tarihi: tarihStr(gunOnce(satisGun)), aciklama: 'Ödeme alındı, noter devri için randevu bekleniyor.' });
+      await motorEkle({
+        ...ortak,
+        durum: 'devir_bekliyor',
+        satis_fiyati: liste,
+        noter_satis: yuvarla(liste * 0.7, 5000),
+        alici_adi: alici.ad_soyad,
+        alici_tc: alici.tc,
+        alici_telefon: alici.telefon,
+        alici_adres: alici.adres,
+        odeme_sekli: 'havale',
+        odeme_detaylari: JSON.stringify([{ tip: 'Havale/EFT', tutar: liste }]),
+        satis_tarihi: tarihStr(gunOnce(satisGun)),
+        aciklama: 'Ödeme alındı, noter devri için randevu bekleniyor.',
+      });
     } else {
       const pertAlis = yuvarla(liste * 0.35, 1000);
-      await motorEkle({ ...ortak, durum: 'perte', alis_fiyati: pertAlis, noter_alis: yuvarla(pertAlis * 0.7, 5000), liste_fiyati: 0,
-        aciklama: ['Pert kayıtlı; parça amaçlı alındı.', 'Ağır hasarlı (ön çatal, şasi). Parçalanacak.', 'Motor kilitli, onarım maliyeti değerini aşıyor.'][i % 3] });
+      await motorEkle({
+        ...ortak,
+        durum: 'perte',
+        alis_fiyati: pertAlis,
+        noter_alis: yuvarla(pertAlis * 0.7, 5000),
+        liste_fiyati: 0,
+        aciklama: ['Pert kayıtlı; parça amaçlı alındı.', 'Ağır hasarlı (ön çatal, şasi). Parçalanacak.', 'Motor kilitli, onarım maliyeti değerini aşıyor.'][
+          i % 3
+        ],
+      });
     }
   }
 
   // Satış belgesi örnekleri (son satılan motorlara)
   for (const m of sonSatilanlar.slice(0, 3)) {
     const pdf = ornekPdf([
-      'KAYNAR MOTOR - SATIS SOZLESMESI (ORNEK)', '',
-      `Arac: ${m.marka} ${m.model} (${m.yil})`, `Plaka: ${m.plaka}`, `Alici: ${m.alici}`,
-      `Satis tutari: ${tl(m.satis)} TL`, `Tarih: ${tarihStr(m.satisZamani)}`, '',
+      'KAYNAR MOTOR - SATIS SOZLESMESI (ORNEK)',
+      '',
+      `Arac: ${m.marka} ${m.model} (${m.yil})`,
+      `Plaka: ${m.plaka}`,
+      `Alici: ${m.alici}`,
+      `Satis tutari: ${tl(m.satis)} TL`,
+      `Tarih: ${tarihStr(m.satisZamani)}`,
+      '',
       'Bu belge yerel gelistirme icin uretilmis ornek veridir.',
     ]);
     await ekle('satis_belgeleri', {
-      motor_id: m.id, dosya_adi: `satis-sozlesmesi-${m.plaka.replace(/\s+/g, '')}.pdf`, mime: 'application/pdf',
-      boyut: pdf.length, icerik: pdf, yukleyen_id: kullanicilar.satis.id, yukleyen_adi: kullanicilar.satis.kullanici_adi, created_at: m.satisZamani,
+      motor_id: m.id,
+      dosya_adi: `satis-sozlesmesi-${m.plaka.replace(/\s+/g, '')}.pdf`,
+      mime: 'application/pdf',
+      boyut: pdf.length,
+      icerik: pdf,
+      yukleyen_id: kullanicilar.satis.id,
+      yukleyen_adi: kullanicilar.satis.kullanici_adi,
+      created_at: m.satisZamani,
     });
   }
 
@@ -860,21 +1508,54 @@ const seed = async (client) => {
     const v = VITRIN_MOTORLAR[i];
     const gorseller = ilanGorselleri(v.gorsel, `${v.marka} ${v.model}`, `${v.yil} • ${v.cc} cc • ${v.segment}`);
     gorselSayisi += gorseller.length;
-    await ilanEkle({
-      kategori: 'motor', baslik: v.baslik, aciklama: v.aciklamaTam, fiyat: v.fiyat, marka: v.marka, model: v.model, yil: v.yil,
-      segment: v.segment, motor_cc: v.cc, km: v.km, motor_durumu: v.sifir ? 'sifir' : 'ikinci_el', hasar_kaydi: v.hasar || null,
-      yayinda: true, siralama: i, one_cikan: !!v.one, stok_motor_id: vitrinMotorIdleri[i],
-    }, gorseller, gunOnce(5 + i * 4, 14, i * 3));
+    await ilanEkle(
+      {
+        kategori: 'motor',
+        baslik: v.baslik,
+        aciklama: v.aciklamaTam,
+        fiyat: v.fiyat,
+        marka: v.marka,
+        model: v.model,
+        yil: v.yil,
+        segment: v.segment,
+        motor_cc: v.cc,
+        km: v.km,
+        motor_durumu: v.sifir ? 'sifir' : 'ikinci_el',
+        hasar_kaydi: v.hasar || null,
+        yayinda: true,
+        siralama: i,
+        one_cikan: !!v.one,
+        stok_motor_id: vitrinMotorIdleri[i],
+      },
+      gorseller,
+      gunOnce(5 + i * 4, 14, i * 3),
+    );
   }
   // Satılan motorların ilanı uygulamada otomatik yayından kalkar → arşiv örnekleri
   for (let i = 0; i < Math.min(2, sonSatilanlar.length); i++) {
     const m = sonSatilanlar[i];
     gorselSayisi++;
-    await ilanEkle({
-      kategori: 'motor', baslik: `${m.marka} ${m.model} ${m.yil} – ${tl(m.km)} km`, fiyat: m.satis, marka: m.marka, model: m.model, yil: m.yil,
-      aciklama: `Bakımlı ${m.marka} ${m.model}.\n\n${IKINCI_EL_NOTLAR}`, segment: m.segment, motor_cc: m.cc, km: m.km,
-      motor_durumu: 'ikinci_el', yayinda: false, siralama: VITRIN_MOTORLAR.length + i, one_cikan: false, stok_motor_id: m.id,
-    }, [yerTutucu(`${m.marka} ${m.model}`, `${m.yil} • satıldı`)], gunOnce(40 + i * 9, 15));
+    await ilanEkle(
+      {
+        kategori: 'motor',
+        baslik: `${m.marka} ${m.model} ${m.yil} – ${tl(m.km)} km`,
+        fiyat: m.satis,
+        marka: m.marka,
+        model: m.model,
+        yil: m.yil,
+        aciklama: `Bakımlı ${m.marka} ${m.model}.\n\n${IKINCI_EL_NOTLAR}`,
+        segment: m.segment,
+        motor_cc: m.cc,
+        km: m.km,
+        motor_durumu: 'ikinci_el',
+        yayinda: false,
+        siralama: VITRIN_MOTORLAR.length + i,
+        one_cikan: false,
+        stok_motor_id: m.id,
+      },
+      [yerTutucu(`${m.marka} ${m.model}`, `${m.yil} • satıldı`)],
+      gunOnce(40 + i * 9, 15),
+    );
   }
   const kategoriSira = {};
   for (let i = 0; i < VITRIN_DIGER.length; i++) {
@@ -882,31 +1563,56 @@ const seed = async (client) => {
     const gorseller = ilanGorselleri(v.gorsel, v.yer[0], v.yer[1]);
     gorselSayisi += gorseller.length;
     kategoriSira[v.kategori] = (kategoriSira[v.kategori] ?? -1) + 1;
-    await ilanEkle({
-      kategori: v.kategori, baslik: v.baslik, aciklama: v.aciklama, fiyat: v.fiyat, marka: v.marka,
-      yayinda: true, siralama: kategoriSira[v.kategori], one_cikan: i === 0,
-    }, gorseller, gunOnce(3 + i * 5, 15, i * 4));
+    await ilanEkle(
+      {
+        kategori: v.kategori,
+        baslik: v.baslik,
+        aciklama: v.aciklama,
+        fiyat: v.fiyat,
+        marka: v.marka,
+        yayinda: true,
+        siralama: kategoriSira[v.kategori],
+        one_cikan: i === 0,
+      },
+      gorseller,
+      gunOnce(3 + i * 5, 15, i * 4),
+    );
   }
   const iletisim = [
     // Motor satışında iki satış personeli gösterilir (ikinci kişi isteğe bağlıdır)
     ['motor', kullanicilar.satis.ad_soyad, sahteTelefon(901), null, null, null, kullanicilar.satis2.ad_soyad, sahteTelefon(907)],
     ['aksesuar', kullanicilar.aksesuar.ad_soyad, sahteTelefon(902), null, null, null],
     ['yedek_parca', kullanicilar.servis.ad_soyad, sahteTelefon(903), null, null, null],
-    ['bakim_servis', kullanicilar.usta.ad_soyad, sahteTelefon(904), 'Bakım ve servis randevusu',
-      'Periyodik bakım, fren, zincir dişli, lastik ve elektrik arızaları.\nAynı gün teslim için sabah 10:00\'a kadar randevu alın.',
-      yerTutucu('Bakım ve Servis', 'Tüm marka ve modeller')],
-    ['nakliye', kullanicilar.satis.ad_soyad, sahteTelefon(905), 'Kapıdan kapıya motosiklet nakliyesi',
+    [
+      'bakim_servis',
+      kullanicilar.usta.ad_soyad,
+      sahteTelefon(904),
+      'Bakım ve servis randevusu',
+      "Periyodik bakım, fren, zincir dişli, lastik ve elektrik arızaları.\nAynı gün teslim için sabah 10:00'a kadar randevu alın.",
+      yerTutucu('Bakım ve Servis', 'Tüm marka ve modeller'),
+    ],
+    [
+      'nakliye',
+      kullanicilar.satis.ad_soyad,
+      sahteTelefon(905),
+      'Kapıdan kapıya motosiklet nakliyesi',
       'Sigortalı ve kapalı kasa araçlarla Mersin içi aynı gün, şehirler arası 2 iş günü içinde teslim.',
-      gorselOku('nakliye') || yerTutucu('Motosiklet Nakliyesi', 'Sigortalı taşıma')],
-    ['sigorta', kullanicilar.satis.ad_soyad, sahteTelefon(906), 'Trafik sigortası ve kasko',
+      gorselOku('nakliye') || yerTutucu('Motosiklet Nakliyesi', 'Sigortalı taşıma'),
+    ],
+    [
+      'sigorta',
+      kullanicilar.satis.ad_soyad,
+      sahteTelefon(906),
+      'Trafik sigortası ve kasko',
       'Motosikletinize özel trafik sigortası ve kasko tekliflerini aynı gün içinde hazırlıyoruz.',
-      yerTutucu('Sigorta ve Kasko', 'Aynı gün teklif')],
+      yerTutucu('Sigorta ve Kasko', 'Aynı gün teklif'),
+    ],
   ];
   for (const [kategori, personel, telefon, baslik, aciklama, gorsel, personel2 = null, telefon2 = null] of iletisim) {
     await client.query(
       `INSERT INTO vitrin_kategori_iletisim (kategori, personel_adi, telefon, baslik, aciklama, gorsel, personel_adi_2, telefon_2)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
-      [kategori, personel, telefon, baslik, aciklama, gorsel, personel2, telefon2]
+      [kategori, personel, telefon, baslik, aciklama, gorsel, personel2, telefon2],
     );
   }
 
@@ -920,8 +1626,14 @@ const seed = async (client) => {
   loglar.sort((a, b) => a.tarih - b.tarih);
   for (const l of loglar) {
     await ekle('aktivite_log', {
-      kullanici_id: l.kullanici.id, kullanici_adi: l.kullanici.kullanici_adi, islem_tipi: l.tip, islem_detay: l.detay,
-      hedef_tablo: l.tablo, hedef_id: l.hedefId, ip_adresi: '127.0.0.1', created_at: l.tarih,
+      kullanici_id: l.kullanici.id,
+      kullanici_adi: l.kullanici.kullanici_adi,
+      islem_tipi: l.tip,
+      islem_detay: l.detay,
+      hedef_tablo: l.tablo,
+      hedef_id: l.hedefId,
+      ip_adresi: '127.0.0.1',
+      created_at: l.tarih,
     });
   }
 
@@ -952,7 +1664,9 @@ const main = async () => {
     console.log('\nYÜKLENDİ');
     console.log(`  Müşteri            : ${await say('musteriler')}`);
     console.log(`  İş emri            : ${await say('is_emirleri')}  (${await say('parcalar')} kalem)`);
-    console.log(`  Motor              : ${await say('ikinci_el_motorlar')}  (satılan ${sonuc.sayac.tamamlandi}, stokta ${sonuc.sayac.stokta}, konsinye ${sonuc.sayac.konsinye}, kapora ${sonuc.sayac.kapora}, devir bekleyen ${sonuc.sayac.devir_bekliyor}, serviste ${sonuc.sayac.depo_serviste}, pert ${sonuc.sayac.perte})`);
+    console.log(
+      `  Motor              : ${await say('ikinci_el_motorlar')}  (satılan ${sonuc.sayac.tamamlandi}, stokta ${sonuc.sayac.stokta}, konsinye ${sonuc.sayac.konsinye}, kapora ${sonuc.sayac.kapora}, devir bekleyen ${sonuc.sayac.devir_bekliyor}, serviste ${sonuc.sayac.depo_serviste}, pert ${sonuc.sayac.perte})`,
+    );
     console.log(`  Aksesuar           : ${await say('aksesuar_stok')} stok kalemi, ${await say('aksesuarlar')} satış`);
     console.log(`  Yedek parça        : ${await say('yedek_parca_stok')} stok kalemi, ${await say('yedek_parcalar')} satış`);
     console.log(`  E-ticaret          : ${await say('eticaret_platformlar')} platform, ${await say('eticaret_satislar')} satış`);
@@ -964,10 +1678,14 @@ const main = async () => {
       console.log('       Fotoğrafları indirmek için: npm run seed:gorseller  → sonra tekrar npm run seed');
     }
     console.log(`\nDEMO HESAPLARI (şifre: ${DEMO_SIFRE})`);
-    DEMO_KULLANICILAR.forEach((k) => console.log(`  ${k.kullanici_adi.padEnd(14)} ${k.ad_soyad.padEnd(16)} ${k.rol}${k.onay ? ' — onay bekliyor (giriş yapamaz)' : ''}`));
-    console.log(sonuc.adminOlusturuldu
-      ? `  admin          yeni oluşturuldu, şifre: ${process.env.ADMIN_INITIAL_PASSWORD ? '(ADMIN_INITIAL_PASSWORD)' : DEMO_SIFRE}`
-      : '  admin          mevcut hesabınız ve şifreniz değişmedi');
+    DEMO_KULLANICILAR.forEach((k) =>
+      console.log(`  ${k.kullanici_adi.padEnd(14)} ${k.ad_soyad.padEnd(16)} ${k.rol}${k.onay ? ' — onay bekliyor (giriş yapamaz)' : ''}`),
+    );
+    console.log(
+      sonuc.adminOlusturuldu
+        ? `  admin          yeni oluşturuldu, şifre: ${process.env.ADMIN_INITIAL_PASSWORD ? '(ADMIN_INITIAL_PASSWORD)' : DEMO_SIFRE}`
+        : '  admin          mevcut hesabınız ve şifreniz değişmedi',
+    );
     console.log('\nMÜŞTERİ SERVİS GEÇMİŞİ (QR) ÖRNEKLERİ');
     sonuc.qrLinkleri.forEach((l) => console.log(`  ${l}`));
     console.log('');

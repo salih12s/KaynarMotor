@@ -28,12 +28,67 @@ jest.mock('./SatisBelgeleri', () => ({
 }));
 
 // ---- Sabit test verisi -------------------------------------------------------------------------------------------
-const M1 = { id: 1, plaka: '34AAA111', marka: 'Honda', model: 'PCX', yil: 2020, km: 10000, durum: 'stokta', stok_tipi: 'sahip', alis_fiyati: 50000, noter_alis: 40000, liste_fiyati: 65000, masraflar: 1000, satici_adi: 'Ali Veli', satici_tc: '111', tarih: '2026-09-01T12:00:00', fatura_kesildi: true, kalan_odeme: 0 };
-const M2 = { id: 2, plaka: '06BBB222', marka: 'Yamaha', model: 'NMAX', durum: 'kapora', alis_fiyati: 70000, liste_fiyati: 90000, satici_adi: 'Ayşe', tarih: '2026-09-02T12:00:00', fatura_kesildi: false, kalan_odeme: '5000' };
-const M3 = { id: 3, plaka: '35CCC333', marka: 'Suzuki', model: 'Burgman', durum: 'stokta', stok_tipi: 'konsinye', liste_fiyati: 80000, tarih: '2026-09-03T12:00:00' };
+const M1 = {
+  id: 1,
+  plaka: '34AAA111',
+  marka: 'Honda',
+  model: 'PCX',
+  yil: 2020,
+  km: 10000,
+  durum: 'stokta',
+  stok_tipi: 'sahip',
+  alis_fiyati: 50000,
+  noter_alis: 40000,
+  liste_fiyati: 65000,
+  masraflar: 1000,
+  satici_adi: 'Ali Veli',
+  satici_tc: '111',
+  tarih: '2026-09-01T12:00:00',
+  fatura_kesildi: true,
+  kalan_odeme: 0,
+};
+const M2 = {
+  id: 2,
+  plaka: '06BBB222',
+  marka: 'Yamaha',
+  model: 'NMAX',
+  durum: 'kapora',
+  alis_fiyati: 70000,
+  liste_fiyati: 90000,
+  satici_adi: 'Ayşe',
+  tarih: '2026-09-02T12:00:00',
+  fatura_kesildi: false,
+  kalan_odeme: '5000',
+};
+const M3 = {
+  id: 3,
+  plaka: '35CCC333',
+  marka: 'Suzuki',
+  model: 'Burgman',
+  durum: 'stokta',
+  stok_tipi: 'konsinye',
+  liste_fiyati: 80000,
+  tarih: '2026-09-03T12:00:00',
+};
 const M4 = { id: 4, plaka: '16DDD444', marka: 'Kawasaki', model: 'Z', durum: 'depo_serviste', tarih: '2026-09-04T12:00:00' };
 const M5 = { id: 5, plaka: '41EEE555', marka: 'BMW', model: 'R', durum: 'devir_bekliyor', tarih: '2026-09-05T12:00:00' };
-const M6 = { id: 6, plaka: '07FFF666', marka: 'Vespa', model: 'GTS', durum: 'tamamlandi', alis_fiyati: 30000, liste_fiyati: 45000, satici_adi: 'Veli', tarih: '2026-08-01T12:00:00', fatura_kesildi: true, kar: 5000, yatirimci_id: 9, yatirimci_kar: 1000, satis_fiyati: 35000, kalan_odeme: 0 };
+const M6 = {
+  id: 6,
+  plaka: '07FFF666',
+  marka: 'Vespa',
+  model: 'GTS',
+  durum: 'tamamlandi',
+  alis_fiyati: 30000,
+  liste_fiyati: 45000,
+  satici_adi: 'Veli',
+  tarih: '2026-08-01T12:00:00',
+  fatura_kesildi: true,
+  kar: 5000,
+  yatirimci_id: 9,
+  yatirimci_kar: 1000,
+  satis_fiyati: 35000,
+  kalan_odeme: 0,
+};
 const M7 = { id: 7, plaka: '01GGG777', marka: 'Piaggio', model: 'Liberty', durum: 'perte', tarih: '2026-09-06T12:00:00' };
 const HEPSI = [M6, M7, M5, M4, M3, M2, M1]; // sunucu sırası karışık; ekran durum sırasına dizer
 // Sıra: stokta(sahip) -> kapora -> konsinye -> depo -> devir -> perte -> satılan
@@ -49,7 +104,20 @@ let yazdir;
 const kur = ({ user = ADMIN, liste = HEPSI } = {}) => {
   useAuth.mockReturnValue({ user });
   ikinciElMotorService.getAll.mockResolvedValue({ data: liste });
-  ikinciElMotorService.getById.mockImplementation(async (id) => ({ data: id === 6 ? { ...M6, odeme_detaylari: JSON.stringify([{ tip: 'Nakit', tutar: 20000 }, { tip: 'Kart', tutar: 10000 }]), kalan_odeme: 5000, aciklama: 'Not' } : liste.find((x) => x.id === id) }));
+  ikinciElMotorService.getById.mockImplementation(async (id) => ({
+    data:
+      id === 6
+        ? {
+            ...M6,
+            odeme_detaylari: JSON.stringify([
+              { tip: 'Nakit', tutar: 20000 },
+              { tip: 'Kart', tutar: 10000 },
+            ]),
+            kalan_odeme: 5000,
+            aciklama: 'Not',
+          }
+        : liste.find((x) => x.id === id),
+  }));
   ikinciElMotorService.create.mockResolvedValue({ data: { id: 99 } });
   ikinciElMotorService.update.mockResolvedValue({ data: {} });
   ikinciElMotorService.delete.mockResolvedValue({ data: {} });
@@ -69,19 +137,28 @@ const ekranAc = async (secenek = {}) => {
 };
 
 const satir = (plaka) => screen.getByRole('row', { name: new RegExp(plaka) });
-const hucreler = (row) => within(row).getAllByRole('cell').map((c) => c.textContent);
+const hucreler = (row) =>
+  within(row)
+    .getAllByRole('cell')
+    .map((c) => c.textContent);
 const basliklar = () => screen.getAllByRole('columnheader').map((h) => h.textContent);
 const ikon = (kapsam, ad) => within(kapsam).getByTestId(ad);
 const alan = (etiket) => screen.getByLabelText(etiket);
 const bekleDialogKapanana = () => waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-const plakalar = () => screen.getAllByRole('row').slice(1).map((r) => within(r).getAllByRole('cell')[0].textContent);
+const plakalar = () =>
+  screen
+    .getAllByRole('row')
+    .slice(1)
+    .map((r) => within(r).getAllByRole('cell')[0].textContent);
 
 beforeEach(() => {
   jest.spyOn(window, 'alert').mockImplementation(() => {});
   jest.spyOn(window, 'confirm').mockImplementation(() => true);
   jest.spyOn(console, 'error').mockImplementation(() => {});
 });
-afterEach(() => { jest.restoreAllMocks(); });
+afterEach(() => {
+  jest.restoreAllMocks();
+});
 
 // ---- Rol matrisi -------------------------------------------------------------------------------------------------
 describe('Motor Stok: rollere göre sütunlar ve düğmeler', () => {
@@ -123,7 +200,20 @@ describe('Motor Stok: rollere göre sütunlar ve düğmeler', () => {
 
   test('yatırımcı (sahip): Kârım sütunu; satılan motor yalnızca "Satılan" filtresinde, kârıyla görünür', async () => {
     const user = await ekranAc({ user: YAT_SAHIP });
-    expect(basliklar()).toEqual(['Plaka', 'Marka', 'Model', 'Yıl', 'KM', 'İlan Fiyatı', 'Alım', 'Alış Bedeli', 'İsim Soyisim', 'Alım Tarihi', 'Kârım', 'Detay']);
+    expect(basliklar()).toEqual([
+      'Plaka',
+      'Marka',
+      'Model',
+      'Yıl',
+      'KM',
+      'İlan Fiyatı',
+      'Alım',
+      'Alış Bedeli',
+      'İsim Soyisim',
+      'Alım Tarihi',
+      'Kârım',
+      'Detay',
+    ]);
     expect(plakalar()).not.toContain('07FFF666');
     await user.click(screen.getByText('Satılan: 1'));
     expect(plakalar()).toEqual(['07FFF666']);
@@ -140,8 +230,22 @@ describe('Motor Stok: rollere göre sütunlar ve düğmeler', () => {
 describe('Motor Stok: sayaçlar ve süzgeçler', () => {
   test('durum sayaçları ve ikincil (fatura/devir/ödeme) sayaçlar', async () => {
     await ekranAc();
-    for (const t of ['Toplam: 7', 'Stokta: 1', 'Konsinye: 1', 'Kapora: 1', 'Depo/Serviste: 1', 'Devir Bekliyor: 1', 'Perte: 1', 'Satılan: 1',
-      'Fatura ✓ 2', 'Fatura ✗ 5', 'Devir ✓ 1', 'Devir ✗ 1', 'Ödeme ✓ 6', 'Ödeme ✗ 1']) {
+    for (const t of [
+      'Toplam: 7',
+      'Stokta: 1',
+      'Konsinye: 1',
+      'Kapora: 1',
+      'Depo/Serviste: 1',
+      'Devir Bekliyor: 1',
+      'Perte: 1',
+      'Satılan: 1',
+      'Fatura ✓ 2',
+      'Fatura ✗ 5',
+      'Devir ✓ 1',
+      'Devir ✗ 1',
+      'Ödeme ✓ 6',
+      'Ödeme ✗ 1',
+    ]) {
       expect(screen.getByText(t)).toBeInTheDocument();
     }
   });
@@ -175,9 +279,11 @@ describe('Motor Stok: sayaçlar ve süzgeçler', () => {
     const kutu = screen.getByPlaceholderText('Plaka, marka, model veya satıcı adı ile ara...');
     await user.type(kutu, 'nmax');
     expect(plakalar()).toEqual(['06BBB222']);
-    await user.clear(kutu); await user.type(kutu, 'ali veli');
+    await user.clear(kutu);
+    await user.type(kutu, 'ali veli');
     expect(plakalar()).toEqual(['34AAA111']);
-    await user.clear(kutu); await user.type(kutu, 'zzz');
+    await user.clear(kutu);
+    await user.type(kutu, 'zzz');
     expect(screen.getByText('Kayıt yok')).toBeInTheDocument();
   });
 
@@ -263,7 +369,16 @@ describe('Motor Stok: ekleme ve düzenleme formu', () => {
     await user.click(within(p).getByRole('button', { name: 'Kaydet' }));
     await waitFor(() => expect(ikinciElMotorService.create).toHaveBeenCalled());
     const yuk = ikinciElMotorService.create.mock.calls[0][0];
-    expect(yuk).toMatchObject({ plaka: 'ABC123', marka: 'Honda', durum: 'stokta', stok_tipi: 'sahip', fatura_kesildi: false, yatirimci: false, yatirimci_id: null, yatirimci_kar_orani: 0 });
+    expect(yuk).toMatchObject({
+      plaka: 'ABC123',
+      marka: 'Honda',
+      durum: 'stokta',
+      stok_tipi: 'sahip',
+      fatura_kesildi: false,
+      yatirimci: false,
+      yatirimci_id: null,
+      yatirimci_kar_orani: 0,
+    });
     await bekleDialogKapanana();
   });
 
@@ -273,7 +388,8 @@ describe('Motor Stok: ekleme ve düzenleme formu', () => {
     await user.click(within(p).getByRole('checkbox', { name: 'Bu motor bir yatırımcıya ait' }));
     await user.click(within(p).getByRole('combobox', { name: /Yatırımcı Seç/ }));
     await user.click(screen.getByRole('option', { name: 'Yatırımcı Veli' }));
-    await user.type(alan('Plaka *'), 'X1'); await user.type(alan('Marka *'), 'Y');
+    await user.type(alan('Plaka *'), 'X1');
+    await user.type(alan('Marka *'), 'Y');
     await user.click(within(p).getByRole('button', { name: 'Kaydet' }));
     await waitFor(() => expect(ikinciElMotorService.create).toHaveBeenCalled());
     expect(ikinciElMotorService.create.mock.calls[0][0]).toMatchObject({ yatirimci: true, yatirimci_id: 9 });
@@ -287,13 +403,14 @@ describe('Motor Stok: ekleme ve düzenleme formu', () => {
     expect(within(p).getByText(/Vitrin \/ Site Bilgileri/)).toBeInTheDocument();
   });
 
-  test('yeni motorda seçilen belgeler kayıttan sonra yeni motor id\'siyle yüklenir; hata olursa uyarı çıkar', async () => {
+  test("yeni motorda seçilen belgeler kayıttan sonra yeni motor id'siyle yüklenir; hata olursa uyarı çıkar", async () => {
     const user = await ekranAc();
     const p = await eklemeAc(user);
     await user.click(within(p).getByRole('button', { name: /BELGE-EKLE \(0\)/ }));
     expect(within(p).getByRole('button', { name: /BELGE-EKLE \(1\)/ })).toBeInTheDocument();
     bekleyenBelgeleriYukle.mockResolvedValue(['ruhsat.pdf: çok büyük']);
-    await user.type(alan('Plaka *'), 'X1'); await user.type(alan('Marka *'), 'Y');
+    await user.type(alan('Plaka *'), 'X1');
+    await user.type(alan('Marka *'), 'Y');
     await user.click(within(p).getByRole('button', { name: 'Kaydet' }));
     await waitFor(() => expect(bekleyenBelgeleriYukle).toHaveBeenCalledWith(99, [{ name: 'ruhsat.pdf' }]));
     await waitFor(() => expect(window.alert).toHaveBeenCalledWith(expect.stringContaining('ruhsat.pdf: çok büyük')));
@@ -303,7 +420,8 @@ describe('Motor Stok: ekleme ve düzenleme formu', () => {
     const user = await ekranAc();
     ikinciElMotorService.create.mockRejectedValue({ response: { data: { message: 'Plaka zaten kayıtlı' } } });
     const p = await eklemeAc(user);
-    await user.type(alan('Plaka *'), 'X1'); await user.type(alan('Marka *'), 'Y');
+    await user.type(alan('Plaka *'), 'X1');
+    await user.type(alan('Marka *'), 'Y');
     await user.click(within(p).getByRole('button', { name: 'Kaydet' }));
     expect(await within(p).findByText('Plaka zaten kayıtlı')).toBeInTheDocument();
   });
@@ -373,7 +491,8 @@ describe('Motor Stok: hızlı satış', () => {
     expect(within(p).getByText('Toplam Satış:').nextElementSibling).toHaveTextContent('₺60.000');
     expect(within(p).getByText('Girilen Ödeme:').nextElementSibling).toHaveTextContent('₺40.000');
     expect(within(p).getByText('Kalan:').nextElementSibling).toHaveTextContent('₺20.000');
-    await user.clear(alan('Tutar (₺)')); await user.type(alan('Tutar (₺)'), '70000');
+    await user.clear(alan('Tutar (₺)'));
+    await user.type(alan('Tutar (₺)'), '70000');
     expect(within(p).getByText('Fazla Ödeme:').nextElementSibling).toHaveTextContent('₺10.000');
     expect(within(p).getByText('Girilen ödeme toplamı satış tutarını aşıyor.')).toBeInTheDocument();
     await user.click(ikon(p, 'CloseIcon')); // satırı sil
@@ -391,7 +510,15 @@ describe('Motor Stok: hızlı satış', () => {
     await waitFor(() => expect(ikinciElMotorService.update).toHaveBeenCalled());
     const [id, yuk] = ikinciElMotorService.update.mock.calls[0];
     expect(id).toBe(1);
-    expect(yuk).toMatchObject({ plaka: '34AAA111', alis_fiyati: 50000, satis_fiyati: '60000', yevmiye_no: 'Y-5', masraflar: 1000, durum: 'tamamlandi', kalan_odeme: 20000 });
+    expect(yuk).toMatchObject({
+      plaka: '34AAA111',
+      alis_fiyati: 50000,
+      satis_fiyati: '60000',
+      yevmiye_no: 'Y-5',
+      masraflar: 1000,
+      durum: 'tamamlandi',
+      kalan_odeme: 20000,
+    });
     expect(JSON.parse(yuk.odeme_detaylari)).toEqual([{ tip: 'Nakit', tutar: '40000' }]);
     await bekleDialogKapanana();
   });
@@ -421,9 +548,20 @@ describe('Motor Stok: hızlı satış', () => {
 
 describe('Motor Stok: mobil görünüm', () => {
   beforeEach(() => {
-    window.matchMedia = (q) => ({ matches: true, media: q, onchange: null, addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {}, dispatchEvent: () => false });
+    window.matchMedia = (q) => ({
+      matches: true,
+      media: q,
+      onchange: null,
+      addEventListener() {},
+      removeEventListener() {},
+      addListener() {},
+      removeListener() {},
+      dispatchEvent: () => false,
+    });
   });
-  afterEach(() => { delete window.matchMedia; });
+  afterEach(() => {
+    delete window.matchMedia;
+  });
 
   test('kart listesi; fiyatlar yetkiye göre; karta dokunmak detayı açar', async () => {
     const user = await ekranAc();

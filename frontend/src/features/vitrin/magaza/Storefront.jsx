@@ -68,6 +68,10 @@ const Storefront = () => {
 };
 
 // Vitrin teması (yazı tipi, renkler) yalnızca müşteri sayfalarını sarar; yönetim paneli etkilenmez
-const StorefrontSayfa = () => <VitrinTema><Storefront /></VitrinTema>;
+const StorefrontSayfa = () => (
+  <VitrinTema>
+    <Storefront />
+  </VitrinTema>
+);
 
 export default StorefrontSayfa;

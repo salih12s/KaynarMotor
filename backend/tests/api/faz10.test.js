@@ -17,12 +17,17 @@ const assert = require('node:assert/strict');
 const { sunucuBaslat, kullaniciOlustur } = require('./yardimci');
 
 const SON = Date.now().toString(36);
-let s, api, admin, sayac = 0;
+let s,
+  api,
+  admin,
+  sayac = 0;
 const benzersiz = (onek) => `${onek}${SON}${++sayac}`;
 const k = {};
 
 before(async () => {
-  s = await sunucuBaslat(); api = s.api; admin = s.admin;
+  s = await sunucuBaslat();
+  api = s.api;
+  admin = s.admin;
   k.servis = await kullaniciOlustur(api, admin, benzersiz('f10_srv_'), 'personel', { servis_yetkisi: true });
   k.motor = await kullaniciOlustur(api, admin, benzersiz('f10_mtr_'), 'personel', { motor_satis_yetkisi: true });
   k.eticaret = await kullaniciOlustur(api, admin, benzersiz('f10_etc_'), 'personel', { eticaret_yetkisi: true });
@@ -153,7 +158,12 @@ describe('#46 yedek parça stok: HTTP sözleşmesi', () => {
 
   it('güncelleme: kod değişince iş emri parçaları yeni koda taşınır; olmayan stok 404; negatif giren 400', async () => {
     const yeniKod = kod + '-B';
-    const ie = await api('POST', '/api/is-emirleri', { musteri_ad_soyad: benzersiz('F10 '), parcalar: [{ takilan_parca: 'Balata', parca_kodu: kod, adet: 1, birim_fiyat: 10, maliyet: 5 }] }, admin);
+    const ie = await api(
+      'POST',
+      '/api/is-emirleri',
+      { musteri_ad_soyad: benzersiz('F10 '), parcalar: [{ takilan_parca: 'Balata', parca_kodu: kod, adet: 1, birim_fiyat: 10, maliyet: 5 }] },
+      admin,
+    );
     assert.equal(ie.durum, 201);
     const g = await api('PUT', `/api/yedek-parca-stok/${stokId}`, { stok_kodu: yeniKod, stok_adi: 'Balata F10', giren_miktar: 5, satis_fiyati: 100 }, admin);
     assert.equal(g.durum, 200);
@@ -171,7 +181,17 @@ describe('#46 yedek parça stok: HTTP sözleşmesi', () => {
     const dizi = await api('POST', '/api/yedek-parca-stok/toplu', { stoklar: 'x' }, admin);
     assert.equal(dizi.durum, 400);
     assert.equal(dizi.govde.message, 'Stok listesi gerekli');
-    const eksik = await api('POST', '/api/yedek-parca-stok/toplu', { stoklar: [{ stok_kodu: 'A', stok_adi: 'a' }, { stok_kodu: '', stok_adi: 'b' }] }, admin);
+    const eksik = await api(
+      'POST',
+      '/api/yedek-parca-stok/toplu',
+      {
+        stoklar: [
+          { stok_kodu: 'A', stok_adi: 'a' },
+          { stok_kodu: '', stok_adi: 'b' },
+        ],
+      },
+      admin,
+    );
     assert.equal(eksik.durum, 400);
     assert.equal(eksik.govde.message, 'Stok kodu ve adı boş olamaz (satır: 2)');
     const ok = await api('POST', '/api/yedek-parca-stok/toplu', { stoklar: [{ stok_kodu: benzersiz('TP-'), stok_adi: 'Toplu', giren_miktar: 2 }] }, admin);
@@ -214,10 +234,19 @@ describe('#48 iş emirleri ve servis geçmişi: HTTP sözleşmesi', () => {
 
   before(async () => {
     plaka = ('34' + benzersiz('F').replace(/[^A-Za-z0-9]/g, '')).toUpperCase().slice(0, 10);
-    const r = await api('POST', '/api/is-emirleri', {
-      musteri_ad_soyad: benzersiz('F10 Servis '), plaka, marka: 'Honda', model_tip: 'PCX', km: 1200,
-      parcalar: [{ takilan_parca: 'Yağ değişimi', adet: 2, birim_fiyat: 100, maliyet: 60 }],
-    }, admin);
+    const r = await api(
+      'POST',
+      '/api/is-emirleri',
+      {
+        musteri_ad_soyad: benzersiz('F10 Servis '),
+        plaka,
+        marka: 'Honda',
+        model_tip: 'PCX',
+        km: 1200,
+        parcalar: [{ takilan_parca: 'Yağ değişimi', adet: 2, birim_fiyat: 100, maliyet: 60 }],
+      },
+      admin,
+    );
     assert.equal(r.durum, 201);
     ieId = r.govde.id;
     fisNo = r.govde.fis_no;
@@ -255,7 +284,12 @@ describe('#48 iş emirleri ve servis geçmişi: HTTP sözleşmesi', () => {
   });
 
   it('tamamlanan iş emrini personel düzenleyemez (403), silemez (403); admin düzenler', async () => {
-    const tamam = await api('PUT', `/api/is-emirleri/${ieId}`, { musteri_ad_soyad: 'x', plaka, durum: 'tamamlandi', parcalar: [{ takilan_parca: 'Yağ değişimi', adet: 2, birim_fiyat: 100, maliyet: 60 }] }, admin);
+    const tamam = await api(
+      'PUT',
+      `/api/is-emirleri/${ieId}`,
+      { musteri_ad_soyad: 'x', plaka, durum: 'tamamlandi', parcalar: [{ takilan_parca: 'Yağ değişimi', adet: 2, birim_fiyat: 100, maliyet: 60 }] },
+      admin,
+    );
     assert.equal(tamam.durum, 200);
     assert.ok(tamam.govde.tamamlama_tarihi, 'geçişte tamamlama tarihi verilir');
     const personel = await api('PUT', `/api/is-emirleri/${ieId}`, { musteri_ad_soyad: 'y', parcalar: [] }, k.servis.token);
@@ -330,10 +364,17 @@ describe('#49 aksesuar stok ve satışı: HTTP sözleşmesi', () => {
   });
 
   it('satış: indirim ve kâr hesabı; tamamlandı olunca stok id ile DÜŞER; silinince iade', async () => {
-    const r = await api('POST', '/api/aksesuarlar', {
-      ad_soyad: benzersiz('F10 Alıcı '), durum: 'tamamlandi', indirim: 20,
-      parcalar: [{ stok_id: stokId, urun_adi: 'Kask', adet: 3, maliyet: 100, satis_fiyati: 200 }],
-    }, admin);
+    const r = await api(
+      'POST',
+      '/api/aksesuarlar',
+      {
+        ad_soyad: benzersiz('F10 Alıcı '),
+        durum: 'tamamlandi',
+        indirim: 20,
+        parcalar: [{ stok_id: stokId, urun_adi: 'Kask', adet: 3, maliyet: 100, satis_fiyati: 200 }],
+      },
+      admin,
+    );
     assert.equal(r.durum, 201);
     assert.equal(Number(r.govde.toplam_satis), 580);
     assert.equal(Number(r.govde.toplam_maliyet), 300);
@@ -382,7 +423,12 @@ describe('#50 e-ticaret: HTTP sözleşmesi', () => {
     assert.equal(p.durum, 201);
     platformId = p.govde.id;
     stokKodu = benzersiz('ET-').slice(0, 20);
-    const st = await api('POST', '/api/aksesuar-stok', { stok_kodu: stokKodu, stok_adi: benzersiz('E-ticaret ürün '), giren_miktar: 10, satis_fiyati: 300 }, admin);
+    const st = await api(
+      'POST',
+      '/api/aksesuar-stok',
+      { stok_kodu: stokKodu, stok_adi: benzersiz('E-ticaret ürün '), giren_miktar: 10, satis_fiyati: 300 },
+      admin,
+    );
     stokId = st.govde.id;
   });
 
@@ -408,7 +454,12 @@ describe('#50 e-ticaret: HTTP sözleşmesi', () => {
   });
 
   it('satış: kâr hesaplanır, platform adı yanıtta; stok düşer; silinince iade edilir', async () => {
-    const r = await api('POST', '/api/eticaret', { stok_id: stokId, platform_id: platformId, urun_adi: 'Kask', alis_fiyati: 100, satis_fiyati: 300, komisyon_orani: 10, kargo_ucreti: 20, adet: 2 }, admin);
+    const r = await api(
+      'POST',
+      '/api/eticaret',
+      { stok_id: stokId, platform_id: platformId, urun_adi: 'Kask', alis_fiyati: 100, satis_fiyati: 300, komisyon_orani: 10, kargo_ucreti: 20, adet: 2 },
+      admin,
+    );
     assert.equal(r.durum, 201);
     assert.ok(r.govde.platform_adi);
     assert.equal(typeof Number(r.govde.kar), 'number');
@@ -432,7 +483,12 @@ describe('#50 e-ticaret: HTTP sözleşmesi', () => {
   });
 
   it('kâr: e-ticaret yetkilisi (admin olmasa da) satış kârını ve toplam kârı görür; yetkisiz personel 403', async () => {
-    const r = await api('POST', '/api/eticaret', { platform_id: platformId, urun_adi: 'Kâr görünürlüğü', alis_fiyati: 100, satis_fiyati: 300, komisyon_orani: 10, kargo_ucreti: 20, adet: 1 }, admin);
+    const r = await api(
+      'POST',
+      '/api/eticaret',
+      { platform_id: platformId, urun_adi: 'Kâr görünürlüğü', alis_fiyati: 100, satis_fiyati: 300, komisyon_orani: 10, kargo_ucreti: 20, adet: 1 },
+      admin,
+    );
     assert.equal(r.durum, 201);
     const liste = await api('GET', '/api/eticaret', undefined, k.eticaret.token);
     assert.equal(liste.durum, 200);
@@ -459,10 +515,26 @@ describe('#51 motor ve satış belgeleri: HTTP sözleşmesi', () => {
 
   before(async () => {
     plaka = benzersiz('34M').slice(0, 12);
-    const r = await api('POST', '/api/ikinci-el-motor', {
-      plaka, marka: 'Honda', model: 'PCX', yil: 2021, km: 5000, alis_fiyati: 100000, satis_fiyati: 150000, masraflar: 2000,
-      komisyoncu_tutari: 3000, durum: 'tamamlandi', alici_adi: benzersiz('F10 Alıcı '), tarih: '2026-08-05', satis_tarihi: '2026-09-20',
-    }, admin);
+    const r = await api(
+      'POST',
+      '/api/ikinci-el-motor',
+      {
+        plaka,
+        marka: 'Honda',
+        model: 'PCX',
+        yil: 2021,
+        km: 5000,
+        alis_fiyati: 100000,
+        satis_fiyati: 150000,
+        masraflar: 2000,
+        komisyoncu_tutari: 3000,
+        durum: 'tamamlandi',
+        alici_adi: benzersiz('F10 Alıcı '),
+        tarih: '2026-08-05',
+        satis_tarihi: '2026-09-20',
+      },
+      admin,
+    );
     assert.equal(r.durum, 201);
     motorId = r.govde.id;
   });
@@ -581,7 +653,8 @@ describe('#52 raporlar ve veresiye: HTTP sözleşmesi', () => {
     assert.equal(eksik.govde.message, 'Başlangıç ve bitiş tarihi gerekli');
     const tam = await api('GET', '/api/raporlar/aralik?baslangic=2026-01-01&bitis=2026-12-31', undefined, admin);
     assert.equal(tam.durum, 200);
-    for (const alan of ['motorGelir', 'isEmriGelir', 'aksesuarGelir', 'eticaretGelir', 'yedekParcaToplamDeger', 'motorStokToplam']) assert.ok(alan in tam.govde, alan);
+    for (const alan of ['motorGelir', 'isEmriGelir', 'aksesuarGelir', 'eticaretGelir', 'yedekParcaToplamDeger', 'motorStokToplam'])
+      assert.ok(alan in tam.govde, alan);
     assert.ok('gelir' in tam.govde.toplam && 'maliyet' in tam.govde.toplam && 'kar' in tam.govde.toplam);
   });
 
@@ -599,7 +672,8 @@ describe('#52 raporlar ve veresiye: HTTP sözleşmesi', () => {
     assert.equal(genel.govde.message, 'Bu rapora erişim yetkiniz yok');
     const kendi = await api('GET', '/api/raporlar/yatirimci-rapor', undefined, yat.token);
     assert.equal(kendi.durum, 200);
-    for (const alan of ['stok_adet', 'satilan_adet', 'toplam_yatirimci_kar', 'toplam_satis', 'toplam_alis', 'stok_degeri']) assert.ok(alan in kendi.govde.ozet, alan);
+    for (const alan of ['stok_adet', 'satilan_adet', 'toplam_yatirimci_kar', 'toplam_satis', 'toplam_alis', 'stok_degeri'])
+      assert.ok(alan in kendi.govde.ozet, alan);
   });
 
   it('yatırımcı raporu: admin yatirimci_id vermezse 400; verirse o yatırımcının raporu', async () => {

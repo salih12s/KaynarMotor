@@ -15,8 +15,14 @@ import { initializeDatabase } from './core/veritabani/initDb';
 import { authenticateToken } from './core/middleware/auth';
 import { negatifTutarEngelle } from './core/middleware/tutarDogrula';
 import {
-  modulYetkisi, yazmaYetkisi, rolYetkisi, motorYazmaYetkisi, vitrinYetkili, kariGizle,
-  AKSESUAR_STOK_OKUYANLAR, YEDEK_PARCA_STOK_OKUYANLAR,
+  modulYetkisi,
+  yazmaYetkisi,
+  rolYetkisi,
+  motorYazmaYetkisi,
+  vitrinYetkili,
+  kariGizle,
+  AKSESUAR_STOK_OKUYANLAR,
+  YEDEK_PARCA_STOK_OKUYANLAR,
 } from './core/middleware/yetki';
 // Modül yolları (her biri routes → controller → service → repository katmanlarıdır)
 import authRoutes from './modules/auth/auth.routes';
@@ -64,34 +70,38 @@ const allowedOrigins = [
   process.env.FRONTEND_URL,
 ].filter(Boolean) as string[];
 
-app.use(cors({
-  origin: function (origin, callback) {
-    // origin olmayan istekler (same-origin, Postman vs.)
-    // Production'da frontend backend tarafından servis edildiği için ana uygulama
-    // buradan geçer; CORS kontrolü yalnızca farklı origin'lerden gelen istekler içindir.
-    if (!origin) return callback(null, true);
-    // Bilinen origin'ler veya development modunda hepsine izin ver
-    if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV === 'development') {
-      return callback(null, true);
-    }
-    // Bilinmeyen origin reddedilir. Yeni bir alan adından servis ediyorsanız
-    // FRONTEND_URL ortam değişkenini o adrese ayarlayın; aşağıdaki log hangi
-    // origin'in reddedildiğini gösterir.
-    console.warn(`CORS reddedildi: ${origin} (izin vermek için FRONTEND_URL ayarlayın)`);
-    callback(Object.assign(new Error('CORS policy violation'), { status: 403 }));
-  },
-  credentials: true,
-}));
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // origin olmayan istekler (same-origin, Postman vs.)
+      // Production'da frontend backend tarafından servis edildiği için ana uygulama
+      // buradan geçer; CORS kontrolü yalnızca farklı origin'lerden gelen istekler içindir.
+      if (!origin) return callback(null, true);
+      // Bilinen origin'ler veya development modunda hepsine izin ver
+      if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV === 'development') {
+        return callback(null, true);
+      }
+      // Bilinmeyen origin reddedilir. Yeni bir alan adından servis ediyorsanız
+      // FRONTEND_URL ortam değişkenini o adrese ayarlayın; aşağıdaki log hangi
+      // origin'in reddedildiğini gösterir.
+      console.warn(`CORS reddedildi: ${origin} (izin vermek için FRONTEND_URL ayarlayın)`);
+      callback(Object.assign(new Error('CORS policy violation'), { status: 403 }));
+    },
+    credentials: true,
+  }),
+);
 
 // Güvenlik başlıkları.
 // contentSecurityPolicy kapalı: CRA build'i inline script/stil üretir, varsayılan CSP
 // bunları engelleyip arayüzü bozar. crossOriginResourcePolicy 'cross-origin':
 // vitrin görsel/videoları API'den farklı bir origin'deki siteye servis ediliyor.
-app.use(helmet({
-  contentSecurityPolicy: false,
-  crossOriginResourcePolicy: { policy: 'cross-origin' },
-  crossOriginOpenerPolicy: false,
-}));
+app.use(
+  helmet({
+    contentSecurityPolicy: false,
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+    crossOriginOpenerPolicy: false,
+  }),
+);
 
 // Gövde limiti: yüksek limit yalnızca vitrin yükleme uçlarında gerekli (görsel/video base64, 120 MB).
 // Bu devasa gövde KİMLİK DOĞRULANMADAN okunursa yetkisiz biri sunucu belleğini şişirebilir. Bu yüzden
@@ -119,14 +129,28 @@ app.use('/api/auth', authRoutes);
 app.use('/api/musteriler', denetimKaydi('musteriler'), authenticateToken, kariGizle, musteriRoutes);
 app.use('/api/is-emirleri', authenticateToken, kariGizle, modulYetkisi('servis_yetkisi'), isEmriRoutes);
 app.use('/api/aksesuarlar', authenticateToken, kariGizle, modulYetkisi('aksesuar_yetkisi'), aksesuarRoutes);
-app.use('/api/aksesuar-stok', denetimKaydi('aksesuar_stok'), authenticateToken, modulYetkisi(...AKSESUAR_STOK_OKUYANLAR), yazmaYetkisi('aksesuar_stok_yetkisi'), aksesuarStokRoutes);
+app.use(
+  '/api/aksesuar-stok',
+  denetimKaydi('aksesuar_stok'),
+  authenticateToken,
+  modulYetkisi(...AKSESUAR_STOK_OKUYANLAR),
+  yazmaYetkisi('aksesuar_stok_yetkisi'),
+  aksesuarStokRoutes,
+);
 app.use('/api/ikinci-el-motor', authenticateToken, kariGizle, motorYazmaYetkisi, ikinciElMotorRoutes);
 // Satış belgeleri (sözleşme vb.): yetki kontrolü route dosyasında; yükleme gövdesi ham ikili (express.raw)
 app.use('/api/satis-belgeleri', authenticateToken, satisBelgeRoutes);
 // E-ticaret kârı bilerek kariGizle DIŞINDADIR (Salih'in kararı, 2026-10-22): sayfaya girebilen herkes (eticaret_yetkisi) kârı görür.
 app.use('/api/eticaret', authenticateToken, modulYetkisi('eticaret_yetkisi'), eticaretRoutes);
 app.use('/api/yedek-parcalar', denetimKaydi('yedek_parcalar'), authenticateToken, modulYetkisi('yedek_parca_yetkisi'), yedekParcaRoutes);
-app.use('/api/yedek-parca-stok', denetimKaydi('yedek_parca_stok'), authenticateToken, modulYetkisi(...YEDEK_PARCA_STOK_OKUYANLAR), yazmaYetkisi('yedek_parca_yetkisi'), yedekParcaStokRoutes);
+app.use(
+  '/api/yedek-parca-stok',
+  denetimKaydi('yedek_parca_stok'),
+  authenticateToken,
+  modulYetkisi(...YEDEK_PARCA_STOK_OKUYANLAR),
+  yazmaYetkisi('yedek_parca_yetkisi'),
+  yedekParcaStokRoutes,
+);
 app.use('/api/raporlar', authenticateToken, kariGizle, rolYetkisi('admin', 'yatirimci'), raporRoutes);
 app.use('/api/veresiye', authenticateToken, rolYetkisi('admin'), veresiyeRoutes);
 // Vitrin: public + admin uçları karışık; auth route içinde uygulanır

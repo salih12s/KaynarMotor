@@ -1,8 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
-  Typography, Drawer, List, ListItem, ListItemButton, ListItemIcon,
-  ListItemText, IconButton, Box, Divider, Collapse, useMediaQuery, useTheme, Avatar
+  Typography,
+  Drawer,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  IconButton,
+  Box,
+  Divider,
+  Collapse,
+  useMediaQuery,
+  useTheme,
+  Avatar,
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import BuildIcon from '@mui/icons-material/Build';
@@ -37,7 +49,7 @@ const Layout = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   // Alt menü açık/kapalı durumu grup başlığına göre ayrı ayrı tutulur
   const [openMenus, setOpenMenus] = useState({});
-  const toggleMenu = (key) => setOpenMenus(prev => ({ ...prev, [key]: !prev[key] }));
+  const toggleMenu = (key) => setOpenMenus((prev) => ({ ...prev, [key]: !prev[key] }));
   const { setDefaultTheme, setAksesuarTheme, setMotorTheme, setEticaretTheme, setYedekParcaTheme } = useCustomTheme();
 
   const pathname = location.pathname;
@@ -57,7 +69,9 @@ const Layout = () => {
   }, [pathname, setDefaultTheme, setAksesuarTheme, setMotorTheme, setEticaretTheme, setYedekParcaTheme]);
 
   const handleLogout = async () => {
-    try { await authService.logout(); } catch {}
+    try {
+      await authService.logout();
+    } catch {}
     logout();
     navigate('/login');
   };
@@ -108,28 +122,38 @@ const Layout = () => {
 
   const menuItems = [
     {
-      title: 'Motorsiklet', icon: <MotorIcon />, color: '#C62828', show: isAdmin || hasMotor || isYatirimci || muhasebeMotor, key: 'motor',
+      title: 'Motorsiklet',
+      icon: <MotorIcon />,
+      color: '#C62828',
+      show: isAdmin || hasMotor || isYatirimci || muhasebeMotor,
+      key: 'motor',
       subItems: [
-        ...((isAdmin || hasMotor || muhasebeMotor) ? [{ title: 'Motor Satış', path: '/ikinci-el-motor', icon: <SellIcon /> }] : []),
+        ...(isAdmin || hasMotor || muhasebeMotor ? [{ title: 'Motor Satış', path: '/ikinci-el-motor', icon: <SellIcon /> }] : []),
         ...(!muhasebeMotor ? [{ title: isYatirimci ? 'Motorlarım' : 'Motor Stok', path: '/motor-stok', icon: <StokIcon /> }] : []),
-      ]
+      ],
     },
     { title: 'Servis', path: '/servis', icon: <BuildIcon />, show: isAdmin || hasServis, color: '#C62828' },
     {
-      title: 'Aksesuarlar', icon: <ShopIcon />, color: '#C62828', show: isAdmin || hasAksesuar || hasAksesuarStok,
+      title: 'Aksesuarlar',
+      icon: <ShopIcon />,
+      color: '#C62828',
+      show: isAdmin || hasAksesuar || hasAksesuarStok,
       subItems: [
         ...(isAdmin || hasAksesuar ? [{ title: 'Aksesuar Satış', path: '/aksesuarlar', icon: <SellIcon /> }] : []),
         ...(isAdmin || hasAksesuarStok ? [{ title: 'Aksesuar Stok', path: '/aksesuar-stok', icon: <StokIcon /> }] : []),
-      ]
+      ],
     },
     { title: 'E-Ticaret', path: '/eticaret', icon: <StoreIcon />, show: isAdmin || hasEticaret, color: '#C62828' },
     { title: 'Taksit Hesaplama', path: '/taksit-hesaplama', icon: <CalculateIcon />, show: !isYatirimci && !isMuhasebeci, color: '#C62828' },
     {
-      title: 'Yedek Parça', icon: <SettingsIcon />, color: '#C62828', show: isAdmin || hasYedekParca,
+      title: 'Yedek Parça',
+      icon: <SettingsIcon />,
+      color: '#C62828',
+      show: isAdmin || hasYedekParca,
       subItems: [
         { title: 'Yedek Parça Satış', path: '/yedek-parcalar', icon: <SellIcon /> },
         { title: 'Yedek Parça Stok', path: '/yedek-parca-stok', icon: <StokIcon /> },
-      ]
+      ],
     },
     { title: 'Vitrin / Site', path: '/vitrin', icon: <StoreIcon />, show: isAdmin || hasMotorVitrin || hasAksesuarVitrin, color: '#C62828' },
     { title: 'Veresiye', path: '/veresiye', icon: <VeresiyeIcon />, show: isAdmin, color: '#C62828' },
@@ -138,85 +162,106 @@ const Layout = () => {
     { title: 'Belge Arşivi', path: '/belge-arsivi', icon: <FolderIcon />, show: isAdmin || isMuhasebeci, color: '#C62828' },
     { title: 'Kullanıcılar', path: '/kullanicilar', icon: <AdminIcon />, show: isAdmin, color: '#C62828' },
     { title: 'Yetkilendirme', path: '/yetkilendirme', icon: <SettingsIcon />, show: isAdmin, color: '#C62828' },
-        { title: 'Ana Sayfaya Git', path: '/site', icon: <HomeIcon />, show: !isMuhasebeci, color: '#C62828' },
-
+    { title: 'Ana Sayfaya Git', path: '/site', icon: <HomeIcon />, show: !isMuhasebeci, color: '#C62828' },
   ];
 
   const isActive = (path) => pathname === path;
-  const isSubActive = (item) => item.subItems?.some(s => pathname === s.path);
+  const isSubActive = (item) => item.subItems?.some((s) => pathname === s.path);
 
   const drawer = (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: '#1a1a1a', color: 'white', overflow: 'hidden' }}>
       <Box sx={{ p: 1.5, textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1.5, flexShrink: 0 }}>
         <span className="kmt-logo-wrap" style={{ width: 40, height: 44, overflow: 'hidden', display: 'inline-flex', alignItems: 'center', flexShrink: 0 }}>
-          <img className="kmt-logo" src="/KaynarMotor.png" alt="Kaynar Motor" width="40" height="44"
-            style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', filter: 'brightness(0) invert(1)' }} />
+          <img
+            className="kmt-logo"
+            src="/KaynarMotor.png"
+            alt="Kaynar Motor"
+            width="40"
+            height="44"
+            style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', filter: 'brightness(0) invert(1)' }}
+          />
         </span>
         <Typography variant="h7" fontWeight="bold" sx={{ letterSpacing: 1 }}>
-          <span>KAYNAR </span><span style={{ color: '#C62828' }}>MOTOR</span>
+          <span>KAYNAR </span>
+          <span style={{ color: '#C62828' }}>MOTOR</span>
         </Typography>
       </Box>
-      <List sx={{
-        flex: 1, pt: 0, pb: 0, overflowY: 'auto', overflowX: 'hidden',
-        '&::-webkit-scrollbar': { width: 6 },
-        '&::-webkit-scrollbar-thumb': { bgcolor: 'rgba(255,255,255,0.2)', borderRadius: 3 },
-      }}>
-        {menuItems.filter(item => item.show).map((item, index) => (
-          <React.Fragment key={index}>
-            {item.subItems ? (
-              <>
+      <List
+        sx={{
+          flex: 1,
+          pt: 0,
+          pb: 0,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          '&::-webkit-scrollbar': { width: 6 },
+          '&::-webkit-scrollbar-thumb': { bgcolor: 'rgba(255,255,255,0.2)', borderRadius: 3 },
+        }}
+      >
+        {menuItems
+          .filter((item) => item.show)
+          .map((item, index) => (
+            <React.Fragment key={index}>
+              {item.subItems ? (
+                <>
+                  <ListItem disablePadding>
+                    <ListItemButton
+                      onClick={() => toggleMenu(item.key || item.title)}
+                      sx={{
+                        color: 'white',
+                        py: 1,
+                        borderLeft: isSubActive(item) ? '4px solid white' : '4px solid transparent',
+                        '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' },
+                      }}
+                    >
+                      <ListItemIcon sx={{ color: 'white', minWidth: 34, '& svg': { fontSize: 21 } }}>{item.icon}</ListItemIcon>
+                      <ListItemText primary={item.title} primaryTypographyProps={{ fontSize: '0.92rem', fontWeight: isSubActive(item) ? 'bold' : 'normal' }} />
+                      {openMenus[item.key || item.title] ? <ExpandLess /> : <ExpandMore />}
+                    </ListItemButton>
+                  </ListItem>
+                  <Collapse in={!!openMenus[item.key || item.title]} timeout="auto" unmountOnExit>
+                    <List component="div" disablePadding>
+                      {item.subItems.map((sub, si) => (
+                        <ListItemButton
+                          key={si}
+                          onClick={() => handleNavigate(sub.path)}
+                          sx={{
+                            pl: 4,
+                            py: 0.6,
+                            color: 'white',
+                            borderLeft: isActive(sub.path) ? '4px solid white' : '4px solid transparent',
+                            bgcolor: isActive(sub.path) ? 'rgba(255,255,255,0.1)' : 'transparent',
+                            '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' },
+                          }}
+                        >
+                          <ListItemIcon sx={{ color: 'rgba(255,255,255,0.7)', minWidth: 30, '& svg': { fontSize: 19 } }}>{sub.icon}</ListItemIcon>
+                          <ListItemText
+                            primary={sub.title}
+                            primaryTypographyProps={{ fontSize: '0.85rem', fontWeight: isActive(sub.path) ? 'bold' : 'normal' }}
+                          />
+                        </ListItemButton>
+                      ))}
+                    </List>
+                  </Collapse>
+                </>
+              ) : (
                 <ListItem disablePadding>
                   <ListItemButton
-                    onClick={() => toggleMenu(item.key || item.title)}
+                    onClick={() => handleNavigate(item.path)}
                     sx={{
-                      color: 'white', py: 1,
-                      borderLeft: isSubActive(item) ? '4px solid white' : '4px solid transparent',
+                      color: 'white',
+                      py: 1,
+                      borderLeft: isActive(item.path) ? '4px solid white' : '4px solid transparent',
+                      bgcolor: isActive(item.path) ? 'rgba(255,255,255,0.1)' : 'transparent',
                       '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' },
                     }}
                   >
                     <ListItemIcon sx={{ color: 'white', minWidth: 34, '& svg': { fontSize: 21 } }}>{item.icon}</ListItemIcon>
-                    <ListItemText primary={item.title} primaryTypographyProps={{ fontSize: '0.92rem', fontWeight: isSubActive(item) ? 'bold' : 'normal' }} />
-                    {openMenus[item.key || item.title] ? <ExpandLess /> : <ExpandMore />}
+                    <ListItemText primary={item.title} primaryTypographyProps={{ fontSize: '0.92rem', fontWeight: isActive(item.path) ? 'bold' : 'normal' }} />
                   </ListItemButton>
                 </ListItem>
-                <Collapse in={!!openMenus[item.key || item.title]} timeout="auto" unmountOnExit>
-                  <List component="div" disablePadding>
-                    {item.subItems.map((sub, si) => (
-                      <ListItemButton
-                        key={si}
-                        onClick={() => handleNavigate(sub.path)}
-                        sx={{
-                          pl: 4, py: 0.6, color: 'white',
-                          borderLeft: isActive(sub.path) ? '4px solid white' : '4px solid transparent',
-                          bgcolor: isActive(sub.path) ? 'rgba(255,255,255,0.1)' : 'transparent',
-                          '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' },
-                        }}
-                      >
-                        <ListItemIcon sx={{ color: 'rgba(255,255,255,0.7)', minWidth: 30, '& svg': { fontSize: 19 } }}>{sub.icon}</ListItemIcon>
-                        <ListItemText primary={sub.title} primaryTypographyProps={{ fontSize: '0.85rem', fontWeight: isActive(sub.path) ? 'bold' : 'normal' }} />
-                      </ListItemButton>
-                    ))}
-                  </List>
-                </Collapse>
-              </>
-            ) : (
-              <ListItem disablePadding>
-                <ListItemButton
-                  onClick={() => handleNavigate(item.path)}
-                  sx={{
-                    color: 'white', py: 1,
-                    borderLeft: isActive(item.path) ? '4px solid white' : '4px solid transparent',
-                    bgcolor: isActive(item.path) ? 'rgba(255,255,255,0.1)' : 'transparent',
-                    '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' },
-                  }}
-                >
-                  <ListItemIcon sx={{ color: 'white', minWidth: 34, '& svg': { fontSize: 21 } }}>{item.icon}</ListItemIcon>
-                  <ListItemText primary={item.title} primaryTypographyProps={{ fontSize: '0.92rem', fontWeight: isActive(item.path) ? 'bold' : 'normal' }} />
-                </ListItemButton>
-              </ListItem>
-            )}
-          </React.Fragment>
-        ))}
+              )}
+            </React.Fragment>
+          ))}
       </List>
       <Divider sx={{ borderColor: 'rgba(255,255,255,0.2)' }} />
     </Box>
@@ -226,10 +271,24 @@ const Layout = () => {
     <Box sx={{ display: 'flex', minHeight: '100vh' }}>
       {isMobile ? (
         <>
-          <IconButton onClick={() => setMobileOpen(!mobileOpen)} sx={{ position: 'fixed', top: 8, left: 8, zIndex: 1300, bgcolor: theme.palette.primary.main, color: 'white', '&:hover': { bgcolor: theme.palette.primary.dark } }}>
+          <IconButton
+            onClick={() => setMobileOpen(!mobileOpen)}
+            sx={{
+              position: 'fixed',
+              top: 8,
+              left: 8,
+              zIndex: 1300,
+              bgcolor: theme.palette.primary.main,
+              color: 'white',
+              '&:hover': { bgcolor: theme.palette.primary.dark },
+            }}
+          >
             <MenuIcon />
           </IconButton>
-          <Drawer variant="temporary" open={mobileOpen} onClose={() => setMobileOpen(false)}
+          <Drawer
+            variant="temporary"
+            open={mobileOpen}
+            onClose={() => setMobileOpen(false)}
             ModalProps={{ keepMounted: true }}
             sx={{ '& .MuiDrawer-paper': { width: DRAWER_WIDTH, border: 'none', borderRadius: 0 } }}
           >
@@ -237,22 +296,44 @@ const Layout = () => {
           </Drawer>
         </>
       ) : (
-        <Drawer variant="permanent"
-          sx={{ width: DRAWER_WIDTH, flexShrink: 0, '& .MuiDrawer-paper': { width: DRAWER_WIDTH, border: 'none', borderRadius: 0 } }}
-        >
+        <Drawer variant="permanent" sx={{ width: DRAWER_WIDTH, flexShrink: 0, '& .MuiDrawer-paper': { width: DRAWER_WIDTH, border: 'none', borderRadius: 0 } }}>
           {drawer}
         </Drawer>
       )}
 
       <Box component="main" sx={{ flexGrow: 1, minHeight: '100vh', bgcolor: '#f5f5f5', width: isMobile ? '100%' : `calc(100% - ${DRAWER_WIDTH}px)` }}>
         {/* Page Header */}
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', px: { xs: 1.5, md: 3 }, pl: { xs: 6, md: 3 }, pt: { xs: 1, md: 2 }, pb: 1, bgcolor: 'white', borderBottom: '1px solid #eee', flexWrap: 'wrap', gap: 1 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            px: { xs: 1.5, md: 3 },
+            pl: { xs: 6, md: 3 },
+            pt: { xs: 1, md: 2 },
+            pb: 1,
+            bgcolor: 'white',
+            borderBottom: '1px solid #eee',
+            flexWrap: 'wrap',
+            gap: 1,
+          }}
+        >
           <Box sx={{ minWidth: 0 }}>
-            <Typography variant={isMobile ? 'subtitle1' : 'h5'} fontWeight="bold" noWrap>{getPageTitle()}</Typography>
-            {!isMobile && <Typography variant="body2" color="text.secondary">{dateStr}</Typography>}
+            <Typography variant={isMobile ? 'subtitle1' : 'h5'} fontWeight="bold" noWrap>
+              {getPageTitle()}
+            </Typography>
+            {!isMobile && (
+              <Typography variant="body2" color="text.secondary">
+                {dateStr}
+              </Typography>
+            )}
           </Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-            {!isMobile && <Typography variant="body2" fontWeight="500">{user?.ad_soyad}</Typography>}
+            {!isMobile && (
+              <Typography variant="body2" fontWeight="500">
+                {user?.ad_soyad}
+              </Typography>
+            )}
             <Avatar sx={{ width: { xs: 30, md: 36 }, height: { xs: 30, md: 36 }, bgcolor: theme.palette.primary.main, fontSize: { xs: 13, md: 15 } }}>
               {user?.ad_soyad?.charAt(0) || 'U'}
             </Avatar>

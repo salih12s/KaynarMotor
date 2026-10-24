@@ -11,11 +11,15 @@ test('eklenen değer okunur; olmayan anahtar undefined', () => {
 
 test('sınır aşılınca en eski kullanılan atılır; okunan kayıt yenilenir', () => {
   const o = new MedyaOnbellegi({ azamiBayt: 30 });
-  o.set('a', 'A', 10); o.set('b', 'B', 10); o.set('c', 'C', 10);
+  o.set('a', 'A', 10);
+  o.set('b', 'B', 10);
+  o.set('c', 'C', 10);
   o.get('a'); // a yenilendi, en eski artık b
   o.set('d', 'D', 10);
   assert.equal(o.get('b'), undefined);
-  assert.equal(o.get('a'), 'A'); assert.equal(o.get('c'), 'C'); assert.equal(o.get('d'), 'D');
+  assert.equal(o.get('a'), 'A');
+  assert.equal(o.get('c'), 'C');
+  assert.equal(o.get('d'), 'D');
   assert.equal(o.toplamBayt, 30);
 });
 
@@ -29,7 +33,8 @@ test('sınırın yarısından büyük değer önbelleğe alınmaz (tek büyük d
 
 test('aynı anahtar yeniden eklenince toplam bayt çift sayılmaz', () => {
   const o = new MedyaOnbellegi({ azamiBayt: 100 });
-  o.set('a', 'A1', 10); o.set('a', 'A2', 20);
+  o.set('a', 'A1', 10);
+  o.set('a', 'A2', 20);
   assert.equal(o.get('a'), 'A2');
   assert.equal(o.toplamBayt, 20);
 });
@@ -38,8 +43,10 @@ test('ömrü dolan kayıt okunmaz ve bellekten düşer', () => {
   let t = 1000;
   const o = new MedyaOnbellegi({ azamiBayt: 100, omurMs: 500, simdi: () => t });
   o.set('a', 'A', 10);
-  t = 1400; assert.equal(o.get('a'), 'A');
-  t = 1600; assert.equal(o.get('a'), undefined);
+  t = 1400;
+  assert.equal(o.get('a'), 'A');
+  t = 1600;
+  assert.equal(o.get('a'), undefined);
   assert.equal(o.toplamBayt, 0);
 });
 

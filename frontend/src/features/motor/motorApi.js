@@ -14,11 +14,12 @@ export const ikinciElMotorService = {
 export const satisBelgeService = {
   list: (motorId) => api.get(`/satis-belgeleri/motor/${motorId}`),
   arsiv: () => api.get('/satis-belgeleri/arsiv'),
-  upload: (motorId, file) => api.post(`/satis-belgeleri/motor/${motorId}`, file, {
-    params: { ad: file.name },
-    headers: { 'Content-Type': 'application/octet-stream' },
-    timeout: 120000,
-  }),
+  upload: (motorId, file) =>
+    api.post(`/satis-belgeleri/motor/${motorId}`, file, {
+      params: { ad: file.name },
+      headers: { 'Content-Type': 'application/octet-stream' },
+      timeout: 120000,
+    }),
   download: (id) => api.get(`/satis-belgeleri/${id}/indir`, { responseType: 'blob' }),
   delete: (id) => api.delete(`/satis-belgeleri/${id}`),
 };

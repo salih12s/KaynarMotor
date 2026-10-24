@@ -28,19 +28,25 @@ if (cikti.toLowerCase().startsWith(path.resolve(__dirname, '..', '..', '..').toL
 (async () => {
   const yerel = ['localhost', '127.0.0.1'].includes(process.env.DB_HOST);
   const c = new Client({
-    host: process.env.DB_HOST, port: parseInt(process.env.DB_PORT, 10) || 5432, database: process.env.DB_NAME,
-    user: process.env.DB_USER, password: process.env.DB_PASSWORD, ssl: yerel ? false : { rejectUnauthorized: false },
+    host: process.env.DB_HOST,
+    port: parseInt(process.env.DB_PORT, 10) || 5432,
+    database: process.env.DB_NAME,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    ssl: yerel ? false : { rejectUnauthorized: false },
   });
   await c.connect();
   await c.query('SET default_transaction_read_only = on');
   await c.query('BEGIN READ ONLY');
   const collate = (await c.query('SELECT datcollate FROM pg_database WHERE datname = current_database()')).rows[0].datcollate;
-  const kolonlar = (await c.query(`
+  const kolonlar = (
+    await c.query(`
     SELECT table_name, column_name FROM information_schema.columns
     WHERE table_schema = 'public' AND udt_name IN ('varchar', 'text')
       AND COALESCE(character_maximum_length, 0) <= 255
       AND column_name NOT IN ('data', 'gorsel', 'icerik', 'sifre', 'plain_sifre', 'token', 'islem_detay', 'tarayici_bilgisi')
-    ORDER BY 1, 2`)).rows;
+    ORDER BY 1, 2`)
+  ).rows;
   const sonuc = { collate, alinma: new Date().toISOString(), sira: {} };
   for (const { table_name: t, column_name: k } of kolonlar) {
     const r = await c.query(`SELECT DISTINCT "${k}" AS v FROM "${t}" WHERE "${k}" IS NOT NULL ORDER BY "${k}"`);

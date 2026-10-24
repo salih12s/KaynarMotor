@@ -17,8 +17,20 @@ const IstatistikSatiri = ({ motorlar, stats, canKar, salt, onExcel, onYeni }) =>
         <Chip key={i} label={c.label} sx={{ bgcolor: c.bg, color: c.color, fontWeight: 'bold', fontSize: '0.8rem', borderLeft: `4px solid ${c.color}` }} />
       ))}
       <Box sx={{ flexGrow: 1 }} />
-      <Button variant="outlined" size="large" startIcon={<FileDownloadIcon />} onClick={onExcel} sx={{ mr: 1, color: '#1B5E20', borderColor: '#1B5E20', '&:hover': { borderColor: '#1B5E20', bgcolor: '#E8F5E9' } }}>Excel'e Aktar</Button>
-      {!salt && <Button variant="contained" size="large" startIcon={<AddIcon />} onClick={onYeni} sx={{ bgcolor: '#C62828', '&:hover': { bgcolor: '#b71c1c' } }}>Motor Satış</Button>}
+      <Button
+        variant="outlined"
+        size="large"
+        startIcon={<FileDownloadIcon />}
+        onClick={onExcel}
+        sx={{ mr: 1, color: '#1B5E20', borderColor: '#1B5E20', '&:hover': { borderColor: '#1B5E20', bgcolor: '#E8F5E9' } }}
+      >
+        Excel'e Aktar
+      </Button>
+      {!salt && (
+        <Button variant="contained" size="large" startIcon={<AddIcon />} onClick={onYeni} sx={{ bgcolor: '#C62828', '&:hover': { bgcolor: '#b71c1c' } }}>
+          Motor Satış
+        </Button>
+      )}
     </Box>
   );
 };

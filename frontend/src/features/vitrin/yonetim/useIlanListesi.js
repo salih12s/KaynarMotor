@@ -15,32 +15,36 @@ export const useIlanListesi = ({ kategori, isAdmin, bildir }) => {
   const [yayinSavingId, setYayinSavingId] = useState(null);
 
   // Yayındaki ilanlar sıralanabilir; yayından kaldırılanlar arşivde toplanır (sunucu sırasını korur)
-  const aktifler = useMemo(() => urunler.filter(u => u.yayinda), [urunler]);
-  const arsivdekiler = useMemo(() => urunler.filter(u => !u.yayinda), [urunler]);
+  const aktifler = useMemo(() => urunler.filter((u) => u.yayinda), [urunler]);
+  const arsivdekiler = useMemo(() => urunler.filter((u) => !u.yayinda), [urunler]);
   const arsivGorunumu = gorunum === 'arsiv';
   const gorunenListe = arsivGorunumu ? arsivdekiler : aktifler;
   const digerListe = arsivGorunumu ? aktifler : arsivdekiler;
   const aramaVar = arama.trim() !== '';
-  const filtrelenmis = useMemo(
-    () => (aramaVar ? gorunenListe.filter(u => ilanAramaUygunMu(u, arama)) : gorunenListe),
-    [gorunenListe, arama, aramaVar]
-  );
-  const digerSonuc = aramaVar ? digerListe.filter(u => ilanAramaUygunMu(u, arama)).length : 0;
+  const filtrelenmis = useMemo(() => (aramaVar ? gorunenListe.filter((u) => ilanAramaUygunMu(u, arama)) : gorunenListe), [gorunenListe, arama, aramaVar]);
+  const digerSonuc = aramaVar ? digerListe.filter((u) => ilanAramaUygunMu(u, arama)).length : 0;
   // Arama açıkken liste kısaldığı için "bir yukarı/aşağı" ve sürükle-bırak güvenle yapılamaz
   const siraDegistirilebilir = !arsivGorunumu && !aramaVar;
   // Kartın üstündeki sıra numarası: aramadan bağımsız, yayındaki listedeki gerçek konum
   const siraMap = useMemo(() => new Map(aktifler.map((u, i) => [u.id, i])), [aktifler]);
 
-  const loadUrunler = useCallback(async (sessiz = false) => {
-    if (!sessiz) setLoading(true);
-    try {
-      const res = await vitrinService.getAllAdmin({ kategori });
-      setUrunler(res.data);
-    } catch { bildir('Ürünler yüklenemedi', 'error'); }
-    setLoading(false);
-  }, [kategori]);
+  const loadUrunler = useCallback(
+    async (sessiz = false) => {
+      if (!sessiz) setLoading(true);
+      try {
+        const res = await vitrinService.getAllAdmin({ kategori });
+        setUrunler(res.data);
+      } catch {
+        bildir('Ürünler yüklenemedi', 'error');
+      }
+      setLoading(false);
+    },
+    [kategori],
+  );
 
-  useEffect(() => { loadUrunler(); }, [loadUrunler]);
+  useEffect(() => {
+    loadUrunler();
+  }, [loadUrunler]);
   useEffect(() => {
     setSiraTaslaklari(Object.fromEntries(aktifler.map((urun, index) => [urun.id, String(index + 1)])));
   }, [aktifler]);
@@ -52,7 +56,10 @@ export const useIlanListesi = ({ kategori, isAdmin, bildir }) => {
     setUrunler([...yeni, ...arsivdekiler]);
     setOrderSaving(true);
     try {
-      await vitrinService.reorder(kategori, yeni.map(u => u.id));
+      await vitrinService.reorder(
+        kategori,
+        yeni.map((u) => u.id),
+      );
       bildir('Anasayfa vitrin sırası kaydedildi');
     } catch {
       setUrunler(onceki);
@@ -65,7 +72,7 @@ export const useIlanListesi = ({ kategori, isAdmin, bildir }) => {
 
   const moveUrun = (id, direction) => {
     if (orderSaving || !siraDegistirilebilir) return;
-    const from = aktifler.findIndex(u => u.id === id);
+    const from = aktifler.findIndex((u) => u.id === id);
     const to = from + direction;
     if (from < 0 || to < 0 || to >= aktifler.length) return;
     const yeni = [...aktifler];
@@ -79,9 +86,12 @@ export const useIlanListesi = ({ kategori, isAdmin, bildir }) => {
       setDraggedUrunId(null);
       return;
     }
-    const from = aktifler.findIndex(u => u.id === draggedUrunId);
-    const to = aktifler.findIndex(u => u.id === targetId);
-    if (from < 0 || to < 0) { setDraggedUrunId(null); return; }
+    const from = aktifler.findIndex((u) => u.id === draggedUrunId);
+    const to = aktifler.findIndex((u) => u.id === targetId);
+    if (from < 0 || to < 0) {
+      setDraggedUrunId(null);
+      return;
+    }
     const yeni = [...aktifler];
     const [moved] = yeni.splice(from, 1);
     yeni.splice(to, 0, moved);
@@ -95,7 +105,7 @@ export const useIlanListesi = ({ kategori, isAdmin, bildir }) => {
     setYayinSavingId(urun.id);
     try {
       const res = await vitrinService.setPublished(urun.id, yeniDurum);
-      setUrunler(prev => prev.map(item => item.id === urun.id ? { ...item, yayinda: res.data.yayinda } : item));
+      setUrunler((prev) => prev.map((item) => (item.id === urun.id ? { ...item, yayinda: res.data.yayinda } : item)));
       bildir(res.data.yayinda ? 'İlan arşivden çıkarıldı, yayına alındı (listenin sonuna eklendi)' : 'İlan yayından kaldırıldı, arşive taşındı');
       loadUrunler(true); // sunucudaki yeni sıra değerlerini al (ekran titremesin diye sessiz)
     } catch {
@@ -113,17 +123,17 @@ export const useIlanListesi = ({ kategori, isAdmin, bildir }) => {
       return;
     }
 
-    const mevcutSira = aktifler.findIndex(item => item.id === urun.id) + 1;
+    const mevcutSira = aktifler.findIndex((item) => item.id === urun.id) + 1;
     if (mevcutSira === yeniSira) return;
 
     setSiraSavingId(urun.id);
     setOrderSaving(true);
     try {
       const res = await vitrinService.moveToPosition(urun.id, yeniSira);
-      setUrunler(prev => {
-        const urunMap = new Map(prev.map(item => [Number(item.id), item]));
+      setUrunler((prev) => {
+        const urunMap = new Map(prev.map((item) => [Number(item.id), item]));
         const siraliAktifler = (res.data.urun_ids || []).map((id, index) => ({ ...urunMap.get(Number(id)), siralama: index }));
-        return [...siraliAktifler, ...prev.filter(item => !item.yayinda)];
+        return [...siraliAktifler, ...prev.filter((item) => !item.yayinda)];
       });
       bildir(`İlan ${res.data.sira}. sıraya taşındı`);
     } catch {
@@ -141,12 +151,38 @@ export const useIlanListesi = ({ kategori, isAdmin, bildir }) => {
       await vitrinService.delete(id);
       bildir('Silindi');
       loadUrunler();
-    } catch { bildir('Silinemedi', 'error'); }
+    } catch {
+      bildir('Silinemedi', 'error');
+    }
   };
 
   return {
-    urunler, loading, gorunum, setGorunum, arama, setArama, aktifler, arsivdekiler, arsivGorunumu, filtrelenmis, digerSonuc, aramaVar,
-    siraDegistirilebilir, siraMap, loadUrunler, orderSaving, draggedUrunId, setDraggedUrunId, siraTaslaklari, setSiraTaslaklari,
-    siraSavingId, yayinSavingId, moveUrun, handleUrunDrop, handleYayinToggle, handleDogrudanSira, handleDelete,
+    urunler,
+    loading,
+    gorunum,
+    setGorunum,
+    arama,
+    setArama,
+    aktifler,
+    arsivdekiler,
+    arsivGorunumu,
+    filtrelenmis,
+    digerSonuc,
+    aramaVar,
+    siraDegistirilebilir,
+    siraMap,
+    loadUrunler,
+    orderSaving,
+    draggedUrunId,
+    setDraggedUrunId,
+    siraTaslaklari,
+    setSiraTaslaklari,
+    siraSavingId,
+    yayinSavingId,
+    moveUrun,
+    handleUrunDrop,
+    handleYayinToggle,
+    handleDogrudanSira,
+    handleDelete,
   };
 };

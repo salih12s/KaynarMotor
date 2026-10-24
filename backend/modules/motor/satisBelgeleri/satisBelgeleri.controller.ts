@@ -19,10 +19,12 @@ export const yukle = sarmala('Satış belgesi yükleme hatası:', async (req, re
   const sorgu = dogrula(belgeYuklemeSorgusu, req.query);
   const belge = await servis.yukle(pool, { motorIdHam: req.params.motorId, dosyaAdiHam: sorgu.ad, icerik: req.body, kullanici: req.user });
   await logAktivite({
-    kullanici_id: req.user.id, kullanici_adi: req.user.kullanici_adi,
+    kullanici_id: req.user.id,
+    kullanici_adi: req.user.kullanici_adi,
     islem_tipi: ISLEM_TIPLERI.MOTOR_SATIS_GUNCELLE,
     islem_detay: `2. El Motor #${belge.motor_id}: belge eklendi (${belge.dosya_adi})`,
-    hedef_tablo: 'ikinci_el_motorlar', hedef_id: belge.motor_id,
+    hedef_tablo: 'ikinci_el_motorlar',
+    hedef_id: belge.motor_id,
   });
   res.status(201).json(belge);
 });
@@ -42,10 +44,12 @@ export const indir = sarmala('Satış belgesi indirme hatası:', async (req, res
 export const sil = sarmala('Satış belgesi silme hatası:', async (req, res) => {
   const silinen = await servis.sil(pool, req.params.id);
   await logAktivite({
-    kullanici_id: req.user.id, kullanici_adi: req.user.kullanici_adi,
+    kullanici_id: req.user.id,
+    kullanici_adi: req.user.kullanici_adi,
     islem_tipi: ISLEM_TIPLERI.MOTOR_SATIS_GUNCELLE,
     islem_detay: `2. El Motor #${silinen.motor_id}: belge silindi (${silinen.dosya_adi})`,
-    hedef_tablo: 'ikinci_el_motorlar', hedef_id: silinen.motor_id,
+    hedef_tablo: 'ikinci_el_motorlar',
+    hedef_id: silinen.motor_id,
   });
   res.json({ message: 'Belge silindi' });
 });

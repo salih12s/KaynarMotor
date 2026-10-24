@@ -22,7 +22,7 @@ export const stokAyarla = async (client: Veritabani, tablo: string, kosul: strin
        mevcut = IFNULL(mevcut, 0) - $1,
        updated_at = CURRENT_TIMESTAMP
      WHERE ${kosul}`,
-    [miktar, kosulDegeri]
+    [miktar, kosulDegeri],
   );
   return sonuc.rowCount;
 };

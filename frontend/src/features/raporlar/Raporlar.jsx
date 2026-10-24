@@ -45,9 +45,13 @@ const Raporlar = () => {
   return (
     <Box>
       <Paper sx={{ mb: 2 }}>
-        <Tabs value={tab} onChange={(_, v) => setTab(v)} variant="scrollable"
+        <Tabs
+          value={tab}
+          onChange={(_, v) => setTab(v)}
+          variant="scrollable"
           TabIndicatorProps={{ sx: { bgcolor: '#C62828' } }}
-          sx={{ '& .MuiTab-root': { fontWeight: 'bold' }, '& .Mui-selected': { color: '#C62828 !important' } }}>
+          sx={{ '& .MuiTab-root': { fontWeight: 'bold' }, '& .Mui-selected': { color: '#C62828 !important' } }}
+        >
           <Tab label="Genel Özet" />
           <Tab label="Motor Satışları" />
           <Tab label="İş Emirleri" />
@@ -61,25 +65,52 @@ const Raporlar = () => {
 
       <TarihFiltresi baslangic={veri.baslangic} bitis={veri.bitis} setBaslangic={veri.setBaslangic} setBitis={veri.setBitis} presetler={veri.presetler}>
         {tab === 2 && (
-          <TextField size="small" select label="Personel" value={seciliPersonel} onChange={e => setSeciliPersonel(e.target.value)} sx={{ minWidth: { xs: '100%', sm: 180 } }}>
+          <TextField
+            size="small"
+            select
+            label="Personel"
+            value={seciliPersonel}
+            onChange={(e) => setSeciliPersonel(e.target.value)}
+            sx={{ minWidth: { xs: '100%', sm: 180 } }}
+          >
             <MenuItem value="">Tümü</MenuItem>
-            {personeller.map(p => <MenuItem key={p} value={p}>{p}</MenuItem>)}
+            {personeller.map((p) => (
+              <MenuItem key={p} value={p}>
+                {p}
+              </MenuItem>
+            ))}
           </TextField>
         )}
       </TarihFiltresi>
 
-      {loading && <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}><CircularProgress sx={{ color: '#C62828' }} /></Box>}
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+      {loading && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+          <CircularProgress sx={{ color: '#C62828' }} />
+        </Box>
+      )}
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
 
       {tab === 0 && rapor && !loading && <GenelOzet rapor={rapor} toplamlar={toplamlar} isMobile={isMobile} onSekmeAc={setTab} />}
       {tab === 1 && rapor && !loading && (
-        <MotorSatislari rapor={rapor} isMobile={isMobile} onDetay={motorModal.ac}
-          motorSubTab={motorSubTab} setMotorSubTab={setMotorSubTab}
-          komisyoncuFilter={komisyoncuFilter} setKomisyoncuFilter={setKomisyoncuFilter} />
+        <MotorSatislari
+          rapor={rapor}
+          isMobile={isMobile}
+          onDetay={motorModal.ac}
+          motorSubTab={motorSubTab}
+          setMotorSubTab={setMotorSubTab}
+          komisyoncuFilter={komisyoncuFilter}
+          setKomisyoncuFilter={setKomisyoncuFilter}
+        />
       )}
       {tab === 2 && rapor && !loading && <IsEmirleri rapor={rapor} isMobile={isMobile} seciliPersonel={seciliPersonel} onDetay={isEmriModal.ac} />}
       {tab === 3 && rapor && !loading && <AksesuarSatislari rapor={rapor} isMobile={isMobile} onDetay={aksesuarModal.ac} />}
-      {tab === 4 && rapor && !loading && <ETicaret rapor={rapor} hesaplananEticaretKar={toplamlar.hesaplananEticaretKar} isMobile={isMobile} onDetay={eticaretModal.ac} />}
+      {tab === 4 && rapor && !loading && (
+        <ETicaret rapor={rapor} hesaplananEticaretKar={toplamlar.hesaplananEticaretKar} isMobile={isMobile} onDetay={eticaretModal.ac} />
+      )}
       {tab === 5 && rapor && !loading && <YedekParca rapor={rapor} isMobile={isMobile} />}
       {tab === 6 && !loading && <FisKarAnalizi fisKar={fisKar} isMobile={isMobile} />}
       {tab === 7 && isAdmin && !loading && <Yatirimcilar yatirimciOzetGosterim={yatirimciOzetGosterim} isMobile={isMobile} />}

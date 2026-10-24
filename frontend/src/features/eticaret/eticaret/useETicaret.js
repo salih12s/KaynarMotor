@@ -15,7 +15,18 @@ export const useETicaret = () => {
 
   // Satış dialog
   const [satisDialog, setSatisDialog] = useState({ open: false, data: null });
-  const [satisForm, setSatisForm] = useState({ stok_id: '', platform_id: '', urun_adi: '', alis_fiyati: '', satis_fiyati: '', komisyon_orani: '', kdv_orani: '20', kargo_ucreti: '0', adet: 1, tarih: '' });
+  const [satisForm, setSatisForm] = useState({
+    stok_id: '',
+    platform_id: '',
+    urun_adi: '',
+    alis_fiyati: '',
+    satis_fiyati: '',
+    komisyon_orani: '',
+    kdv_orani: '20',
+    kargo_ucreti: '0',
+    adet: 1,
+    tarih: '',
+  });
 
   // Platform dialog
   const [platformDialog, setPlatformDialog] = useState({ open: false, data: null });
@@ -27,8 +38,10 @@ export const useETicaret = () => {
   const loadData = async () => {
     try {
       const [satisRes, platformRes, statsRes, stokRes] = await Promise.all([
-        eticaretService.getSales(), eticaretService.getPlatforms(),
-        eticaretService.getStats(), aksesuarStokService.getAll()
+        eticaretService.getSales(),
+        eticaretService.getPlatforms(),
+        eticaretService.getStats(),
+        aksesuarStokService.getAll(),
       ]);
       setSatislar(satisRes.data);
       setPlatformlar(platformRes.data);
@@ -37,7 +50,9 @@ export const useETicaret = () => {
     } catch {}
   };
 
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => {
+    loadData();
+  }, []);
 
   // ===== Satış İşlemleri =====
   const openSatisDialog = (satis = null) => {
@@ -47,30 +62,31 @@ export const useETicaret = () => {
   };
 
   const handleStokSelect = (stokId) => {
-    const found = stokOptions.find(s => s.id === Number(stokId));
+    const found = stokOptions.find((s) => s.id === Number(stokId));
     if (found) {
-      setSatisForm(prev => ({ ...prev, stok_id: stokId, urun_adi: found.stok_adi, alis_fiyati: parseFloat(found.alis_fiyati || 0) }));
+      setSatisForm((prev) => ({ ...prev, stok_id: stokId, urun_adi: found.stok_adi, alis_fiyati: parseFloat(found.alis_fiyati || 0) }));
     } else {
-      setSatisForm(prev => ({ ...prev, stok_id: stokId }));
+      setSatisForm((prev) => ({ ...prev, stok_id: stokId }));
     }
   };
 
   const handlePlatformSelect = (platformId) => {
-    const found = platformlar.find(p => p.id === Number(platformId));
+    const found = platformlar.find((p) => p.id === Number(platformId));
     if (found) {
-      setSatisForm(prev => ({
-        ...prev, platform_id: platformId,
+      setSatisForm((prev) => ({
+        ...prev,
+        platform_id: platformId,
         komisyon_orani: parseFloat(found.komisyon_orani || 0),
         kdv_orani: parseFloat(found.kdv_orani || 20),
-        kargo_ucreti: parseFloat(found.kargo_ucreti || 0)
+        kargo_ucreti: parseFloat(found.kargo_ucreti || 0),
       }));
     } else {
-      setSatisForm(prev => ({ ...prev, platform_id: platformId }));
+      setSatisForm((prev) => ({ ...prev, platform_id: platformId }));
     }
   };
 
   const sf = satisForm;
-  const selectedPlatformObj = platformlar.find(p => p.id === Number(sf.platform_id));
+  const selectedPlatformObj = platformlar.find((p) => p.id === Number(sf.platform_id));
   const canliPlatformTipi = detectPlatform(selectedPlatformObj?.platform_adi);
   const canliHesap = hesaplaKomisyon(sf.satis_fiyati, sf.alis_fiyati, sf.komisyon_orani, sf.kdv_orani, sf.kargo_ucreti, sf.adet, canliPlatformTipi);
 
@@ -84,12 +100,19 @@ export const useETicaret = () => {
       }
       setSatisDialog({ open: false, data: null });
       loadData();
-    } catch (err) { setError(err.response?.data?.message || 'Hata'); }
+    } catch (err) {
+      setError(err.response?.data?.message || 'Hata');
+    }
   };
 
   const handleSatisDelete = async (id) => {
     if (!window.confirm('Bu satışı silmek istediğinizden emin misiniz?')) return;
-    try { await eticaretService.deleteSale(id); loadData(); } catch (err) { alert(err.response?.data?.message || 'Hata'); }
+    try {
+      await eticaretService.deleteSale(id);
+      loadData();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Hata');
+    }
   };
 
   // ===== Platform İşlemleri =====
@@ -109,19 +132,50 @@ export const useETicaret = () => {
       }
       setPlatformDialog({ open: false, data: null });
       loadData();
-    } catch (err) { setError(err.response?.data?.message || 'Hata'); }
+    } catch (err) {
+      setError(err.response?.data?.message || 'Hata');
+    }
   };
 
   const handlePlatformDelete = async (id) => {
     if (!window.confirm('Bu platformu silmek istediğinizden emin misiniz?')) return;
-    try { await eticaretService.deletePlatform(id); loadData(); } catch (err) { alert(err.response?.data?.message || 'Hata'); }
+    try {
+      await eticaretService.deletePlatform(id);
+      loadData();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Hata');
+    }
   };
 
   const hesaplananToplamKar = hesaplaToplamKar(satislar);
 
   return {
-    satislar, platformlar, stokOptions, stats, error, satisDialog, setSatisDialog, satisForm, setSatisForm, platformDialog, setPlatformDialog, platformForm,
-    setPlatformForm, detayDialog, setDetayDialog, openSatisDialog, handleStokSelect, handlePlatformSelect, sf, canliPlatformTipi, canliHesap,
-    handleSatisSave, handleSatisDelete, openPlatformDialog, handlePlatformSave, handlePlatformDelete, hesaplananToplamKar,
+    satislar,
+    platformlar,
+    stokOptions,
+    stats,
+    error,
+    satisDialog,
+    setSatisDialog,
+    satisForm,
+    setSatisForm,
+    platformDialog,
+    setPlatformDialog,
+    platformForm,
+    setPlatformForm,
+    detayDialog,
+    setDetayDialog,
+    openSatisDialog,
+    handleStokSelect,
+    handlePlatformSelect,
+    sf,
+    canliPlatformTipi,
+    canliHesap,
+    handleSatisSave,
+    handleSatisDelete,
+    openPlatformDialog,
+    handlePlatformSave,
+    handlePlatformDelete,
+    hesaplananToplamKar,
   };
 };

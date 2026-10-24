@@ -23,14 +23,20 @@ const kehanet = JSON.parse(fs.readFileSync(YEDEK, 'utf8'));
 
 // Başka testlerin değiştirdiği veri karışmasın: arama kendi veritabanına (kaynar_test) canlı yedeği yükleyip çalışır.
 test.before(() => {
-  require('child_process').execFileSync(process.execPath, ['--import', 'tsx', 'scripts/mariadb/yedektenYukle.js', '--env', ENV], { cwd: BACKEND, stdio: 'pipe' });
+  require('child_process').execFileSync(process.execPath, ['--import', 'tsx', 'scripts/mariadb/yedektenYukle.js', '--env', ENV], {
+    cwd: BACKEND,
+    stdio: 'pipe',
+  });
 });
 test.after(() => pool.end());
 
 for (const [ad, harita] of Object.entries(kehanet.sonuclar)) {
   const [, tablo, kolonlar] = /^(\w+)\((.*)\)$/.exec(ad);
   test(`${tablo}: ${Object.keys(harita).length} arama sözcüğü canlıyla aynı kayıtları bulur`, async () => {
-    const kosul = kolonlar.split(',').map((k) => `LOWER(${k}) LIKE LOWER($1)`).join(' OR ');
+    const kosul = kolonlar
+      .split(',')
+      .map((k) => `LOWER(${k}) LIKE LOWER($1)`)
+      .join(' OR ');
     const farklar = [];
     for (const [sozcuk, beklenen] of Object.entries(harita)) {
       const r = await pool.query(`SELECT id FROM ${tablo} WHERE ${kosul} ORDER BY id`, [`%${sozcuk}%`]);

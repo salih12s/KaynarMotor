@@ -3,9 +3,7 @@ import { pool } from '../../../core/veritabani/db';
 import { dogrula } from '../../../core/dogrulama/dogrula';
 import { sarmala } from '../../../core/http/kontrolcu';
 import { opsiyonelKullanici } from '../../../core/middleware/auth';
-import {
-  ilanGuncelleGovdesi, ilanOlusturGovdesi, ilanSorgusu, siraGovdesi, siralaGovdesi, yayinGovdesi,
-} from './ilanlar.schemas';
+import { ilanGuncelleGovdesi, ilanOlusturGovdesi, ilanSorgusu, siraGovdesi, siralaGovdesi, yayinGovdesi } from './ilanlar.schemas';
 import * as servis from './ilanlar.service';
 
 const govdeyiOku = (req: { body?: unknown }): unknown => req.body || {};

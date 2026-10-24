@@ -13,11 +13,13 @@ export const ozet = sarmala('Motor özet hatası:', async (req, res) => {
 });
 
 export const listele = sarmala('Motor listeleme hatası:', async (req, res) => {
-  res.json(await servis.listele(pool, req.user, {
-    baslangic: metinSorgu(req.query.baslangic),
-    bitis: metinSorgu(req.query.bitis),
-    durum: metinSorgu(req.query.durum),
-  }));
+  res.json(
+    await servis.listele(pool, req.user, {
+      baslangic: metinSorgu(req.query.baslangic),
+      bitis: metinSorgu(req.query.bitis),
+      durum: metinSorgu(req.query.durum),
+    }),
+  );
 });
 
 export const detay = sarmala('Motor detay hatası:', async (req, res) => {
@@ -28,10 +30,12 @@ export const olustur = sarmala('Motor satış ekleme hatası:', async (req, res)
   const govde = dogrula(motorOlusturGovdesi, req.body);
   const kayit = await servis.olustur(pool, govde, req.user);
   await logAktivite({
-    kullanici_id: req.user.id, kullanici_adi: req.user.kullanici_adi,
+    kullanici_id: req.user.id,
+    kullanici_adi: req.user.kullanici_adi,
     islem_tipi: ISLEM_TIPLERI.MOTOR_SATIS_OLUSTUR,
     islem_detay: `2. El Motor: ${govde.plaka} - ${govde.marka} ${govde.model}`,
-    hedef_tablo: 'ikinci_el_motorlar', hedef_id: kayit.id,
+    hedef_tablo: 'ikinci_el_motorlar',
+    hedef_id: kayit.id,
   });
   res.status(201).json(kayit);
 });
@@ -40,10 +44,12 @@ export const guncelle = sarmala('Motor satış güncelleme hatası:', async (req
   const id = Number(req.params.id);
   const kayit = await servis.guncelle(pool, id, dogrula(motorGuncelleGovdesi, req.body), req.user);
   await logAktivite({
-    kullanici_id: req.user.id, kullanici_adi: req.user.kullanici_adi,
+    kullanici_id: req.user.id,
+    kullanici_adi: req.user.kullanici_adi,
     islem_tipi: ISLEM_TIPLERI.MOTOR_SATIS_GUNCELLE,
     islem_detay: `2. El Motor #${id} güncellendi`,
-    hedef_tablo: 'ikinci_el_motorlar', hedef_id: id,
+    hedef_tablo: 'ikinci_el_motorlar',
+    hedef_id: id,
   });
   res.json(kayit);
 });
@@ -52,10 +58,12 @@ export const sil = sarmala('Motor silme hatası:', async (req, res) => {
   const id = Number(req.params.id);
   await servis.sil(pool, id, req.user);
   await logAktivite({
-    kullanici_id: req.user.id, kullanici_adi: req.user.kullanici_adi,
+    kullanici_id: req.user.id,
+    kullanici_adi: req.user.kullanici_adi,
     islem_tipi: ISLEM_TIPLERI.MOTOR_SATIS_SIL,
     islem_detay: `2. El Motor #${id} silindi`,
-    hedef_tablo: 'ikinci_el_motorlar', hedef_id: id,
+    hedef_tablo: 'ikinci_el_motorlar',
+    hedef_id: id,
   });
   res.json({ message: 'Motor satışı silindi' });
 });

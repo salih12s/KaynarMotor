@@ -16,17 +16,18 @@ const gecmis = require('../../modules/servis/servisGecmisi/servisGecmisi.service
 const ADMIN = { id: 1, kullanici_adi: 'admin', ad_soyad: 'Admin', rol: 'admin' };
 const PERSONEL = { id: 2, kullanici_adi: 'ali', ad_soyad: 'Ali Usta', rol: 'personel' };
 
-const kayitDb = (ekKurallar = []) => sahteDb([
-  ...ekKurallar,
-  ['INSERT INTO is_emirleri', [{ id: 11, fis_no: 8 }]],
-  ['MAX(fis_no)', [{ next_fis_no: '8' }]],
-  ['SELECT * FROM is_emirleri WHERE id', [{ id: 11, fis_no: 8 }]],
-]);
+const kayitDb = (ekKurallar = []) =>
+  sahteDb([
+    ...ekKurallar,
+    ['INSERT INTO is_emirleri', [{ id: 11, fis_no: 8 }]],
+    ['MAX(fis_no)', [{ next_fis_no: '8' }]],
+    ['SELECT * FROM is_emirleri WHERE id', [{ id: 11, fis_no: 8 }]],
+  ]);
 const sorgular = (db, parca) => db.cagrilar.filter((c) => c.sql.includes(parca));
 const sira = (db, parca) => db.cagrilar.findIndex((c) => c.sql.includes(parca));
 
 describe('iş emri oluştur', () => {
-  it('fiş numarası: KİLİT önce alınır, sonra MAX+1 okunur; numara INSERT\'e gider', async () => {
+  it("fiş numarası: KİLİT önce alınır, sonra MAX+1 okunur; numara INSERT'e gider", async () => {
     const db = kayitDb();
     await isEmri.olustur(db, { musteri_ad_soyad: 'Ali', parcalar: [] }, ADMIN);
     assert.ok(sira(db, 'fis_no_kilidi') >= 0 && sira(db, 'fis_no_kilidi') < sira(db, 'MAX(fis_no)'));
@@ -36,13 +37,17 @@ describe('iş emri oluştur', () => {
 
   it('toplam, maliyet ve kâr: adet x birim fiyat; kâr = toplam - maliyet', async () => {
     const db = kayitDb();
-    await isEmri.olustur(db, {
-      musteri_ad_soyad: 'Ali',
-      parcalar: [
-        { takilan_parca: 'Yağ', adet: 2, birim_fiyat: 100, maliyet: 60 },
-        { takilan_parca: 'İşçilik', adet: 1, birim_fiyat: '50', maliyet: '20' },
-      ],
-    }, ADMIN);
+    await isEmri.olustur(
+      db,
+      {
+        musteri_ad_soyad: 'Ali',
+        parcalar: [
+          { takilan_parca: 'Yağ', adet: 2, birim_fiyat: 100, maliyet: 60 },
+          { takilan_parca: 'İşçilik', adet: 1, birim_fiyat: '50', maliyet: '20' },
+        ],
+      },
+      ADMIN,
+    );
     const toplam = sorgular(db, 'SET gercek_toplam_ucret')[0];
     assert.deepEqual(toplam.params, [250, 140, 110, 11]);
   });
@@ -77,10 +82,17 @@ describe('iş emri oluştur', () => {
 
   it('parça kodu olan satır yedek parça stoğundan DÜŞER; kodsuz satır düşmez', async () => {
     const db = kayitDb();
-    await isEmri.olustur(db, {
-      musteri_ad_soyad: 'A',
-      parcalar: [{ parca_kodu: 'K1', takilan_parca: 'Balata', adet: 3, birim_fiyat: 10 }, { takilan_parca: 'İşçilik', adet: 1, birim_fiyat: 5 }],
-    }, ADMIN);
+    await isEmri.olustur(
+      db,
+      {
+        musteri_ad_soyad: 'A',
+        parcalar: [
+          { parca_kodu: 'K1', takilan_parca: 'Balata', adet: 3, birim_fiyat: 10 },
+          { takilan_parca: 'İşçilik', adet: 1, birim_fiyat: 5 },
+        ],
+      },
+      ADMIN,
+    );
     const dusumler = sorgular(db, 'UPDATE yedek_parca_stok');
     assert.equal(dusumler.length, 1);
     assert.deepEqual(dusumler[0].params, [3, 'K1']);
@@ -95,11 +107,12 @@ describe('iş emri oluştur', () => {
 
 describe('iş emri güncelle', () => {
   const govde = { musteri_ad_soyad: 'A', durum: 'tamamlandi', parcalar: [] };
-  const mevcutDb = (durum, parcalar = []) => sahteDb([
-    ['SELECT durum FROM is_emirleri', durum === null ? [] : [{ durum }]],
-    ['SELECT parca_kodu, adet FROM parcalar', parcalar],
-    ['SELECT * FROM is_emirleri WHERE id', [{ id: 5 }]],
-  ]);
+  const mevcutDb = (durum, parcalar = []) =>
+    sahteDb([
+      ['SELECT durum FROM is_emirleri', durum === null ? [] : [{ durum }]],
+      ['SELECT parca_kodu, adet FROM parcalar', parcalar],
+      ['SELECT * FROM is_emirleri WHERE id', [{ id: 5 }]],
+    ]);
 
   it('olmayan iş emri: 404, ROLLBACK', async () => {
     const db = mevcutDb(null);
@@ -108,7 +121,10 @@ describe('iş emri güncelle', () => {
   });
 
   it('tamamlanan iş emrini PERSONEL düzenleyemez (403), ADMIN düzenler', async () => {
-    await assert.rejects(isEmri.guncelle(mevcutDb('tamamlandi'), 5, govde, PERSONEL), (h) => h.status === 403 && h.message === 'Tamamlanan iş emrini düzenleme yetkiniz yok');
+    await assert.rejects(
+      isEmri.guncelle(mevcutDb('tamamlandi'), 5, govde, PERSONEL),
+      (h) => h.status === 403 && h.message === 'Tamamlanan iş emrini düzenleme yetkiniz yok',
+    );
     const db = mevcutDb('tamamlandi');
     await isEmri.guncelle(db, 5, govde, ADMIN);
     assert.deepEqual(db.olaylar, ['BEGIN', 'COMMIT']);
@@ -149,7 +165,7 @@ describe('iş emri sil', () => {
 });
 
 describe('QR token ve müşteriye açık servis geçmişi', () => {
-  it('plaka büyük harfe ve A-Z0-9\'a indirgenir; token 16 hex', async () => {
+  it("plaka büyük harfe ve A-Z0-9'a indirgenir; token 16 hex", async () => {
     const db = sahteDb([['SELECT plaka, token', [{ plaka: 'AB123CD', token: 'x' }]]]);
     await gecmis.qrTokenAl(db, 'ab 123-cd');
     const ekleme = sorgular(db, 'INSERT IGNORE')[0];
@@ -169,12 +185,35 @@ describe('QR token ve müşteriye açık servis geçmişi', () => {
   it('geçmiş maliyet/kâr/telefon/müşteri adı SIZDIRMAZ; işlemler iş emrine göre eşleşir', async () => {
     const db = sahteDb([
       ['SELECT plaka FROM servis_qr_tokenler', [{ plaka: 'AB123CD' }]],
-      ['FROM is_emirleri', [{
-        id: 1, fis_no: 7, plaka: 'AB 123 CD', marka: 'Honda', model_tip: 'PCX', km: 1000, durum: 'tamamlandi',
-        created_at: 'T1', teslim_tarihi: null, tamamlama_tarihi: 'T2', gercek_toplam_ucret: 250,
-        maliyet: 999, kar: 111, telefon: '0555', musteri_ad_soyad: 'Gizli Kişi',
-      }]],
-      ['FROM parcalar', [{ is_emri_id: 1, takilan_parca: 'Yağ', adet: 2 }, { is_emri_id: 99, takilan_parca: 'Başkası', adet: 1 }]],
+      [
+        'FROM is_emirleri',
+        [
+          {
+            id: 1,
+            fis_no: 7,
+            plaka: 'AB 123 CD',
+            marka: 'Honda',
+            model_tip: 'PCX',
+            km: 1000,
+            durum: 'tamamlandi',
+            created_at: 'T1',
+            teslim_tarihi: null,
+            tamamlama_tarihi: 'T2',
+            gercek_toplam_ucret: 250,
+            maliyet: 999,
+            kar: 111,
+            telefon: '0555',
+            musteri_ad_soyad: 'Gizli Kişi',
+          },
+        ],
+      ],
+      [
+        'FROM parcalar',
+        [
+          { is_emri_id: 1, takilan_parca: 'Yağ', adet: 2 },
+          { is_emri_id: 99, takilan_parca: 'Başkası', adet: 1 },
+        ],
+      ],
     ]);
     const sonuc = await gecmis.gecmisiGetir(db, 'tok');
     const servis = sonuc.servisler[0];

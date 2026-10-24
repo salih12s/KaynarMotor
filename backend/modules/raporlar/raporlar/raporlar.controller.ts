@@ -2,9 +2,7 @@
 import { pool } from '../../../core/veritabani/db';
 import { dogrula } from '../../../core/dogrulama/dogrula';
 import { sarmala } from '../../../core/http/kontrolcu';
-import {
-  aralikSorgusu, fisKarSorgusu, gunlukSorgusu, yatirimciOzetSorgusu, yatirimciRaporSorgusu,
-} from './raporlar.schemas';
+import { aralikSorgusu, fisKarSorgusu, gunlukSorgusu, yatirimciOzetSorgusu, yatirimciRaporSorgusu } from './raporlar.schemas';
 import * as servis from './raporlar.service';
 
 export const gunluk = sarmala('Günlük rapor hatası:', async (req, res) => {

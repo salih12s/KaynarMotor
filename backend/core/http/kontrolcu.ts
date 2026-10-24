@@ -5,7 +5,8 @@
 import type { Request, RequestHandler, Response } from 'express';
 import { hataYanitla } from '../dogrulama/dogrula';
 
-export const sarmala = (baglam: string, isleyici: (req: Request, res: Response) => unknown): RequestHandler =>
+export const sarmala =
+  (baglam: string, isleyici: (req: Request, res: Response) => unknown): RequestHandler =>
   async (req, res) => {
     try {
       await isleyici(req, res);

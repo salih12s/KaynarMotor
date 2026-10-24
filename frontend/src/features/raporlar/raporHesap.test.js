@@ -9,14 +9,22 @@ import { formatTL, formatDate, karColor, motorIsletmeKari } from './bicim';
 describe('hesaplaToplamlar', () => {
   test('rapor henüz yokken (null) her şey 0', () => {
     expect(hesaplaToplamlar(null)).toEqual({
-      hesaplananEticaretKar: 0, yedekParcaKar: 0, duzeltilmisTotalKar: 0, duzeltilmisTotalGelir: 0, duzeltilmisTotalMaliyet: 0,
+      hesaplananEticaretKar: 0,
+      yedekParcaKar: 0,
+      duzeltilmisTotalKar: 0,
+      duzeltilmisTotalGelir: 0,
+      duzeltilmisTotalMaliyet: 0,
     });
   });
 
   test('kâr = motor + iş emri + aksesuar + e-ticaret + yedek parça; gelir/maliyete yedek parça değeri eklenir', () => {
     const t = hesaplaToplamlar({
-      motorKar: 14000, isEmriKar: 1000, aksesuarKar: 400, eticaret: [],
-      yedekParcaToplamDeger: 3000, yedekParcaToplamMaliyet: 2000,
+      motorKar: 14000,
+      isEmriKar: 1000,
+      aksesuarKar: 400,
+      eticaret: [],
+      yedekParcaToplamDeger: 3000,
+      yedekParcaToplamMaliyet: 2000,
       toplam: { gelir: 100000, maliyet: 70000 },
     });
     expect(t.yedekParcaKar).toBe(1000);
@@ -26,7 +34,14 @@ describe('hesaplaToplamlar', () => {
   });
 
   test('sunucudan metin olarak gelen sayılar (DECIMAL) da toplanır', () => {
-    const t = hesaplaToplamlar({ motorKar: '100.50', isEmriKar: '0', aksesuarKar: null, yedekParcaToplamDeger: '10', yedekParcaToplamMaliyet: '4', toplam: { gelir: '5', maliyet: '2' } });
+    const t = hesaplaToplamlar({
+      motorKar: '100.50',
+      isEmriKar: '0',
+      aksesuarKar: null,
+      yedekParcaToplamDeger: '10',
+      yedekParcaToplamMaliyet: '4',
+      toplam: { gelir: '5', maliyet: '2' },
+    });
     expect(t.duzeltilmisTotalKar).toBeCloseTo(106.5);
     expect(t.duzeltilmisTotalGelir).toBe(15);
   });
@@ -41,7 +56,10 @@ describe('hesaplaToplamlar', () => {
 });
 
 describe('yatirimciOzetBirlestir', () => {
-  const ozet = [{ id: 7, ad_soyad: 'Veli', stok_adet: 3, stok_degeri: 90000 }, { id: 8, ad_soyad: 'Ayşe', stok_adet: 1 }];
+  const ozet = [
+    { id: 7, ad_soyad: 'Veli', stok_adet: 3, stok_degeri: 90000 },
+    { id: 8, ad_soyad: 'Ayşe', stok_adet: 1 },
+  ];
 
   test('rapor yoksa sunucudaki özet olduğu gibi döner', () => {
     expect(yatirimciOzetBirlestir(null, ozet)).toBe(ozet);

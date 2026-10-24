@@ -1,5 +1,16 @@
 import {
-  ilkForm, bosForm, satistanForm, filtrele, yeniParca, parcaEkle, stoktanEkleVeyaArtir, parcaGuncelle, parcaStokSec, parcaSil, stokDegeri, hesapla,
+  ilkForm,
+  bosForm,
+  satistanForm,
+  filtrele,
+  yeniParca,
+  parcaEkle,
+  stoktanEkleVeyaArtir,
+  parcaGuncelle,
+  parcaStokSec,
+  parcaSil,
+  stokDegeri,
+  hesapla,
 } from './aksesuarVeri';
 
 describe('form dönüşümleri', () => {
@@ -87,7 +98,10 @@ describe('ürün satırları', () => {
 
   test('parcaSil ve stokDegeri (kimlik önce, yoksa ad)', () => {
     expect(parcaSil([{ a: 1 }, { a: 2 }, { a: 3 }], 1)).toEqual([{ a: 1 }, { a: 3 }]);
-    const opts = [{ id: 1, stok_adi: 'A' }, { id: 2, stok_adi: 'A' }];
+    const opts = [
+      { id: 1, stok_adi: 'A' },
+      { id: 2, stok_adi: 'A' },
+    ];
     expect(stokDegeri(opts, { stok_id: 2, urun_adi: 'A' })).toBe(opts[1]);
     expect(stokDegeri(opts, { stok_id: null, urun_adi: 'A' })).toBe(opts[0]);
     expect(stokDegeri(opts, { stok_id: null, urun_adi: 'Yok' })).toBeNull();
@@ -95,7 +109,10 @@ describe('ürün satırları', () => {
 });
 
 describe('hesapla', () => {
-  const parcalar = [{ adet: 2, satis_fiyati: 100, maliyet: 60 }, { adet: 1, satis_fiyati: '50', maliyet: '20' }];
+  const parcalar = [
+    { adet: 2, satis_fiyati: 100, maliyet: 60 },
+    { adet: 1, satis_fiyati: '50', maliyet: '20' },
+  ];
 
   test('toplam, maliyet, net ve kâr', () => {
     expect(hesapla(parcalar, '')).toEqual({ toplamSatis: 250, toplamMaliyet: 140, indirim: 0, netToplam: 250, kar: 110 });

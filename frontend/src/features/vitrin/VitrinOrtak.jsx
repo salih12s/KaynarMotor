@@ -11,16 +11,16 @@ import { sayiYaz } from '../../shared/utils/bicim';
 // Yönetim panelinin temasından bağımsızdır; yalnızca bu sayfaları sarar.
 
 export const RENK = {
-  asfalt: '#161618',      // üst bar, görsel sahnesi
-  zemin: '#0E0E10',       // sayfa zemini (karanlık showroom)
-  yuzey: '#18181B',       // kart ve panel yüzeyi
-  yuzey2: '#222226',      // seçilmemiş düğme, içe gömülü alanlar
-  murekkep: '#F3F3F4',    // ana yazı (koyu zeminde açık)
+  asfalt: '#161618', // üst bar, görsel sahnesi
+  zemin: '#0E0E10', // sayfa zemini (karanlık showroom)
+  yuzey: '#18181B', // kart ve panel yüzeyi
+  yuzey2: '#222226', // seçilmemiş düğme, içe gömülü alanlar
+  murekkep: '#F3F3F4', // ana yazı (koyu zeminde açık)
   ikincil: '#A3A7AE',
   cizgi: '#2B2C31',
-  kirmizi: '#C62828',     // marka rengi: dolu düğmeler (üstüne beyaz yazı gelir)
+  kirmizi: '#C62828', // marka rengi: dolu düğmeler (üstüne beyaz yazı gelir)
   kirmiziAcik: '#FF5A4F', // koyu zeminde kırmızı yazı (fiyat) için daha parlak ton
-  sari: '#F4C20D',        // öne çıkan etiketi
+  sari: '#F4C20D', // öne çıkan etiketi
   whatsapp: '#1FA855',
 };
 
@@ -103,25 +103,46 @@ export const enUzunTaksit = (fiyat) => {
 };
 
 // Kategori iletişim kaydından kişi listesi (ikinci personel isteğe bağlıdır)
-export const iletisimKisileri = (iletisim) => (iletisim ? [
-  { ad: iletisim.personel_adi, tel: iletisim.telefon },
-  { ad: iletisim.personel_adi_2, tel: iletisim.telefon_2 },
-].filter(k => k.ad || k.tel) : []);
+export const iletisimKisileri = (iletisim) =>
+  iletisim
+    ? [
+        { ad: iletisim.personel_adi, tel: iletisim.telefon },
+        { ad: iletisim.personel_adi_2, tel: iletisim.telefon_2 },
+      ].filter((k) => k.ad || k.tel)
+    : [];
 
 // Bir kişi için "Ara" ve "WhatsApp" düğmeleri
 export const KisiDugmeleri = ({ kisi, boyut = 'medium', tamGenislik = false }) => (
   <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
     {kisi.tel && (
-      <Button size={boyut} variant="contained" color="error" disableElevation startIcon={<PhoneIcon />}
-        href={`tel:${kisi.tel}`} sx={{ flex: tamGenislik ? 1 : 'none', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>
+      <Button
+        size={boyut}
+        variant="contained"
+        color="error"
+        disableElevation
+        startIcon={<PhoneIcon />}
+        href={`tel:${kisi.tel}`}
+        sx={{ flex: tamGenislik ? 1 : 'none', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}
+      >
         {kisi.tel}
       </Button>
     )}
     {waLink(kisi.tel) && (
-      <Button size={boyut} variant="outlined" startIcon={<WhatsAppIcon />}
-        href={waLink(kisi.tel)} target="_blank" rel="noopener noreferrer"
-        sx={{ flex: tamGenislik ? 1 : 'none', whiteSpace: 'nowrap', color: RENK.whatsapp, borderColor: RENK.whatsapp,
-          '&:hover': { borderColor: RENK.whatsapp, bgcolor: 'rgba(31,168,85,0.12)' } }}>
+      <Button
+        size={boyut}
+        variant="outlined"
+        startIcon={<WhatsAppIcon />}
+        href={waLink(kisi.tel)}
+        target="_blank"
+        rel="noopener noreferrer"
+        sx={{
+          flex: tamGenislik ? 1 : 'none',
+          whiteSpace: 'nowrap',
+          color: RENK.whatsapp,
+          borderColor: RENK.whatsapp,
+          '&:hover': { borderColor: RENK.whatsapp, bgcolor: 'rgba(31,168,85,0.12)' },
+        }}
+      >
         WhatsApp
       </Button>
     )}
@@ -132,12 +153,7 @@ export const KisiDugmeleri = ({ kisi, boyut = 'medium', tamGenislik = false }) =
 const kunyeParcalari = (u) => {
   if (u.kategori !== 'motor') return [u.marka].filter(Boolean);
   const sifir = u.motor_durumu === 'sifir';
-  return [
-    u.yil,
-    sifir ? 'Sıfır km' : (u.km ? `${sayiYaz(u.km)} km` : null),
-    u.motor_cc ? `${u.motor_cc} cc` : null,
-    u.segment,
-  ].filter(Boolean);
+  return [u.yil, sifir ? 'Sıfır km' : u.km ? `${sayiYaz(u.km)} km` : null, u.motor_cc ? `${u.motor_cc} cc` : null, u.segment].filter(Boolean);
 };
 
 // İlan kartı. Fotoğrafın üzerine hiçbir şey konmaz: etiketler, başlık, ölçüler ve fiyat kartın içinde, fotoğrafın altındadır.
@@ -148,13 +164,13 @@ export const IlanKarti = ({ u, onClick, kucuk = false }) => {
   const fiyat = Number(u.fiyat) || 0;
   const taksit = enUzunTaksit(fiyat);
   const buyuk = motor && !kucuk;
-  const olculer = buyuk ? [
-    u.yil ? { deger: String(u.yil), etiket: 'Model yılı' } : null,
-    sifir
-      ? { deger: 'Sıfır', etiket: 'Kilometre' }
-      : (u.km ? { deger: sayiYaz(u.km), etiket: 'Kilometre' } : null),
-    u.motor_cc ? { deger: String(u.motor_cc), etiket: 'Hacim (cc)' } : null,
-  ].filter(Boolean) : [];
+  const olculer = buyuk
+    ? [
+        u.yil ? { deger: String(u.yil), etiket: 'Model yılı' } : null,
+        sifir ? { deger: 'Sıfır', etiket: 'Kilometre' } : u.km ? { deger: sayiYaz(u.km), etiket: 'Kilometre' } : null,
+        u.motor_cc ? { deger: String(u.motor_cc), etiket: 'Hacim (cc)' } : null,
+      ].filter(Boolean)
+    : [];
   const etiketler = [
     sifir && { metin: 'Sıfır', zemin: '#FFFFFF', renk: '#111111' },
     buyuk && u.segment && { metin: u.segment, zemin: RENK.yuzey2, renk: RENK.murekkep },
@@ -164,50 +180,103 @@ export const IlanKarti = ({ u, onClick, kucuk = false }) => {
   const gorsel = u.kapak_gorsel_id ? vitrinService.gorselUrl(u.kapak_gorsel_id) : null;
 
   return (
-    <ButtonBase component="div" onClick={onClick}
+    <ButtonBase
+      component="div"
+      onClick={onClick}
       aria-label={`${u.baslik}${fiyat > 0 ? `, ${tlYaz(fiyat)}` : ''}`}
       sx={{
-        display: 'flex', flexDirection: 'column', alignItems: 'stretch', justifyContent: 'flex-start', width: '100%', textAlign: 'left',
-        bgcolor: RENK.yuzey, border: `1px solid ${RENK.cizgi}`, borderRadius: 3, overflow: 'hidden', ...ODAK,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'stretch',
+        justifyContent: 'flex-start',
+        width: '100%',
+        textAlign: 'left',
+        bgcolor: RENK.yuzey,
+        border: `1px solid ${RENK.cizgi}`,
+        borderRadius: 3,
+        overflow: 'hidden',
+        ...ODAK,
         '&:hover': { borderColor: RENK.kirmizi },
         '@media (prefers-reduced-motion: no-preference)': {
           transition: 'border-color .2s ease',
           '& .ilan-gorsel': { transition: 'transform .6s cubic-bezier(.2,.7,.2,1)' },
           '&:hover .ilan-gorsel': { transform: 'scale(1.04)' },
         },
-      }}>
+      }}
+    >
       {/* Fotoğraf: üstünde yazı, etiket ya da karartma yok */}
       <Box sx={{ position: 'relative', width: '100%', aspectRatio: '4 / 3', overflow: 'hidden', bgcolor: RENK.yuzey2 }}>
-        <Box component="img" className="ilan-gorsel" src={gorsel || '/KaynarMotor.png'} alt="" loading="lazy" decoding="async"
+        <Box
+          component="img"
+          className="ilan-gorsel"
+          src={gorsel || '/KaynarMotor.png'}
+          alt=""
+          loading="lazy"
+          decoding="async"
           sx={{
-            position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: gorsel ? 'cover' : 'contain',
-            p: gorsel ? 0 : 6, opacity: gorsel ? 1 : 0.25, filter: gorsel ? 'none' : 'brightness(0) invert(1)',
-          }} />
+            position: 'absolute',
+            inset: 0,
+            width: '100%',
+            height: '100%',
+            objectFit: gorsel ? 'cover' : 'contain',
+            p: gorsel ? 0 : 6,
+            opacity: gorsel ? 1 : 0.25,
+            filter: gorsel ? 'none' : 'brightness(0) invert(1)',
+          }}
+        />
       </Box>
 
       <Box sx={{ px: 2, pt: 1.5, pb: olculer.length ? 1.5 : 1.25, display: 'flex', flexDirection: 'column', flex: 1 }}>
         {etiketler.length > 0 && (
           <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap', mb: 1 }}>
-            {etiketler.map(e => <Etiket key={e.metin} zemin={e.zemin} renk={e.renk}>{e.metin}</Etiket>)}
+            {etiketler.map((e) => (
+              <Etiket key={e.metin} zemin={e.zemin} renk={e.renk}>
+                {e.metin}
+              </Etiket>
+            ))}
           </Box>
         )}
-        <Typography component="h3" sx={{
-          fontFamily: YAZI.baslik, fontWeight: 700, fontSize: buyuk ? 23 : 19, lineHeight: 1.15,
-          display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
-        }}>
+        <Typography
+          component="h3"
+          sx={{
+            fontFamily: YAZI.baslik,
+            fontWeight: 700,
+            fontSize: buyuk ? 23 : 19,
+            lineHeight: 1.15,
+            display: '-webkit-box',
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical',
+            overflow: 'hidden',
+          }}
+        >
           {u.baslik}
         </Typography>
         {!buyuk && kunye.length > 0 && (
-          <Box sx={{
-            mt: 0.5, display: 'flex', flexWrap: 'wrap', rowGap: 0.25, color: 'text.secondary', fontSize: 14, fontWeight: 500, fontVariantNumeric: 'tabular-nums',
-            '& > span + span': { ml: 1, pl: 1, borderLeft: `1px solid ${RENK.cizgi}` },
-            // Küçük kartlar telefonda dar kalır: künye tek satıra sığsın diye yalnızca ilk iki bilgi gösterilir
-            '& > span:nth-of-type(n+3)': { display: { xs: 'none', sm: 'inline' } },
-          }}>
-            {kunye.map(k => <span key={k}>{k}</span>)}
+          <Box
+            sx={{
+              mt: 0.5,
+              display: 'flex',
+              flexWrap: 'wrap',
+              rowGap: 0.25,
+              color: 'text.secondary',
+              fontSize: 14,
+              fontWeight: 500,
+              fontVariantNumeric: 'tabular-nums',
+              '& > span + span': { ml: 1, pl: 1, borderLeft: `1px solid ${RENK.cizgi}` },
+              // Küçük kartlar telefonda dar kalır: künye tek satıra sığsın diye yalnızca ilk iki bilgi gösterilir
+              '& > span:nth-of-type(n+3)': { display: { xs: 'none', sm: 'inline' } },
+            }}
+          >
+            {kunye.map((k) => (
+              <span key={k}>{k}</span>
+            ))}
           </Box>
         )}
-        {!buyuk && <Box sx={{ mt: 'auto', pt: 1 }}><FiyatSatiri fiyat={fiyat} taksit={null} buyuk={false} /></Box>}
+        {!buyuk && (
+          <Box sx={{ mt: 'auto', pt: 1 }}>
+            <FiyatSatiri fiyat={fiyat} taksit={null} buyuk={false} />
+          </Box>
+        )}
       </Box>
 
       {buyuk && (
@@ -216,7 +285,9 @@ export const IlanKarti = ({ u, onClick, kucuk = false }) => {
             <Box sx={{ display: 'grid', gridTemplateColumns: `repeat(${olculer.length}, minmax(0, 1fr))`, borderTop: `1px solid ${RENK.cizgi}` }}>
               {olculer.map((o, i) => (
                 <Box key={o.etiket} sx={{ px: 2, py: 1.25, borderLeft: i ? `1px solid ${RENK.cizgi}` : 'none' }}>
-                  <Typography sx={{ fontFamily: YAZI.baslik, fontWeight: 700, fontSize: 24, lineHeight: 1.1, fontVariantNumeric: 'tabular-nums' }}>{o.deger}</Typography>
+                  <Typography sx={{ fontFamily: YAZI.baslik, fontWeight: 700, fontSize: 24, lineHeight: 1.1, fontVariantNumeric: 'tabular-nums' }}>
+                    {o.deger}
+                  </Typography>
                   <Typography sx={{ fontSize: 12.5, color: 'text.secondary', lineHeight: 1.3 }}>{o.etiket}</Typography>
                 </Box>
               ))}
@@ -234,10 +305,16 @@ export const IlanKarti = ({ u, onClick, kucuk = false }) => {
 // Fiyat + (varsa) taksit özeti
 const FiyatSatiri = ({ fiyat, taksit, buyuk }) => (
   <Box sx={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', flexWrap: 'wrap', columnGap: 1.5 }}>
-    <Typography sx={{
-      fontFamily: YAZI.baslik, fontWeight: 700, fontSize: buyuk ? 32 : 24, lineHeight: 1.1,
-      color: fiyat > 0 ? RENK.kirmiziAcik : 'text.primary', fontVariantNumeric: 'tabular-nums',
-    }}>
+    <Typography
+      sx={{
+        fontFamily: YAZI.baslik,
+        fontWeight: 700,
+        fontSize: buyuk ? 32 : 24,
+        lineHeight: 1.1,
+        color: fiyat > 0 ? RENK.kirmiziAcik : 'text.primary',
+        fontVariantNumeric: 'tabular-nums',
+      }}
+    >
       {fiyat > 0 ? tlYaz(fiyat) : 'Fiyat için arayın'}
     </Typography>
     {taksit && (
@@ -258,18 +335,37 @@ const Etiket = ({ zemin, renk, children }) => (
 // (Dolu kırmızı/yeşil düğmeler başlıkta göze batıyordu; tam düğmeler ilan detayında kalır.)
 export const KisiSessiz = ({ kisi }) => (
   <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1 }}>
-    {kisi.ad && <Typography component="span" sx={{ color: 'text.secondary' }}>{kisi.ad}</Typography>}
+    {kisi.ad && (
+      <Typography component="span" sx={{ color: 'text.secondary' }}>
+        {kisi.ad}
+      </Typography>
+    )}
     {kisi.tel && (
-      <Box component="a" href={`tel:${kisi.tel}`} sx={{
-        color: 'text.primary', fontWeight: 600, textDecoration: 'none', fontVariantNumeric: 'tabular-nums', borderRadius: 0.5, ...ODAK,
-        '&:hover': { textDecoration: 'underline', textUnderlineOffset: 3 },
-      }}>
+      <Box
+        component="a"
+        href={`tel:${kisi.tel}`}
+        sx={{
+          color: 'text.primary',
+          fontWeight: 600,
+          textDecoration: 'none',
+          fontVariantNumeric: 'tabular-nums',
+          borderRadius: 0.5,
+          ...ODAK,
+          '&:hover': { textDecoration: 'underline', textUnderlineOffset: 3 },
+        }}
+      >
         {kisi.tel}
       </Box>
     )}
     {waLink(kisi.tel) && (
-      <IconButton size="small" href={waLink(kisi.tel)} target="_blank" rel="noopener noreferrer"
-        aria-label={`${kisi.ad || kisi.tel} ile WhatsApp'ta yaz`} sx={{ color: RENK.whatsapp, ...ODAK }}>
+      <IconButton
+        size="small"
+        href={waLink(kisi.tel)}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label={`${kisi.ad || kisi.tel} ile WhatsApp'ta yaz`}
+        sx={{ color: RENK.whatsapp, ...ODAK }}
+      >
         <WhatsAppIcon fontSize="small" />
       </IconButton>
     )}

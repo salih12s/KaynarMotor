@@ -29,14 +29,61 @@ const ARAMALAR = [
   ['vitrin_urunleri', ['baslik', 'aciklama', 'marka', 'model']],
 ];
 // Sözcük kaynağı: gerçek veri (sabit, tekrarlanabilir seçim)
-const KAYNAK = [['musteriler', 'ad_soyad'], ['aksesuar_stok', 'stok_adi'], ['aksesuar_stok', 'marka'], ['vitrin_urunleri', 'baslik'], ['vitrin_urunleri', 'marka'], ['ikinci_el_motorlar', 'alici_adi']];
-const EK = ['ali', 'ALİ', 'ali̇', 'ılık', 'ILIK', 'ışık', 'IŞIK', 'i', 'İ', 'ı', 'I', 'ş', 'Ş', 'ç', 'Ç', 'ğ', 'Ğ', 'ö', 'Ö', 'ü', 'Ü', 'şiş', 'ŞİŞ', 'çan', 'ÇAN', '05', '+90', '%', '_', 'a', 'e', 'kask', 'KASK', 'honda', 'HONDA'];
+const KAYNAK = [
+  ['musteriler', 'ad_soyad'],
+  ['aksesuar_stok', 'stok_adi'],
+  ['aksesuar_stok', 'marka'],
+  ['vitrin_urunleri', 'baslik'],
+  ['vitrin_urunleri', 'marka'],
+  ['ikinci_el_motorlar', 'alici_adi'],
+];
+const EK = [
+  'ali',
+  'ALİ',
+  'ali̇',
+  'ılık',
+  'ILIK',
+  'ışık',
+  'IŞIK',
+  'i',
+  'İ',
+  'ı',
+  'I',
+  'ş',
+  'Ş',
+  'ç',
+  'Ç',
+  'ğ',
+  'Ğ',
+  'ö',
+  'Ö',
+  'ü',
+  'Ü',
+  'şiş',
+  'ŞİŞ',
+  'çan',
+  'ÇAN',
+  '05',
+  '+90',
+  '%',
+  '_',
+  'a',
+  'e',
+  'kask',
+  'KASK',
+  'honda',
+  'HONDA',
+];
 
 (async () => {
   const yerel = ['localhost', '127.0.0.1'].includes(process.env.DB_HOST);
   const c = new Client({
-    host: process.env.DB_HOST, port: parseInt(process.env.DB_PORT, 10) || 5432, database: process.env.DB_NAME,
-    user: process.env.DB_USER, password: process.env.DB_PASSWORD, ssl: yerel ? false : { rejectUnauthorized: false },
+    host: process.env.DB_HOST,
+    port: parseInt(process.env.DB_PORT, 10) || 5432,
+    database: process.env.DB_NAME,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    ssl: yerel ? false : { rejectUnauthorized: false },
   });
   await c.connect();
   await c.query('SET default_transaction_read_only = on');
@@ -48,10 +95,18 @@ const EK = ['ali', 'ALİ', 'ali̇', 'ılık', 'ILIK', 'ışık', 'IŞIK', 'i', '
     for (const { v } of r.rows) for (const w of String(v).split(/[\s,.\-/()]+/)) if (w.length >= 2) sozcukler.add(w);
   }
   // Sabit, tekrarlanabilir örnekleme (ilk 300 sözcük sırasıyla)
-  const liste = [...sozcukler].filter((w) => w.length <= 20).sort().filter((_, i) => i % 3 === 0).slice(0, 300);
+  const liste = [...sozcukler]
+    .filter((w) => w.length <= 20)
+    .sort()
+    .filter((_, i) => i % 3 === 0)
+    .slice(0, 300);
   for (const e of EK) if (!liste.includes(e)) liste.push(e);
 
-  const sonuc = { collate: (await c.query('SELECT datcollate FROM pg_database WHERE datname = current_database()')).rows[0].datcollate, sozcukler: liste, sonuclar: {} };
+  const sonuc = {
+    collate: (await c.query('SELECT datcollate FROM pg_database WHERE datname = current_database()')).rows[0].datcollate,
+    sozcukler: liste,
+    sonuclar: {},
+  };
   for (const [tablo, kolonlar] of ARAMALAR) {
     const kosul = kolonlar.map((k) => `"${k}" ILIKE $1`).join(' OR ');
     const harita = {};

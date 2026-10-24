@@ -10,19 +10,54 @@ import type { Kullanici } from '../../../core/tipler';
 export type MotorSatiri = Record<string, any>;
 
 // Personelin görebileceği motor alanları (allowlist). Gruplar ilgili yetkiyle açılır.
-export const MOTOR_TEMEL = ['id', 'plaka', 'marka', 'model', 'yil', 'km', 'durum', 'stok_tipi', 'tarih', 'created_at', 'updated_at', 'fatura_kesildi',
-  'vitrin_baslik', 'vitrin_aciklama', 'vitrin_segment', 'vitrin_cc', 'vitrin_hasar'];
+export const MOTOR_TEMEL = [
+  'id',
+  'plaka',
+  'marka',
+  'model',
+  'yil',
+  'km',
+  'durum',
+  'stok_tipi',
+  'tarih',
+  'created_at',
+  'updated_at',
+  'fatura_kesildi',
+  'vitrin_baslik',
+  'vitrin_aciklama',
+  'vitrin_segment',
+  'vitrin_cc',
+  'vitrin_hasar',
+];
 export const MOTOR_ALIS = ['alis_fiyati', 'noter_alis', 'masraflar'];
-export const MOTOR_SATIS = ['satis_fiyati', 'noter_satis', 'kalan_odeme', 'odeme_detaylari', 'odeme_sekli', 'satis_tarihi', 'tamamlama_tarihi', 'yevmiye_no', 'aciklama'];
-export const MOTOR_MUSTERI = ['alici_adi', 'alici_tc', 'alici_telefon', 'alici_adres', 'satici_adi', 'satici_tc',
-  'komisyoncu_adi', 'komisyoncu_telefon', 'komisyoncu_tutari'];
+export const MOTOR_SATIS = [
+  'satis_fiyati',
+  'noter_satis',
+  'kalan_odeme',
+  'odeme_detaylari',
+  'odeme_sekli',
+  'satis_tarihi',
+  'tamamlama_tarihi',
+  'yevmiye_no',
+  'aciklama',
+];
+export const MOTOR_MUSTERI = [
+  'alici_adi',
+  'alici_tc',
+  'alici_telefon',
+  'alici_adres',
+  'satici_adi',
+  'satici_tc',
+  'komisyoncu_adi',
+  'komisyoncu_telefon',
+  'komisyoncu_tutari',
+];
 
 /**
  * Muhasebeci: admin Yetkilendirme'den "Motor Satış'ı görebilir" anahtarını açtıysa satış kayıtlarını SALT OKUNUR görür
  * (yazma motorYazmaYetkisi ile kapalı). Anahtar kapalıysa bu uçlara hiç giremez (routes'taki kapı).
  */
-export const muhasebeMotorGorur = (user: Pick<Kullanici, 'rol' | 'motor_satis_gor'>): boolean =>
-  user.rol === 'muhasebeci' && !!user.motor_satis_gor;
+export const muhasebeMotorGorur = (user: Pick<Kullanici, 'rol' | 'motor_satis_gor'>): boolean => user.rol === 'muhasebeci' && !!user.motor_satis_gor;
 
 // Muhasebeci masraf göremez: alış ve masraftan kâr çıkarılabilir; kâr yalnızca admin'e özeldir.
 const MUHASEBE_ALIS = ['alis_fiyati', 'noter_alis'];
@@ -48,21 +83,46 @@ export const sanitizeMotor = (row: MotorSatiri | null | undefined, user: Kullani
     if (!user.liste_fiyati_gor) {
       return {
         ...row,
-        alici_adi: null, alici_tc: null, alici_telefon: null, alici_adres: null,
-        satici_adi: null, satici_tc: null,
-        komisyoncu_adi: null, komisyoncu_telefon: null,
+        alici_adi: null,
+        alici_tc: null,
+        alici_telefon: null,
+        alici_adres: null,
+        satici_adi: null,
+        satici_tc: null,
+        komisyoncu_adi: null,
+        komisyoncu_telefon: null,
       };
     }
     return {
-      id: row.id, plaka: row.plaka, marka: row.marka, model: row.model,
-      yil: row.yil, km: row.km, durum: row.durum, stok_tipi: row.stok_tipi,
-      tarih: row.tarih, liste_fiyati: row.liste_fiyati,
+      id: row.id,
+      plaka: row.plaka,
+      marka: row.marka,
+      model: row.model,
+      yil: row.yil,
+      km: row.km,
+      durum: row.durum,
+      stok_tipi: row.stok_tipi,
+      tarih: row.tarih,
+      liste_fiyati: row.liste_fiyati,
       // Hassas alanlar gizli
-      alis_fiyati: null, noter_alis: null, satis_fiyati: null, noter_satis: null,
-      masraflar: null, kar: null, yatirimci_id: null, yatirimci_kar: null, yatirimci_kar_orani: null,
-      satici_adi: null, satici_tc: null, alici_adi: null, alici_tc: null,
-      alici_telefon: null, alici_adres: null,
-      komisyoncu_adi: null, komisyoncu_telefon: null, komisyoncu_tutari: null,
+      alis_fiyati: null,
+      noter_alis: null,
+      satis_fiyati: null,
+      noter_satis: null,
+      masraflar: null,
+      kar: null,
+      yatirimci_id: null,
+      yatirimci_kar: null,
+      yatirimci_kar_orani: null,
+      satici_adi: null,
+      satici_tc: null,
+      alici_adi: null,
+      alici_tc: null,
+      alici_telefon: null,
+      alici_adres: null,
+      komisyoncu_adi: null,
+      komisyoncu_telefon: null,
+      komisyoncu_tutari: null,
     };
   }
 
@@ -99,9 +159,9 @@ export const sanitizeOzet = (row: MotorSatiri, user: Kullanici): MotorSatiri => 
 
 /** Listeyi/tek kaydı kullanıcıya göre hangi kapsamda görebilir (SQL filtresini service seçer). */
 export type MotorKapsami =
-  | { tur: 'yatirimci-vitrin' }                      // satılan/perte hariç tüm satılık motorlar (yalnız liste fiyatı görünür)
-  | { tur: 'yatirimci-kendi'; yatirimciId: number }  // yalnız kendi motorları
-  | { tur: 'satilmislar-gizli' }                     // satılmış motorlar görünmez
+  | { tur: 'yatirimci-vitrin' } // satılan/perte hariç tüm satılık motorlar (yalnız liste fiyatı görünür)
+  | { tur: 'yatirimci-kendi'; yatirimciId: number } // yalnız kendi motorları
+  | { tur: 'satilmislar-gizli' } // satılmış motorlar görünmez
   | { tur: 'hepsi' };
 
 export const motorKapsami = (user: Kullanici): MotorKapsami => {

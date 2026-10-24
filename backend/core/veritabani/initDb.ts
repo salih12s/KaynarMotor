@@ -415,7 +415,7 @@ CREATE TABLE IF NOT EXISTS yedek_parcalar (
   PRIMARY KEY (id),
   FOREIGN KEY (stok_id) REFERENCES yedek_parca_stok(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_nopad_bin
-  `
+  `,
 ];
 
 const INDEKSLER = [
@@ -431,7 +431,7 @@ const INDEKSLER = [
   'CREATE INDEX IF NOT EXISTS idx_satis_belge_motor ON satis_belgeleri (motor_id)',
   'CREATE INDEX IF NOT EXISTS idx_vitrin_gorsel_urun ON vitrin_gorseller (urun_id)',
   'CREATE INDEX IF NOT EXISTS idx_vitrin_kategori_yayinda ON vitrin_urunleri (kategori, yayinda)',
-  'CREATE INDEX IF NOT EXISTS idx_vitrin_video_urun ON vitrin_videolar (urun_id)'
+  'CREATE INDEX IF NOT EXISTS idx_vitrin_video_urun ON vitrin_videolar (urun_id)',
 ];
 
 // Sonradan eklenen kolonlar buraya yazılır (ör. 'ALTER TABLE x ADD COLUMN IF NOT EXISTS y INT').
@@ -465,13 +465,13 @@ export const initializeDatabase = async (): Promise<void> => {
         await client.query(
           `INSERT INTO kullanicilar (kullanici_adi, sifre, ad_soyad, rol, onay_durumu)
            VALUES ('admin', $1, 'Admin', 'admin', 'onaylandi')`,
-          [hashedPassword]
+          [hashedPassword],
         );
         console.log('Varsayılan admin oluşturuldu (kullanıcı adı: admin)');
       } else {
         console.warn(
           'UYARI: admin kullanıcısı yok ve ADMIN_INITIAL_PASSWORD tanımlı değil. ' +
-          'İlk admin hesabını oluşturmak için bu değişkeni set edip sunucuyu yeniden başlatın.'
+            'İlk admin hesabını oluşturmak için bu değişkeni set edip sunucuyu yeniden başlatın.',
         );
       }
     }

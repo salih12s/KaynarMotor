@@ -44,9 +44,13 @@ export const useStorefront = ({ geriDonus, navigate }) => {
     try {
       const res = await vitrinService.getIletisim();
       const map = {};
-      res.data.forEach(r => { map[r.kategori] = r; });
+      res.data.forEach((r) => {
+        map[r.kategori] = r;
+      });
       setIletisim(map);
-    } catch { /* sessiz */ }
+    } catch {
+      /* sessiz */
+    }
   }, []);
 
   const loadUrunler = useCallback(async () => {
@@ -64,36 +68,60 @@ export const useStorefront = ({ geriDonus, navigate }) => {
       const res = await sonUrun(vitrinService.getAll(params));
       if (!res) return; // filtre bu arada değişti: eski yanıt yok sayılır, yükleniyor göstergesini yeni istek kapatır
       setUrunler(res.data);
-    } catch { setUrunler([]); }
+    } catch {
+      setUrunler([]);
+    }
     setLoading(false);
   }, [kategori, isMotor, motorDurumu, marka, segment, ccMax, kmMax]);
 
-  const gorunenUrunler = useMemo(() => urunler.filter(u => ilanAramaUygunMu(u, q)), [urunler, q]);
+  const gorunenUrunler = useMemo(() => urunler.filter((u) => ilanAramaUygunMu(u, q)), [urunler, q]);
   const aramaVar = q.trim() !== '';
 
-  useEffect(() => { loadIletisim(); }, [loadIletisim]);
+  useEffect(() => {
+    loadIletisim();
+  }, [loadIletisim]);
 
   // dinamik segmentleri yükle
   useEffect(() => {
-    vitrinService.getSegmentler()
-      .then(res => { if (res.data?.length) setSegmentler(res.data.map(s => s.ad)); })
-      .catch(() => { /* varsayılan listede kalır */ });
+    vitrinService
+      .getSegmentler()
+      .then((res) => {
+        if (res.data?.length) setSegmentler(res.data.map((s) => s.ad));
+      })
+      .catch(() => {
+        /* varsayılan listede kalır */
+      });
   }, []);
 
   // Seçilen durumdaki (sıfır / ikinci el) yayındaki ilanların markaları — admin ne marka girdiyse o listelenir
   useEffect(() => {
-    if (!isMotor || !motorDurumu) { setMarkalar([]); return; }
+    if (!isMotor || !motorDurumu) {
+      setMarkalar([]);
+      return;
+    }
     let active = true;
-    vitrinService.getMarkalar(motorDurumu)
-      .then(res => { if (active) setMarkalar(res.data.map(m => m.marka)); })
-      .catch(() => { if (active) setMarkalar([]); });
-    return () => { active = false; };
+    vitrinService
+      .getMarkalar(motorDurumu)
+      .then((res) => {
+        if (active) setMarkalar(res.data.map((m) => m.marka));
+      })
+      .catch(() => {
+        if (active) setMarkalar([]);
+      });
+    return () => {
+      active = false;
+    };
   }, [isMotor, motorDurumu]);
 
   // Dar ekranda filtre paneli aç/kapa; masaüstünde hep açık
   const [filtreAcik, setFiltreAcik] = useState(false);
   const aktifFiltreSayisi = [marka, segment, ccMax, kmMax].filter(Boolean).length;
-  const filtreleriTemizle = () => { setMarka(''); setSegment(''); setCcMax(''); setKmMax(''); };
+  const filtreleriTemizle = () => {
+    setMarka('');
+    setSegment('');
+    setCcMax('');
+    setKmMax('');
+  };
 
   // Sıfır / İkinci El seçilmeden motor listesi gösterilmez
   const durumSecimi = isMotor && !motorDurumu;
@@ -103,17 +131,24 @@ export const useStorefront = ({ geriDonus, navigate }) => {
   useEffect(() => {
     if (intro || !durumSecimi) return undefined;
     let active = true;
-    Promise.all(MOTOR_DURUMLARI.map(d =>
-      vitrinService.getAll({ kategori: 'motor', durum: d.key }).then(res => [d.key, res.data]).catch(() => [d.key, []])
-    )).then(sonuclar => {
+    Promise.all(
+      MOTOR_DURUMLARI.map((d) =>
+        vitrinService
+          .getAll({ kategori: 'motor', durum: d.key })
+          .then((res) => [d.key, res.data])
+          .catch(() => [d.key, []]),
+      ),
+    ).then((sonuclar) => {
       if (!active) return;
       const ozet = {};
       sonuclar.forEach(([key, liste]) => {
-        ozet[key] = { adet: liste.length, kapak: liste.find(u => u.kapak_gorsel_id)?.kapak_gorsel_id || null };
+        ozet[key] = { adet: liste.length, kapak: liste.find((u) => u.kapak_gorsel_id)?.kapak_gorsel_id || null };
       });
       setDurumOzet(ozet);
     });
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, [intro, durumSecimi]);
 
   // filtre değişince (kısa debounce ile) yükle — giriş ekranındayken ve ilan göstermeyen hizmet sayfalarında yükleme yapma
@@ -126,22 +161,37 @@ export const useStorefront = ({ geriDonus, navigate }) => {
   // sekme değişince filtreleri sıfırla + eski listeyi anında temizle (yumuşak geçiş)
   const handleTab = (v) => {
     setTab(v);
-    setMotorDurumu(''); setMarka('');
-    setSegment(''); setCcMax(''); setKmMax(''); setQ('');
-    setUrunler([]); setLoading(true);
+    setMotorDurumu('');
+    setMarka('');
+    setSegment('');
+    setCcMax('');
+    setKmMax('');
+    setQ('');
+    setUrunler([]);
+    setLoading(true);
   };
 
   // Sıfır / İkinci El değişince marka ve km filtreleri o türe ait olmayabilir → sıfırla
   const secMotorDurumu = (d) => {
     if (d === motorDurumu) return;
-    setMotorDurumu(d); setMarka(''); setKmMax('');
-    setUrunler([]); setLoading(true);
+    setMotorDurumu(d);
+    setMarka('');
+    setKmMax('');
+    setUrunler([]);
+    setLoading(true);
     window.scrollTo(0, 0);
   };
 
   // Giriş ekranından bir kategoriye gir
-  const enterKategori = (i) => { handleTab(i); setIntro(false); window.scrollTo(0, 0); };
-  const goHome = () => { setIntro(true); setUrunler([]); };
+  const enterKategori = (i) => {
+    handleTab(i);
+    setIntro(false);
+    window.scrollTo(0, 0);
+  };
+  const goHome = () => {
+    setIntro(true);
+    setUrunler([]);
+  };
 
   const openDetay = (u) => {
     navigate(`/ilan/${u.id}`, { state: { storefront: { tab, motorDurumu, marka, segment, ccMax, kmMax, q } } });
@@ -152,9 +202,45 @@ export const useStorefront = ({ geriDonus, navigate }) => {
   const sayfaBasligi = isMotor ? MOTOR_DURUM_BASLIK[motorDurumu] : KATEGORILER[tab].label;
 
   return {
-    intro, tab, kategori, isMotor, isHizmet, urunler, loading, segmentler, motorDurumu, marka, setMarka, markalar, segment, setSegment,
-    ccMax, setCcMax, kmMax, setKmMax, q, setQ, mobilMenu, setMobilMenu, taksitOpen, setTaksitOpen, gorunenUrunler, aramaVar, filtreAcik,
-    setFiltreAcik, aktifFiltreSayisi, filtreleriTemizle, durumSecimi, durumOzet, handleTab, secMotorDurumu, enterKategori, goHome, openDetay,
-    curIletisim, kisiler, sayfaBasligi,
+    intro,
+    tab,
+    kategori,
+    isMotor,
+    isHizmet,
+    urunler,
+    loading,
+    segmentler,
+    motorDurumu,
+    marka,
+    setMarka,
+    markalar,
+    segment,
+    setSegment,
+    ccMax,
+    setCcMax,
+    kmMax,
+    setKmMax,
+    q,
+    setQ,
+    mobilMenu,
+    setMobilMenu,
+    taksitOpen,
+    setTaksitOpen,
+    gorunenUrunler,
+    aramaVar,
+    filtreAcik,
+    setFiltreAcik,
+    aktifFiltreSayisi,
+    filtreleriTemizle,
+    durumSecimi,
+    durumOzet,
+    handleTab,
+    secMotorDurumu,
+    enterKategori,
+    goHome,
+    openDetay,
+    curIletisim,
+    kisiler,
+    sayfaBasligi,
   };
 };

@@ -9,7 +9,7 @@ const servis = require('../../modules/motor/satisBelgeleri/satisBelgeleri.servic
 
 const KUL = { id: 3, kullanici_adi: 'ali' };
 const PDF = Buffer.from('%PDF-1.4 test');
-const PNG = Buffer.from([0x89, 0x50, 0x4E, 0x47, 0, 0]);
+const PNG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0, 0]);
 
 describe('temizAd ve pozitifId (saf)', () => {
   it('yol ayracı ve özel karakterler atılır; boşsa "belge"; 200 karaktere kırpılır', () => {
@@ -64,12 +64,32 @@ describe('indir ve sil', () => {
 });
 
 describe('arsivGrupla (saf)', () => {
-  const s = (motor_id, id, ek = {}) => ({ motor_id, plaka: `P${motor_id}`, marka: 'M', model: 'X', durum: 'tamamlandi', alis_tarihi: '2026-08-01', satis_tarihi: '2026-09-01', id, dosya_adi: `d${id}.pdf`, mime: 'application/pdf', boyut: 10, created_at: 'T', ...ek });
+  const s = (motor_id, id, ek = {}) => ({
+    motor_id,
+    plaka: `P${motor_id}`,
+    marka: 'M',
+    model: 'X',
+    durum: 'tamamlandi',
+    alis_tarihi: '2026-08-01',
+    satis_tarihi: '2026-09-01',
+    id,
+    dosya_adi: `d${id}.pdf`,
+    mime: 'application/pdf',
+    boyut: 10,
+    created_at: 'T',
+    ...ek,
+  });
 
   it('belge başına satırlar motora göre gruplanır; motor sırası ve belge sırası korunur', () => {
     const gruplar = servis.arsivGrupla([s(2, 1), s(2, 2), s(7, 3), s(2, 4)]);
-    assert.deepEqual(gruplar.map((g) => g.motor_id), [2, 7]);
-    assert.deepEqual(gruplar[0].belgeler.map((b) => b.id), [1, 2, 4]);
+    assert.deepEqual(
+      gruplar.map((g) => g.motor_id),
+      [2, 7],
+    );
+    assert.deepEqual(
+      gruplar[0].belgeler.map((b) => b.id),
+      [1, 2, 4],
+    );
   });
 
   it('grupta tarihler var; fiyat/alıcı/TC gibi alanlar YOK', () => {

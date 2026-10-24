@@ -12,7 +12,12 @@ import { hesaplaTaksit, fmtTL } from '../../taksit/TaksitHesaplama';
 
 jest.mock('../vitrinApi', () => ({
   vitrinService: {
-    getAll: jest.fn(), getIletisim: jest.fn(), getSegmentler: jest.fn(), getMarkalar: jest.fn(), gorselUrl: jest.fn(), iletisimGorselUrl: jest.fn(),
+    getAll: jest.fn(),
+    getIletisim: jest.fn(),
+    getSegmentler: jest.fn(),
+    getMarkalar: jest.fn(),
+    gorselUrl: jest.fn(),
+    iletisimGorselUrl: jest.fn(),
   },
 }));
 // react-router-dom v7'nin "exports" alanını CRA'nın Jest 27'si okuyamaz: yönlendirme kancaları sahte
@@ -21,9 +26,43 @@ const mockNavigate = jest.fn();
 jest.mock('react-router-dom', () => ({ useNavigate: () => mockNavigate, useLocation: () => mockLocation }), { virtual: true });
 
 // ---- Sabit test verisi -------------------------------------------------------------------------------------------
-const V1 = { id: 1, baslik: 'NMAX Fırsat', marka: 'Yamaha', model: 'NMAX', yil: 2021, kategori: 'motor', motor_durumu: 'ikinci_el', fiyat: 150000, km: 12000, segment: 'Scooter', motor_cc: 155, kapak_gorsel_id: 11 };
-const V2 = { id: 2, baslik: 'PCX Sıfır', marka: 'Honda', model: 'PCX', yil: 2024, kategori: 'motor', motor_durumu: 'sifir', fiyat: 210000, segment: 'Scooter', motor_cc: 125 };
-const V3 = { id: 3, baslik: 'Chopper Klasik', marka: 'Kawasaki', kategori: 'motor', motor_durumu: 'ikinci_el', fiyat: 99000, km: 30000, segment: 'Chopper', motor_cc: 250 };
+const V1 = {
+  id: 1,
+  baslik: 'NMAX Fırsat',
+  marka: 'Yamaha',
+  model: 'NMAX',
+  yil: 2021,
+  kategori: 'motor',
+  motor_durumu: 'ikinci_el',
+  fiyat: 150000,
+  km: 12000,
+  segment: 'Scooter',
+  motor_cc: 155,
+  kapak_gorsel_id: 11,
+};
+const V2 = {
+  id: 2,
+  baslik: 'PCX Sıfır',
+  marka: 'Honda',
+  model: 'PCX',
+  yil: 2024,
+  kategori: 'motor',
+  motor_durumu: 'sifir',
+  fiyat: 210000,
+  segment: 'Scooter',
+  motor_cc: 125,
+};
+const V3 = {
+  id: 3,
+  baslik: 'Chopper Klasik',
+  marka: 'Kawasaki',
+  kategori: 'motor',
+  motor_durumu: 'ikinci_el',
+  fiyat: 99000,
+  km: 30000,
+  segment: 'Chopper',
+  motor_cc: 250,
+};
 const AKS = { id: 20, baslik: 'Kask LS2', kategori: 'aksesuar', fiyat: 2500 };
 const ILETISIM = [
   { kategori: 'motor', personel_adi: 'Satış Ahmet', telefon: '05320000000' },
@@ -32,14 +71,25 @@ const ILETISIM = [
 
 // ---- Yardımcılar -------------------------------------------------------------------------------------------------
 const kur = ({ getAll } = {}) => {
-  vitrinService.getAll.mockImplementation(getAll || (async (p) => {
-    if (p.kategori === 'motor') return { data: [V1, V2, V3].filter((v) => !p.durum || v.motor_durumu === p.durum).filter((v) => !p.marka || v.marka === p.marka).filter((v) => !p.segment || v.segment === p.segment) };
-    if (p.kategori === 'aksesuar') return { data: [AKS] };
-    return { data: [] };
-  }));
+  vitrinService.getAll.mockImplementation(
+    getAll ||
+      (async (p) => {
+        if (p.kategori === 'motor')
+          return {
+            data: [V1, V2, V3]
+              .filter((v) => !p.durum || v.motor_durumu === p.durum)
+              .filter((v) => !p.marka || v.marka === p.marka)
+              .filter((v) => !p.segment || v.segment === p.segment),
+          };
+        if (p.kategori === 'aksesuar') return { data: [AKS] };
+        return { data: [] };
+      }),
+  );
   vitrinService.getIletisim.mockResolvedValue({ data: ILETISIM });
   vitrinService.getSegmentler.mockResolvedValue({ data: [{ ad: 'Scooter' }, { ad: 'Chopper' }] });
-  vitrinService.getMarkalar.mockImplementation(async (durum) => ({ data: (durum === 'sifir' ? [{ marka: 'Honda' }] : [{ marka: 'Kawasaki' }, { marka: 'Yamaha' }]) }));
+  vitrinService.getMarkalar.mockImplementation(async (durum) => ({
+    data: durum === 'sifir' ? [{ marka: 'Honda' }] : [{ marka: 'Kawasaki' }, { marka: 'Yamaha' }],
+  }));
   vitrinService.gorselUrl.mockImplementation((id) => `/g/${id}`);
   vitrinService.iletisimGorselUrl.mockImplementation((k) => `/ig/${k}`);
 };
@@ -61,10 +111,22 @@ const sonCagri = () => vitrinService.getAll.mock.calls[vitrinService.getAll.mock
 
 beforeEach(() => {
   window.scrollTo = jest.fn();
-  window.matchMedia = (q) => ({ matches: false, media: q, onchange: null, addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {}, dispatchEvent: () => false });
+  window.matchMedia = (q) => ({
+    matches: false,
+    media: q,
+    onchange: null,
+    addEventListener() {},
+    removeEventListener() {},
+    addListener() {},
+    removeListener() {},
+    dispatchEvent: () => false,
+  });
   jest.spyOn(console, 'error').mockImplementation(() => {});
 });
-afterEach(() => { delete window.matchMedia; jest.restoreAllMocks(); });
+afterEach(() => {
+  delete window.matchMedia;
+  jest.restoreAllMocks();
+});
 
 // ---- Giriş ekranı ------------------------------------------------------------------------------------------------
 describe('Storefront: giriş ekranı', () => {
@@ -93,13 +155,18 @@ describe('Storefront: giriş ekranı', () => {
     await user.type(within(p).getByLabelText('Nakit Fiyat'), '100000');
     expect(within(p).getByLabelText('Nakit Fiyat')).toHaveValue('100.000'); // para biçimi
     const sonuc = hesaplaTaksit(100000);
-    expect(within(p).getAllByText(/ Ay$/).map((x) => x.textContent)).toEqual(['3 Ay', '6 Ay', '9 Ay', '12 Ay']);
+    expect(
+      within(p)
+        .getAllByText(/ Ay$/)
+        .map((x) => x.textContent),
+    ).toEqual(['3 Ay', '6 Ay', '9 Ay', '12 Ay']);
     expect(within(p).getByText(fmtTL(sonuc[0].toplam))).toBeInTheDocument();
     expect(within(p).getByText('111.111 ₺')).toBeInTheDocument(); // 100000 / 0.90
     await user.type(within(p).getByLabelText('Peşinat / Peşin Ödeme'), '40000');
     expect(within(p).getByText('Kalan tutar: 60.000 ₺')).toBeInTheDocument();
     expect(within(p).getByText(fmtTL(hesaplaTaksit(100000, 40000)[3].aylik))).toBeInTheDocument();
-    await user.clear(within(p).getByLabelText('Peşinat / Peşin Ödeme')); await user.type(within(p).getByLabelText('Peşinat / Peşin Ödeme'), '100000');
+    await user.clear(within(p).getByLabelText('Peşinat / Peşin Ödeme'));
+    await user.type(within(p).getByLabelText('Peşinat / Peşin Ödeme'), '100000');
     expect(within(p).getByText(/Peşinat tutarı nakit fiyata eşit veya daha büyük/)).toBeInTheDocument();
     await user.click(within(p).getByRole('button', { name: 'Temizle' }));
     expect(within(p).getByLabelText('Nakit Fiyat')).toHaveValue('');
@@ -168,7 +235,8 @@ describe('Storefront: motor akışı', () => {
     expect(screen.queryByRole('button', { name: /NMAX Fırsat/ })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Chopper Klasik/ })).toBeInTheDocument();
     expect(screen.getByText('"kawasaki" için 1 ilan')).toBeInTheDocument();
-    await user.clear(screen.getByLabelText('İlan ara')); await user.type(screen.getByLabelText('İlan ara'), 'zzz');
+    await user.clear(screen.getByLabelText('İlan ara'));
+    await user.type(screen.getByLabelText('İlan ara'), 'zzz');
     expect(screen.getByText('"zzz" ile eşleşen ilan yok')).toBeInTheDocument();
     const temizleDugmeleri = screen.getAllByRole('button', { name: 'Aramayı temizle' }); // arama kutusundaki ikon + boş sonuç düğmesi
     expect(temizleDugmeleri).toHaveLength(2);
@@ -178,7 +246,12 @@ describe('Storefront: motor akışı', () => {
   });
 
   test('ilan yoksa / yükleme hatasında yönlendirici mesaj çıkar', async () => {
-    const user = await ac(null, { getAll: async (p) => { if (p.kategori === 'motor' && !p.durum) return { data: [] }; throw new Error('ağ'); } });
+    const user = await ac(null, {
+      getAll: async (p) => {
+        if (p.kategori === 'motor' && !p.durum) return { data: [] };
+        throw new Error('ağ');
+      },
+    });
     await user.click(kategoriKarti('Motor Satışı'));
     await user.click(await screen.findByRole('button', { name: /İkinci el motorlar/ }));
     expect(await screen.findByText('Şu an ikinci el motor ilanı yok')).toBeInTheDocument();
@@ -189,7 +262,9 @@ describe('Storefront: motor akışı', () => {
     await motorListesineGir(user);
     await user.click(within(await screen.findByRole('group', { name: 'Marka' })).getByRole('button', { name: 'Yamaha' }));
     await user.click(await screen.findByRole('button', { name: /NMAX Fırsat/ }));
-    expect(mockNavigate).toHaveBeenCalledWith('/ilan/1', { state: { storefront: { tab: 0, motorDurumu: 'ikinci_el', marka: 'Yamaha', segment: '', ccMax: '', kmMax: '', q: '' } } });
+    expect(mockNavigate).toHaveBeenCalledWith('/ilan/1', {
+      state: { storefront: { tab: 0, motorDurumu: 'ikinci_el', marka: 'Yamaha', segment: '', ccMax: '', kmMax: '', q: '' } },
+    });
   });
 
   test('detaydan geri dönüşte giriş ekranı atlanır ve süzgeçler geri gelir', async () => {
@@ -251,7 +326,16 @@ describe('Storefront: kategori değişince durum sıfırlanır', () => {
 
 describe('Storefront: mobil görünüm', () => {
   beforeEach(() => {
-    window.matchMedia = (q) => ({ matches: true, media: q, onchange: null, addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {}, dispatchEvent: () => false });
+    window.matchMedia = (q) => ({
+      matches: true,
+      media: q,
+      onchange: null,
+      addEventListener() {},
+      removeEventListener() {},
+      addListener() {},
+      removeListener() {},
+      dispatchEvent: () => false,
+    });
     HTMLMediaElement.prototype.pause = jest.fn();
   });
 

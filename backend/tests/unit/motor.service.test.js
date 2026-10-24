@@ -12,8 +12,19 @@ const { sahteDb } = require('./sahteDb');
 const servis = require('../../modules/motor/ikinciElMotor/ikinciElMotor.service');
 
 const kul = (rol, ek = {}) => ({
-  id: 10, kullanici_adi: 'u', ad_soyad: 'U', rol, motor_satis_yetkisi: false, alis_fiyati_gor: false, satis_fiyati_gor: false,
-  musteri_gor: false, liste_fiyati_gor: false, satis_gecmisi_gor: false, kar_gor: false, motor_satis_gor: false, ...ek,
+  id: 10,
+  kullanici_adi: 'u',
+  ad_soyad: 'U',
+  rol,
+  motor_satis_yetkisi: false,
+  alis_fiyati_gor: false,
+  satis_fiyati_gor: false,
+  musteri_gor: false,
+  liste_fiyati_gor: false,
+  satis_gecmisi_gor: false,
+  kar_gor: false,
+  motor_satis_gor: false,
+  ...ek,
 });
 const ADMIN = kul('admin');
 const MOTOR_SATIS = kul('personel', { motor_satis_yetkisi: true });
@@ -23,13 +34,33 @@ const sorgular = (db, parca) => db.cagrilar.filter((c) => c.sql.includes(parca))
 const ekleme = (db) => sorgular(db, 'INSERT INTO ikinci_el_motorlar')[0].params;
 const guncelleme = (db) => sorgular(db, 'UPDATE ikinci_el_motorlar SET')[0].params;
 const olusturDb = () => sahteDb([['INSERT INTO ikinci_el_motorlar', [{ id: 21, plaka: 'X' }]]]);
-const mevcutDb = (satir) => sahteDb([['FOR UPDATE', [satir]], ['UPDATE ikinci_el_motorlar SET', [{ id: 5 }]]]);
+const mevcutDb = (satir) =>
+  sahteDb([
+    ['FOR UPDATE', [satir]],
+    ['UPDATE ikinci_el_motorlar SET', [{ id: 5 }]],
+  ]);
 
 const MEVCUT = {
-  id: 5, durum: 'stokta', plaka: '34ABC', marka: 'Honda', model: 'PCX', km: 1000, yil: 2020,
-  alis_fiyati: '100000', satis_fiyati: '0', noter_alis: '90000', noter_satis: '0', masraflar: '2000',
-  komisyoncu_tutari: '0', yatirimci_id: null, yatirimci_kar_orani: '0', yatirimci_kar: '0', liste_fiyati: '160000',
-  alici_adi: 'Eski Alıcı', satici_adi: 'Eski Satıcı', odeme_detaylari: '[{"a":1}]',
+  id: 5,
+  durum: 'stokta',
+  plaka: '34ABC',
+  marka: 'Honda',
+  model: 'PCX',
+  km: 1000,
+  yil: 2020,
+  alis_fiyati: '100000',
+  satis_fiyati: '0',
+  noter_alis: '90000',
+  noter_satis: '0',
+  masraflar: '2000',
+  komisyoncu_tutari: '0',
+  yatirimci_id: null,
+  yatirimci_kar_orani: '0',
+  yatirimci_kar: '0',
+  liste_fiyati: '160000',
+  alici_adi: 'Eski Alıcı',
+  satici_adi: 'Eski Satıcı',
+  odeme_detaylari: '[{"a":1}]',
 };
 
 describe('odemeyiNormalle (saf)', () => {
@@ -78,8 +109,11 @@ describe('oluştur', () => {
     assert.equal(ekleme(stok)[18], null);
   });
 
-  it('satıcı, alıcı ve komisyoncu müşteri kayıtları AYNI transaction\'da açılır', async () => {
-    const db = sahteDb([['INSERT INTO ikinci_el_motorlar', [{ id: 21 }]], ['INSERT INTO musteriler', [{ id: 1 }]]]);
+  it("satıcı, alıcı ve komisyoncu müşteri kayıtları AYNI transaction'da açılır", async () => {
+    const db = sahteDb([
+      ['INSERT INTO ikinci_el_motorlar', [{ id: 21 }]],
+      ['INSERT INTO musteriler', [{ id: 1 }]],
+    ]);
     await servis.olustur(db, { plaka: 'P', satici_adi: 'Veli', alici_adi: 'Ali', alici_telefon: '05551112233', komisyoncu_adi: 'Kem' }, ADMIN);
     assert.equal(sorgular(db, 'INSERT INTO musteriler').length, 3);
     assert.deepEqual(db.olaylar, ['BEGIN', 'COMMIT']);
@@ -102,7 +136,10 @@ describe('güncelle: yetki ve kısmi güncelleme', () => {
 
   it('yatırımcı başkasının motorunu güncelleyemez (403)', async () => {
     const db = mevcutDb({ ...MEVCUT, yatirimci_id: 99 });
-    await assert.rejects(servis.guncelle(db, 5, { plaka: 'Y' }, kul('yatirimci', { id: 10 })), (h) => h.status === 403 && h.message === 'Bu kayda erişim yetkiniz yok');
+    await assert.rejects(
+      servis.guncelle(db, 5, { plaka: 'Y' }, kul('yatirimci', { id: 10 })),
+      (h) => h.status === 403 && h.message === 'Bu kayda erişim yetkiniz yok',
+    );
   });
 
   it('KISMİ: gövdede olmayan alanlar mevcut değerle korunur (satış verisi silinmez)', async () => {
@@ -118,10 +155,22 @@ describe('güncelle: yetki ve kısmi güncelleme', () => {
 
   it('YETKİSİ OLMAYAN personelin gönderdiği alış/satış/masraf/müşteri/yatırımcı alanları yok sayılır (DB değeri korunur)', async () => {
     const db = mevcutDb({ ...MEVCUT });
-    await servis.guncelle(db, 5, {
-      alis_fiyati: 1, satis_fiyati: 999999, masraflar: 0, noter_alis: 1, alici_adi: 'Kötü', komisyoncu_tutari: 777,
-      yatirimci_id: 5, yatirimci_kar: 1234, liste_fiyati: 1,
-    }, SADECE_PERSONEL);
+    await servis.guncelle(
+      db,
+      5,
+      {
+        alis_fiyati: 1,
+        satis_fiyati: 999999,
+        masraflar: 0,
+        noter_alis: 1,
+        alici_adi: 'Kötü',
+        komisyoncu_tutari: 777,
+        yatirimci_id: 5,
+        yatirimci_kar: 1234,
+        liste_fiyati: 1,
+      },
+      SADECE_PERSONEL,
+    );
     const p = guncelleme(db);
     assert.equal(p[5], 100000, 'alış korunur');
     assert.equal(p[6], 0, 'satış korunur (mevcut 0)');
@@ -180,7 +229,11 @@ describe('güncelle: satışa geçiş ve vitrin ilanı', () => {
   });
 
   it('ilan güncellemesi patlarsa motor güncellemesi de geri alınır (tek transaction)', async () => {
-    const db = sahteDb([['FOR UPDATE', [{ ...MEVCUT }]], ['UPDATE ikinci_el_motorlar SET', [{ id: 5 }]], ['SET yayinda = FALSE', new Error('ilan hatası')]]);
+    const db = sahteDb([
+      ['FOR UPDATE', [{ ...MEVCUT }]],
+      ['UPDATE ikinci_el_motorlar SET', [{ id: 5 }]],
+      ['SET yayinda = FALSE', new Error('ilan hatası')],
+    ]);
     await assert.rejects(servis.guncelle(db, 5, { durum: 'tamamlandi' }, ADMIN), /ilan hatası/);
     assert.deepEqual(db.olaylar, ['BEGIN', 'ROLLBACK']);
   });

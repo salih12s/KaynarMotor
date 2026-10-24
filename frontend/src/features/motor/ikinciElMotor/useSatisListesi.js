@@ -18,19 +18,28 @@ export const useSatisListesi = () => {
     try {
       const [motorRes, statsRes] = await Promise.all([ikinciElMotorService.getAll(), ikinciElMotorService.getStats()]);
       const allMotors = motorRes.data;
-      const satisMotorlar = allMotors.filter(m => m.durum === 'tamamlandi');
+      const satisMotorlar = allMotors.filter((m) => m.durum === 'tamamlandi');
       setMotorlar(satisMotorlar);
       setStats(statsRes.data);
-      setStokMotorlar(allMotors.filter(m => m.durum === 'stokta' || m.durum === 'kapora'));
+      setStokMotorlar(allMotors.filter((m) => m.durum === 'stokta' || m.durum === 'kapora'));
     } catch {}
   };
 
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => {
+    loadData();
+  }, []);
 
   // Yatırımcı isimlerini yükle (yetki yoksa sessiz geç — ibare yine "Yatırımcı Motoru" gösterir)
   useEffect(() => {
-    authService.getYatirimcilar()
-      .then(res => { const map = {}; res.data.forEach(y => { map[y.id] = y.ad_soyad; }); setYatirimciMap(map); })
+    authService
+      .getYatirimcilar()
+      .then((res) => {
+        const map = {};
+        res.data.forEach((y) => {
+          map[y.id] = y.ad_soyad;
+        });
+        setYatirimciMap(map);
+      })
       .catch(() => {});
   }, []);
 
@@ -38,18 +47,29 @@ export const useSatisListesi = () => {
     const id = location.state?.openDetailId;
     if (!id) return;
     (async () => {
-      try { const res = await ikinciElMotorService.getById(id); setDetayModal({ open: true, data: res.data }); } catch {}
+      try {
+        const res = await ikinciElMotorService.getById(id);
+        setDetayModal({ open: true, data: res.data });
+      } catch {}
     })();
     navigate(location.pathname, { replace: true, state: {} });
   }, [location.state]);
 
   const handleDelete = async (id) => {
     if (!window.confirm('Bu kaydı silmek istediğinizden emin misiniz?')) return;
-    try { await ikinciElMotorService.delete(id); loadData(); } catch (err) { alert(err.response?.data?.message || 'Hata'); }
+    try {
+      await ikinciElMotorService.delete(id);
+      loadData();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Hata');
+    }
   };
 
   const detayAc = async (id) => {
-    try { const res = await ikinciElMotorService.getById(id); setDetayModal({ open: true, data: res.data }); } catch {}
+    try {
+      const res = await ikinciElMotorService.getById(id);
+      setDetayModal({ open: true, data: res.data });
+    } catch {}
   };
   const detayKapat = () => setDetayModal({ open: false, data: null });
 

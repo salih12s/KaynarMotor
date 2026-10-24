@@ -14,8 +14,15 @@ import { hesaplaKomisyon, detectPlatform } from './komisyon';
 
 jest.mock('./eticaretApi', () => ({
   eticaretService: {
-    getSales: jest.fn(), getPlatforms: jest.fn(), getStats: jest.fn(), createSale: jest.fn(), updateSale: jest.fn(), deleteSale: jest.fn(),
-    createPlatform: jest.fn(), updatePlatform: jest.fn(), deletePlatform: jest.fn(),
+    getSales: jest.fn(),
+    getPlatforms: jest.fn(),
+    getStats: jest.fn(),
+    createSale: jest.fn(),
+    updateSale: jest.fn(),
+    deleteSale: jest.fn(),
+    createPlatform: jest.fn(),
+    updatePlatform: jest.fn(),
+    deletePlatform: jest.fn(),
   },
 }));
 jest.mock('../aksesuar/aksesuarApi', () => ({ aksesuarStokService: { getAll: jest.fn() } }));
@@ -25,12 +32,52 @@ jest.mock('../auth/AuthContext', () => ({ useAuth: jest.fn() }));
 const P1 = { id: 1, platform_adi: 'Trendyol', komisyon_orani: 15, kdv_orani: 20, kargo_ucreti: 50 };
 const P2 = { id: 2, platform_adi: 'Hepsiburada', komisyon_orani: 12, kdv_orani: 20, kargo_ucreti: 40 };
 const P3 = { id: 3, platform_adi: 'N11', komisyon_orani: 10, kdv_orani: 18, kargo_ucreti: 30 };
-const E1 = { id: 1, urun_adi: 'Kask Visor', platform_id: 1, platform_adi: 'Trendyol', adet: 2, alis_fiyati: 600, satis_fiyati: 1000, komisyon_orani: 15, kdv_orani: 20, kargo_ucreti: 50, tarih: '2026-10-02T12:00:00', stok_id: 10 };
-const E2 = { id: 2, urun_adi: 'Eldiven', platform_id: 2, platform_adi: 'Hepsiburada', adet: 1, alis_fiyati: 300, satis_fiyati: 500, komisyon_orani: 12, kdv_orani: 20, kargo_ucreti: 40, tarih: '2026-10-03T12:00:00' };
-const E3 = { id: 3, urun_adi: 'Mont', platform_id: 3, platform_adi: 'N11', adet: 1, alis_fiyati: 800, satis_fiyati: 1500, komisyon_orani: 10, kdv_orani: 18, kargo_ucreti: 30, tarih: '2026-10-04T12:00:00' };
+const E1 = {
+  id: 1,
+  urun_adi: 'Kask Visor',
+  platform_id: 1,
+  platform_adi: 'Trendyol',
+  adet: 2,
+  alis_fiyati: 600,
+  satis_fiyati: 1000,
+  komisyon_orani: 15,
+  kdv_orani: 20,
+  kargo_ucreti: 50,
+  tarih: '2026-10-02T12:00:00',
+  stok_id: 10,
+};
+const E2 = {
+  id: 2,
+  urun_adi: 'Eldiven',
+  platform_id: 2,
+  platform_adi: 'Hepsiburada',
+  adet: 1,
+  alis_fiyati: 300,
+  satis_fiyati: 500,
+  komisyon_orani: 12,
+  kdv_orani: 20,
+  kargo_ucreti: 40,
+  tarih: '2026-10-03T12:00:00',
+};
+const E3 = {
+  id: 3,
+  urun_adi: 'Mont',
+  platform_id: 3,
+  platform_adi: 'N11',
+  adet: 1,
+  alis_fiyati: 800,
+  satis_fiyati: 1500,
+  komisyon_orani: 10,
+  kdv_orani: 18,
+  kargo_ucreti: 30,
+  tarih: '2026-10-04T12:00:00',
+};
 const SATISLAR = [E1, E2, E3];
 const PLATFORMLAR = [P1, P2, P3];
-const STOK = [{ id: 10, stok_adi: 'Kask Visor', mevcut: 5, alis_fiyati: '650.00' }, { id: 11, stok_adi: 'Eldiven', mevcut: 2, alis_fiyati: 300 }];
+const STOK = [
+  { id: 10, stok_adi: 'Kask Visor', mevcut: 5, alis_fiyati: '650.00' },
+  { id: 11, stok_adi: 'Eldiven', mevcut: 2, alis_fiyati: 300 },
+];
 const STATS = { toplam_satis: 3, toplam_gelir: 3000, toplam_komisyon: 480 };
 
 const ADMIN = { rol: 'admin' };
@@ -38,7 +85,8 @@ const PERSONEL = { rol: 'personel', eticaret_yetkisi: true };
 const YETKISIZ = { rol: 'personel' }; // sayfaya normalde giremez; kâr yine de gösterilmemeli (savunma)
 
 const tl = (v) => parseFloat(v || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const hesap = (s) => hesaplaKomisyon(s.satis_fiyati, s.alis_fiyati, s.komisyon_orani, s.kdv_orani || 20, s.kargo_ucreti || 0, s.adet, detectPlatform(s.platform_adi));
+const hesap = (s) =>
+  hesaplaKomisyon(s.satis_fiyati, s.alis_fiyati, s.komisyon_orani, s.kdv_orani || 20, s.kargo_ucreti || 0, s.adet, detectPlatform(s.platform_adi));
 
 // ---- Yardımcılar -------------------------------------------------------------------------------------------------
 const kur = ({ user = ADMIN, satislar = SATISLAR } = {}) => {
@@ -62,7 +110,10 @@ const ekranAc = async (secenek = {}) => {
   return user;
 };
 const satir = (ad) => screen.getByRole('row', { name: new RegExp(ad) });
-const hucreler = (row) => within(row).getAllByRole('cell').map((c) => c.textContent);
+const hucreler = (row) =>
+  within(row)
+    .getAllByRole('cell')
+    .map((c) => c.textContent);
 const basliklar = () => screen.getAllByRole('columnheader').map((h) => h.textContent);
 const ikon = (kapsam, ad) => within(kapsam).getByTestId(ad);
 const alan = (etiket) => screen.getByLabelText(etiket);
@@ -78,15 +129,41 @@ beforeEach(() => {
   jest.spyOn(window, 'confirm').mockImplementation(() => true);
   jest.spyOn(console, 'error').mockImplementation(() => {});
 });
-afterEach(() => { jest.restoreAllMocks(); });
+afterEach(() => {
+  jest.restoreAllMocks();
+});
 
 // ---- Liste ve roller ---------------------------------------------------------------------------------------------
 describe('E-Ticaret: satışlar', () => {
   test('admin: sütunlar (kâr dahil), satır içeriği hesaplaKomisyon sonuçlarıyla, Yeni Satış düğmesi', async () => {
     await ekranAc();
-    expect(basliklar()).toEqual(['Ürün', 'Platform', 'Adet', 'Alış (₺)', 'Satış (₺)', 'Komisyon (%)', 'KDV (%)', 'Komisyon (₺)', 'Kâr (₺)', 'Tarih', 'İşlemler']);
+    expect(basliklar()).toEqual([
+      'Ürün',
+      'Platform',
+      'Adet',
+      'Alış (₺)',
+      'Satış (₺)',
+      'Komisyon (%)',
+      'KDV (%)',
+      'Komisyon (₺)',
+      'Kâr (₺)',
+      'Tarih',
+      'İşlemler',
+    ]);
     const h = hesap(E1);
-    expect(hucreler(satir('Kask Visor'))).toEqual(['Kask Visor', 'Trendyol', '2', '600,00', '1.000,00', '%15.00', '%20', tl(h.komisyonTutari), tl(h.netKar), '02.10.2026', '']);
+    expect(hucreler(satir('Kask Visor'))).toEqual([
+      'Kask Visor',
+      'Trendyol',
+      '2',
+      '600,00',
+      '1.000,00',
+      '%15.00',
+      '%20',
+      tl(h.komisyonTutari),
+      tl(h.netKar),
+      '02.10.2026',
+      '',
+    ]);
     expect(screen.getByRole('button', { name: 'Yeni Satış' })).toBeInTheDocument();
   });
 
@@ -174,13 +251,16 @@ describe('E-Ticaret: platformlar', () => {
     await user.type(alan('Platform Adı *'), 'Amazon');
     await user.type(alan('Komisyon Oranı (%) *'), '9');
     await user.click(within(p).getByRole('button', { name: 'Kaydet' }));
-    await waitFor(() => expect(eticaretService.createPlatform).toHaveBeenCalledWith({ platform_adi: 'Amazon', komisyon_orani: '9', kdv_orani: '20', kargo_ucreti: '0' }));
+    await waitFor(() =>
+      expect(eticaretService.createPlatform).toHaveBeenCalledWith({ platform_adi: 'Amazon', komisyon_orani: '9', kdv_orani: '20', kargo_ucreti: '0' }),
+    );
     await bekleDialogKapanana();
 
     eticaretService.createPlatform.mockRejectedValue({ response: { data: { message: 'Platform var' } } });
     await user.click(screen.getByRole('button', { name: 'Yeni Platform' }));
     p = await screen.findByRole('dialog');
-    await user.type(alan('Platform Adı *'), 'X'); await user.type(alan('Komisyon Oranı (%) *'), '1');
+    await user.type(alan('Platform Adı *'), 'X');
+    await user.type(alan('Komisyon Oranı (%) *'), '1');
     await user.click(within(p).getByRole('button', { name: 'Kaydet' }));
     expect(await within(p).findByText('Platform var')).toBeInTheDocument();
   });
@@ -194,7 +274,9 @@ describe('E-Ticaret: platformlar', () => {
     expect(alan('Platform Adı *')).toHaveValue('Trendyol');
     expect(alan('Kargo Ücreti (₺)')).toHaveValue(50);
     await user.click(within(p).getByRole('button', { name: 'Güncelle' }));
-    await waitFor(() => expect(eticaretService.updatePlatform).toHaveBeenCalledWith(1, { platform_adi: 'Trendyol', komisyon_orani: 15, kdv_orani: 20, kargo_ucreti: 50 }));
+    await waitFor(() =>
+      expect(eticaretService.updatePlatform).toHaveBeenCalledWith(1, { platform_adi: 'Trendyol', komisyon_orani: 15, kdv_orani: 20, kargo_ucreti: 50 }),
+    );
     await bekleDialogKapanana();
     await user.click(ikon(satir('N11'), 'DeleteIcon'));
     await waitFor(() => expect(eticaretService.deletePlatform).toHaveBeenCalledWith(3));
@@ -237,7 +319,8 @@ describe('E-Ticaret: satış formu', () => {
     await sec(user, p, 'Platform', 'Trendyol (%15.00)');
     await user.type(alan('Ürün Satış Fiyatı (₺)'), '1000');
     await user.type(alan('Ürün Alış Fiyatı (₺)'), '600');
-    await user.clear(alan('Adet')); await user.type(alan('Adet'), '2');
+    await user.clear(alan('Adet'));
+    await user.type(alan('Adet'), '2');
     const h = hesaplaKomisyon('1000', '600', 15, 20, 50, '2', 'trendyol');
     expect(within(p).getByText('Komisyon Hesaplama (Trendyol)')).toBeInTheDocument();
     expect(kart('Komisyon (Toplam)')).toBe(`${tl(h.toplamKomisyon)} ₺`);
@@ -283,7 +366,7 @@ describe('E-Ticaret: satış formu', () => {
     expect(within(p).queryByText(/^Net Kâr/)).not.toBeInTheDocument();
   });
 
-  test('kaydet: yük (form alanları olduğu gibi) createSale\'e gider; pencere kapanır, liste yenilenir; hata gösterilir', async () => {
+  test("kaydet: yük (form alanları olduğu gibi) createSale'e gider; pencere kapanır, liste yenilenir; hata gösterilir", async () => {
     const user = await ekranAc();
     const cagri = eticaretService.getSales.mock.calls.length;
     let p = await yeniAc(user);
@@ -292,7 +375,16 @@ describe('E-Ticaret: satış formu', () => {
     await user.type(alan('Ürün Satış Fiyatı (₺)'), '1000');
     await user.click(within(p).getByRole('button', { name: 'Kaydet' }));
     await waitFor(() => expect(eticaretService.createSale).toHaveBeenCalled());
-    expect(eticaretService.createSale.mock.calls[0][0]).toMatchObject({ stok_id: '', platform_id: 1, urun_adi: 'Test Ürün', satis_fiyati: '1000', komisyon_orani: 15, kdv_orani: 20, kargo_ucreti: 50, adet: 1 });
+    expect(eticaretService.createSale.mock.calls[0][0]).toMatchObject({
+      stok_id: '',
+      platform_id: 1,
+      urun_adi: 'Test Ürün',
+      satis_fiyati: '1000',
+      komisyon_orani: 15,
+      kdv_orani: 20,
+      kargo_ucreti: 50,
+      adet: 1,
+    });
     await bekleDialogKapanana();
     await waitFor(() => expect(eticaretService.getSales.mock.calls.length).toBe(cagri + 1));
 
@@ -375,9 +467,20 @@ describe('E-Ticaret: detay penceresi', () => {
 
 describe('E-Ticaret: mobil görünüm', () => {
   beforeEach(() => {
-    window.matchMedia = (q) => ({ matches: true, media: q, onchange: null, addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {}, dispatchEvent: () => false });
+    window.matchMedia = (q) => ({
+      matches: true,
+      media: q,
+      onchange: null,
+      addEventListener() {},
+      removeEventListener() {},
+      addListener() {},
+      removeListener() {},
+      dispatchEvent: () => false,
+    });
   });
-  afterEach(() => { delete window.matchMedia; });
+  afterEach(() => {
+    delete window.matchMedia;
+  });
 
   test('kart listesi: kâr görünür; karta dokunmak detayı açar; platform sekmesi kartlarla', async () => {
     const user = await ekranAc();

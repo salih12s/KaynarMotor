@@ -37,25 +37,43 @@ const KomisyonOnizleme = ({ sf, canliPlatformTipi, canliHesap, karGor }) => {
             ];
           } else {
             cards = [
-              { label: 'Komisyon (Toplam)', value: `${formatTL(canliHesap.toplamKomisyon)} ₺`, color: '#e65100', bg: '#fff3e0', sub: `Komisyon: ${formatTL(canliHesap.komisyonTutari)}₺ + Hizmet: ${formatTL(canliHesap.hizmetBedeli)}₺ + Stopaj: ${formatTL(canliHesap.stopaj)}₺` },
+              {
+                label: 'Komisyon (Toplam)',
+                value: `${formatTL(canliHesap.toplamKomisyon)} ₺`,
+                color: '#e65100',
+                bg: '#fff3e0',
+                sub: `Komisyon: ${formatTL(canliHesap.komisyonTutari)}₺ + Hizmet: ${formatTL(canliHesap.hizmetBedeli)}₺ + Stopaj: ${formatTL(canliHesap.stopaj)}₺`,
+              },
               { label: 'Yat. Geri Dönüş Oranı', value: `%${canliHesap.yatirimGeriDonus}`, color: '#1565c0', bg: '#e3f2fd' },
               { label: 'Kâr Oranı', value: `%${canliHesap.karOrani}`, color: '#2e7d32', bg: '#e8f5e9' },
               { label: 'KDV', value: `${formatTL(canliHesap.odenecekKDV)} ₺`, color: '#f57f17', bg: '#fff8e1' },
             ];
           }
-          return cards.filter(c => karGor || !karEtiketi(c.label)).map((c, i) => (
-            <Paper key={i} sx={{ p: 1.5, flex: 1, minWidth: 100, textAlign: 'center', bgcolor: c.bg, borderTop: `3px solid ${c.color}` }}>
-              <Typography variant="caption" color="text.secondary">{c.label}</Typography>
-              <Typography fontWeight="bold" color={c.color}>{c.value}</Typography>
-              {c.sub && <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem', display: 'block' }}>{c.sub}</Typography>}
-            </Paper>
-          ));
+          return cards
+            .filter((c) => karGor || !karEtiketi(c.label))
+            .map((c, i) => (
+              <Paper key={i} sx={{ p: 1.5, flex: 1, minWidth: 100, textAlign: 'center', bgcolor: c.bg, borderTop: `3px solid ${c.color}` }}>
+                <Typography variant="caption" color="text.secondary">
+                  {c.label}
+                </Typography>
+                <Typography fontWeight="bold" color={c.color}>
+                  {c.value}
+                </Typography>
+                {c.sub && (
+                  <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem', display: 'block' }}>
+                    {c.sub}
+                  </Typography>
+                )}
+              </Paper>
+            ));
         })()}
       </Box>
 
       {/* KDV detayları - Platform bazlı */}
       <Paper sx={{ p: 1.5, bgcolor: '#fafafa', mb: 2 }}>
-        <Typography variant="caption" fontWeight="bold" color="text.secondary" gutterBottom>KDV Detayları</Typography>
+        <Typography variant="caption" fontWeight="bold" color="text.secondary" gutterBottom>
+          KDV Detayları
+        </Typography>
         <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mt: 1 }}>
           {(() => {
             let kdvItems = [
@@ -74,8 +92,12 @@ const KomisyonOnizleme = ({ sf, canliPlatformTipi, canliHesap, karGor }) => {
             kdvItems.push({ label: 'Ödenecek KDV', value: canliHesap.odenecekKDV });
             return kdvItems.map((item, i) => (
               <Box key={i} sx={{ textAlign: 'center', minWidth: 130, flex: 1 }}>
-                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>{item.label}</Typography>
-                <Typography variant="body2" fontWeight="bold">{formatTL(item.value)} ₺</Typography>
+                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
+                  {item.label}
+                </Typography>
+                <Typography variant="body2" fontWeight="bold">
+                  {formatTL(item.value)} ₺
+                </Typography>
               </Box>
             ));
           })()}
@@ -84,12 +106,22 @@ const KomisyonOnizleme = ({ sf, canliPlatformTipi, canliHesap, karGor }) => {
 
       {/* Net Kâr büyük gösterim (yalnızca e-ticaret yetkisi olanlar) */}
       {karGor && (
-      <Paper sx={{ p: 2, textAlign: 'center', bgcolor: canliHesap.netKar >= 0 ? '#e8f5e9' : '#ffebee', borderRadius: 2, border: `2px solid ${canliHesap.netKar >= 0 ? '#2e7d32' : '#c62828'}` }}>
-        <Typography variant="body2" color="text.secondary">Net Kâr ({canliHesap.miktar} adet)</Typography>
-        <Typography variant="h4" fontWeight="bold" sx={{ color: canliHesap.netKar >= 0 ? '#2e7d32' : '#c62828' }}>
-          {formatTL(canliHesap.netKar)} ₺
-        </Typography>
-      </Paper>
+        <Paper
+          sx={{
+            p: 2,
+            textAlign: 'center',
+            bgcolor: canliHesap.netKar >= 0 ? '#e8f5e9' : '#ffebee',
+            borderRadius: 2,
+            border: `2px solid ${canliHesap.netKar >= 0 ? '#2e7d32' : '#c62828'}`,
+          }}
+        >
+          <Typography variant="body2" color="text.secondary">
+            Net Kâr ({canliHesap.miktar} adet)
+          </Typography>
+          <Typography variant="h4" fontWeight="bold" sx={{ color: canliHesap.netKar >= 0 ? '#2e7d32' : '#c62828' }}>
+            {formatTL(canliHesap.netKar)} ₺
+          </Typography>
+        </Paper>
       )}
     </Box>
   );

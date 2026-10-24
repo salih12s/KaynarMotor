@@ -9,46 +9,95 @@ const IletisimDialog = ({ ilet, aktifKategori, isHizmet, kategori, iletisim }) =
   const { iletDlg, kapat, iletForm, setIletForm, iletGorsel, iletGorselVar, iletGorselSil, removeIletGorsel, handleIletGorsel, handleSaveIletisim } = ilet;
   return (
     <Dialog open={iletDlg} onClose={kapat} maxWidth="xs" fullWidth>
-      <DialogTitle>{aktifKategori.label} — {isHizmet ? 'Hizmet Sayfası' : 'İletişim'}</DialogTitle>
+      <DialogTitle>
+        {aktifKategori.label} — {isHizmet ? 'Hizmet Sayfası' : 'İletişim'}
+      </DialogTitle>
       <DialogContent dividers>
         <Stack spacing={2} sx={{ mt: 0.5 }}>
           {isHizmet && (
             <>
-              <TextField label="Başlık" value={iletForm.baslik} onChange={e => setIletForm({ ...iletForm, baslik: e.target.value })} fullWidth placeholder={aktifKategori.label} />
+              <TextField
+                label="Başlık"
+                value={iletForm.baslik}
+                onChange={(e) => setIletForm({ ...iletForm, baslik: e.target.value })}
+                fullWidth
+                placeholder={aktifKategori.label}
+              />
               {/* Hizmet görseli */}
               <Box sx={{ border: '1px solid #e0e0e0', borderRadius: 2, p: 1.5 }}>
-                <Typography variant="subtitle2" sx={{ mb: 1 }}>Sayfa Görseli</Typography>
-                {(iletGorsel || (iletGorselVar && !iletGorselSil)) ? (
+                <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                  Sayfa Görseli
+                </Typography>
+                {iletGorsel || (iletGorselVar && !iletGorselSil) ? (
                   <Box>
-                    <Box component="img"
-                      src={iletGorsel || `${vitrinService.iletisimGorselUrl(kategori)}?t=${(iletisim[kategori]?.updated_at) || ''}`}
-                      alt="görsel" sx={{ width: '100%', maxHeight: 160, objectFit: 'cover', borderRadius: 1, display: 'block', mb: 1 }} />
+                    <Box
+                      component="img"
+                      src={iletGorsel || `${vitrinService.iletisimGorselUrl(kategori)}?t=${iletisim[kategori]?.updated_at || ''}`}
+                      alt="görsel"
+                      sx={{ width: '100%', maxHeight: 160, objectFit: 'cover', borderRadius: 1, display: 'block', mb: 1 }}
+                    />
                     <Stack direction="row" spacing={1}>
-                      <Button size="small" color="error" startIcon={<DeleteIcon />} onClick={removeIletGorsel}>Kaldır</Button>
-                      <Button size="small" variant="outlined" component="label" startIcon={<PhotoIcon />}>Değiştir
+                      <Button size="small" color="error" startIcon={<DeleteIcon />} onClick={removeIletGorsel}>
+                        Kaldır
+                      </Button>
+                      <Button size="small" variant="outlined" component="label" startIcon={<PhotoIcon />}>
+                        Değiştir
                         <input type="file" hidden accept="image/*" onChange={handleIletGorsel} />
                       </Button>
                     </Stack>
                   </Box>
                 ) : (
-                  <Button variant="outlined" component="label" startIcon={<PhotoIcon />}>Görsel Yükle
+                  <Button variant="outlined" component="label" startIcon={<PhotoIcon />}>
+                    Görsel Yükle
                     <input type="file" hidden accept="image/*" onChange={handleIletGorsel} />
                   </Button>
                 )}
               </Box>
             </>
           )}
-          <TextField label="Personel Adı" value={iletForm.personel_adi} onChange={e => setIletForm({ ...iletForm, personel_adi: e.target.value })} fullWidth />
-          <TextField label="Telefon" value={iletForm.telefon} onChange={e => setIletForm({ ...iletForm, telefon: e.target.value })} fullWidth placeholder="05XX XXX XX XX" helperText={isHizmet ? 'WhatsApp butonu bu numarayı kullanır' : ''} />
+          <TextField
+            label="Personel Adı"
+            value={iletForm.personel_adi}
+            onChange={(e) => setIletForm({ ...iletForm, personel_adi: e.target.value })}
+            fullWidth
+          />
+          <TextField
+            label="Telefon"
+            value={iletForm.telefon}
+            onChange={(e) => setIletForm({ ...iletForm, telefon: e.target.value })}
+            fullWidth
+            placeholder="05XX XXX XX XX"
+            helperText={isHizmet ? 'WhatsApp butonu bu numarayı kullanır' : ''}
+          />
           {/* İkinci personel isteğe bağlıdır; doldurulursa sitede birinci kişinin yanında gösterilir */}
-          <TextField label="2. Personel Adı (opsiyonel)" value={iletForm.personel_adi_2} onChange={e => setIletForm({ ...iletForm, personel_adi_2: e.target.value })} fullWidth />
-          <TextField label="2. Personel Telefon (opsiyonel)" value={iletForm.telefon_2} onChange={e => setIletForm({ ...iletForm, telefon_2: e.target.value })} fullWidth placeholder="05XX XXX XX XX" />
-          <TextField label={isHizmet ? 'Açıklama (opsiyonel)' : 'Not (opsiyonel)'} value={iletForm.aciklama} onChange={e => setIletForm({ ...iletForm, aciklama: e.target.value })} fullWidth multiline minRows={2} />
+          <TextField
+            label="2. Personel Adı (opsiyonel)"
+            value={iletForm.personel_adi_2}
+            onChange={(e) => setIletForm({ ...iletForm, personel_adi_2: e.target.value })}
+            fullWidth
+          />
+          <TextField
+            label="2. Personel Telefon (opsiyonel)"
+            value={iletForm.telefon_2}
+            onChange={(e) => setIletForm({ ...iletForm, telefon_2: e.target.value })}
+            fullWidth
+            placeholder="05XX XXX XX XX"
+          />
+          <TextField
+            label={isHizmet ? 'Açıklama (opsiyonel)' : 'Not (opsiyonel)'}
+            value={iletForm.aciklama}
+            onChange={(e) => setIletForm({ ...iletForm, aciklama: e.target.value })}
+            fullWidth
+            multiline
+            minRows={2}
+          />
         </Stack>
       </DialogContent>
       <DialogActions>
         <Button onClick={kapat}>İptal</Button>
-        <Button variant="contained" onClick={handleSaveIletisim}>Kaydet</Button>
+        <Button variant="contained" onClick={handleSaveIletisim}>
+          Kaydet
+        </Button>
       </DialogActions>
     </Dialog>
   );

@@ -24,7 +24,12 @@ const motorToplamlari = (motorlar: Satir[]) => {
   };
 };
 
-export interface GunlukGirdi { isEmirleri: Satir[]; aksesuarlar: Satir[]; motorlar: Satir[]; eticaret: Satir[] }
+export interface GunlukGirdi {
+  isEmirleri: Satir[];
+  aksesuarlar: Satir[];
+  motorlar: Satir[];
+  eticaret: Satir[];
+}
 
 export const gunlukHesapla = (hedefTarih: string, g: GunlukGirdi) => {
   const isEmriGelir = alanToplami(g.isEmirleri, 'gercek_toplam_ucret');
@@ -44,7 +49,15 @@ export const gunlukHesapla = (hedefTarih: string, g: GunlukGirdi) => {
     tarih: hedefTarih,
     is_emirleri: { kayitlar: g.isEmirleri, gelir: isEmriGelir, maliyet: isEmriMaliyet, kar: isEmriKar },
     aksesuarlar: { kayitlar: g.aksesuarlar, gelir: aksesuarGelir, maliyet: aksesuarMaliyet, kar: aksesuarKar },
-    motorlar: { kayitlar: g.motorlar, gelir: m.gelir, maliyet: m.maliyet, kar: m.kar, kar_toplam: m.kar_toplam, yatirimci_kar: m.yatirimci_kar, komisyon: m.komisyon },
+    motorlar: {
+      kayitlar: g.motorlar,
+      gelir: m.gelir,
+      maliyet: m.maliyet,
+      kar: m.kar,
+      kar_toplam: m.kar_toplam,
+      yatirimci_kar: m.yatirimci_kar,
+      komisyon: m.komisyon,
+    },
     eticaret: { kayitlar: g.eticaret, gelir: eticaretGelir, kar: eticaretKar },
     toplam: {
       gelir: isEmriGelir + aksesuarGelir + m.gelir + eticaretGelir,
@@ -53,7 +66,10 @@ export const gunlukHesapla = (hedefTarih: string, g: GunlukGirdi) => {
   };
 };
 
-export interface AralikGirdi extends GunlukGirdi { yedekParcalar: Satir[]; motorStokToplam: number }
+export interface AralikGirdi extends GunlukGirdi {
+  yedekParcalar: Satir[];
+  motorStokToplam: number;
+}
 
 export const aralikHesapla = (baslangic: string, bitis: string, g: AralikGirdi) => {
   const isEmriKar = alanToplami(g.isEmirleri, 'kar');
@@ -70,16 +86,28 @@ export const aralikHesapla = (baslangic: string, bitis: string, g: AralikGirdi) 
   const eticaretMaliyet = toplam(g.eticaret, (r) => adetli(r, 'alis_fiyati'));
 
   return {
-    baslangic, bitis,
+    baslangic,
+    bitis,
     motorlar: g.motorlar,
-    motorGelir: m.gelir, motorMaliyet: m.maliyet, motorKar: m.kar, motorKarToplam: m.kar_toplam,
-    motorYatirimciKar: m.yatirimci_kar, motorKomisyon: m.komisyon, motorNoterSatisCiro,
+    motorGelir: m.gelir,
+    motorMaliyet: m.maliyet,
+    motorKar: m.kar,
+    motorKarToplam: m.kar_toplam,
+    motorYatirimciKar: m.yatirimci_kar,
+    motorKomisyon: m.komisyon,
+    motorNoterSatisCiro,
     isEmirleri: g.isEmirleri,
-    isEmriGelir, isEmriMaliyet, isEmriKar,
+    isEmriGelir,
+    isEmriMaliyet,
+    isEmriKar,
     aksesuarlar: g.aksesuarlar,
-    aksesuarGelir, aksesuarMaliyet, aksesuarKar,
+    aksesuarGelir,
+    aksesuarMaliyet,
+    aksesuarKar,
     eticaret: g.eticaret,
-    eticaretGelir, eticaretMaliyet, eticaretKar,
+    eticaretGelir,
+    eticaretMaliyet,
+    eticaretKar,
     yedekParcalar: g.yedekParcalar,
     yedekParcaToplamDeger: alanToplami(g.yedekParcalar, 'satis_fiyati'),
     yedekParcaToplamMaliyet: alanToplami(g.yedekParcalar, 'alis_fiyati'),

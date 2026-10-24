@@ -12,7 +12,7 @@ export const MOTOR_DURUMLARI = ['sifir', 'ikinci_el'];
 
 /** Yalnızca motor ilanının durumu vardır: geçersiz/boş değer "ikinci_el" olur; diğer kategorilerde NULL. */
 export const motorDurumu = (kategori: unknown, v: unknown): string | null =>
-  (kategori === 'motor' ? (MOTOR_DURUMLARI.includes(v as string) ? (v as string) : 'ikinci_el') : null);
+  kategori === 'motor' ? (MOTOR_DURUMLARI.includes(v as string) ? (v as string) : 'ikinci_el') : null;
 
 export const numOrNull = (v: unknown): number | null => {
   if (v === '' || v === undefined || v === null) return null;
@@ -56,7 +56,10 @@ const HTTP_URL = /^https?:\/\/\S+$/i;
 
 /** Geçersiz bağlantı varsa kullanıcıya gösterilecek mesaj, yoksa null. */
 export const baglantiHatasi = (rubik: unknown, video: unknown): string | null => {
-  for (const [ad, deger] of [['Ödeme linki', rubik], ['Video linki', video]] as Array<[string, unknown]>) {
+  for (const [ad, deger] of [
+    ['Ödeme linki', rubik],
+    ['Video linki', video],
+  ] as Array<[string, unknown]>) {
     if (deger === undefined || deger === null || deger === '') continue;
     if (typeof deger !== 'string' || (deger.trim() && !HTTP_URL.test(deger.trim()))) return `${ad} http:// veya https:// ile başlamalıdır`;
   }
@@ -88,7 +91,10 @@ export const paketAsimi = async (...metinler: unknown[]): Promise<number | null>
 };
 
 /** Personel yalnızca izinli olduğu kategoriyi yönetebilir (admin hepsini). */
-export const kategoriYetkiliMi = (user: Pick<Kullanici, 'rol' | 'motor_vitrin_yetkisi' | 'aksesuar_vitrin_yetkisi'> | null | undefined, kategori: unknown): boolean => {
+export const kategoriYetkiliMi = (
+  user: Pick<Kullanici, 'rol' | 'motor_vitrin_yetkisi' | 'aksesuar_vitrin_yetkisi'> | null | undefined,
+  kategori: unknown,
+): boolean => {
   if (!user) return false;
   if (user.rol === 'admin') return true;
   if (kategori === 'motor') return !!user.motor_vitrin_yetkisi;

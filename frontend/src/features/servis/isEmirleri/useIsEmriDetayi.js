@@ -10,7 +10,10 @@ export const useIsEmriDetayi = () => {
   const [detayModal, setDetayModal] = useState({ open: false, data: null });
 
   const ac = async (id) => {
-    try { const res = await isEmriService.getById(id); setDetayModal({ open: true, data: res.data }); } catch {}
+    try {
+      const res = await isEmriService.getById(id);
+      setDetayModal({ open: true, data: res.data });
+    } catch {}
   };
   const kapat = () => setDetayModal({ open: false, data: null });
 

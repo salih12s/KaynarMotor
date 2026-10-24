@@ -25,9 +25,20 @@ const SUNUCULAR = {
 };
 
 const hepsiYetki = {
-  aksesuar_yetkisi: true, motor_satis_yetkisi: true, eticaret_yetkisi: true, servis_yetkisi: true,
-  aksesuar_stok_yetkisi: true, yedek_parca_yetkisi: true, motor_vitrin_yetkisi: true, aksesuar_vitrin_yetkisi: true,
-  liste_fiyati_gor: true, alis_fiyati_gor: true, satis_fiyati_gor: true, kar_gor: true, musteri_gor: true, satis_gecmisi_gor: true,
+  aksesuar_yetkisi: true,
+  motor_satis_yetkisi: true,
+  eticaret_yetkisi: true,
+  servis_yetkisi: true,
+  aksesuar_stok_yetkisi: true,
+  yedek_parca_yetkisi: true,
+  motor_vitrin_yetkisi: true,
+  aksesuar_vitrin_yetkisi: true,
+  liste_fiyati_gor: true,
+  alis_fiyati_gor: true,
+  satis_fiyati_gor: true,
+  kar_gor: true,
+  musteri_gor: true,
+  satis_gecmisi_gor: true,
 };
 
 // Test kullanıcıları (id'ler 9000+; gerçek kayıtlarla çakışmaz)
@@ -55,7 +66,8 @@ function envOku(dosya) {
 
 /** İki veritabanını da canlı yedekten sıfırlar (önceki koşuların günlük/kayıt birikimi kalmasın). */
 function veritabanlariniSifirla() {
-  const yukle = (env, ...ek) => execFileSync(process.execPath, ['--import', 'tsx', 'scripts/mariadb/yedektenYukle.js', '--env', env, ...ek], { cwd: BACKEND, stdio: 'pipe' });
+  const yukle = (env, ...ek) =>
+    execFileSync(process.execPath, ['--import', 'tsx', 'scripts/mariadb/yedektenYukle.js', '--env', env, ...ek], { cwd: BACKEND, stdio: 'pipe' });
   yukle(SUNUCULAR.ref.env, '--hedef', 'pg');
   yukle(SUNUCULAR.yeni.env);
 }
@@ -65,7 +77,17 @@ async function veritabanlariniHazirla() {
   veritabanlariniSifirla();
   const hash = await bcrypt.hash(SIFRE, 4);
   const kolonlar = ['id', 'kullanici_adi', 'sifre', 'plain_sifre', 'ad_soyad', 'rol', 'onay_durumu', 'created_at', ...YETKI_KOLONLARI];
-  const degerler = (k) => [k.id, k.kullanici_adi, hash, null, k.ad_soyad, k.rol, 'onaylandi', `2026-10-01 10:00:0${k.id - 9000}`, ...YETKI_KOLONLARI.map((y) => !!k[y])];
+  const degerler = (k) => [
+    k.id,
+    k.kullanici_adi,
+    hash,
+    null,
+    k.ad_soyad,
+    k.rol,
+    'onaylandi',
+    `2026-10-01 10:00:0${k.id - 9000}`,
+    ...YETKI_KOLONLARI.map((y) => !!k[y]),
+  ];
 
   // --- PostgreSQL referans
   const { Client } = require('pg');
@@ -78,7 +100,13 @@ async function veritabanlariniHazirla() {
   // --- MariaDB yeni
   const mysql = require('mysql2/promise');
   const myEnv = envOku(SUNUCULAR.yeni.env);
-  const my = await mysql.createConnection({ host: '127.0.0.1', port: +myEnv.DB_PORT, database: myEnv.DB_NAME, user: myEnv.DB_USER, password: myEnv.DB_PASSWORD });
+  const my = await mysql.createConnection({
+    host: '127.0.0.1',
+    port: +myEnv.DB_PORT,
+    database: myEnv.DB_NAME,
+    user: myEnv.DB_USER,
+    password: myEnv.DB_PASSWORD,
+  });
 
   try {
     await pg.query('UPDATE ikinci_el_motorlar SET yatirimci_id = NULL WHERE yatirimci_id >= 9000');
@@ -87,7 +115,10 @@ async function veritabanlariniHazirla() {
     await my.query('DELETE FROM kullanicilar WHERE id >= 9000');
     for (const k of KULLANICILAR) {
       await pg.query(`INSERT INTO kullanicilar (${kolonlar.join(',')}) VALUES (${kolonlar.map((_, i) => `$${i + 1}`).join(',')})`, degerler(k));
-      await my.query(`INSERT INTO kullanicilar (${kolonlar.join(',')}) VALUES (${kolonlar.map(() => '?').join(',')})`, degerler(k).map((v) => (typeof v === 'boolean' ? (v ? 1 : 0) : v)));
+      await my.query(
+        `INSERT INTO kullanicilar (${kolonlar.join(',')}) VALUES (${kolonlar.map(() => '?').join(',')})`,
+        degerler(k).map((v) => (typeof v === 'boolean' ? (v ? 1 : 0) : v)),
+      );
     }
     // MariaDB, açık id ile eklenen satırdan sonra AUTO_INCREMENT'ı yükseltir (PostgreSQL dizisi etkilenmez):
     // iki taraf aynı sıradaki id'yi (9009) üretsin diye PostgreSQL dizisi 9008'e çekilir.
@@ -96,9 +127,11 @@ async function veritabanlariniHazirla() {
     await pg.query("SELECT setval('kullanicilar_id_seq', 9008)");
     void sonId;
     // En çok motoru olan gerçek yatırımcının motorlarını test yatırımcısına devret (iki veritabanında aynı)
-    const en = (await pg.query(
-      `SELECT yatirimci_id FROM ikinci_el_motorlar WHERE yatirimci_id IS NOT NULL AND yatirimci_id < 9000 GROUP BY yatirimci_id ORDER BY COUNT(*) DESC, yatirimci_id LIMIT 1`
-    )).rows[0];
+    const en = (
+      await pg.query(
+        `SELECT yatirimci_id FROM ikinci_el_motorlar WHERE yatirimci_id IS NOT NULL AND yatirimci_id < 9000 GROUP BY yatirimci_id ORDER BY COUNT(*) DESC, yatirimci_id LIMIT 1`,
+      )
+    ).rows[0];
     if (en) {
       await pg.query('UPDATE ikinci_el_motorlar SET yatirimci_id = 9004 WHERE yatirimci_id = $1', [en.yatirimci_id]);
       await my.query('UPDATE ikinci_el_motorlar SET yatirimci_id = 9004 WHERE yatirimci_id = ?', [en.yatirimci_id]);
@@ -113,7 +146,8 @@ function sunucuBaslat(s) {
   if (!s.dizin) throw new Error('PG_REF_DIR tanımlı değil (eski kodun backend klasörü).');
   const log = fs.openSync(path.join(require('os').tmpdir(), `kaynar-parity-${s.port}.log`), 'w');
   const tsx = fs.existsSync(path.join(s.dizin, 'node_modules', 'tsx')) ? ['--import', 'tsx'] : []; // eski referans kodda tsx yok
-  const cocuk = spawn(process.execPath, [`--env-file=${s.env}`, ...tsx, fs.existsSync(path.join(s.dizin, 'server.ts')) ? 'server.ts' : 'server.js'], { // eski referans kodda server.js
+  const cocuk = spawn(process.execPath, [`--env-file=${s.env}`, ...tsx, fs.existsSync(path.join(s.dizin, 'server.ts')) ? 'server.ts' : 'server.js'], {
+    // eski referans kodda server.js
     cwd: s.dizin,
     env: { ...process.env, PORT: String(s.port), TZ: 'UTC', NODE_ENV: 'development' },
     stdio: ['ignore', log, log],
@@ -129,7 +163,9 @@ async function hazirOlmayiBekle(s, sureMs = 60000) {
     try {
       const r = await fetch(`${s.url}/api/vitrin/segmentler`);
       if (r.ok) return;
-    } catch { /* henüz kalkmadı */ }
+    } catch {
+      /* henüz kalkmadı */
+    }
     if (Date.now() - bas > sureMs) throw new Error(`${s.ad} ${sureMs} ms içinde hazır olmadı`);
     await new Promise((r) => setTimeout(r, 300));
   }
@@ -151,7 +187,11 @@ async function istek(s, yontem, yol, { token, govde, ham, baslik } = {}) {
   const buf = Buffer.from(await r.arrayBuffer());
   const sonuc = { durum: r.status, tur: tur.split(';')[0] };
   if (tur.includes('application/json')) {
-    try { sonuc.json = JSON.parse(buf.toString('utf8')); } catch { sonuc.metin = buf.toString('utf8'); }
+    try {
+      sonuc.json = JSON.parse(buf.toString('utf8'));
+    } catch {
+      sonuc.metin = buf.toString('utf8');
+    }
   } else if (tur.startsWith('text/')) {
     sonuc.metin = buf.toString('utf8');
   } else {
@@ -253,6 +293,15 @@ async function sunuculariKapat() {
 }
 
 module.exports = {
-  SUNUCULAR, KULLANICILAR, SIFRE,
-  veritabanlariniHazirla, sunucuBaslat, hazirOlmayiBekle, istek, girisYap, kiyasla, farklar, sunuculariKapat,
+  SUNUCULAR,
+  KULLANICILAR,
+  SIFRE,
+  veritabanlariniHazirla,
+  sunucuBaslat,
+  hazirOlmayiBekle,
+  istek,
+  girisYap,
+  kiyasla,
+  farklar,
+  sunuculariKapat,
 };

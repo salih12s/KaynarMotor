@@ -19,10 +19,9 @@ const Vitrin = () => {
   const { user } = useAuth();
   const isAdmin = user?.rol === 'admin';
   // Yetkiye göre görünen vitrin kategorileri: admin hepsini, personel yalnızca izinli olduğu vitrini yönetir
-  const gorunenKategoriler = isAdmin ? KATEGORILER : KATEGORILER.filter(k =>
-    (k.key === 'motor' && user?.motor_vitrin_yetkisi) ||
-    (k.key === 'aksesuar' && user?.aksesuar_vitrin_yetkisi)
-  );
+  const gorunenKategoriler = isAdmin
+    ? KATEGORILER
+    : KATEGORILER.filter((k) => (k.key === 'motor' && user?.motor_vitrin_yetkisi) || (k.key === 'aksesuar' && user?.aksesuar_vitrin_yetkisi));
 
   const [tab, setTab] = useState(0);
   const aktifKategori = gorunenKategoriler[tab] || gorunenKategoriler[0] || KATEGORILER[0];
@@ -43,8 +42,19 @@ const Vitrin = () => {
   return (
     <Box>
       <Paper sx={{ mb: 2 }}>
-        <Tabs value={tab} onChange={(_, v) => { setTab(v); liste.setArama(''); liste.setGorunum('aktif'); }} variant="scrollable" scrollButtons="auto">
-          {gorunenKategoriler.map(k => <Tab key={k.key} label={k.label} />)}
+        <Tabs
+          value={tab}
+          onChange={(_, v) => {
+            setTab(v);
+            liste.setArama('');
+            liste.setGorunum('aktif');
+          }}
+          variant="scrollable"
+          scrollButtons="auto"
+        >
+          {gorunenKategoriler.map((k) => (
+            <Tab key={k.key} label={k.label} />
+          ))}
         </Tabs>
       </Paper>
 
@@ -54,19 +64,41 @@ const Vitrin = () => {
       ) : (
         <>
           <IletisimSatiri curIletisim={curIletisim} onIletisim={ilet.openIletisim} onYeni={f.openNew} />
-          <AramaSatiri arama={liste.arama} setArama={liste.setArama} gorunum={liste.gorunum} setGorunum={liste.setGorunum}
-            aktifSayisi={liste.aktifler.length} arsivSayisi={liste.arsivdekiler.length} />
+          <AramaSatiri
+            arama={liste.arama}
+            setArama={liste.setArama}
+            gorunum={liste.gorunum}
+            setGorunum={liste.setGorunum}
+            aktifSayisi={liste.aktifler.length}
+            arsivSayisi={liste.arsivdekiler.length}
+          />
           <IlanListesi liste={liste} isAdmin={isAdmin} isMotor={isMotor} onDuzenle={f.openEdit} />
         </>
       )}
 
-      <IlanDialog f={f} aktifKategori={aktifKategori} isMotor={isMotor} isAksesuar={isAksesuar} isAdmin={isAdmin}
-        stokMotorlar={ref.stokMotorlar} stokAksesuarlar={ref.stokAksesuarlar} segmentler={ref.segmentler} videoLimitMb={ref.videoLimitMb} />
+      <IlanDialog
+        f={f}
+        aktifKategori={aktifKategori}
+        isMotor={isMotor}
+        isAksesuar={isAksesuar}
+        isAdmin={isAdmin}
+        stokMotorlar={ref.stokMotorlar}
+        stokAksesuarlar={ref.stokAksesuarlar}
+        segmentler={ref.segmentler}
+        videoLimitMb={ref.videoLimitMb}
+      />
 
       <IletisimDialog ilet={ilet} aktifKategori={aktifKategori} isHizmet={isHizmet} kategori={kategori} iletisim={ref.iletisim} />
 
-      <Snackbar open={snack.open} autoHideDuration={3000} onClose={() => setSnack({ ...snack, open: false })} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
-        <Alert severity={snack.sev} onClose={() => setSnack({ ...snack, open: false })}>{snack.msg}</Alert>
+      <Snackbar
+        open={snack.open}
+        autoHideDuration={3000}
+        onClose={() => setSnack({ ...snack, open: false })}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert severity={snack.sev} onClose={() => setSnack({ ...snack, open: false })}>
+          {snack.msg}
+        </Alert>
       </Snackbar>
     </Box>
   );

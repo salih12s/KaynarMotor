@@ -22,7 +22,10 @@ const motorlar = [
   { satis_fiyati: '150000', alis_fiyati: '100000', masraflar: '2000', kar: '45000', yatirimci_kar: '5000', komisyoncu_tutari: '3000', noter_satis: '120000' },
   { satis_fiyati: '80000', alis_fiyati: '70000', masraflar: null, kar: '10000', yatirimci_kar: null, komisyoncu_tutari: null, noter_satis: '60000' },
 ];
-const eticaret = [{ satis_fiyati: '300', alis_fiyati: '100', adet: 2, kar: '80' }, { satis_fiyati: '50', alis_fiyati: '20', adet: null, kar: '10' }];
+const eticaret = [
+  { satis_fiyati: '300', alis_fiyati: '100', adet: 2, kar: '80' },
+  { satis_fiyati: '50', alis_fiyati: '20', adet: null, kar: '10' },
+];
 
 describe('günlük rapor hesabı', () => {
   const r = hesap.gunlukHesapla('2026-10-01', { isEmirleri, aksesuarlar, motorlar, eticaret });
@@ -62,7 +65,10 @@ describe('günlük rapor hesabı', () => {
 });
 
 describe('aralık rapor hesabı', () => {
-  const yedekParcalar = [{ satis_fiyati: '150', alis_fiyati: '90' }, { satis_fiyati: '50', alis_fiyati: '30' }];
+  const yedekParcalar = [
+    { satis_fiyati: '150', alis_fiyati: '90' },
+    { satis_fiyati: '50', alis_fiyati: '30' },
+  ];
   const r = hesap.aralikHesapla('2026-10-01', '2026-10-31', { isEmirleri, aksesuarlar, motorlar, eticaret, yedekParcalar, motorStokToplam: 123456 });
 
   it('toplam maliyet = iş emri + aksesuar + motor (alış+masraf) + e-ticaret (alış x adet)', () => {
@@ -93,8 +99,11 @@ describe('aralık rapor hesabı', () => {
 describe('genel rapor hesabı', () => {
   it('toplam gelir/kâr SQL ile toplanmış metin değerlerden hesaplanır', () => {
     const r = hesap.genelHesapla({
-      isEmirleri: { gelir: '100', kar: '40' }, aksesuarlar: { gelir: '200.5', kar: '50' },
-      motorlar: { gelir: '1000', kar: '300' }, eticaret: { gelir: '10', kar: '2' }, yedekParcalar: { toplam_deger: '9' },
+      isEmirleri: { gelir: '100', kar: '40' },
+      aksesuarlar: { gelir: '200.5', kar: '50' },
+      motorlar: { gelir: '1000', kar: '300' },
+      eticaret: { gelir: '10', kar: '2' },
+      yedekParcalar: { toplam_deger: '9' },
     });
     assert.deepEqual([r.toplam.gelir, r.toplam.kar], [1310.5, 392]);
     assert.deepEqual(r.yedek_parcalar, { toplam_deger: '9' });
@@ -105,7 +114,10 @@ describe('yatırımcı raporu hesabı', () => {
   it('adetler ve özet: yatırımcı kârı, satış, alış, stok değeri (stoktakilerin ALIŞ fiyatı)', () => {
     const r = hesap.yatirimciRaporuHesapla(
       [{ alis_fiyati: '1000' }, { alis_fiyati: '500' }],
-      [{ yatirimci_kar: '100', satis_fiyati: '1500', alis_fiyati: '1000' }, { yatirimci_kar: null, satis_fiyati: '200', alis_fiyati: '150' }]
+      [
+        { yatirimci_kar: '100', satis_fiyati: '1500', alis_fiyati: '1000' },
+        { yatirimci_kar: null, satis_fiyati: '200', alis_fiyati: '150' },
+      ],
     );
     assert.deepEqual(r.ozet, { stok_adet: 2, satilan_adet: 2, toplam_yatirimci_kar: 100, toplam_satis: 1700, toplam_alis: 1150, stok_degeri: 1500 });
   });
@@ -139,7 +151,10 @@ describe('rapor servisi: tarih ve erişim kuralları', () => {
   it('yatırımcı raporu: yatırımcı YALNIZCA kendi verisini görür (yatirimci_id parametresi yok sayılır)', async () => {
     const db = sahteDb();
     await servis.yatirimciRaporu(db, KUL('yatirimci', 42), { yatirimci_id: '99' });
-    assert.ok(db.cagrilar.every((c) => c.params[0] === 42), 'tüm sorgular kendi id ile');
+    assert.ok(
+      db.cagrilar.every((c) => c.params[0] === 42),
+      'tüm sorgular kendi id ile',
+    );
   });
 
   it('yatırımcı raporu: admin yatirimci_id ile istediğini görür; id yoksa 400', async () => {
@@ -170,7 +185,8 @@ describe('rapor servisi: tarih ve erişim kuralları', () => {
   it('yatırımcı raporu kolonları alıcı/satıcı kimliğini (TC, adres, telefon) İÇERMEZ (KVKK)', async () => {
     const db = sahteDb();
     await servis.yatirimciRaporu(db, KUL('yatirimci', 5), {});
-    for (const c of db.cagrilar) for (const alan of ['alici_tc', 'alici_adres', 'alici_telefon', 'satici_tc', 'komisyoncu_telefon']) assert.ok(!c.sql.includes(alan), `${alan} sorguda`);
+    for (const c of db.cagrilar)
+      for (const alan of ['alici_tc', 'alici_adres', 'alici_telefon', 'satici_tc', 'komisyoncu_telefon']) assert.ok(!c.sql.includes(alan), `${alan} sorguda`);
   });
 });
 
@@ -178,15 +194,67 @@ describe('veresiye: borç birleştirme (saf)', () => {
   const T1 = '2026-10-01T10:00:00Z';
   const T2 = '2026-10-05T10:00:00Z';
   const g = {
-    motor: [{ id: 1, musteri_adi: 'Ali', telefon: '0555', kalan_odeme: '5000', toplam_tutar: '90000', tarih: T1, plaka: '34A', marka: 'Honda', model: 'PCX', alis_fiyati: '70000', noter_satis: '60000' }],
-    servis: [{ id: 2, fis_no: 7, musteri_adi: null, telefon: null, kalan_odeme: '300', toplam_tutar: '800', tarih: T2, marka: 'Yamaha', model_tip: 'R25', parcalar: [] }],
-    aksesuar: [{ id: 3, musteri_adi: 'Veli', telefon: '0532', kalan_odeme: '100', toplam_tutar: '400', tarih: null, notlar: 'not', parcalar: [{ urun_adi: 'Kask' }, { urun_adi: null }, { urun_adi: 'Eldiven' }] }],
-    yedek: [{ id: 4, musteri_adi: 'Can', telefon: '0505', kalan_odeme: '50', toplam_tutar: '150', alis_fiyati: '90', tarih: '2026-09-01T00:00:00Z', urun_adi: 'Balata' }],
+    motor: [
+      {
+        id: 1,
+        musteri_adi: 'Ali',
+        telefon: '0555',
+        kalan_odeme: '5000',
+        toplam_tutar: '90000',
+        tarih: T1,
+        plaka: '34A',
+        marka: 'Honda',
+        model: 'PCX',
+        alis_fiyati: '70000',
+        noter_satis: '60000',
+      },
+    ],
+    servis: [
+      {
+        id: 2,
+        fis_no: 7,
+        musteri_adi: null,
+        telefon: null,
+        kalan_odeme: '300',
+        toplam_tutar: '800',
+        tarih: T2,
+        marka: 'Yamaha',
+        model_tip: 'R25',
+        parcalar: [],
+      },
+    ],
+    aksesuar: [
+      {
+        id: 3,
+        musteri_adi: 'Veli',
+        telefon: '0532',
+        kalan_odeme: '100',
+        toplam_tutar: '400',
+        tarih: null,
+        notlar: 'not',
+        parcalar: [{ urun_adi: 'Kask' }, { urun_adi: null }, { urun_adi: 'Eldiven' }],
+      },
+    ],
+    yedek: [
+      {
+        id: 4,
+        musteri_adi: 'Can',
+        telefon: '0505',
+        kalan_odeme: '50',
+        toplam_tutar: '150',
+        alis_fiyati: '90',
+        tarih: '2026-09-01T00:00:00Z',
+        urun_adi: 'Balata',
+      },
+    ],
   };
   const r = veresiye.borclariBirlestir(g);
 
   it('en yeni önce sıralanır; tarihi olmayan en sona', () => {
-    assert.deepEqual(r.borclar.map((b) => b.kaynak_key), ['servis', 'motor', 'yedek_parca', 'aksesuar']);
+    assert.deepEqual(
+      r.borclar.map((b) => b.kaynak_key),
+      ['servis', 'motor', 'yedek_parca', 'aksesuar'],
+    );
   });
 
   it('özet: kaynak bazında kalan ödeme, toplam borç ve kayıt sayısı', () => {
@@ -208,7 +276,12 @@ describe('veresiye: borç birleştirme (saf)', () => {
   });
 
   it('aksesuarda parça yoksa açıklama notlardan, o da yoksa boş', () => {
-    const a = veresiye.borclariBirlestir({ motor: [], servis: [], yedek: [], aksesuar: [{ id: 1, kalan_odeme: '1', toplam_tutar: '1', notlar: 'sadece not', parcalar: [] }] });
+    const a = veresiye.borclariBirlestir({
+      motor: [],
+      servis: [],
+      yedek: [],
+      aksesuar: [{ id: 1, kalan_odeme: '1', toplam_tutar: '1', notlar: 'sadece not', parcalar: [] }],
+    });
     assert.equal(a.borclar[0].aciklama, 'sadece not');
     const b = veresiye.borclariBirlestir({ motor: [], servis: [], yedek: [], aksesuar: [{ id: 1, kalan_odeme: '1', toplam_tutar: '1', parcalar: [] }] });
     assert.equal(b.borclar[0].aciklama, '');

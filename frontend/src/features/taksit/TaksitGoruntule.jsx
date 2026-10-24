@@ -18,8 +18,14 @@ const TaksitGoruntule = () => {
       <AppBar position="static" sx={{ bgcolor: '#1a1a1a' }} elevation={3}>
         <Toolbar sx={{ gap: 1 }}>
           <span className="kmt-logo-wrap" style={{ width: 31, height: 34, overflow: 'hidden', display: 'inline-flex', alignItems: 'center', flexShrink: 0 }}>
-            <img className="kmt-logo" src="/KaynarMotor.png" alt="Kaynar Motor" width="31" height="34"
-              style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', filter: 'brightness(0) invert(1)' }} />
+            <img
+              className="kmt-logo"
+              src="/KaynarMotor.png"
+              alt="Kaynar Motor"
+              width="31"
+              height="34"
+              style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', filter: 'brightness(0) invert(1)' }}
+            />
           </span>
           <Typography variant="h6" fontWeight="bold" sx={{ letterSpacing: 1, fontSize: { xs: 16, md: 20 } }}>
             KAYNAR <span style={{ color: RED }}>MOTOR</span>
@@ -28,12 +34,18 @@ const TaksitGoruntule = () => {
       </AppBar>
 
       <Box sx={{ flex: 1, p: { xs: 2, md: 3 }, maxWidth: 760, mx: 'auto', width: '100%' }}>
-        <Typography variant="h5" fontWeight="bold" gutterBottom>Taksit Ödeme Seçenekleri</Typography>
+        <Typography variant="h5" fontWeight="bold" gutterBottom>
+          Taksit Ödeme Seçenekleri
+        </Typography>
         {nakit > 0 ? (
           <>
             <Paper sx={{ p: 2, mb: 2, borderRadius: 3, textAlign: 'center', bgcolor: '#fff' }}>
-              <Typography variant="body2" color="text.secondary">Nakit Fiyat</Typography>
-              <Typography variant="h4" fontWeight="bold" sx={{ color: RED }}>{fmtTL(nakit)}</Typography>
+              <Typography variant="body2" color="text.secondary">
+                Nakit Fiyat
+              </Typography>
+              <Typography variant="h4" fontWeight="bold" sx={{ color: RED }}>
+                {fmtTL(nakit)}
+              </Typography>
             </Paper>
 
             {sonuc && <TaksitTablo sonuc={sonuc} isMobile={isMobile} />}

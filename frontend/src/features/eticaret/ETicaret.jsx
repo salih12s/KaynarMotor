@@ -25,15 +25,29 @@ const ETicaret = () => {
 
   return (
     <Box>
-      <IstatistikSatiri stats={e.stats} hesaplananToplamKar={e.hesaplananToplamKar} karGor={karGor} isAdmin={isAdmin} tab={tab}
-        onYeniSatis={() => e.openSatisDialog()} onYeniPlatform={() => e.openPlatformDialog()} />
+      <IstatistikSatiri
+        stats={e.stats}
+        hesaplananToplamKar={e.hesaplananToplamKar}
+        karGor={karGor}
+        isAdmin={isAdmin}
+        tab={tab}
+        onYeniSatis={() => e.openSatisDialog()}
+        onYeniPlatform={() => e.openPlatformDialog()}
+      />
 
       <Sekmeler tab={tab} setTab={setTab} platformFiltre={platformFiltre} setPlatformFiltre={setPlatformFiltre} platformlar={e.platformlar} />
 
       {/* Satışlar Tab */}
       {tab === 0 && (
-        <SatisListesi satislar={e.satislar} platformFiltre={platformFiltre} isMobile={isMobile} karGor={karGor}
-          onDetay={(s) => e.setDetayDialog({ open: true, data: s })} onDuzenle={e.openSatisDialog} onSil={e.handleSatisDelete} />
+        <SatisListesi
+          satislar={e.satislar}
+          platformFiltre={platformFiltre}
+          isMobile={isMobile}
+          karGor={karGor}
+          onDetay={(s) => e.setDetayDialog({ open: true, data: s })}
+          onDuzenle={e.openSatisDialog}
+          onSil={e.handleSatisDelete}
+        />
       )}
 
       {/* Platformlar Tab */}
@@ -45,8 +59,14 @@ const ETicaret = () => {
 
       <PlatformFormModal e={e} isMobile={isMobile} />
 
-      <SatisDetayModal open={e.detayDialog.open} data={e.detayDialog.data} onClose={() => e.setDetayDialog({ open: false, data: null })}
-        onDuzenle={e.openSatisDialog} isMobile={isMobile} karGor={karGor} />
+      <SatisDetayModal
+        open={e.detayDialog.open}
+        data={e.detayDialog.data}
+        onClose={() => e.setDetayDialog({ open: false, data: null })}
+        onDuzenle={e.openSatisDialog}
+        isMobile={isMobile}
+        karGor={karGor}
+      />
     </Box>
   );
 };

@@ -18,25 +18,39 @@ const SayfaBasi = ({ s }) => {
             {loading ? 'İlanlar yükleniyor…' : aramaVar ? `"${q.trim()}" için ${gorunenUrunler.length} ilan` : `${gorunenUrunler.length} ilan`}
           </Typography>
         </Box>
-        <TextField size="small" value={q} onChange={e => setQ(e.target.value)}
+        <TextField
+          size="small"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
           placeholder={isMotor ? 'Marka, model veya ilan no ara' : 'Ürün adı veya ilan no ara'}
           inputProps={{ 'aria-label': 'İlan ara', enterKeyHint: 'search' }}
           sx={{ width: { xs: '100%', md: 380 }, '& .MuiOutlinedInput-root': { bgcolor: RENK.yuzey, borderRadius: 2 } }}
           InputProps={{
-            startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment>,
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon fontSize="small" />
+              </InputAdornment>
+            ),
             endAdornment: q ? (
               <InputAdornment position="end">
-                <IconButton size="small" edge="end" onClick={() => setQ('')} aria-label="Aramayı temizle"><CloseIcon fontSize="small" /></IconButton>
+                <IconButton size="small" edge="end" onClick={() => setQ('')} aria-label="Aramayı temizle">
+                  <CloseIcon fontSize="small" />
+                </IconButton>
               </InputAdornment>
             ) : null,
-          }} />
+          }}
+        />
       </Box>
 
       {/* Telefonda iletişim kişileri listenin altında gösterilir; ilk ilan ekranın üstünde kalsın */}
       {kisiler.length > 0 && (
         <Box sx={{ mt: 1.5, display: { xs: 'none', md: 'flex' }, flexWrap: 'wrap', alignItems: 'center', columnGap: 2.5, rowGap: 0.75 }}>
-          <Typography color="text.secondary" sx={{ fontSize: 14.5 }}>Sorularınız için arayın</Typography>
-          {kisiler.map(k => <KisiSessiz key={`${k.ad}-${k.tel}`} kisi={k} />)}
+          <Typography color="text.secondary" sx={{ fontSize: 14.5 }}>
+            Sorularınız için arayın
+          </Typography>
+          {kisiler.map((k) => (
+            <KisiSessiz key={`${k.ad}-${k.tel}`} kisi={k} />
+          ))}
         </Box>
       )}
     </Box>

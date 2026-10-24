@@ -10,7 +10,12 @@ import type { Kullanici } from '../tipler';
  * Özetin kendisi token'a/req.user'a konmaz; yalnızca kısa bir türevi. `sv` taşımayan eski token'lar (bu özellikten önce
  * verilenler) süreleri dolana kadar (en çok 24 sa) kabul edilir.
  */
-export const sifreParmagi = (ozet: unknown): string => crypto.createHash('sha256').update(String(ozet || '')).digest('hex').slice(0, 16);
+export const sifreParmagi = (ozet: unknown): string =>
+  crypto
+    .createHash('sha256')
+    .update(String(ozet || ''))
+    .digest('hex')
+    .slice(0, 16);
 
 /*
  * Kimlik doğrulama.
@@ -23,10 +28,26 @@ export const sifreParmagi = (ozet: unknown): string => crypto.createHash('sha256
  * ve etki ANINDA olur. Birden fazla sunucu süreci çalışırsa diğer süreçlerde etki en geç 15 sn sonra görülür.
  */
 const KULLANICI_KOLONLARI = [
-  'id', 'kullanici_adi', 'ad_soyad', 'rol', 'onay_durumu', 'sifre',
-  'aksesuar_yetkisi', 'motor_satis_yetkisi', 'eticaret_yetkisi', 'servis_yetkisi',
-  'aksesuar_stok_yetkisi', 'yedek_parca_yetkisi', 'motor_vitrin_yetkisi', 'aksesuar_vitrin_yetkisi',
-  'liste_fiyati_gor', 'alis_fiyati_gor', 'satis_fiyati_gor', 'kar_gor', 'musteri_gor', 'satis_gecmisi_gor',
+  'id',
+  'kullanici_adi',
+  'ad_soyad',
+  'rol',
+  'onay_durumu',
+  'sifre',
+  'aksesuar_yetkisi',
+  'motor_satis_yetkisi',
+  'eticaret_yetkisi',
+  'servis_yetkisi',
+  'aksesuar_stok_yetkisi',
+  'yedek_parca_yetkisi',
+  'motor_vitrin_yetkisi',
+  'aksesuar_vitrin_yetkisi',
+  'liste_fiyati_gor',
+  'alis_fiyati_gor',
+  'satis_fiyati_gor',
+  'kar_gor',
+  'musteri_gor',
+  'satis_gecmisi_gor',
   'motor_satis_gor',
 ].join(', ');
 const ONBELLEK_MS = 15000;
@@ -48,7 +69,8 @@ const kullaniciGetir = async (id: number): Promise<Kullanici | null> => {
 
 // Yönetici bir kullanıcıyı onayladığında/reddettiğinde/sildiğinde/yetkisini ya da şifresini değiştirdiğinde çağrılır.
 export const kullaniciOnbellegiTemizle = (id?: number | string): void => {
-  if (id === undefined) onbellek.clear(); else onbellek.delete(Number(id));
+  if (id === undefined) onbellek.clear();
+  else onbellek.delete(Number(id));
 };
 
 const tokenYukuOku = (req: Request): { token: string | null; yuk?: any } => {
@@ -66,7 +88,7 @@ const tokenYukuOku = (req: Request): { token: string | null; yuk?: any } => {
 export const authenticateToken = async (req: Request, res: Response, next: NextFunction) => {
   const { token, yuk } = tokenYukuOku(req);
   if (!token) {
-    return res.status(401).json({ message: 'Yetkilendirme token\'ı gerekli', code: 'TOKEN_MISSING' });
+    return res.status(401).json({ message: "Yetkilendirme token'ı gerekli", code: 'TOKEN_MISSING' });
   }
   if (!yuk) {
     return res.status(403).json({ message: 'Geçersiz veya süresi dolmuş token', code: 'TOKEN_INVALID' });

@@ -28,7 +28,10 @@ const IsEmirleri = () => {
   const form = useIsEmriFormu({ yenile: liste.yenile });
 
   const yazdirKayit = async (id) => {
-    try { const res = await isEmriService.getById(id); printIsEmri(res.data); } catch {}
+    try {
+      const res = await isEmriService.getById(id);
+      printIsEmri(res.data);
+    } catch {}
   };
 
   const filtered = filtrele(liste.isEmirleri, { search, startDate, endDate });
@@ -37,11 +40,27 @@ const IsEmirleri = () => {
     <Box>
       <IstatistikSatiri istatistik={istatistikler(liste.isEmirleri)} karGor={karGor} onYeni={form.openModal} />
 
-      <Suzgecler search={search} setSearch={setSearch} durumFilter={liste.durumFilter} setDurumFilter={liste.setDurumFilter}
-        startDate={startDate} setStartDate={setStartDate} endDate={endDate} setEndDate={setEndDate} />
+      <Suzgecler
+        search={search}
+        setSearch={setSearch}
+        durumFilter={liste.durumFilter}
+        setDurumFilter={liste.setDurumFilter}
+        startDate={startDate}
+        setStartDate={setStartDate}
+        endDate={endDate}
+        setEndDate={setEndDate}
+      />
 
-      <IsEmriListesi filtered={filtered} isMobile={isMobile} karGor={karGor} isAdmin={user?.rol === 'admin'}
-        onDetay={detay.ac} onYazdir={yazdirKayit} onDuzenle={form.openEditModal} onSil={liste.sil} />
+      <IsEmriListesi
+        filtered={filtered}
+        isMobile={isMobile}
+        karGor={karGor}
+        isAdmin={user?.rol === 'admin'}
+        onDetay={detay.ac}
+        onYazdir={yazdirKayit}
+        onDuzenle={form.openEditModal}
+        onSil={liste.sil}
+      />
 
       <IsEmriFormModal form={form} kullanicilar={liste.kullanicilar} isMobile={isMobile} />
 

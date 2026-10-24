@@ -70,7 +70,9 @@ type DoldurulacakAlan = ['ad_soyad' | 'telefon' | 'adres', string];
  */
 export const doldurulacakAlanlar = (
   mevcut: Pick<MusteriSatiri, 'ad_soyad' | 'telefon' | 'adres'>,
-  ad: string, telefon: string, adres: string
+  ad: string,
+  telefon: string,
+  adres: string,
 ): DoldurulacakAlan[] => {
   const alanlar: DoldurulacakAlan[] = [];
   if (!metin(mevcut.ad_soyad)) alanlar.push(['ad_soyad', ad]);
@@ -83,9 +85,7 @@ export const doldurulacakAlanlar = (
  * Satış/servis kayıtlarından müşteri kaydını otomatik oluşturur ya da bulur; müşteri id'sini döner (hata/boş ad: null).
  * `db`: havuz (varsayılan) ya da açık bir transaction'ın bağlantısı (iş emri, kaydıyla birlikte geri alınsın diye).
  */
-export async function upsertMusteri(
-  ad_soyad: unknown, telefon: unknown, adres: unknown, db: Veritabani = pool
-): Promise<number | null> {
+export async function upsertMusteri(ad_soyad: unknown, telefon: unknown, adres: unknown, db: Veritabani = pool): Promise<number | null> {
   if (!ad_soyad || !metin(ad_soyad)) return null;
 
   const ad = metin(ad_soyad);

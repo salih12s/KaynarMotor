@@ -1,5 +1,20 @@
 import React from 'react';
-import { Box, Paper, Typography, Grid, Table, TableBody, TableCell, TableContainer, TableRow, Dialog, DialogTitle, DialogContent, DialogActions, Button } from '@mui/material';
+import {
+  Box,
+  Paper,
+  Typography,
+  Grid,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableRow,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+} from '@mui/material';
 import { formatTL, formatDate } from '../bicim';
 import { hesaplaKomisyon, detectPlatform } from '../../eticaret/komisyon';
 
@@ -24,62 +39,113 @@ const ETicaretDetayModal = ({ open, data, onClose, isMobile }) => {
   const karOrani = toplamSatis > 0 ? ((netKar / toplamSatis) * 100).toFixed(1) : '0.0';
   return (
     <Dialog {...dialogProps}>
-      <DialogTitle sx={{ bgcolor: '#C62828', color: 'white', py: 1.5 }}>
-        E-Ticaret Satış Detayı - {e.urun_adi}
-      </DialogTitle>
+      <DialogTitle sx={{ bgcolor: '#C62828', color: 'white', py: 1.5 }}>E-Ticaret Satış Detayı - {e.urun_adi}</DialogTitle>
       <DialogContent dividers>
         <Grid container spacing={2} sx={{ mb: 2, mt: 0.5 }}>
           <Grid size={{ xs: 12, md: 4 }}>
             <Paper sx={{ p: 1.5, bgcolor: '#fafafa' }}>
-              <Typography variant="subtitle2" color="#C62828" fontWeight="bold" gutterBottom>Ürün Bilgileri</Typography>
-              <Typography variant="body2"><strong>Ürün:</strong> {e.urun_adi || '-'}</Typography>
-              <Typography variant="body2"><strong>Platform:</strong> {e.platform_adi || '-'}</Typography>
-              <Typography variant="body2"><strong>Adet:</strong> {miktar}</Typography>
-              <Typography variant="body2"><strong>Tarih:</strong> {formatDate(e.tarih)}</Typography>
+              <Typography variant="subtitle2" color="#C62828" fontWeight="bold" gutterBottom>
+                Ürün Bilgileri
+              </Typography>
+              <Typography variant="body2">
+                <strong>Ürün:</strong> {e.urun_adi || '-'}
+              </Typography>
+              <Typography variant="body2">
+                <strong>Platform:</strong> {e.platform_adi || '-'}
+              </Typography>
+              <Typography variant="body2">
+                <strong>Adet:</strong> {miktar}
+              </Typography>
+              <Typography variant="body2">
+                <strong>Tarih:</strong> {formatDate(e.tarih)}
+              </Typography>
             </Paper>
           </Grid>
           <Grid size={{ xs: 12, md: 4 }}>
             <Paper sx={{ p: 1.5, bgcolor: '#fafafa' }}>
-              <Typography variant="subtitle2" color="#C62828" fontWeight="bold" gutterBottom>Fiyat Bilgileri</Typography>
-              <Typography variant="body2"><strong>Alış Fiyatı:</strong> ₺{formatTL(alis)}</Typography>
-              <Typography variant="body2"><strong>Satış Fiyatı:</strong> ₺{formatTL(satis)}</Typography>
-              <Typography variant="body2"><strong>Toplam Alış:</strong> ₺{formatTL(toplamAlis)}</Typography>
-              <Typography variant="body2"><strong>Toplam Satış:</strong> ₺{formatTL(toplamSatis)}</Typography>
+              <Typography variant="subtitle2" color="#C62828" fontWeight="bold" gutterBottom>
+                Fiyat Bilgileri
+              </Typography>
+              <Typography variant="body2">
+                <strong>Alış Fiyatı:</strong> ₺{formatTL(alis)}
+              </Typography>
+              <Typography variant="body2">
+                <strong>Satış Fiyatı:</strong> ₺{formatTL(satis)}
+              </Typography>
+              <Typography variant="body2">
+                <strong>Toplam Alış:</strong> ₺{formatTL(toplamAlis)}
+              </Typography>
+              <Typography variant="body2">
+                <strong>Toplam Satış:</strong> ₺{formatTL(toplamSatis)}
+              </Typography>
             </Paper>
           </Grid>
           <Grid size={{ xs: 12, md: 4 }}>
             <Paper sx={{ p: 1.5, bgcolor: '#fafafa' }}>
-              <Typography variant="subtitle2" color="#C62828" fontWeight="bold" gutterBottom>Platform Bilgileri</Typography>
-              <Typography variant="body2"><strong>Komisyon Oranı:</strong> %{komisyonOrani}</Typography>
-              <Typography variant="body2"><strong>KDV Oranı:</strong> %{kdvOrani}</Typography>
-              <Typography variant="body2"><strong>Kargo Ücreti:</strong> ₺{formatTL(kargoUcreti)}</Typography>
+              <Typography variant="subtitle2" color="#C62828" fontWeight="bold" gutterBottom>
+                Platform Bilgileri
+              </Typography>
+              <Typography variant="body2">
+                <strong>Komisyon Oranı:</strong> %{komisyonOrani}
+              </Typography>
+              <Typography variant="body2">
+                <strong>KDV Oranı:</strong> %{kdvOrani}
+              </Typography>
+              <Typography variant="body2">
+                <strong>Kargo Ücreti:</strong> ₺{formatTL(kargoUcreti)}
+              </Typography>
             </Paper>
           </Grid>
         </Grid>
 
-        <Typography variant="subtitle2" color="#C62828" fontWeight="bold" gutterBottom>Kesinti Detayları</Typography>
+        <Typography variant="subtitle2" color="#C62828" fontWeight="bold" gutterBottom>
+          Kesinti Detayları
+        </Typography>
         <TableContainer component={Paper} variant="outlined" sx={{ mb: 2, overflowX: 'auto' }}>
           <Table size="small">
             <TableBody>
-              <TableRow><TableCell>Komisyon Tutarı (%{komisyonOrani})</TableCell><TableCell align="right" sx={{ fontWeight: 'bold' }}>₺{formatTL(komisyonTutari / miktar)}</TableCell></TableRow>
-              <TableRow><TableCell>Kargo Ücreti</TableCell><TableCell align="right" sx={{ fontWeight: 'bold' }}>₺{formatTL(kargoUcreti)}</TableCell></TableRow>
-              <TableRow sx={{ bgcolor: '#f5f5f5' }}><TableCell sx={{ fontWeight: 'bold' }}>Toplam Kesinti ({miktar} adet)</TableCell><TableCell align="right" sx={{ fontWeight: 'bold' }}>₺{formatTL(toplamKesinti)}</TableCell></TableRow>
+              <TableRow>
+                <TableCell>Komisyon Tutarı (%{komisyonOrani})</TableCell>
+                <TableCell align="right" sx={{ fontWeight: 'bold' }}>
+                  ₺{formatTL(komisyonTutari / miktar)}
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell>Kargo Ücreti</TableCell>
+                <TableCell align="right" sx={{ fontWeight: 'bold' }}>
+                  ₺{formatTL(kargoUcreti)}
+                </TableCell>
+              </TableRow>
+              <TableRow sx={{ bgcolor: '#f5f5f5' }}>
+                <TableCell sx={{ fontWeight: 'bold' }}>Toplam Kesinti ({miktar} adet)</TableCell>
+                <TableCell align="right" sx={{ fontWeight: 'bold' }}>
+                  ₺{formatTL(toplamKesinti)}
+                </TableCell>
+              </TableRow>
             </TableBody>
           </Table>
         </TableContainer>
 
         <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
           <Paper sx={{ px: 2, py: 1, bgcolor: '#ffebee' }}>
-            <Typography variant="body2">Toplam Satış: <strong>₺{formatTL(toplamSatis)}</strong></Typography>
+            <Typography variant="body2">
+              Toplam Satış: <strong>₺{formatTL(toplamSatis)}</strong>
+            </Typography>
           </Paper>
           <Paper sx={{ px: 2, py: 1, bgcolor: '#fff3e0' }}>
-            <Typography variant="body2">Toplam Maliyet: <strong>₺{formatTL(toplamAlis)}</strong></Typography>
+            <Typography variant="body2">
+              Toplam Maliyet: <strong>₺{formatTL(toplamAlis)}</strong>
+            </Typography>
           </Paper>
           <Paper sx={{ px: 2, py: 1, bgcolor: '#fce4ec' }}>
-            <Typography variant="body2">Toplam Kesinti: <strong>₺{formatTL(toplamKesinti)}</strong></Typography>
+            <Typography variant="body2">
+              Toplam Kesinti: <strong>₺{formatTL(toplamKesinti)}</strong>
+            </Typography>
           </Paper>
           <Paper sx={{ px: 2, py: 1, bgcolor: netKar >= 0 ? '#e8f5e9' : '#ffebee' }}>
-            <Typography variant="body2">Net Kâr: <strong style={{ color: netKar >= 0 ? '#2e7d32' : '#c62828' }}>₺{formatTL(netKar)}</strong> (%{karOrani})</Typography>
+            <Typography variant="body2">
+              Net Kâr: <strong style={{ color: netKar >= 0 ? '#2e7d32' : '#c62828' }}>₺{formatTL(netKar)}</strong> (%{karOrani})
+            </Typography>
           </Paper>
         </Box>
       </DialogContent>

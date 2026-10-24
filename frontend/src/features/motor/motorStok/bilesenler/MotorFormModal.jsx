@@ -13,15 +13,35 @@ const MotorFormModal = ({ form, perms, yatirimcilar, musteri, isMobile }) => {
     <Dialog open={dialog.open} onClose={kapat} maxWidth="md" fullWidth fullScreen={isMobile}>
       <DialogTitle>{dialog.data ? 'Motor Düzenle' : 'Yeni Motor Ekle'}</DialogTitle>
       <DialogContent>
-        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
         <MotorFormBilgi f={f} setFormData={setFormData} dialog={dialog} canAlis={canAlis} canListe={canListe} />
-        <MotorFormYatirimciSatici f={f} setFormData={setFormData} isAdmin={isAdmin} canMusteri={canMusteri} yatirimcilar={yatirimcilar}
-          musteriOptions={musteriOptions} searchMusteri={searchMusteri} />
-        <MotorFormVitrinBelge f={f} setFormData={setFormData} dialog={dialog} canEdit={canEdit} bekleyenBelgeler={bekleyenBelgeler} setBekleyenBelgeler={setBekleyenBelgeler} />
+        <MotorFormYatirimciSatici
+          f={f}
+          setFormData={setFormData}
+          isAdmin={isAdmin}
+          canMusteri={canMusteri}
+          yatirimcilar={yatirimcilar}
+          musteriOptions={musteriOptions}
+          searchMusteri={searchMusteri}
+        />
+        <MotorFormVitrinBelge
+          f={f}
+          setFormData={setFormData}
+          dialog={dialog}
+          canEdit={canEdit}
+          bekleyenBelgeler={bekleyenBelgeler}
+          setBekleyenBelgeler={setBekleyenBelgeler}
+        />
       </DialogContent>
       <DialogActions>
         <Button onClick={kapat}>İptal</Button>
-        <Button variant="contained" onClick={handleSave}>{dialog.data ? 'Güncelle' : 'Kaydet'}</Button>
+        <Button variant="contained" onClick={handleSave}>
+          {dialog.data ? 'Güncelle' : 'Kaydet'}
+        </Button>
       </DialogActions>
     </Dialog>
   );

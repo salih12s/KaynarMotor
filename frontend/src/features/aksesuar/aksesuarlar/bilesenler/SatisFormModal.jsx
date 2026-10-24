@@ -13,7 +13,11 @@ const SatisFormModal = ({ a, isMobile, karGor }) => {
     <Dialog open={dialog.open} onClose={kapat} maxWidth="md" fullWidth fullScreen={isMobile}>
       <DialogTitle>{dialog.data ? 'Satış Düzenle' : 'Yeni Aksesuar Satışı'}</DialogTitle>
       <DialogContent>
-        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
         <MusteriSatisAlanlari formData={formData} setFormData={setFormData} musteriOptions={musteriOptions} searchMusteri={searchMusteri} />
 
         <UrunlerBolumu a={a} isMobile={isMobile} />
@@ -23,7 +27,9 @@ const SatisFormModal = ({ a, isMobile, karGor }) => {
       </DialogContent>
       <DialogActions>
         <Button onClick={kapat}>İptal</Button>
-        <Button variant="contained" onClick={handleSave}>{dialog.data ? 'Güncelle' : 'Kaydet'}</Button>
+        <Button variant="contained" onClick={handleSave}>
+          {dialog.data ? 'Güncelle' : 'Kaydet'}
+        </Button>
       </DialogActions>
     </Dialog>
   );

@@ -6,20 +6,64 @@ import { sayiYaz } from '../../../../shared/utils/bicim';
 const FiyatKarBolumu = ({ f, setFormData, canAlis, canKar, canliKar }) => {
   return (
     <>
-      <Typography variant="subtitle1" fontWeight="bold" sx={{ mt: 3, mb: 1 }}>Fiyat Bilgileri</Typography>
+      <Typography variant="subtitle1" fontWeight="bold" sx={{ mt: 3, mb: 1 }}>
+        Fiyat Bilgileri
+      </Typography>
       <Grid container spacing={2}>
-        {canAlis && <Grid size={{ xs: 12, md: 4 }}><TextField fullWidth label="Alış Fiyatı (₺)" type="number" value={f.alis_fiyati} onChange={e => setFormData({ ...f, alis_fiyati: e.target.value })} /></Grid>}
-        <Grid size={{ xs: 12, md: 4 }}><TextField fullWidth label="Satış Fiyatı (₺)" type="number" value={f.satis_fiyati} onChange={e => setFormData({ ...f, satis_fiyati: e.target.value })} /></Grid>
-        <Grid size={{ xs: 12, md: 4 }}><TextField fullWidth label="Masraflar (₺)" type="number" value={f.masraflar} onChange={e => setFormData({ ...f, masraflar: e.target.value })} helperText="Tamir, bakım, sigorta vb." /></Grid>
-        <Grid size={{ xs: 12, md: 6 }}><TextField fullWidth label="Noter Alış (₺)" type="number" value={f.noter_alis} onChange={e => setFormData({ ...f, noter_alis: e.target.value })} /></Grid>
-        <Grid size={{ xs: 12, md: 6 }}><TextField fullWidth label="Noter Satış (₺)" type="number" value={f.noter_satis} onChange={e => setFormData({ ...f, noter_satis: e.target.value })} /></Grid>
+        {canAlis && (
+          <Grid size={{ xs: 12, md: 4 }}>
+            <TextField
+              fullWidth
+              label="Alış Fiyatı (₺)"
+              type="number"
+              value={f.alis_fiyati}
+              onChange={(e) => setFormData({ ...f, alis_fiyati: e.target.value })}
+            />
+          </Grid>
+        )}
+        <Grid size={{ xs: 12, md: 4 }}>
+          <TextField
+            fullWidth
+            label="Satış Fiyatı (₺)"
+            type="number"
+            value={f.satis_fiyati}
+            onChange={(e) => setFormData({ ...f, satis_fiyati: e.target.value })}
+          />
+        </Grid>
+        <Grid size={{ xs: 12, md: 4 }}>
+          <TextField
+            fullWidth
+            label="Masraflar (₺)"
+            type="number"
+            value={f.masraflar}
+            onChange={(e) => setFormData({ ...f, masraflar: e.target.value })}
+            helperText="Tamir, bakım, sigorta vb."
+          />
+        </Grid>
+        <Grid size={{ xs: 12, md: 6 }}>
+          <TextField fullWidth label="Noter Alış (₺)" type="number" value={f.noter_alis} onChange={(e) => setFormData({ ...f, noter_alis: e.target.value })} />
+        </Grid>
+        <Grid size={{ xs: 12, md: 6 }}>
+          <TextField
+            fullWidth
+            label="Noter Satış (₺)"
+            type="number"
+            value={f.noter_satis}
+            onChange={(e) => setFormData({ ...f, noter_satis: e.target.value })}
+          />
+        </Grid>
         {f.yatirimci_id && canKar && (
           <Grid size={{ xs: 12, md: 6 }}>
-            <TextField fullWidth label="Yatırımcı Kârı (₺)" type="number" value={f.yatirimci_kar}
-              onChange={e => setFormData({ ...f, yatirimci_kar: e.target.value })}
+            <TextField
+              fullWidth
+              label="Yatırımcı Kârı (₺)"
+              type="number"
+              value={f.yatirimci_kar}
+              onChange={(e) => setFormData({ ...f, yatirimci_kar: e.target.value })}
               helperText="Yatırımcıya verilecek tutar; kalanı işletme kârıdır."
               sx={{ '& .MuiInputBase-root': { bgcolor: '#e3f2fd' } }}
-              InputProps={{ startAdornment: <InputAdornment position="start">₺</InputAdornment> }} />
+              InputProps={{ startAdornment: <InputAdornment position="start">₺</InputAdornment> }}
+            />
           </Grid>
         )}
       </Grid>
@@ -28,11 +72,17 @@ const FiyatKarBolumu = ({ f, setFormData, canAlis, canKar, canliKar }) => {
           <Typography variant="h6" sx={{ color: canliKar >= 0 ? 'green' : 'red' }}>
             Net Kâr: <strong>{sayiYaz(canliKar)} ₺</strong>
           </Typography>
-          <Typography variant="caption" color="text.secondary">Kâr = Satış - (Alış + Masraflar + Komisyoncu Tutarı)</Typography>
+          <Typography variant="caption" color="text.secondary">
+            Kâr = Satış - (Alış + Masraflar + Komisyoncu Tutarı)
+          </Typography>
           {f.yatirimci_id ? (
             <Box sx={{ mt: 1, pt: 1, borderTop: '1px dashed #bbb', display: 'flex', justifyContent: 'center', gap: 3, flexWrap: 'wrap' }}>
-              <Typography variant="body2">Yatırımcı Kârı: <strong style={{ color: '#1565C0' }}>{sayiYaz(Number(f.yatirimci_kar) || 0)} ₺</strong></Typography>
-              <Typography variant="body2">Benim Kârım: <strong style={{ color: '#2e7d32' }}>{sayiYaz(canliKar - (Number(f.yatirimci_kar) || 0))} ₺</strong></Typography>
+              <Typography variant="body2">
+                Yatırımcı Kârı: <strong style={{ color: '#1565C0' }}>{sayiYaz(Number(f.yatirimci_kar) || 0)} ₺</strong>
+              </Typography>
+              <Typography variant="body2">
+                Benim Kârım: <strong style={{ color: '#2e7d32' }}>{sayiYaz(canliKar - (Number(f.yatirimci_kar) || 0))} ₺</strong>
+              </Typography>
             </Box>
           ) : null}
         </Paper>
