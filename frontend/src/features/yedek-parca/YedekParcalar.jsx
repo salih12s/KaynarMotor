@@ -176,11 +176,11 @@ const YedekParcalar = () => {
                 <Box sx={{ display: 'flex', gap: 2 }}>
                   <Typography variant="body2">Alış: <strong>{sayiYaz(p.alis_fiyati)} ₺</strong></Typography>
                   <Typography variant="body2">Satış: <strong>{sayiYaz(p.satis_fiyati)} ₺</strong></Typography>
-                  {karGor && <Typography variant="body2" sx={{ color: pKar >= 0 ? 'green' : 'red' }}>Kâr: <strong>{pKar.toLocaleString('tr-TR')} ₺</strong></Typography>}
+                  {karGor && <Typography variant="body2" sx={{ color: pKar >= 0 ? 'green' : 'red' }}>Kâr: <strong>{sayiYaz(pKar)} ₺</strong></Typography>}
                 </Box>
                 <Box sx={{ mt: 0.5 }}>
                   {kalan > 0 ? (
-                    <Chip size="small" label={`Kalan: ₺${kalan.toLocaleString('tr-TR')}`} sx={{ bgcolor: '#fff3e0', color: '#ed6c02', fontWeight: 'bold' }} />
+                    <Chip size="small" label={`Kalan: ₺${sayiYaz(kalan)}`} sx={{ bgcolor: '#fff3e0', color: '#ed6c02', fontWeight: 'bold' }} />
                   ) : (
                     <Chip size="small" label="Ödeme Tamamlandı" sx={{ bgcolor: '#e8f5e9', color: '#2e7d32', fontWeight: 'bold' }} />
                   )}
@@ -215,10 +215,10 @@ const YedekParcalar = () => {
                   <TableCell>{sayiYaz(p.satis_fiyati)}</TableCell>
                   <TableCell>{p.musteri_adi || '-'}</TableCell>
                   <TableCell>{p.musteri_telefon || '-'}</TableCell>
-                  {karGor && <TableCell sx={{ color: pKar >= 0 ? 'green' : 'red', fontWeight: 'bold' }}>{pKar.toLocaleString('tr-TR')}</TableCell>}
+                  {karGor && <TableCell sx={{ color: pKar >= 0 ? 'green' : 'red', fontWeight: 'bold' }}>{sayiYaz(pKar)}</TableCell>}
                   <TableCell>
                     {kalan > 0 ? (
-                      <Chip size="small" label={`Kalan: ₺${kalan.toLocaleString('tr-TR')}`} sx={{ bgcolor: '#fff3e0', color: '#ed6c02', fontWeight: 'bold', borderLeft: '3px solid #ed6c02' }} />
+                      <Chip size="small" label={`Kalan: ₺${sayiYaz(kalan)}`} sx={{ bgcolor: '#fff3e0', color: '#ed6c02', fontWeight: 'bold', borderLeft: '3px solid #ed6c02' }} />
                     ) : (
                       <Chip size="small" label="Tamamlandı" sx={{ bgcolor: '#e8f5e9', color: '#2e7d32', fontWeight: 'bold', borderLeft: '3px solid #2e7d32' }} />
                     )}
@@ -304,7 +304,7 @@ const YedekParcalar = () => {
           </Grid>
           {karGor && (
           <Paper sx={{ p: 1, mt: 2, textAlign: 'center', bgcolor: kar >= 0 ? '#e8f5e9' : '#ffebee' }}>
-            <Typography sx={{ color: kar >= 0 ? 'green' : 'red' }}>Kâr: <strong>{kar.toLocaleString('tr-TR')} ₺</strong></Typography>
+            <Typography sx={{ color: kar >= 0 ? 'green' : 'red' }}>Kâr: <strong>{sayiYaz(kar)} ₺</strong></Typography>
           </Paper>
           )}
           <Box sx={{ mt: 2, p: 1.5, border: '1px solid #e0e0e0', borderRadius: 1 }}>

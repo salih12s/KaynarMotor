@@ -8,6 +8,7 @@ import CalculateIcon from '@mui/icons-material/Calculate';
 import ClearIcon from '@mui/icons-material/Clear';
 import ShareIcon from '@mui/icons-material/Share';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
+import { sayiYaz } from '../../shared/utils/bicim';
 
 // Taksit oranları (nakit fiyat / oran = taksitli toplam)
 export const ORANLAR = [
@@ -17,12 +18,12 @@ export const ORANLAR = [
   { ay: 12, oran: 0.73 },
 ];
 
-export const fmtTL = (v) => `${Math.round(v).toLocaleString('tr-TR')} ₺`;
+export const fmtTL = (v) => `${sayiYaz(Math.round(v))} ₺`;
 
 // Para formatlı input yardımcıları: "50000" -> "50.000", girilen değerden sayı çıkarır
 export const formatParaInput = (val) => {
   const digits = String(val ?? '').replace(/\D/g, '');
-  return digits ? parseInt(digits, 10).toLocaleString('tr-TR') : '';
+  return digits ? sayiYaz(parseInt(digits, 10)) : '';
 };
 export const paraToNumber = (val) => {
   const digits = String(val ?? '').replace(/\D/g, '');

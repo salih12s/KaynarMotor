@@ -102,8 +102,8 @@ const IsEmriDetayModal = ({ open, data, onClose, onEdit, isMobile }) => {
                     return (
                       <Paper key={i} variant="outlined" sx={{ p: 1.5 }}>
                         <Typography variant="body2" fontWeight="bold">{p.takilan_parca}</Typography>
-                        <Typography variant="caption" color="text.secondary">Adet: {p.adet} • Birim: ₺{sayiYaz(p.birim_fiyat)} • Toplam: ₺{pSatis.toLocaleString('tr-TR')}</Typography>
-                        <Typography variant="caption" className="no-print" sx={{ display: 'block' }}>Maliyet: ₺{pMaliyet.toLocaleString('tr-TR')}{karGor && <> • <span style={{ color: pKar >= 0 ? '#2e7d32' : '#c62828', fontWeight: 'bold' }}>Kâr: ₺{pKar.toLocaleString('tr-TR')}</span></>}</Typography>
+                        <Typography variant="caption" color="text.secondary">Adet: {p.adet} • Birim: ₺{sayiYaz(p.birim_fiyat)} • Toplam: ₺{sayiYaz(pSatis)}</Typography>
+                        <Typography variant="caption" className="no-print" sx={{ display: 'block' }}>Maliyet: ₺{sayiYaz(pMaliyet)}{karGor && <> • <span style={{ color: pKar >= 0 ? '#2e7d32' : '#c62828', fontWeight: 'bold' }}>Kâr: ₺{sayiYaz(pKar)}</span></>}</Typography>
                       </Paper>
                     );
                   })}
@@ -130,9 +130,9 @@ const IsEmriDetayModal = ({ open, data, onClose, onEdit, isMobile }) => {
                             <TableCell>{p.takilan_parca}</TableCell>
                             <TableCell>{p.adet}</TableCell>
                             <TableCell>₺{sayiYaz(p.birim_fiyat)}</TableCell>
-                            <TableCell sx={{ fontWeight: 'bold' }}>₺{pSatis.toLocaleString('tr-TR')}</TableCell>
-                            <TableCell className="no-print">₺{pMaliyet.toLocaleString('tr-TR')}</TableCell>
-                            {karGor && <TableCell className="no-print" sx={{ color: pKar >= 0 ? '#2e7d32' : '#c62828', fontWeight: 'bold' }}>₺{pKar.toLocaleString('tr-TR')}</TableCell>}
+                            <TableCell sx={{ fontWeight: 'bold' }}>₺{sayiYaz(pSatis)}</TableCell>
+                            <TableCell className="no-print">₺{sayiYaz(pMaliyet)}</TableCell>
+                            {karGor && <TableCell className="no-print" sx={{ color: pKar >= 0 ? '#2e7d32' : '#c62828', fontWeight: 'bold' }}>₺{sayiYaz(pKar)}</TableCell>}
                           </TableRow>
                         );
                       })}
@@ -142,14 +142,14 @@ const IsEmriDetayModal = ({ open, data, onClose, onEdit, isMobile }) => {
                 )}
                 <Box sx={{ mt: 2, display: 'flex', gap: 3, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
                   <Paper sx={{ px: 2, py: 1, bgcolor: '#ffebee' }}>
-                    <Typography variant="body2">Toplam: <strong>₺{toplamFiyat.toLocaleString('tr-TR')}</strong></Typography>
+                    <Typography variant="body2">Toplam: <strong>₺{sayiYaz(toplamFiyat)}</strong></Typography>
                   </Paper>
                   <Paper sx={{ px: 2, py: 1, bgcolor: '#ffebee' }} className="no-print">
-                    <Typography variant="body2">Maliyet: <strong>₺{toplamMaliyet.toLocaleString('tr-TR')}</strong></Typography>
+                    <Typography variant="body2">Maliyet: <strong>₺{sayiYaz(toplamMaliyet)}</strong></Typography>
                   </Paper>
                   {karGor && (
                   <Paper sx={{ px: 2, py: 1, bgcolor: kar >= 0 ? '#e8f5e9' : '#ffebee' }} className="no-print">
-                    <Typography variant="body2" sx={{ color: kar >= 0 ? '#2e7d32' : '#c62828' }}>Kâr: <strong>₺{kar.toLocaleString('tr-TR')}</strong></Typography>
+                    <Typography variant="body2" sx={{ color: kar >= 0 ? '#2e7d32' : '#c62828' }}>Kâr: <strong>₺{sayiYaz(kar)}</strong></Typography>
                   </Paper>
                   )}
                 </Box>
@@ -181,16 +181,16 @@ const IsEmriDetayModal = ({ open, data, onClose, onEdit, isMobile }) => {
                 <Grid container spacing={2}>
                   <Grid size={{ xs: 4 }}>
                     <Typography variant="caption" color="text.secondary">Toplam Tutar</Typography>
-                    <Typography fontWeight="bold">₺{toplam.toLocaleString('tr-TR')}</Typography>
+                    <Typography fontWeight="bold">₺{sayiYaz(toplam)}</Typography>
                   </Grid>
                   <Grid size={{ xs: 4 }}>
                     <Typography variant="caption" color="text.secondary">Ödenen</Typography>
-                    <Typography fontWeight="bold" sx={{ color: '#2e7d32' }}>₺{odenen.toLocaleString('tr-TR')}</Typography>
+                    <Typography fontWeight="bold" sx={{ color: '#2e7d32' }}>₺{sayiYaz(odenen)}</Typography>
                   </Grid>
                   <Grid size={{ xs: 4 }}>
                     <Typography variant="caption" color="text.secondary">Kalan Borç</Typography>
                     <Typography fontWeight="bold" sx={{ color: kalan > 0 ? '#C62828' : '#2e7d32' }}>
-                      {kalan > 0 ? `₺${kalan.toLocaleString('tr-TR')}` : 'Tamamlandı'}
+                      {kalan > 0 ? `₺${sayiYaz(kalan)}` : 'Tamamlandı'}
                     </Typography>
                   </Grid>
                 </Grid>

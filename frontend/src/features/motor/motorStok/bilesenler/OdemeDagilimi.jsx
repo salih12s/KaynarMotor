@@ -2,6 +2,7 @@ import React from 'react';
 import { Box, Typography, Button, IconButton, TextField, Alert, Grid, MenuItem } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import CloseIcon from '@mui/icons-material/Close';
+import { sayiYaz } from '../../../../shared/utils/bicim';
 
 // Hızlı satış: parçalı ödeme satırları ve toplam / girilen / kalan özeti.
 const OdemeDagilimi = ({ hs }) => {
@@ -28,7 +29,7 @@ const OdemeDagilimi = ({ hs }) => {
       {odemeKalemleri.length > 0 && (() => {
         const satis = parseFloat(hizliForm.satis_fiyati || 0);
         const kalan = satis - odemeToplam;
-        const fmt = (v) => `₺${v.toLocaleString('tr-TR')}`;
+        const fmt = (v) => `₺${sayiYaz(v)}`;
         return (
           <Box sx={{ mt: 1.5, p: 1.5, borderRadius: 1, bgcolor: '#f5f5f5', border: '1px solid #e0e0e0' }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between' }}><Typography variant="body2">Toplam Satış:</Typography><Typography variant="body2" fontWeight="bold">{fmt(satis)}</Typography></Box>

@@ -5,6 +5,7 @@ import PhoneIcon from '@mui/icons-material/Phone';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import { vitrinService } from './vitrinApi';
 import { hesaplaTaksit } from '../taksit/TaksitHesaplama';
+import { sayiYaz } from '../../shared/utils/bicim';
 
 // Müşteriye açık vitrin sayfalarının (ilan listesi + ilan detayı) ortak görsel dili.
 // Yönetim panelinin temasından bağımsızdır; yalnızca bu sayfaları sarar.
@@ -71,7 +72,7 @@ export const VitrinAcikTema = ({ children }) => <ThemeProvider theme={acikTema}>
 // Klavye ile gezinenler için belirgin odak çerçevesi
 export const ODAK = { '&:focus-visible': { outline: `3px solid ${RENK.kirmiziAcik}`, outlineOffset: 3 } };
 
-export const tlYaz = (v) => `${Math.round(Number(v) || 0).toLocaleString('tr-TR')} ₺`;
+export const tlYaz = (v) => `${sayiYaz(Math.round(Number(v) || 0))} ₺`;
 
 // WhatsApp linki üret (TR numarası, baştaki 0 -> 90)
 export const waLink = (tel) => {
@@ -133,7 +134,7 @@ const kunyeParcalari = (u) => {
   const sifir = u.motor_durumu === 'sifir';
   return [
     u.yil,
-    sifir ? 'Sıfır km' : (u.km ? `${Number(u.km).toLocaleString('tr-TR')} km` : null),
+    sifir ? 'Sıfır km' : (u.km ? `${sayiYaz(u.km)} km` : null),
     u.motor_cc ? `${u.motor_cc} cc` : null,
     u.segment,
   ].filter(Boolean);
@@ -151,7 +152,7 @@ export const IlanKarti = ({ u, onClick, kucuk = false }) => {
     u.yil ? { deger: String(u.yil), etiket: 'Model yılı' } : null,
     sifir
       ? { deger: 'Sıfır', etiket: 'Kilometre' }
-      : (u.km ? { deger: Number(u.km).toLocaleString('tr-TR'), etiket: 'Kilometre' } : null),
+      : (u.km ? { deger: sayiYaz(u.km), etiket: 'Kilometre' } : null),
     u.motor_cc ? { deger: String(u.motor_cc), etiket: 'Hacim (cc)' } : null,
   ].filter(Boolean) : [];
   const etiketler = [

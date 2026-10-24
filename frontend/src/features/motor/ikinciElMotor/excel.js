@@ -12,7 +12,7 @@ export const excelHtml = (motorlar, { canAlis, canKar }) => {
   const rowsHtml = motorlar.map(m => {
     const cells = [
       m.plaka || '', m.marka || '', m.model || '', m.yil || '',
-      m.km ? Number(m.km).toLocaleString('tr-TR') : '',
+      m.km ? sayiYaz(m.km) : '',
       ...(canAlis ? [num(m.alis_fiyati)] : []), num(m.satis_fiyati), num(m.noter_alis), num(m.noter_satis),
       ...(canKar ? [num(m.kar)] : []),
       m.satici_adi || '', m.alici_adi || '', m.alici_telefon || '',

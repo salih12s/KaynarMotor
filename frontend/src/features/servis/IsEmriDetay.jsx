@@ -172,14 +172,14 @@ const IsEmriDetay = () => {
               )}
               <Box sx={{ mt: 2, display: 'flex', gap: 3, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
                 <Paper sx={{ px: 2, py: 1, bgcolor: '#ffebee' }}>
-                  <Typography variant="body2">Toplam: <strong>₺{toplamFiyat.toLocaleString('tr-TR')}</strong></Typography>
+                  <Typography variant="body2">Toplam: <strong>₺{sayiYaz(toplamFiyat)}</strong></Typography>
                 </Paper>
                 <Paper sx={{ px: 2, py: 1, bgcolor: '#ffebee' }}>
-                  <Typography variant="body2">Maliyet: <strong>₺{toplamMaliyet.toLocaleString('tr-TR')}</strong></Typography>
+                  <Typography variant="body2">Maliyet: <strong>₺{sayiYaz(toplamMaliyet)}</strong></Typography>
                 </Paper>
                 {karGor && (
                 <Paper sx={{ px: 2, py: 1, bgcolor: kar >= 0 ? '#e8f5e9' : '#ffebee' }}>
-                  <Typography variant="body2" sx={{ color: kar >= 0 ? '#2e7d32' : '#c62828' }}>Kâr: <strong>₺{kar.toLocaleString('tr-TR')}</strong></Typography>
+                  <Typography variant="body2" sx={{ color: kar >= 0 ? '#2e7d32' : '#c62828' }}>Kâr: <strong>₺{sayiYaz(kar)}</strong></Typography>
                 </Paper>
                 )}
               </Box>
@@ -197,7 +197,7 @@ const IsEmriDetay = () => {
           <Divider sx={{ mb: 1 }} />
           {parseFloat(data.kalan_odeme || 0) > 0 ? (
             <Typography variant="h6" sx={{ color: '#ed6c02' }}>
-              Kalan Ödeme: <strong>₺{parseFloat(data.kalan_odeme).toLocaleString('tr-TR')}</strong>
+              Kalan Ödeme: <strong>₺{sayiYaz(data.kalan_odeme)}</strong>
             </Typography>
           ) : (
             <Typography variant="h6" sx={{ color: '#2e7d32' }}>Ödeme Tamamlandı ✓</Typography>

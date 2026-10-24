@@ -19,6 +19,7 @@ import {
   VitrinTema, RENK, YAZI, ODAK, tlYaz, waLink, videoKaynak, enUzunTaksit,
   iletisimKisileri, KisiDugmeleri, IlanKarti, ilanIzgarasi
 } from '../VitrinOrtak';
+import { sayiYaz } from '../../../shared/utils/bicim';
 
 const bolumBasligi = { fontFamily: YAZI.baslik, fontWeight: 700, fontSize: { xs: 24, md: 28 }, lineHeight: 1.1, mb: 1.5 };
 const sahneDugmesi = { position: 'absolute', color: '#fff', bgcolor: 'rgba(0,0,0,.5)', '&:hover': { bgcolor: 'rgba(0,0,0,.75)' }, ...ODAK };
@@ -126,7 +127,7 @@ const StorefrontDetay = () => {
     detay.model && { label: 'Model', value: detay.model },
     detay.yil && { label: 'Yıl', value: String(detay.yil) },
     motor && { label: 'Durum', value: sifir ? 'Sıfır' : 'İkinci el' },
-    motor && !sifir && (detay.km !== null && detay.km !== undefined && detay.km !== '') && { label: 'Kilometre', value: `${Number(detay.km).toLocaleString('tr-TR')} km` },
+    motor && !sifir && (detay.km !== null && detay.km !== undefined && detay.km !== '') && { label: 'Kilometre', value: `${sayiYaz(detay.km)} km` },
     detay.motor_cc && { label: 'Motor hacmi', value: `${detay.motor_cc} cc` },
     detay.segment && { label: 'Tip', value: detay.segment },
     detay.hasar_kaydi && { label: 'Hasar kaydı', value: detay.hasar_kaydi },

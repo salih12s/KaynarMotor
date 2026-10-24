@@ -21,7 +21,7 @@ const MotorListesi = ({ filteredMotorlar, isMobile, perms, onDetay, onHizliSatis
               <Typography variant="caption" color="text.secondary">{tarihYaz(m.tarih)}</Typography>
             </Box>
             <Typography variant="body2">{m.marka} {m.model} {m.yil ? `(${m.yil})` : ''}</Typography>
-            <Typography variant="body2" color="text.secondary">{m.km ? Number(m.km).toLocaleString('tr-TR') + ' km' : ''}{canMusteri ? ` • ${m.satici_adi || '-'}` : ''}</Typography>
+            <Typography variant="body2" color="text.secondary">{m.km ? sayiYaz(m.km) + ' km' : ''}{canMusteri ? ` • ${m.satici_adi || '-'}` : ''}</Typography>
             <Box sx={{ display: 'flex', gap: 2, mt: 0.5, flexWrap: 'wrap' }}>
               {canAlis && <Typography variant="body2">Alım: <strong>₺{sayiYaz(m.alis_fiyati)}</strong></Typography>}
               {canAlis && <Typography variant="body2">Noter: <strong>₺{sayiYaz(m.noter_alis)}</strong></Typography>}
@@ -66,7 +66,7 @@ const MotorListesi = ({ filteredMotorlar, isMobile, perms, onDetay, onHizliSatis
                 <TableCell>{m.marka || '-'}</TableCell>
                 <TableCell>{m.model || '-'}</TableCell>
                 <TableCell>{m.yil || '-'}</TableCell>
-                <TableCell>{m.km ? Number(m.km).toLocaleString('tr-TR') : '-'}</TableCell>
+                <TableCell>{m.km ? sayiYaz(m.km) : '-'}</TableCell>
                 {canListe && <TableCell sx={{ color: '#1565C0', fontWeight: 'bold' }}>{sayiYaz(m.liste_fiyati)}</TableCell>}
                 {canAlis && <TableCell>{sayiYaz(m.alis_fiyati)}</TableCell>}
                 {canAlis && <TableCell>{sayiYaz(m.noter_alis)}</TableCell>}

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Box, Typography } from '@mui/material';
+import { sayiYaz } from '../../../../shared/utils/bicim';
 
 // Hızlı satış: kâr önizlemesi (yalnızca admin görür): satış - alış - masraf - komisyon, yatırımcı payı düşülmüş işletme kârı.
 const KarOnizleme = ({ hs, canKar }) => {
@@ -12,7 +13,7 @@ const KarOnizleme = ({ hs, canKar }) => {
     const kar = satis - alis - masraf - komisyon;
     const yatirimciKar = hizliSatis.motor.yatirimci_id ? parseFloat(hizliForm.yatirimci_kar || 0) : 0;
     const benimKar = kar - yatirimciKar;
-    const fmt = (v) => `₺${v.toLocaleString('tr-TR')}`;
+    const fmt = (v) => `₺${sayiYaz(v)}`;
     return (
       <Box sx={{ mt: 2, p: 1.5, borderRadius: 1, bgcolor: '#f1f8e9', border: '1px solid #c5e1a5' }}>
         <Typography variant="subtitle2" fontWeight="bold" sx={{ mb: 0.5 }}>Kâr Önizleme</Typography>

@@ -81,8 +81,8 @@ const ParcaBolumu = ({ parcalar, newParca, setNewParca, stokOptions, addParca, r
               <Paper key={i} variant="outlined" sx={{ p: 1.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Box sx={{ flex: 1 }}>
                   <Typography variant="body2" fontWeight="bold">{p.takilan_parca}</Typography>
-                  <Typography variant="caption" color="text.secondary">Adet: {p.adet} • Satış: ₺{pSatis.toLocaleString('tr-TR')} • Maliyet: ₺{pMaliyet.toLocaleString('tr-TR')}</Typography>
-                  {karGor && <Typography variant="caption" sx={{ display: 'block', color: pKar >= 0 ? '#2e7d32' : '#c62828', fontWeight: 'bold' }}>Kâr: ₺{pKar.toLocaleString('tr-TR')}</Typography>}
+                  <Typography variant="caption" color="text.secondary">Adet: {p.adet} • Satış: ₺{sayiYaz(pSatis)} • Maliyet: ₺{sayiYaz(pMaliyet)}</Typography>
+                  {karGor && <Typography variant="caption" sx={{ display: 'block', color: pKar >= 0 ? '#2e7d32' : '#c62828', fontWeight: 'bold' }}>Kâr: ₺{sayiYaz(pKar)}</Typography>}
                 </Box>
                 <IconButton size="small" color="error" onClick={() => removeParca(i)}><CloseIcon fontSize="small" /></IconButton>
               </Paper>
@@ -111,9 +111,9 @@ const ParcaBolumu = ({ parcalar, newParca, setNewParca, stokOptions, addParca, r
                   <TableRow key={i}>
                     <TableCell>{p.takilan_parca}</TableCell>
                     <TableCell align="center">{p.adet}</TableCell>
-                    <TableCell align="right">₺{pSatis.toLocaleString('tr-TR')}</TableCell>
-                    <TableCell align="right">₺{pMaliyet.toLocaleString('tr-TR')}</TableCell>
-                    {karGor && <TableCell align="right" sx={{ color: pKar >= 0 ? '#2e7d32' : '#c62828', fontWeight: 'bold' }}>₺{pKar.toLocaleString('tr-TR')}</TableCell>}
+                    <TableCell align="right">₺{sayiYaz(pSatis)}</TableCell>
+                    <TableCell align="right">₺{sayiYaz(pMaliyet)}</TableCell>
+                    {karGor && <TableCell align="right" sx={{ color: pKar >= 0 ? '#2e7d32' : '#c62828', fontWeight: 'bold' }}>₺{sayiYaz(pKar)}</TableCell>}
                     <TableCell align="center">
                       <IconButton size="small" color="error" onClick={() => removeParca(i)}><CloseIcon fontSize="small" /></IconButton>
                     </TableCell>

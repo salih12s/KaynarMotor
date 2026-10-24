@@ -3,6 +3,7 @@ import { Box, Paper, Typography, Table, TableBody, TableCell, TableContainer, Ta
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ScannerIcon from '@mui/icons-material/QrCodeScanner';
+import { sayiYaz } from '../../../../shared/utils/bicim';
 
 // Satış formu: ürün satırları (stoktan seçim, adet/maliyet/satış), barkod okutma; dar ekranda kartlar, geniş ekranda tablo.
 const UrunlerBolumu = ({ a, isMobile }) => {
@@ -43,7 +44,7 @@ const UrunlerBolumu = ({ a, isMobile }) => {
                 <Grid size={4}><TextField fullWidth size="small" type="number" label="Maliyet" value={p.maliyet} onChange={e => updateParca(i, 'maliyet', e.target.value)} /></Grid>
                 <Grid size={4}><TextField fullWidth size="small" type="number" label="Satış" value={p.satis_fiyati} onChange={e => updateParca(i, 'satis_fiyati', e.target.value)} /></Grid>
               </Grid>
-              <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>Toplam: {((Number(p.adet) || 0) * (Number(p.satis_fiyati) || 0)).toLocaleString('tr-TR')} ₺</Typography>
+              <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>Toplam: {sayiYaz((Number(p.adet) || 0) * (Number(p.satis_fiyati) || 0))} ₺</Typography>
             </Paper>
           ))}
         </Box>
@@ -71,7 +72,7 @@ const UrunlerBolumu = ({ a, isMobile }) => {
                   <TableCell><TextField size="small" type="number" value={p.adet} onChange={e => updateParca(i, 'adet', e.target.value)} sx={{ width: 80 }} /></TableCell>
                   <TableCell><TextField size="small" type="number" value={p.maliyet} onChange={e => updateParca(i, 'maliyet', e.target.value)} sx={{ width: 100 }} /></TableCell>
                   <TableCell><TextField size="small" type="number" value={p.satis_fiyati} onChange={e => updateParca(i, 'satis_fiyati', e.target.value)} sx={{ width: 100 }} /></TableCell>
-                  <TableCell>{((Number(p.adet) || 0) * (Number(p.satis_fiyati) || 0)).toLocaleString('tr-TR')} ₺</TableCell>
+                  <TableCell>{sayiYaz((Number(p.adet) || 0) * (Number(p.satis_fiyati) || 0))} ₺</TableCell>
                   <TableCell><IconButton size="small" color="error" onClick={() => removeParca(i)}><DeleteIcon /></IconButton></TableCell>
                 </TableRow>
               ))}

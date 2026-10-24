@@ -30,7 +30,7 @@ const MotorDetayModal = ({ open, data, onClose, isMobile }) => {
               <Typography variant="body2"><strong>Marka:</strong> {m.marka || '-'}</Typography>
               <Typography variant="body2"><strong>Model:</strong> {m.model || '-'}</Typography>
               <Typography variant="body2"><strong>Yıl:</strong> {m.yil || '-'}</Typography>
-              <Typography variant="body2"><strong>KM:</strong> {m.km ? Number(m.km).toLocaleString('tr-TR') + ' km' : '-'}</Typography>
+              <Typography variant="body2"><strong>KM:</strong> {m.km ? sayiYaz(m.km) + ' km' : '-'}</Typography>
             </Paper>
           </Grid>
           <Grid size={{ xs: 12, md: 4 }}>

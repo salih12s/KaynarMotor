@@ -9,6 +9,7 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import ArchiveIcon from '@mui/icons-material/Archive';
 import { vitrinService } from '../../vitrinApi';
+import { sayiYaz } from '../../../../shared/utils/bicim';
 
 // Tek bir ilan kartı: sıra kutusu / sürükleme tutacağı, görsel, rozetler, fiyat, yayın düğmesi ve işlemler.
 const IlanKarti = ({ u, index, liste, isAdmin, isMotor, onDuzenle }) => {
@@ -90,10 +91,10 @@ const IlanKarti = ({ u, index, liste, isAdmin, isMotor, onDuzenle }) => {
             {[u.marka, u.model, u.yil].filter(Boolean).join(' ') || '\u00a0'}
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ minHeight: 20 }}>
-            {u.km ? `${Number(u.km).toLocaleString('tr-TR')} km` : '\u00a0'}
+            {u.km ? `${sayiYaz(u.km)} km` : '\u00a0'}
           </Typography>
           <Typography variant="h6" color="error" fontWeight="bold" sx={{ mt: 'auto', pt: 0.5 }}>
-            {Number(u.fiyat).toLocaleString('tr-TR')} ₺
+            {sayiYaz(u.fiyat)} ₺
           </Typography>
         </CardContent>
         {isAdmin && (

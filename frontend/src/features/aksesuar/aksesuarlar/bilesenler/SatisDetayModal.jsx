@@ -2,7 +2,7 @@ import React from 'react';
 import { Box, Paper, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Button, IconButton, Chip, Dialog, DialogTitle, DialogContent, DialogActions, Grid, Divider } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import CloseIcon from '@mui/icons-material/Close';
-import { tarihYaz } from '../../../../shared/utils/bicim';
+import { sayiYaz, tarihYaz } from '../../../../shared/utils/bicim';
 
 // Satış detay penceresi: müşteri/satış/kayıt bilgisi, ürünler (stoktan marka/beden/renk), indirimli toplamlar ve kalan ödeme.
 const SatisDetayModal = ({ open, data, onClose, onDuzenle, stokOptions, karGor, isMobile }) => {
@@ -82,10 +82,10 @@ const SatisDetayModal = ({ open, data, onClose, onDuzenle, stokOptions, karGor, 
                 <Paper key={i} variant="outlined" sx={{ p: 1.5 }}>
                   <Typography variant="body2" fontWeight="bold">{p.urun_adi}</Typography>
                   <Typography variant="caption" color="text.secondary">
-                    Adet: {p.adet} • Maliyet: ₺{pMaliyet.toLocaleString('tr-TR')} • Satış: ₺{pSatis.toLocaleString('tr-TR')}
+                    Adet: {p.adet} • Maliyet: ₺{sayiYaz(pMaliyet)} • Satış: ₺{sayiYaz(pSatis)}
                     {p.marka ? ` • ${p.marka}` : ''}{p.platform ? ` • ${p.platform}` : ''}{p.beden ? ` • ${p.beden}` : ''}{p.renk ? ` • ${p.renk}` : ''}
                   </Typography>
-                  {karGor && <Typography variant="caption" sx={{ display: 'block', color: pKar >= 0 ? '#2e7d32' : '#c62828', fontWeight: 'bold' }}>Kâr: ₺{pKar.toLocaleString('tr-TR')}</Typography>}
+                  {karGor && <Typography variant="caption" sx={{ display: 'block', color: pKar >= 0 ? '#2e7d32' : '#c62828', fontWeight: 'bold' }}>Kâr: ₺{sayiYaz(pKar)}</Typography>}
                 </Paper>
               );
             })}
@@ -113,10 +113,10 @@ const SatisDetayModal = ({ open, data, onClose, onDuzenle, stokOptions, karGor, 
                       <TableCell>{p.beden || '-'}</TableCell>
                       <TableCell>{p.renk || '-'}</TableCell>
                       <TableCell>{p.adet}</TableCell>
-                      <TableCell>₺{pMaliyet.toLocaleString('tr-TR')}</TableCell>
-                      <TableCell>₺{pSatis.toLocaleString('tr-TR')}</TableCell>
-                      <TableCell sx={{ fontWeight: 'bold' }}>₺{pSatis.toLocaleString('tr-TR')}</TableCell>
-                      {karGor && <TableCell sx={{ color: pKar >= 0 ? '#2e7d32' : '#c62828', fontWeight: 'bold' }}>₺{pKar.toLocaleString('tr-TR')}</TableCell>}
+                      <TableCell>₺{sayiYaz(pMaliyet)}</TableCell>
+                      <TableCell>₺{sayiYaz(pSatis)}</TableCell>
+                      <TableCell sx={{ fontWeight: 'bold' }}>₺{sayiYaz(pSatis)}</TableCell>
+                      {karGor && <TableCell sx={{ color: pKar >= 0 ? '#2e7d32' : '#c62828', fontWeight: 'bold' }}>₺{sayiYaz(pKar)}</TableCell>}
                     </TableRow>
                   );
                 })}
@@ -131,29 +131,29 @@ const SatisDetayModal = ({ open, data, onClose, onDuzenle, stokOptions, karGor, 
         <Box sx={{ mt: 2, display: 'flex', gap: 2, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
           {dIndirim > 0 && (
             <Paper sx={{ px: 2, py: 1, bgcolor: '#f5f5f5' }}>
-              <Typography variant="body2">Ara Toplam: <strong>₺{dBrutSatis.toLocaleString('tr-TR')}</strong></Typography>
+              <Typography variant="body2">Ara Toplam: <strong>₺{sayiYaz(dBrutSatis)}</strong></Typography>
             </Paper>
           )}
           {dIndirim > 0 && (
             <Paper sx={{ px: 2, py: 1, bgcolor: '#fce4ec' }}>
-              <Typography variant="body2" sx={{ color: '#c62828' }}>İndirim: <strong>−₺{dIndirim.toLocaleString('tr-TR')}</strong></Typography>
+              <Typography variant="body2" sx={{ color: '#c62828' }}>İndirim: <strong>−₺{sayiYaz(dIndirim)}</strong></Typography>
             </Paper>
           )}
           <Paper sx={{ px: 2, py: 1, bgcolor: '#ffebee' }}>
-            <Typography variant="body2">Toplam Satış: <strong>₺{dNetSatis.toLocaleString('tr-TR')}</strong></Typography>
+            <Typography variant="body2">Toplam Satış: <strong>₺{sayiYaz(dNetSatis)}</strong></Typography>
           </Paper>
           <Paper sx={{ px: 2, py: 1, bgcolor: '#fff3e0' }}>
-            <Typography variant="body2">Maliyet: <strong>₺{dToplamMaliyet.toLocaleString('tr-TR')}</strong></Typography>
+            <Typography variant="body2">Maliyet: <strong>₺{sayiYaz(dToplamMaliyet)}</strong></Typography>
           </Paper>
           {karGor && (
           <Paper sx={{ px: 2, py: 1, bgcolor: '#e8f5e9' }}>
-            <Typography variant="body2">Kâr: <strong style={{ color: dKar >= 0 ? '#2e7d32' : '#c62828' }}>₺{dKar.toLocaleString('tr-TR')}</strong></Typography>
+            <Typography variant="body2">Kâr: <strong style={{ color: dKar >= 0 ? '#2e7d32' : '#c62828' }}>₺{sayiYaz(dKar)}</strong></Typography>
           </Paper>
           )}
         </Box>
         <Paper sx={{ mt: 2, p: 1.5, bgcolor: parseFloat(d.kalan_odeme || 0) > 0 ? '#fff3e0' : '#e8f5e9', borderLeft: '4px solid', borderColor: parseFloat(d.kalan_odeme || 0) > 0 ? '#ed6c02' : '#2e7d32' }}>
           <Typography variant="subtitle2" fontWeight="bold" sx={{ color: parseFloat(d.kalan_odeme || 0) > 0 ? '#ed6c02' : '#2e7d32' }}>
-            {parseFloat(d.kalan_odeme || 0) > 0 ? `Kalan Ödeme: ₺${parseFloat(d.kalan_odeme).toLocaleString('tr-TR')}` : 'Ödeme Tamamlandı ✓'}
+            {parseFloat(d.kalan_odeme || 0) > 0 ? `Kalan Ödeme: ₺${sayiYaz(d.kalan_odeme)}` : 'Ödeme Tamamlandı ✓'}
           </Typography>
         </Paper>
       </DialogContent>

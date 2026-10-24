@@ -44,7 +44,7 @@ const MotorDetayModal = ({ open, data, onClose, printRef, isMobile, canAlis, can
               <InfoRow label="Marka" value={data.marka} />
               <InfoRow label="Model" value={data.model} />
               <InfoRow label="Yıl" value={data.yil} />
-              <InfoRow label="KM" value={data.km ? Number(data.km).toLocaleString('tr-TR') : null} />
+              <InfoRow label="KM" value={data.km ? sayiYaz(data.km) : null} />
               <InfoRow label="Alım Tarihi" value={tarihYaz(data.tarih)} />
               <InfoRow label="Satış Tarihi" value={tarihYaz(data.satis_tarihi)} />
               <InfoRow label="Durum" value={data.durum === 'stokta' ? 'Stokta' : data.durum === 'kapora' ? 'Kapora' : data.durum === 'depo_serviste' ? 'Depo/Serviste' : data.durum === 'devir_bekliyor' ? 'Devir Bekliyor' : data.durum === 'tamamlandi' ? 'Tamamlandı' : data.durum === 'perte' ? 'Perte' : data.durum} />
@@ -71,7 +71,7 @@ const MotorDetayModal = ({ open, data, onClose, printRef, isMobile, canAlis, can
                 <Grid size={{ xs: 12, md: 3 }}><InfoRow label="İsim Soyisim" value={data.alici_adi} /></Grid>
                 <Grid size={{ xs: 12, md: 3 }}><InfoRow label="TC Kimlik" value={data.alici_tc} /></Grid>
                 <Grid size={{ xs: 12, md: 3 }}><InfoRow label="Telefon" value={data.alici_telefon} /></Grid>
-                <Grid size={{ xs: 12, md: 3 }}><InfoRow label="Kalan Ödeme" value={parseFloat(data.kalan_odeme || 0) > 0 ? `₺${parseFloat(data.kalan_odeme).toLocaleString('tr-TR')}` : 'Tamamlandı ✓'} /></Grid>
+                <Grid size={{ xs: 12, md: 3 }}><InfoRow label="Kalan Ödeme" value={parseFloat(data.kalan_odeme || 0) > 0 ? `₺${sayiYaz(data.kalan_odeme)}` : 'Tamamlandı ✓'} /></Grid>
               </Grid>
             </Box>
           )}

@@ -2,6 +2,7 @@ import React from 'react';
 import { Box, Paper, Typography, Grid, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Dialog, DialogTitle, DialogContent, DialogActions, Button } from '@mui/material';
 import { formatDate } from '../bicim';
 import DurumChip from '../bilesenler/DurumChip';
+import { sayiYaz } from '../../../shared/utils/bicim';
 
 // Aksesuar satış detay penceresi; ürünlerin marka/beden/renk bilgisi stok listesinden eşlenir.
 const AksesuarDetayModal = ({ open, data, onClose, isMobile, stokOptions }) => {
@@ -71,10 +72,10 @@ const AksesuarDetayModal = ({ open, data, onClose, isMobile, stokOptions }) => {
                 <Paper key={i} variant="outlined" sx={{ p: 1.5 }}>
                   <Typography variant="body2" fontWeight="bold">{p.urun_adi}</Typography>
                   <Typography variant="caption" color="text.secondary">
-                    Adet: {p.adet} • Maliyet: ₺{pMaliyet.toLocaleString('tr-TR')} • Satış: ₺{pSatis.toLocaleString('tr-TR')}
+                    Adet: {p.adet} • Maliyet: ₺{sayiYaz(pMaliyet)} • Satış: ₺{sayiYaz(pSatis)}
                     {p.marka ? ` • ${p.marka}` : ''}{p.platform ? ` • ${p.platform}` : ''}{p.beden ? ` • ${p.beden}` : ''}{p.renk ? ` • ${p.renk}` : ''}
                   </Typography>
-                  <Typography variant="caption" sx={{ display: 'block', color: pKar >= 0 ? '#2e7d32' : '#c62828', fontWeight: 'bold' }}>Kâr: ₺{pKar.toLocaleString('tr-TR')}</Typography>
+                  <Typography variant="caption" sx={{ display: 'block', color: pKar >= 0 ? '#2e7d32' : '#c62828', fontWeight: 'bold' }}>Kâr: ₺{sayiYaz(pKar)}</Typography>
                 </Paper>
               );
             })}
@@ -102,9 +103,9 @@ const AksesuarDetayModal = ({ open, data, onClose, isMobile, stokOptions }) => {
                       <TableCell>{p.beden || '-'}</TableCell>
                       <TableCell>{p.renk || '-'}</TableCell>
                       <TableCell>{p.adet}</TableCell>
-                      <TableCell>₺{pMaliyet.toLocaleString('tr-TR')}</TableCell>
-                      <TableCell>₺{pSatis.toLocaleString('tr-TR')}</TableCell>
-                      <TableCell sx={{ color: pKar >= 0 ? '#2e7d32' : '#c62828', fontWeight: 'bold' }}>₺{pKar.toLocaleString('tr-TR')}</TableCell>
+                      <TableCell>₺{sayiYaz(pMaliyet)}</TableCell>
+                      <TableCell>₺{sayiYaz(pSatis)}</TableCell>
+                      <TableCell sx={{ color: pKar >= 0 ? '#2e7d32' : '#c62828', fontWeight: 'bold' }}>₺{sayiYaz(pKar)}</TableCell>
                     </TableRow>
                   );
                 })}
@@ -117,13 +118,13 @@ const AksesuarDetayModal = ({ open, data, onClose, isMobile, stokOptions }) => {
         )}
         <Box sx={{ mt: 2, display: 'flex', gap: 2, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
           <Paper sx={{ px: 2, py: 1, bgcolor: '#ffebee' }}>
-            <Typography variant="body2">Satış: <strong>₺{topSatis.toLocaleString('tr-TR')}</strong></Typography>
+            <Typography variant="body2">Satış: <strong>₺{sayiYaz(topSatis)}</strong></Typography>
           </Paper>
           <Paper sx={{ px: 2, py: 1, bgcolor: '#fff3e0' }}>
-            <Typography variant="body2">Maliyet: <strong>₺{topMaliyet.toLocaleString('tr-TR')}</strong></Typography>
+            <Typography variant="body2">Maliyet: <strong>₺{sayiYaz(topMaliyet)}</strong></Typography>
           </Paper>
           <Paper sx={{ px: 2, py: 1, bgcolor: '#e8f5e9' }}>
-            <Typography variant="body2">Kâr: <strong style={{ color: topKar >= 0 ? '#2e7d32' : '#c62828' }}>₺{topKar.toLocaleString('tr-TR')}</strong></Typography>
+            <Typography variant="body2">Kâr: <strong style={{ color: topKar >= 0 ? '#2e7d32' : '#c62828' }}>₺{sayiYaz(topKar)}</strong></Typography>
           </Paper>
         </Box>
       </DialogContent>

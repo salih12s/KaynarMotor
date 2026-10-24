@@ -14,7 +14,7 @@ export const isEmriYazdirHtml = (data) => {
       <td style="padding:6px;border:1px solid #ddd">${e(p.takilan_parca)}</td>
       <td style="padding:6px;border:1px solid #ddd;text-align:center">${e(p.adet)}</td>
       <td style="padding:6px;border:1px solid #ddd;text-align:right">₺${sayiYaz(p.birim_fiyat)}</td>
-      <td style="padding:6px;border:1px solid #ddd;text-align:right;font-weight:bold">₺${pSatis.toLocaleString('tr-TR')}</td>
+      <td style="padding:6px;border:1px solid #ddd;text-align:right;font-weight:bold">₺${sayiYaz(pSatis)}</td>
     </tr>`;
   }).join('');
 
@@ -76,7 +76,7 @@ export const isEmriYazdirHtml = (data) => {
       <table><thead><tr>
         <th>Takılan Parça</th><th style="text-align:center">Adet</th><th style="text-align:right">Birim Fiyat</th><th style="text-align:right">Toplam</th>
       </tr></thead><tbody>${parcaRows}</tbody></table>
-      <div class="total-box">Toplam: ₺${toplamFiyat.toLocaleString('tr-TR')}</div>
+      <div class="total-box">Toplam: ₺${sayiYaz(toplamFiyat)}</div>
     ` : '<div style="text-align:center;color:#999;padding:10px">Parça kaydı yok</div>'}
   </div>
   ${data.odeme_detaylari ? `<div class="section"><div class="section-title">Ödeme Detayları</div><div>${e(data.odeme_detaylari)}</div></div>` : ''}

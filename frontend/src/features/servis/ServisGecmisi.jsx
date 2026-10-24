@@ -83,7 +83,7 @@ const ServisGecmisi = () => {
                     <Chip label={durumLabel(s.durum)} size="small" color={durumRenk(s.durum)} />
                   </Box>
                   {s.km ? (
-                    <Typography variant="caption" color="text.secondary">KM: {Number(s.km).toLocaleString('tr-TR')}</Typography>
+                    <Typography variant="caption" color="text.secondary">KM: {sayiYaz(s.km)}</Typography>
                   ) : null}
                   <Divider sx={{ my: 1 }} />
                   {s.islemler.length > 0 ? (

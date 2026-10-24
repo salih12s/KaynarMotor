@@ -3,6 +3,7 @@ import { Box, Paper, Typography, Grid, Table, TableBody, TableCell, TableContain
 import ViewIcon from '@mui/icons-material/Visibility';
 import { formatTL, formatDate, karColor, headerSx } from '../bicim';
 import KartItem from '../bilesenler/KartItem';
+import { sayiYaz } from '../../../shared/utils/bicim';
 
 // İş Emirleri (servis) sekmesi; personel süzgeci üstteki tarih çubuğundadır.
 const IsEmirleri = ({ rapor, isMobile, seciliPersonel, onDetay }) => {
@@ -38,7 +39,7 @@ const IsEmirleri = ({ rapor, isMobile, seciliPersonel, onDetay }) => {
                 <Typography variant="caption" color="text.secondary">{formatDate(ie.tamamlama_tarihi || ie.created_at)}</Typography>
               </Box>
               <Typography variant="body2">{ie.musteri_ad_soyad} • {ie.marka} {ie.model_tip || ''}</Typography>
-              <Typography variant="body2" color="text.secondary">{ie.teslim_eden_teknisyen || ie.olusturan_kisi || '-'} • {ie.km ? `${parseInt(ie.km).toLocaleString('tr-TR')} km` : ''}</Typography>
+              <Typography variant="body2" color="text.secondary">{ie.teslim_eden_teknisyen || ie.olusturan_kisi || '-'} • {ie.km ? `${sayiYaz(parseInt(ie.km))} km` : ''}</Typography>
               <Box sx={{ display: 'flex', gap: 2, mt: 0.5 }}>
                 <Typography variant="body2">Gelir: <strong>{formatTL(ie.gercek_toplam_ucret)} ₺</strong></Typography>
                 <Typography variant="body2" sx={{ color: karColor(ie.kar) }}>Kâr: <strong>{formatTL(ie.kar)} ₺</strong></Typography>
@@ -65,7 +66,7 @@ const IsEmirleri = ({ rapor, isMobile, seciliPersonel, onDetay }) => {
                   <TableCell>{ie.musteri_ad_soyad}</TableCell>
                   <TableCell>{ie.telefon || '-'}</TableCell>
                   <TableCell>{ie.marka} {ie.model_tip || ''}</TableCell>
-                  <TableCell>{ie.km ? `${parseInt(ie.km).toLocaleString('tr-TR')} km` : '-'}</TableCell>
+                  <TableCell>{ie.km ? `${sayiYaz(parseInt(ie.km))} km` : '-'}</TableCell>
                   <TableCell>{ie.teslim_eden_teknisyen || ie.olusturan_kisi || '-'}</TableCell>
                   <TableCell sx={{ maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ie.ariza_sikayetler || '-'}</TableCell>
                   <TableCell>{formatTL(ie.gercek_toplam_ucret)} ₺</TableCell>

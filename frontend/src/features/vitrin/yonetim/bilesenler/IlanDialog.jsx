@@ -5,6 +5,7 @@ import SaveIcon from '@mui/icons-material/Save';
 import MotorAlanlari from './MotorAlanlari';
 import VideoAlani from './VideoAlani';
 import GorselYonetimi from './GorselYonetimi';
+import { sayiYaz } from '../../../../shared/utils/bicim';
 
 // İlan ekleme/düzenleme penceresi. Durum ve işlemler useIlanFormu hook'undan gelir (f).
 const IlanDialog = ({ f, aktifKategori, isMotor, isAksesuar, isAdmin, stokMotorlar, stokAksesuarlar, segmentler, videoLimitMb }) => {
@@ -23,7 +24,7 @@ const IlanDialog = ({ f, aktifKategori, isMotor, isAksesuar, isAdmin, stokMotorl
           {isAksesuar && (
             <Autocomplete
               options={stokAksesuarlar}
-              getOptionLabel={(a) => `${a.stok_adi || ''}${a.marka ? ' • ' + a.marka : ''}${a.satis_fiyati ? ' — ₺' + Number(a.satis_fiyati).toLocaleString('tr-TR') : ''}`.trim()}
+              getOptionLabel={(a) => `${a.stok_adi || ''}${a.marka ? ' • ' + a.marka : ''}${a.satis_fiyati ? ' — ₺' + sayiYaz(a.satis_fiyati) : ''}`.trim()}
               isOptionEqualToValue={(o, v) => o.id === v.id}
               onChange={(e, val) => secStokAksesuar(val)}
               renderInput={(params) => (

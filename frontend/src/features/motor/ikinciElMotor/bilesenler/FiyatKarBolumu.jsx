@@ -1,5 +1,6 @@
 import React from 'react';
 import { Box, Paper, Typography, TextField, Grid, InputAdornment } from '@mui/material';
+import { sayiYaz } from '../../../../shared/utils/bicim';
 
 // Satış formu: fiyat bilgileri ve (yalnızca admin) canlı net kâr.
 const FiyatKarBolumu = ({ f, setFormData, canAlis, canKar, canliKar }) => {
@@ -25,13 +26,13 @@ const FiyatKarBolumu = ({ f, setFormData, canAlis, canKar, canliKar }) => {
       {canKar && (
         <Paper sx={{ p: 2, mt: 2, bgcolor: canliKar >= 0 ? '#e8f5e9' : '#ffebee', textAlign: 'center' }}>
           <Typography variant="h6" sx={{ color: canliKar >= 0 ? 'green' : 'red' }}>
-            Net Kâr: <strong>{canliKar.toLocaleString('tr-TR')} ₺</strong>
+            Net Kâr: <strong>{sayiYaz(canliKar)} ₺</strong>
           </Typography>
           <Typography variant="caption" color="text.secondary">Kâr = Satış - (Alış + Masraflar + Komisyoncu Tutarı)</Typography>
           {f.yatirimci_id ? (
             <Box sx={{ mt: 1, pt: 1, borderTop: '1px dashed #bbb', display: 'flex', justifyContent: 'center', gap: 3, flexWrap: 'wrap' }}>
-              <Typography variant="body2">Yatırımcı Kârı: <strong style={{ color: '#1565C0' }}>{(Number(f.yatirimci_kar) || 0).toLocaleString('tr-TR')} ₺</strong></Typography>
-              <Typography variant="body2">Benim Kârım: <strong style={{ color: '#2e7d32' }}>{(canliKar - (Number(f.yatirimci_kar) || 0)).toLocaleString('tr-TR')} ₺</strong></Typography>
+              <Typography variant="body2">Yatırımcı Kârı: <strong style={{ color: '#1565C0' }}>{sayiYaz(Number(f.yatirimci_kar) || 0)} ₺</strong></Typography>
+              <Typography variant="body2">Benim Kârım: <strong style={{ color: '#2e7d32' }}>{sayiYaz(canliKar - (Number(f.yatirimci_kar) || 0))} ₺</strong></Typography>
             </Box>
           ) : null}
         </Paper>

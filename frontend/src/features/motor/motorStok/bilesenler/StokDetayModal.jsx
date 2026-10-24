@@ -41,7 +41,7 @@ const StokDetayModal = ({ open, data, onClose, printRef, isMobile, perms = {} })
               <InfoRow label="Marka" value={data.marka} />
               <InfoRow label="Model" value={data.model} />
               <InfoRow label="Yıl" value={data.yil} />
-              <InfoRow label="KM" value={data.km ? Number(data.km).toLocaleString('tr-TR') : null} />
+              <InfoRow label="KM" value={data.km ? sayiYaz(data.km) : null} />
               <InfoRow label="Stok Tipi" value={data.stok_tipi === 'konsinye' ? 'Konsinye' : 'Sahip'} />
               <InfoRow label="Alım Tarihi" value={tarihYaz(data.tarih)} />
               {data.yevmiye_no && <InfoRow label="Yevmiye No" value={data.yevmiye_no} />}
@@ -126,7 +126,7 @@ const StokDetayModal = ({ open, data, onClose, printRef, isMobile, perms = {} })
                 {odemeler.map((o, i) => <InfoRow key={i} label={o.tip} value={`₺${sayiYaz(o.tutar)}`} />)}
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', pt: 0.5, mt: 0.5, borderTop: '1px solid #eee' }}>
                   <Typography variant="body2" fontWeight="bold">Toplam Ödeme</Typography>
-                  <Typography variant="body2" fontWeight="bold">₺{toplam.toLocaleString('tr-TR')}</Typography>
+                  <Typography variant="body2" fontWeight="bold">₺{sayiYaz(toplam)}</Typography>
                 </Box>
                 {parseFloat(data.kalan_odeme || 0) > 0 && (
                   <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>

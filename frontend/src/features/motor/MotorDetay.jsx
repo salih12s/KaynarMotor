@@ -83,7 +83,7 @@ const MotorDetay = () => {
                 </Box>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                   <Typography variant="body2" color="text.secondary">KM:</Typography>
-                  <Typography>{data.km ? Number(data.km).toLocaleString('tr-TR') : '-'}</Typography>
+                  <Typography>{data.km ? sayiYaz(data.km) : '-'}</Typography>
                 </Box>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                   <Typography variant="body2" color="text.secondary">Tarih:</Typography>

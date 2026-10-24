@@ -32,7 +32,7 @@ const IsEmriDetayModal = ({ open, data, onClose, isMobile }) => {
               <Typography variant="subtitle2" color="#C62828" fontWeight="bold" gutterBottom>Araç Bilgileri</Typography>
               <Typography variant="body2"><strong>Marka:</strong> {d.marka || '-'}</Typography>
               <Typography variant="body2"><strong>Model/Tip:</strong> {d.model_tip || '-'}</Typography>
-              <Typography variant="body2"><strong>KM:</strong> {d.km ? `${parseInt(d.km).toLocaleString('tr-TR')} km` : '-'}</Typography>
+              <Typography variant="body2"><strong>KM:</strong> {d.km ? `${sayiYaz(parseInt(d.km))} km` : '-'}</Typography>
             </Paper>
           </Grid>
           <Grid size={{ xs: 12, md: 4 }}>
@@ -67,8 +67,8 @@ const IsEmriDetayModal = ({ open, data, onClose, isMobile }) => {
               return (
                 <Paper key={i} variant="outlined" sx={{ p: 1.5 }}>
                   <Typography variant="body2" fontWeight="bold">{p.takilan_parca}</Typography>
-                  <Typography variant="caption" color="text.secondary">Adet: {p.adet} • Birim: ₺{sayiYaz(p.birim_fiyat)} • Toplam: ₺{pSatis.toLocaleString('tr-TR')}</Typography>
-                  <Typography variant="caption" sx={{ display: 'block' }}>Maliyet: ₺{pMaliyet.toLocaleString('tr-TR')} • <span style={{ color: pKar >= 0 ? '#2e7d32' : '#c62828', fontWeight: 'bold' }}>Kâr: ₺{pKar.toLocaleString('tr-TR')}</span></Typography>
+                  <Typography variant="caption" color="text.secondary">Adet: {p.adet} • Birim: ₺{sayiYaz(p.birim_fiyat)} • Toplam: ₺{sayiYaz(pSatis)}</Typography>
+                  <Typography variant="caption" sx={{ display: 'block' }}>Maliyet: ₺{sayiYaz(pMaliyet)} • <span style={{ color: pKar >= 0 ? '#2e7d32' : '#c62828', fontWeight: 'bold' }}>Kâr: ₺{sayiYaz(pKar)}</span></Typography>
                 </Paper>
               );
             })}
@@ -93,9 +93,9 @@ const IsEmriDetayModal = ({ open, data, onClose, isMobile }) => {
                       <TableCell>{p.takilan_parca}</TableCell>
                       <TableCell>{p.adet}</TableCell>
                       <TableCell>₺{sayiYaz(p.birim_fiyat)}</TableCell>
-                      <TableCell sx={{ fontWeight: 'bold' }}>₺{pSatis.toLocaleString('tr-TR')}</TableCell>
-                      <TableCell>₺{pMaliyet.toLocaleString('tr-TR')}</TableCell>
-                      <TableCell sx={{ color: pKar >= 0 ? '#2e7d32' : '#c62828', fontWeight: 'bold' }}>₺{pKar.toLocaleString('tr-TR')}</TableCell>
+                      <TableCell sx={{ fontWeight: 'bold' }}>₺{sayiYaz(pSatis)}</TableCell>
+                      <TableCell>₺{sayiYaz(pMaliyet)}</TableCell>
+                      <TableCell sx={{ color: pKar >= 0 ? '#2e7d32' : '#c62828', fontWeight: 'bold' }}>₺{sayiYaz(pKar)}</TableCell>
                     </TableRow>
                   );
                 })}
@@ -108,13 +108,13 @@ const IsEmriDetayModal = ({ open, data, onClose, isMobile }) => {
         )}
         <Box sx={{ mt: 2, display: 'flex', gap: 2, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
           <Paper sx={{ px: 2, py: 1, bgcolor: '#ffebee' }}>
-            <Typography variant="body2">Toplam: <strong>₺{toplamFiyat.toLocaleString('tr-TR')}</strong></Typography>
+            <Typography variant="body2">Toplam: <strong>₺{sayiYaz(toplamFiyat)}</strong></Typography>
           </Paper>
           <Paper sx={{ px: 2, py: 1, bgcolor: '#fff3e0' }}>
-            <Typography variant="body2">Maliyet: <strong>₺{toplamMaliyet.toLocaleString('tr-TR')}</strong></Typography>
+            <Typography variant="body2">Maliyet: <strong>₺{sayiYaz(toplamMaliyet)}</strong></Typography>
           </Paper>
           <Paper sx={{ px: 2, py: 1, bgcolor: '#e8f5e9' }}>
-            <Typography variant="body2">Kâr: <strong style={{ color: kar >= 0 ? '#2e7d32' : '#c62828' }}>₺{kar.toLocaleString('tr-TR')}</strong></Typography>
+            <Typography variant="body2">Kâr: <strong style={{ color: kar >= 0 ? '#2e7d32' : '#c62828' }}>₺{sayiYaz(kar)}</strong></Typography>
           </Paper>
         </Box>
         {d.odeme_detaylari && (

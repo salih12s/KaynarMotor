@@ -7,6 +7,7 @@ import PrintIcon from '@mui/icons-material/Print';
 import QrIcon from '@mui/icons-material/QrCode2';
 import { printServisQr } from './servisYazdir';
 import { durumRenk, durumLabel, formatTarih } from './isEmriVeri';
+import { sayiYaz } from '../../../shared/utils/bicim';
 
 // Filtrelenmiş iş emirleri: dar ekranda kartlar, geniş ekranda tablo. Kâr sütunu yalnızca karGor için.
 const IsEmriListesi = ({ filtered, isMobile, karGor, isAdmin, onDetay, onYazdir, onDuzenle, onSil }) => {
@@ -26,8 +27,8 @@ const IsEmriListesi = ({ filtered, isMobile, karGor, isAdmin, onDetay, onYazdir,
             <Typography variant="body2" color="text.secondary">{ie.marka} {ie.model_tip} • {ie.telefon || '-'}</Typography>
             <Typography variant="body2" color="text.secondary">{formatTarih(ie.created_at || ie.tarih)} • {ie.teslim_eden_teknisyen || ie.teslim_alan_ad_soyad || ie.olusturan_kisi || '-'}</Typography>
             <Box sx={{ display: 'flex', gap: 2, mt: 0.5 }}>
-              <Typography variant="body2">Toplam: <strong>₺{toplam.toLocaleString('tr-TR')}</strong></Typography>
-              {karGor && <Typography variant="body2" sx={{ color: kar >= 0 ? '#2e7d32' : '#c62828' }}>Kâr: <strong>₺{kar.toLocaleString('tr-TR')}</strong></Typography>}
+              <Typography variant="body2">Toplam: <strong>₺{sayiYaz(toplam)}</strong></Typography>
+              {karGor && <Typography variant="body2" sx={{ color: kar >= 0 ? '#2e7d32' : '#c62828' }}>Kâr: <strong>₺{sayiYaz(kar)}</strong></Typography>}
             </Box>
             <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 0.5 }} onClick={e => e.stopPropagation()}>
               <IconButton size="small" sx={{ color: '#C62828' }} onClick={() => onYazdir(ie.id)}><PrintIcon /></IconButton>
@@ -69,9 +70,9 @@ const IsEmriListesi = ({ filtered, isMobile, karGor, isAdmin, onDetay, onYazdir,
                 </TableCell>
                 <TableCell>{ie.teslim_eden_teknisyen || ie.teslim_alan_ad_soyad || ie.olusturan_kisi || '-'}</TableCell>
                 <TableCell sx={{ maxWidth: 150, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={ie.ariza_sikayetler || ''}>{ie.ariza_sikayetler || '-'}</TableCell>
-                <TableCell sx={{ fontWeight: 'bold' }}>₺{toplam.toLocaleString('tr-TR')}</TableCell>
-                <TableCell sx={{ color: '#C62828' }}>₺{maliyet.toLocaleString('tr-TR')}</TableCell>
-                {karGor && <TableCell sx={{ color: kar >= 0 ? '#2e7d32' : '#c62828', fontWeight: 'bold' }}>₺{kar.toLocaleString('tr-TR')}</TableCell>}
+                <TableCell sx={{ fontWeight: 'bold' }}>₺{sayiYaz(toplam)}</TableCell>
+                <TableCell sx={{ color: '#C62828' }}>₺{sayiYaz(maliyet)}</TableCell>
+                {karGor && <TableCell sx={{ color: kar >= 0 ? '#2e7d32' : '#c62828', fontWeight: 'bold' }}>₺{sayiYaz(kar)}</TableCell>}
                 <TableCell sx={{ whiteSpace: 'nowrap' }}>
                   <IconButton size="small" color="primary" onClick={() => onDetay(ie.id)}><ViewIcon /></IconButton>
                   <IconButton size="small" sx={{ color: '#C62828' }} onClick={() => onYazdir(ie.id)}><PrintIcon /></IconButton>

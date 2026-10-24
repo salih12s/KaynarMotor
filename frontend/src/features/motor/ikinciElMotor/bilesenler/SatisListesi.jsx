@@ -18,7 +18,7 @@ const SatisListesi = ({ filteredMotorlar, isMobile, canAlis, canKar, salt, isAdm
               <Typography variant="caption" color="text.secondary">{tarihYaz(m.satis_tarihi || m.tarih)}</Typography>
             </Box>
             <Typography variant="body2">{m.marka} {m.model} {m.yil ? `(${m.yil})` : ''}</Typography>
-            <Typography variant="body2" color="text.secondary">{m.alici_adi || '-'} • {m.km ? Number(m.km).toLocaleString('tr-TR') + ' km' : ''}</Typography>
+            <Typography variant="body2" color="text.secondary">{m.alici_adi || '-'} • {m.km ? sayiYaz(m.km) + ' km' : ''}</Typography>
             <Box sx={{ display: 'flex', gap: 2, mt: 0.5 }}>
               {canAlis && <Typography variant="body2">Alım: <strong>₺{sayiYaz(m.alis_fiyati)}</strong></Typography>}
             <Typography variant="body2">Satış: <strong>₺{sayiYaz(m.satis_fiyati)}</strong></Typography>
@@ -56,7 +56,7 @@ const SatisListesi = ({ filteredMotorlar, isMobile, canAlis, canKar, salt, isAdm
                 <TableCell>{m.marka || '-'}</TableCell>
                 <TableCell>{m.model || '-'}</TableCell>
                 <TableCell>{m.yil || '-'}</TableCell>
-                <TableCell>{m.km ? Number(m.km).toLocaleString('tr-TR') : '-'}</TableCell>
+                <TableCell>{m.km ? sayiYaz(m.km) : '-'}</TableCell>
                 {canAlis && <TableCell>{sayiYaz(m.alis_fiyati)}</TableCell>}
                 <TableCell>{sayiYaz(m.satis_fiyati)}</TableCell>
                 <TableCell>{sayiYaz(m.noter_alis)}</TableCell>

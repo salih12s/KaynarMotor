@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, Button, Chip } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import { sayiYaz } from '../../../shared/utils/bicim';
 
 // Üstteki sayı çipleri ve "Yeni İş Emri" düğmesi. Kâr çipi yalnızca karGor için.
 const IstatistikSatiri = ({ istatistik: s, karGor, onYeni }) => {
@@ -12,8 +13,8 @@ const IstatistikSatiri = ({ istatistik: s, karGor, onYeni }) => {
     `Ödeme Bekl.: 0`,
     `Tamamlandı: ${s.tamamlandi}`,
     `İptal: 0`,
-    `₺${s.tutar.toLocaleString('tr-TR')}`,
-    ...(karGor ? [`Kar: ₺${s.kar.toLocaleString('tr-TR')}`] : []),
+    `₺${sayiYaz(s.tutar)}`,
+    ...(karGor ? [`Kar: ₺${sayiYaz(s.kar)}`] : []),
   ];
   return (
     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2, alignItems: 'center' }}>

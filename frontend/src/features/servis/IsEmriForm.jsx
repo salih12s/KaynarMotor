@@ -11,6 +11,7 @@ import BackIcon from '@mui/icons-material/ArrowBack';
 import { isEmriService } from './servisApi';
 import { musteriService } from '../musteriler/musteriApi';
 import { useKarGor } from '../auth/AuthContext';
+import { sayiYaz } from '../../shared/utils/bicim';
 
 // Hızlı yazarken eski aramanın yanıtı yeniyi ezmesin
 const sonAra = sonIstek();
@@ -215,7 +216,7 @@ const IsEmriForm = () => {
                     <Grid size={4}><TextField fullWidth size="small" type="number" label="Birim Fiyat" value={p.birim_fiyat} onChange={e => updateParca(i, 'birim_fiyat', e.target.value)} /></Grid>
                     <Grid size={4}><TextField fullWidth size="small" type="number" label="Maliyet" value={p.maliyet} onChange={e => updateParca(i, 'maliyet', e.target.value)} /></Grid>
                   </Grid>
-                  <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>Toplam: {((Number(p.adet) || 0) * (Number(p.birim_fiyat) || 0)).toLocaleString('tr-TR')} ₺</Typography>
+                  <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>Toplam: {sayiYaz((Number(p.adet) || 0) * (Number(p.birim_fiyat) || 0))} ₺</Typography>
                 </Paper>
               ))}
             </Box>
@@ -237,7 +238,7 @@ const IsEmriForm = () => {
                       <TableCell><TextField size="small" type="number" value={p.adet} onChange={e => updateParca(i, 'adet', e.target.value)} sx={{ width: 80 }} /></TableCell>
                       <TableCell><TextField size="small" type="number" value={p.birim_fiyat} onChange={e => updateParca(i, 'birim_fiyat', e.target.value)} sx={{ width: 120 }} /></TableCell>
                       <TableCell><TextField size="small" type="number" value={p.maliyet} onChange={e => updateParca(i, 'maliyet', e.target.value)} sx={{ width: 120 }} /></TableCell>
-                      <TableCell>{((Number(p.adet) || 0) * (Number(p.birim_fiyat) || 0)).toLocaleString('tr-TR')} ₺</TableCell>
+                      <TableCell>{sayiYaz((Number(p.adet) || 0) * (Number(p.birim_fiyat) || 0))} ₺</TableCell>
                       <TableCell><IconButton size="small" color="error" onClick={() => removeParca(i)}><DeleteIcon /></IconButton></TableCell>
                     </TableRow>
                   ))}
@@ -247,9 +248,9 @@ const IsEmriForm = () => {
             )
           )}
           <Box sx={{ mt: 2, display: 'flex', gap: 4, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
-            <Typography>Toplam: <strong>{toplamFiyat.toLocaleString('tr-TR')} ₺</strong></Typography>
-            <Typography>Maliyet: <strong>{toplamMaliyet.toLocaleString('tr-TR')} ₺</strong></Typography>
-            {karGor && <Typography sx={{ color: kar >= 0 ? 'green' : 'red' }}>Kâr: <strong>{kar.toLocaleString('tr-TR')} ₺</strong></Typography>}
+            <Typography>Toplam: <strong>{sayiYaz(toplamFiyat)} ₺</strong></Typography>
+            <Typography>Maliyet: <strong>{sayiYaz(toplamMaliyet)} ₺</strong></Typography>
+            {karGor && <Typography sx={{ color: kar >= 0 ? 'green' : 'red' }}>Kâr: <strong>{sayiYaz(kar)} ₺</strong></Typography>}
           </Box>
         </Paper>
 

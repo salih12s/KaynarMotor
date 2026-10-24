@@ -153,7 +153,7 @@ const AksesuarStok = () => {
     <Box>
       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2, alignItems: 'center' }}>
         <Chip label={`Toplam: ${totalUrun} ürün`} sx={{ bgcolor: '#ffebee', color: '#C62828', fontWeight: 'bold', fontSize: '0.8rem', borderLeft: '4px solid #C62828' }} />
-        <Chip label={`Envanter: ₺${envanter.toLocaleString('tr-TR')}`} sx={{ bgcolor: '#ffebee', color: '#C62828', fontWeight: 'bold', fontSize: '0.8rem', borderLeft: '4px solid #C62828' }} />
+        <Chip label={`Envanter: ₺${sayiYaz(envanter)}`} sx={{ bgcolor: '#ffebee', color: '#C62828', fontWeight: 'bold', fontSize: '0.8rem', borderLeft: '4px solid #C62828' }} />
         <Box sx={{ flexGrow: 1 }} />
         <Button variant="outlined" startIcon={<UploadIcon />} onClick={() => setImportDialog(true)}>İçe Aktar</Button>
         <Button variant="contained" size="large" startIcon={<AddIcon />} onClick={() => openDialog()}>Yeni Stok</Button>
