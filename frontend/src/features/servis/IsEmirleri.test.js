@@ -277,7 +277,7 @@ describe('İş Emirleri: süzgeçler', () => {
     expect(authService.getPersonelListesi).toHaveBeenCalledTimes(1);
   });
 
-  test('önbellek: daha önce bakılan duruma dönünce liste sunucuya gitmeden gelir', async () => {
+  test('önbellek: daha önce bakılan duruma 30 sn içinde dönünce liste sunucuya gitmeden gelir (sonrası tazelenir)', async () => {
     const { user } = await ekranAc();
     await durumSec(user, 'Tamamlandı');
     await waitFor(() => expect(screen.queryByText('Veli Demir')).not.toBeInTheDocument());
