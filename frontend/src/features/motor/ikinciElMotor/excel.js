@@ -1,9 +1,9 @@
 // Excel (HTML tablosu olarak .xls) dışa aktarma. excelHtml saf; excelIndir tarayıcıda dosya indirir.
 import { bugunYerel } from '../../../shared/utils/tarih';
-import { sayiYaz } from '../../../shared/utils/bicim';
+import { sayiYaz, tarihYaz } from '../../../shared/utils/bicim';
 
 export const excelHtml = (motorlar, { canAlis, canKar }) => {
-  const formatDate = (d) => d ? new Date(d).toLocaleDateString('tr-TR') : '';
+  const formatDate = (d) => tarihYaz(d, '');
   const num = (v) => sayiYaz(v);
   const headers = ['Plaka', 'Marka', 'Model', 'Yıl', 'KM',
     ...(canAlis ? ['Alım (₺)'] : []), 'Satış (₺)', 'Noter Alış (₺)', 'Noter Satış (₺)',

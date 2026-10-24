@@ -6,9 +6,10 @@ import DescriptionIcon from '@mui/icons-material/Description';
 import SearchIcon from '@mui/icons-material/Search';
 import { satisBelgeService } from './motorApi';
 import { belgeAc, belgeOnizlenebilir } from './SatisBelgeleri';
+import { tarihYaz } from '../../shared/utils/bicim';
 
 const boyutYaz = (b) => (b >= 1024 * 1024 ? `${(b / 1024 / 1024).toFixed(1)} MB` : `${Math.max(1, Math.round(b / 1024))} KB`);
-const tarihYaz = (t) => (t ? new Date(`${t}T00:00:00`).toLocaleDateString('tr-TR') : null);
+const gunYaz = (t) => (t ? new Date(`${t}T00:00:00`).toLocaleDateString('tr-TR') : null);
 const normalize = (s) => String(s || '').toLocaleUpperCase('tr-TR').replace(/[^A-Z0-9ÇĞİÖŞÜ]/g, '');
 
 // Muhasebeci (ve admin) için salt-okunur belge arşivi: tüm belgeler plakaya göre gruplanır.
@@ -97,7 +98,7 @@ const BelgeArsivi = () => {
                 </Typography>
                 {(g.alis_tarihi || g.satis_tarihi) && (
                   <Typography variant="caption" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>
-                    {g.alis_tarihi && `Alış ${tarihYaz(g.alis_tarihi)}`}{g.alis_tarihi && g.satis_tarihi && ' • '}{g.satis_tarihi && `Satış ${tarihYaz(g.satis_tarihi)}`}
+                    {g.alis_tarihi && `Alış ${gunYaz(g.alis_tarihi)}`}{g.alis_tarihi && g.satis_tarihi && ' • '}{g.satis_tarihi && `Satış ${gunYaz(g.satis_tarihi)}`}
                   </Typography>
                 )}
                 {g.durum === 'tamamlandi'
@@ -110,7 +111,7 @@ const BelgeArsivi = () => {
                   <Box sx={{ flexGrow: 1, minWidth: 0 }}>
                     <Typography variant="body2" fontWeight="500" noWrap title={b.dosya_adi}>{b.dosya_adi}</Typography>
                     <Typography variant="caption" color="text.secondary">
-                      {boyutYaz(b.boyut)} • {new Date(b.created_at).toLocaleDateString('tr-TR')}
+                      {boyutYaz(b.boyut)} • {tarihYaz(b.created_at)}
                     </Typography>
                   </Box>
                   {islemId === b.id ? <CircularProgress size={20} /> : (

@@ -6,6 +6,7 @@ import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
 import DescriptionIcon from '@mui/icons-material/Description';
 import { satisBelgeService } from './motorApi';
+import { tarihYaz } from '../../shared/utils/bicim';
 
 const BELGE_UZANTILARI = '.pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png';
 const MAX_BELGE_BOYUT = 10 * 1024 * 1024; // sunucu limitiyle aynı
@@ -108,7 +109,7 @@ export const BelgeBolumu = ({ motorId }) => {
           <Box sx={{ flexGrow: 1, minWidth: 0 }}>
             <Typography variant="body2" fontWeight="500" noWrap title={b.dosya_adi}>{b.dosya_adi}</Typography>
             <Typography variant="caption" color="text.secondary">
-              {boyutYaz(b.boyut)} • {new Date(b.created_at).toLocaleDateString('tr-TR')}{b.yukleyen_adi ? ` • ${b.yukleyen_adi}` : ''}
+              {boyutYaz(b.boyut)} • {tarihYaz(b.created_at)}{b.yukleyen_adi ? ` • ${b.yukleyen_adi}` : ''}
             </Typography>
           </Box>
           {islemId === b.id ? <CircularProgress size={20} /> : (

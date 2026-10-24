@@ -1,5 +1,6 @@
 // İş emirleri liste ekranının saf kuralları (ekran/durum yok, doğrudan test edilebilir):
 // süzme, istatistik, durum etiketleri ve form için başlangıç/dönüşüm değerleri.
+import { tarihYaz } from '../../../shared/utils/bicim';
 
 export const bosForm = () => ({
   musteri_ad_soyad: '', telefon: '', adres: '', km: '', marka: '', model_tip: '', plaka: '',
@@ -62,4 +63,4 @@ export const durumLabel = (d) => {
   return 'Bekl.';
 };
 
-export const formatTarih = (d) => d ? new Date(d).toLocaleDateString('tr-TR') : '';
+export const formatTarih = (d) => tarihYaz(d, '');
