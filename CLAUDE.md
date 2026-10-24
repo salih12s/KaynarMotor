@@ -44,5 +44,5 @@ tetiklenir (kırmızı ✗ üretmesin diye) ve GitHub'da hiç doğrulanmadı. As
 `.githooks/pre-push` (etkinleştirme: `git config core.hooksPath .githooks`; tsc + birim, ~3 sn). README'de CI rozeti KOYMA; kanıt olarak test sayılarını yaz.
 Frontend bölme **bitti (2026-10-19)**: Raporlar 1563->95, IsEmirleri 950->53, Vitrin 972->75, MotorStok 779->66, IkinciElMotor 709->57, Storefront 721->77, ETicaret 622->52, Aksesuarlar 614->33.
 Yöntem ve kurallar `docs/FRONTEND-BOLME-RAPORU.md` §9'da (önce karakterizasyon testi, betikle taşıma, eski-yeni HTML karşılaştırması).
-Sonraki işler: TanStack Query (ayrı adım), ESLint/Prettier, Vite+TSX.
+Sonraki işler: TanStack Query (ayrı adım), Vite+TSX, Playwright. (bicim.js, ESLint ve Prettier 2026-10-24 tamam.)
 **Tüm kalan işler, öncelik sırası ve sunum (portföy) hedefi: `docs/YOL-HARITASI.md`.** Yeni sohbette önce onu oku.
