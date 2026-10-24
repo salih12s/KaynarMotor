@@ -33,9 +33,11 @@ const Yetkilendirme = () => {
   const loadUsers = async () => {
     try {
       const res = await authService.getUsers();
+      // Reddedilenler giriş yapamaz: yetkilendirme listesine girmez
+      const aktifler = res.data.filter(u => u.onay_durumu !== 'reddedildi');
       // Admin ve yatırımcı dışındaki (personel) kullanıcılar yetkilendirilir
-      setUsers(res.data.filter(u => u.rol !== 'admin' && u.rol !== 'yatirimci' && u.rol !== 'muhasebeci'));
-      setMuhasebeciler(res.data.filter(u => u.rol === 'muhasebeci'));
+      setUsers(aktifler.filter(u => u.rol !== 'admin' && u.rol !== 'yatirimci' && u.rol !== 'muhasebeci'));
+      setMuhasebeciler(aktifler.filter(u => u.rol === 'muhasebeci'));
     } catch { setError('Kullanıcılar yüklenemedi'); }
   };
 
@@ -77,7 +79,7 @@ const Yetkilendirme = () => {
 
   return (
     <Box>
-      <Typography variant="h5" fontWeight="bold" mb={1}>Yetkilendirme</Typography>
+      {/* Sayfa başlığı üst çubukta (Layout) zaten var; burada tekrarlanmaz */}
       <Typography variant="body2" color="text.secondary" mb={3}>
         Personelin hangi işlemleri yapabileceğini buradan ayarlayın. <strong>Motor Satış</strong> yetkisi; satış fiyatı, müşteri bilgisi ve satış geçmişi görüntüleme yetkilerini de kapsar (alış fiyatı ve kâr hariç).
       </Typography>
