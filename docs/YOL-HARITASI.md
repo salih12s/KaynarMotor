@@ -34,7 +34,7 @@ tutarlı tasarım. Bu belge neyin bittiğini, neyin kaldığını ve hangi sıra
 Her dosya: önce karakterizasyon testi, testi bozarak sına, betikle taşı, eski-yeni HTML karşılaştır, ayrı commit. **B listesi bitti.**
 
 ## C. Bölmeden sonra (her biri ayrı karar)
-- `shared/bicim.js`: para/tarih biçimleyicilerini tekilleştir (şimdi `toLocaleString('tr-TR')` ~161 yerde).
+- ~~`shared/utils/bicim.js`~~ **YAPILDI (2026-10-24):** `sayiYaz`/`paraYaz`/`tarihYaz` (61 karakterizasyon testi); ~340 çağrı taşındı, `toLocale…` 169 -> 5 (bilerek kalanlar: Layout uzun tarih, `en-CA` ISO giriş, e-ticaret `formatTL` tam 2 ondalık, raporlar/bicim.js sarmalayıcıları).
 - **ESLint + Prettier** (`react-hooks` kuralı dahil: şu an tanımlı değil, bağımlılık uyarıları hiç üretilmiyor; CRLF/LF karışıklığı da biter).
 - **TanStack Query**: veri çekme/önbellek; `useRaporVerisi` gibi hook'ların yerini alır.
 - Frontend **TypeScript** (`.tsx`; önce `shared/`, sonra özellikler) ve **CRA -> Vite** (react-scripts bakımsız).
