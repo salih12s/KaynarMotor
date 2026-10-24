@@ -4,7 +4,8 @@
  * bölümü ve yazdırma sahte (mock). Sayılar elle hesaplandı.
  */
 import React from 'react';
-import { render, screen, within, waitFor } from '@testing-library/react';
+import { screen, within, waitFor } from '@testing-library/react';
+import { sorguluRender } from '../../shared/sorgu/sorguluRender';
 import userEvent from '@testing-library/user-event';
 import MotorStok from './MotorStok';
 import { ikinciElMotorService } from './motorApi';
@@ -101,6 +102,7 @@ const YAT_SAHIP = { rol: 'yatirimci' };
 
 // ---- Yardımcılar -------------------------------------------------------------------------------------------------
 let yazdir;
+let sonEkran; // son render sonucu (istemci ve unmount, yeniden açılış testi için)
 const kur = ({ user = ADMIN, liste = HEPSI } = {}) => {
   useAuth.mockReturnValue({ user });
   ikinciElMotorService.getAll.mockResolvedValue({ data: liste });
@@ -131,7 +133,7 @@ const kur = ({ user = ADMIN, liste = HEPSI } = {}) => {
 const ekranAc = async (secenek = {}) => {
   kur(secenek);
   const user = userEvent.setup();
-  render(<MotorStok />);
+  sonEkran = sorguluRender(<MotorStok />);
   if (!secenek.bekleme) await screen.findByText(secenek.bekle || '34AAA111');
   return user;
 };
@@ -299,6 +301,16 @@ describe('Motor Stok: sayaçlar ve süzgeçler', () => {
     ikinciElMotorService.delete.mockRejectedValue({ response: { data: { message: 'Bağlı satış var' } } });
     await user.click(ikon(satir('06BBB222'), 'DeleteIcon'));
     await waitFor(() => expect(window.alert).toHaveBeenCalledWith('Bağlı satış var'));
+  });
+
+  test('önbellek: sayfa kapatılıp yeniden açılınca motor listesi yine sunucudan istenir; yatırımcılar önbellekten gelir', async () => {
+    await ekranAc();
+    const { istemci, unmount } = sonEkran;
+    const cagri = ikinciElMotorService.getAll.mock.calls.length;
+    unmount();
+    sorguluRender(<MotorStok />, { istemci });
+    await waitFor(() => expect(ikinciElMotorService.getAll.mock.calls.length).toBe(cagri + 1));
+    expect(authService.getYatirimcilar).toHaveBeenCalledTimes(1);
   });
 });
 
