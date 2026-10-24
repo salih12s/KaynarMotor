@@ -218,6 +218,8 @@ describe('Storefront: diğer kategoriler ve gezinme', () => {
     expect(screen.getByText('Randevu alın')).toBeInTheDocument();
     expect(screen.getByText('Usta Ali')).toBeInTheDocument();
     expect(screen.queryByRole('group', { name: 'Marka' })).not.toBeInTheDocument();
+    // İlan istekleri 250 ms'lik bekleme (debounce) sonrası gider: süre dolmadan "çağrılmadı" demek makine hızına bağlı olurdu
+    await new Promise((bitti) => setTimeout(bitti, 400));
     expect(vitrinService.getAll).not.toHaveBeenCalled();
   });
 

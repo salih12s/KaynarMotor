@@ -116,12 +116,12 @@ export const useStorefront = ({ geriDonus, navigate }) => {
     return () => { active = false; };
   }, [intro, durumSecimi]);
 
-  // filtre değişince (kısa debounce ile) yükle — giriş ekranındayken yükleme yapma
+  // filtre değişince (kısa debounce ile) yükle — giriş ekranındayken ve ilan göstermeyen hizmet sayfalarında yükleme yapma
   useEffect(() => {
-    if (intro || durumSecimi) return;
+    if (intro || durumSecimi || isHizmet) return;
     const t = setTimeout(loadUrunler, 250);
     return () => clearTimeout(t);
-  }, [loadUrunler, intro, durumSecimi]);
+  }, [loadUrunler, intro, durumSecimi, isHizmet]);
 
   // sekme değişince filtreleri sıfırla + eski listeyi anında temizle (yumuşak geçiş)
   const handleTab = (v) => {
