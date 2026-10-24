@@ -4,6 +4,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import PrintIcon from '@mui/icons-material/Print';
 import { BelgeBolumu } from '../../SatisBelgeleri';
 import { useReactToPrint } from 'react-to-print';
+import { sayiYaz, tarihYaz } from '../../../../shared/utils/bicim';
 
 // Satış detay penceresi: yetkiye göre finansal kutular ve net kâr (admin), yazdırma, belgeler (muhasebeci için yok).
 const InfoRow = ({ label, value }) => (
@@ -17,8 +18,7 @@ const MotorDetayModal = ({ open, data, onClose, printRef, isMobile, canAlis, can
   const handlePrint = useReactToPrint({ contentRef: printRef });
   if (!data) return null;
 
-  const formatTL = (v) => parseFloat(v || 0).toLocaleString('tr-TR', { minimumFractionDigits: 0 });
-  const formatDate = (d) => d ? new Date(d).toLocaleDateString('tr-TR') : '-';
+  const formatTL = (v) => sayiYaz(v);
   const alis = parseFloat(data.alis_fiyati || 0);
   const satis = parseFloat(data.satis_fiyati || 0);
   const noterAlis = parseFloat(data.noter_alis || 0);
@@ -45,8 +45,8 @@ const MotorDetayModal = ({ open, data, onClose, printRef, isMobile, canAlis, can
               <InfoRow label="Model" value={data.model} />
               <InfoRow label="Yıl" value={data.yil} />
               <InfoRow label="KM" value={data.km ? Number(data.km).toLocaleString('tr-TR') : null} />
-              <InfoRow label="Alım Tarihi" value={formatDate(data.tarih)} />
-              <InfoRow label="Satış Tarihi" value={formatDate(data.satis_tarihi)} />
+              <InfoRow label="Alım Tarihi" value={tarihYaz(data.tarih)} />
+              <InfoRow label="Satış Tarihi" value={tarihYaz(data.satis_tarihi)} />
               <InfoRow label="Durum" value={data.durum === 'stokta' ? 'Stokta' : data.durum === 'kapora' ? 'Kapora' : data.durum === 'depo_serviste' ? 'Depo/Serviste' : data.durum === 'devir_bekliyor' ? 'Devir Bekliyor' : data.durum === 'tamamlandi' ? 'Tamamlandı' : data.durum === 'perte' ? 'Perte' : data.durum} />
               <InfoRow label="Stok Tipi" value={data.stok_tipi === 'konsinye' ? 'Konsinye' : 'Sahip'} />
               <InfoRow label="Ödeme Şekli" value={data.odeme_sekli || 'Nakit'} />
@@ -58,7 +58,7 @@ const MotorDetayModal = ({ open, data, onClose, printRef, isMobile, canAlis, can
               <Divider sx={{ mb: 1 }} />
               <InfoRow label="İsim Soyisim" value={data.satici_adi} />
               <InfoRow label="TC Kimlik" value={data.satici_tc} />
-              <InfoRow label="Alım Tarihi" value={formatDate(data.tarih)} />
+              <InfoRow label="Alım Tarihi" value={tarihYaz(data.tarih)} />
               {canAlis && <InfoRow label="Alış Bedeli" value={noterAlis ? `₺${formatTL(noterAlis)}` : null} />}
             </Grid>
           </Grid>
@@ -83,7 +83,7 @@ const MotorDetayModal = ({ open, data, onClose, printRef, isMobile, canAlis, can
               <Grid container spacing={3}>
                 <Grid size={{ xs: 12, md: 4 }}><InfoRow label="Ad Soyad" value={data.komisyoncu_adi} /></Grid>
                 <Grid size={{ xs: 12, md: 4 }}><InfoRow label="Telefon" value={data.komisyoncu_telefon} /></Grid>
-                <Grid size={{ xs: 12, md: 4 }}><InfoRow label="Tutar" value={`₺${parseFloat(data.komisyoncu_tutari || 0).toLocaleString('tr-TR')}`} /></Grid>
+                <Grid size={{ xs: 12, md: 4 }}><InfoRow label="Tutar" value={`₺${sayiYaz(data.komisyoncu_tutari)}`} /></Grid>
               </Grid>
             </Box>
           )}

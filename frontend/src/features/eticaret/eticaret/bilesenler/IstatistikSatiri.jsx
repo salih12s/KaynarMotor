@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, Button, Chip } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import { sayiYaz } from '../../../../shared/utils/bicim';
 
 // Üst çipler (satış sayısı, gelir, komisyon, e-ticaret yetkilisi için kâr) ve sekmeye göre "Yeni Satış" / "Yeni Platform" (yalnız admin) düğmesi.
 const IstatistikSatiri = ({ stats, hesaplananToplamKar, karGor, isAdmin, tab, onYeniSatis, onYeniPlatform }) => {
@@ -8,8 +9,8 @@ const IstatistikSatiri = ({ stats, hesaplananToplamKar, karGor, isAdmin, tab, on
     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2, alignItems: 'center' }}>
       {[
         { label: `Satış: ${stats.toplam_satis || 0}`, color: '#C62828', bg: '#ffebee' },
-        { label: `Gelir: ₺${parseFloat(stats.toplam_gelir || 0).toLocaleString('tr-TR')}`, color: '#C62828', bg: '#ffebee' },
-        { label: `Komisyon: ₺${parseFloat(stats.toplam_komisyon || 0).toLocaleString('tr-TR')}`, color: '#C62828', bg: '#ffebee' },
+        { label: `Gelir: ₺${sayiYaz(stats.toplam_gelir)}`, color: '#C62828', bg: '#ffebee' },
+        { label: `Komisyon: ₺${sayiYaz(stats.toplam_komisyon)}`, color: '#C62828', bg: '#ffebee' },
         ...(karGor ? [{ label: `Kâr: ₺${hesaplananToplamKar.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`, color: '#C62828', bg: '#ffebee' }] : []),
       ].map((c, i) => (
         <Chip key={i} label={c.label} sx={{ bgcolor: c.bg, color: c.color, fontWeight: 'bold', fontSize: '0.8rem', borderLeft: `4px solid ${c.color}` }} />

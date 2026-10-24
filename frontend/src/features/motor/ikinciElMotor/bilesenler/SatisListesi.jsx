@@ -3,6 +3,7 @@ import { Box, Paper, Typography, Table, TableBody, TableCell, TableContainer, Ta
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ViewIcon from '@mui/icons-material/Visibility';
+import { sayiYaz, tarihYaz } from '../../../../shared/utils/bicim';
 
 // Satış listesi: dar ekranda kartlar, geniş ekranda tablo. Alım, kâr, düzenleme ve silme düğmeleri yetkiye (canAlis, canKar, salt, isAdmin) göre.
 const SatisListesi = ({ filteredMotorlar, isMobile, canAlis, canKar, salt, isAdmin, onDetay, onDuzenle, onSil }) => {
@@ -10,23 +11,22 @@ const SatisListesi = ({ filteredMotorlar, isMobile, canAlis, canKar, salt, isAdm
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
       {filteredMotorlar.length === 0 && <Alert severity="info">Kayıt yok</Alert>}
       {filteredMotorlar.map(m => {
-        const formatDate = (d) => d ? new Date(d).toLocaleDateString('tr-TR') : '-';
         return (
           <Paper key={m.id} sx={{ p: 1.5 }} onClick={() => onDetay(m.id)}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
               <Typography variant="subtitle2" fontWeight="bold">{m.plaka}</Typography>
-              <Typography variant="caption" color="text.secondary">{formatDate(m.satis_tarihi || m.tarih)}</Typography>
+              <Typography variant="caption" color="text.secondary">{tarihYaz(m.satis_tarihi || m.tarih)}</Typography>
             </Box>
             <Typography variant="body2">{m.marka} {m.model} {m.yil ? `(${m.yil})` : ''}</Typography>
             <Typography variant="body2" color="text.secondary">{m.alici_adi || '-'} • {m.km ? Number(m.km).toLocaleString('tr-TR') + ' km' : ''}</Typography>
             <Box sx={{ display: 'flex', gap: 2, mt: 0.5 }}>
-              {canAlis && <Typography variant="body2">Alım: <strong>₺{parseFloat(m.alis_fiyati || 0).toLocaleString('tr-TR')}</strong></Typography>}
-            <Typography variant="body2">Satış: <strong>₺{parseFloat(m.satis_fiyati || 0).toLocaleString('tr-TR')}</strong></Typography>
+              {canAlis && <Typography variant="body2">Alım: <strong>₺{sayiYaz(m.alis_fiyati)}</strong></Typography>}
+            <Typography variant="body2">Satış: <strong>₺{sayiYaz(m.satis_fiyati)}</strong></Typography>
           </Box>
           <Box sx={{ display: 'flex', gap: 2, mt: 0.5 }}>
-            <Typography variant="body2">Noter Alış: <strong>₺{parseFloat(m.noter_alis || 0).toLocaleString('tr-TR')}</strong></Typography>
-            <Typography variant="body2">Noter Satış: <strong>₺{parseFloat(m.noter_satis || 0).toLocaleString('tr-TR')}</strong></Typography>
-            {canKar && <Typography variant="body2" sx={{ color: parseFloat(m.kar || 0) >= 0 ? 'green' : 'red' }}>Kâr: <strong>₺{parseFloat(m.kar || 0).toLocaleString('tr-TR')}</strong></Typography>}
+            <Typography variant="body2">Noter Alış: <strong>₺{sayiYaz(m.noter_alis)}</strong></Typography>
+            <Typography variant="body2">Noter Satış: <strong>₺{sayiYaz(m.noter_satis)}</strong></Typography>
+            {canKar && <Typography variant="body2" sx={{ color: parseFloat(m.kar || 0) >= 0 ? 'green' : 'red' }}>Kâr: <strong>₺{sayiYaz(m.kar)}</strong></Typography>}
             </Box>
             <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 0.5 }} onClick={e => e.stopPropagation()}>
               {!salt && <IconButton size="small" color="info" onClick={() => onDuzenle(m)}><EditIcon /></IconButton>}
@@ -50,7 +50,6 @@ const SatisListesi = ({ filteredMotorlar, isMobile, canAlis, canKar, salt, isAdm
         </TableHead>
         <TableBody>
           {filteredMotorlar.map(m => {
-            const formatDate = (d) => d ? new Date(d).toLocaleDateString('tr-TR') : '-';
             return (
               <TableRow key={m.id} hover>
                 <TableCell><strong>{m.plaka}</strong></TableCell>
@@ -58,13 +57,13 @@ const SatisListesi = ({ filteredMotorlar, isMobile, canAlis, canKar, salt, isAdm
                 <TableCell>{m.model || '-'}</TableCell>
                 <TableCell>{m.yil || '-'}</TableCell>
                 <TableCell>{m.km ? Number(m.km).toLocaleString('tr-TR') : '-'}</TableCell>
-                {canAlis && <TableCell>{parseFloat(m.alis_fiyati || 0).toLocaleString('tr-TR')}</TableCell>}
-                <TableCell>{parseFloat(m.satis_fiyati || 0).toLocaleString('tr-TR')}</TableCell>
-                <TableCell>{parseFloat(m.noter_alis || 0).toLocaleString('tr-TR')}</TableCell>
-                <TableCell>{parseFloat(m.noter_satis || 0).toLocaleString('tr-TR')}</TableCell>
-                {canKar && <TableCell sx={{ fontWeight: 'bold', color: parseFloat(m.kar || 0) >= 0 ? 'green' : 'red' }}>{parseFloat(m.kar || 0).toLocaleString('tr-TR')}</TableCell>}
+                {canAlis && <TableCell>{sayiYaz(m.alis_fiyati)}</TableCell>}
+                <TableCell>{sayiYaz(m.satis_fiyati)}</TableCell>
+                <TableCell>{sayiYaz(m.noter_alis)}</TableCell>
+                <TableCell>{sayiYaz(m.noter_satis)}</TableCell>
+                {canKar && <TableCell sx={{ fontWeight: 'bold', color: parseFloat(m.kar || 0) >= 0 ? 'green' : 'red' }}>{sayiYaz(m.kar)}</TableCell>}
                 <TableCell>{m.alici_adi || '-'}</TableCell>
-                <TableCell>{formatDate(m.satis_tarihi || m.tarih)}</TableCell>
+                <TableCell>{tarihYaz(m.satis_tarihi || m.tarih)}</TableCell>
                 <TableCell>
                   <IconButton size="small" color="primary" onClick={() => onDetay(m.id)}><ViewIcon /></IconButton>
                   {!salt && <IconButton size="small" color="info" onClick={() => onDuzenle(m)}><EditIcon /></IconButton>}

@@ -2,6 +2,7 @@ import React from 'react';
 import { Box, Paper, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Button, IconButton, Chip, Dialog, DialogTitle, DialogContent, DialogActions, Grid, Divider } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import CloseIcon from '@mui/icons-material/Close';
+import { tarihYaz } from '../../../../shared/utils/bicim';
 
 // Satış detay penceresi: müşteri/satış/kayıt bilgisi, ürünler (stoktan marka/beden/renk), indirimli toplamlar ve kalan ödeme.
 const SatisDetayModal = ({ open, data, onClose, onDuzenle, stokOptions, karGor, isMobile }) => {
@@ -19,7 +20,6 @@ const SatisDetayModal = ({ open, data, onClose, onDuzenle, stokOptions, karGor, 
   const dIndirim = Math.min(Number(d.indirim) || 0, dBrutSatis);
   const dNetSatis = dBrutSatis - dIndirim;
   const dKar = dNetSatis - dToplamMaliyet;
-  const formatDate = (v) => v ? new Date(v).toLocaleDateString('tr-TR') : '-';
   return (
     <Dialog {...dialogProps}>
       <DialogTitle sx={{ bgcolor: '#C62828', color: 'white', py: 1.5, display: 'flex', alignItems: 'center' }}>
@@ -41,7 +41,7 @@ const SatisDetayModal = ({ open, data, onClose, onDuzenle, stokOptions, karGor, 
               <Typography variant="subtitle2" color="#C62828" fontWeight="bold" gutterBottom>Satış Bilgileri</Typography>
               <Divider sx={{ mb: 1 }} />
               <Typography variant="body2"><strong>Ödeme Şekli:</strong> {d.odeme_sekli || '-'}</Typography>
-              <Typography variant="body2"><strong>Satış Tarihi:</strong> {formatDate(d.satis_tarihi)}</Typography>
+              <Typography variant="body2"><strong>Satış Tarihi:</strong> {tarihYaz(d.satis_tarihi)}</Typography>
               <Typography variant="body2"><strong>Durum:</strong> <Chip label={d.durum === 'tamamlandi' ? 'Tamamlandı' : 'Beklemede'} size="small" color={d.durum === 'tamamlandi' ? 'success' : 'warning'} /></Typography>
             </Paper>
           </Grid>
@@ -50,8 +50,8 @@ const SatisDetayModal = ({ open, data, onClose, onDuzenle, stokOptions, karGor, 
               <Typography variant="subtitle2" color="#C62828" fontWeight="bold" gutterBottom>Kayıt Bilgileri</Typography>
               <Divider sx={{ mb: 1 }} />
               <Typography variant="body2"><strong>Oluşturan:</strong> {d.olusturan_kisi || '-'}</Typography>
-              <Typography variant="body2"><strong>Oluşturma:</strong> {formatDate(d.created_at)}</Typography>
-              {d.tamamlama_tarihi && <Typography variant="body2"><strong>Tamamlanma:</strong> {formatDate(d.tamamlama_tarihi)}</Typography>}
+              <Typography variant="body2"><strong>Oluşturma:</strong> {tarihYaz(d.created_at)}</Typography>
+              {d.tamamlama_tarihi && <Typography variant="body2"><strong>Tamamlanma:</strong> {tarihYaz(d.tamamlama_tarihi)}</Typography>}
             </Paper>
           </Grid>
         </Grid>

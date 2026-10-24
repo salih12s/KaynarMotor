@@ -2,13 +2,14 @@ import React from 'react';
 import { Box, Button, Chip } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
+import { sayiYaz } from '../../../../shared/utils/bicim';
 
 // Üst çipler (adet, satış tutarı, yalnızca admin için kâr), "Excel'e Aktar" ve "Motor Satış" düğmeleri.
 const IstatistikSatiri = ({ motorlar, stats, canKar, salt, onExcel, onYeni }) => {
   const statChips = [
     { label: `Toplam: ${motorlar.length}`, color: '#C62828', bg: '#ffebee' },
-    { label: `Satış: ₺${parseFloat(stats.toplam_satis_tutari || 0).toLocaleString('tr-TR')}`, color: '#C62828', bg: '#ffebee' },
-    ...(canKar ? [{ label: `Kâr: ₺${parseFloat(stats.toplam_kar || 0).toLocaleString('tr-TR')}`, color: '#C62828', bg: '#ffebee' }] : []),
+    { label: `Satış: ₺${sayiYaz(stats.toplam_satis_tutari)}`, color: '#C62828', bg: '#ffebee' },
+    ...(canKar ? [{ label: `Kâr: ₺${sayiYaz(stats.toplam_kar)}`, color: '#C62828', bg: '#ffebee' }] : []),
   ];
   return (
     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2, alignItems: 'center' }}>

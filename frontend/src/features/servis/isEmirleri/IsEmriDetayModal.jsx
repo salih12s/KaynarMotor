@@ -7,6 +7,7 @@ import QrIcon from '@mui/icons-material/QrCode2';
 import { useKarGor } from '../../auth/AuthContext';
 import { printServisQr, printIsEmri } from './servisYazdir';
 import { durumRenk, durumLabel } from './isEmriVeri';
+import { sayiYaz, tarihYaz } from '../../../shared/utils/bicim';
 
 // İş emri detay penceresi (liste sayfasından açılır; düzenle/yazdır/QR düğmeleri içinde).
 const InfoRow = ({ label, value }) => (
@@ -24,7 +25,6 @@ const IsEmriDetayModal = ({ open, data, onClose, onEdit, isMobile }) => {
   const toplamFiyat = parcalar.reduce((t, p) => t + parseFloat(p.toplam_fiyat || 0), 0);
   const toplamMaliyet = parcalar.reduce((t, p) => t + (Number(p.adet) || 0) * (Number(p.maliyet) || 0), 0);
   const kar = toplamFiyat - toplamMaliyet;
-  const formatDate = (d) => d ? new Date(d).toLocaleDateString('tr-TR') : '-';
   const durumLabel = (d) => d === 'tamamlandi' ? 'Tamamlandı' : d === 'devam_ediyor' ? 'Devam Ediyor' : 'Beklemede';
   const durumRenk = (d) => d === 'tamamlandi' ? 'success' : d === 'devam_ediyor' ? 'info' : 'warning';
 
@@ -62,9 +62,9 @@ const IsEmriDetayModal = ({ open, data, onClose, onEdit, isMobile }) => {
             <Grid size={{ xs: 12, md: 4 }}>
               <Typography variant="subtitle1" fontWeight="bold" color="primary" gutterBottom>📅 Tarih ve Teslim</Typography>
               <Divider sx={{ mb: 1 }} />
-              <InfoRow label="Oluşturma" value={formatDate(data.created_at)} />
-              <InfoRow label="Tahmini Teslim" value={formatDate(data.tahmini_teslim_tarihi)} />
-              <InfoRow label="Teslim Tarihi" value={formatDate(data.teslim_tarihi)} />
+              <InfoRow label="Oluşturma" value={tarihYaz(data.created_at)} />
+              <InfoRow label="Tahmini Teslim" value={tarihYaz(data.tahmini_teslim_tarihi)} />
+              <InfoRow label="Teslim Tarihi" value={tarihYaz(data.teslim_tarihi)} />
               <InfoRow label="Teslim Alan" value={data.teslim_alan_ad_soyad} />
               <InfoRow label="Teslim Eden" value={data.teslim_eden_teknisyen} />
               <InfoRow label="Kaydı Açan" value={data.olusturan_kisi} />
@@ -102,7 +102,7 @@ const IsEmriDetayModal = ({ open, data, onClose, onEdit, isMobile }) => {
                     return (
                       <Paper key={i} variant="outlined" sx={{ p: 1.5 }}>
                         <Typography variant="body2" fontWeight="bold">{p.takilan_parca}</Typography>
-                        <Typography variant="caption" color="text.secondary">Adet: {p.adet} • Birim: ₺{parseFloat(p.birim_fiyat || 0).toLocaleString('tr-TR')} • Toplam: ₺{pSatis.toLocaleString('tr-TR')}</Typography>
+                        <Typography variant="caption" color="text.secondary">Adet: {p.adet} • Birim: ₺{sayiYaz(p.birim_fiyat)} • Toplam: ₺{pSatis.toLocaleString('tr-TR')}</Typography>
                         <Typography variant="caption" className="no-print" sx={{ display: 'block' }}>Maliyet: ₺{pMaliyet.toLocaleString('tr-TR')}{karGor && <> • <span style={{ color: pKar >= 0 ? '#2e7d32' : '#c62828', fontWeight: 'bold' }}>Kâr: ₺{pKar.toLocaleString('tr-TR')}</span></>}</Typography>
                       </Paper>
                     );
@@ -129,7 +129,7 @@ const IsEmriDetayModal = ({ open, data, onClose, onEdit, isMobile }) => {
                           <TableRow key={i}>
                             <TableCell>{p.takilan_parca}</TableCell>
                             <TableCell>{p.adet}</TableCell>
-                            <TableCell>₺{parseFloat(p.birim_fiyat || 0).toLocaleString('tr-TR')}</TableCell>
+                            <TableCell>₺{sayiYaz(p.birim_fiyat)}</TableCell>
                             <TableCell sx={{ fontWeight: 'bold' }}>₺{pSatis.toLocaleString('tr-TR')}</TableCell>
                             <TableCell className="no-print">₺{pMaliyet.toLocaleString('tr-TR')}</TableCell>
                             {karGor && <TableCell className="no-print" sx={{ color: pKar >= 0 ? '#2e7d32' : '#c62828', fontWeight: 'bold' }}>₺{pKar.toLocaleString('tr-TR')}</TableCell>}

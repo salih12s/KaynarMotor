@@ -12,6 +12,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import ViewIcon from '@mui/icons-material/Visibility';
 import CloseIcon from '@mui/icons-material/Close';
 import { musteriService } from './musteriApi';
+import { sayiYaz, tarihYaz } from '../../shared/utils/bicim';
 
 // Hızlı yazarken eski aramanın yanıtı yeniyi ezmesin
 const sonAra = sonIstek();
@@ -159,8 +160,7 @@ const Musteriler = () => {
       <Dialog open={detayDialog.open} onClose={() => setDetayDialog({ open: false, data: null })} maxWidth="md" fullWidth fullScreen={isMobile}>
         {detayDialog.data && (() => {
           const d = detayDialog.data;
-          const formatDate = (v) => v ? new Date(v).toLocaleDateString('tr-TR') : '-';
-          const formatTL = (v) => parseFloat(v || 0).toLocaleString('tr-TR');
+          const formatTL = (v) => sayiYaz(v);
           return (
             <>
               <DialogTitle sx={{ bgcolor: '#1565C0', color: 'white', py: 1.5, display: 'flex', alignItems: 'center' }}>
@@ -216,7 +216,7 @@ const Musteriler = () => {
                                   {isAlici && `₺${formatTL(m.satis_fiyati)}`}
                                 </TableCell>
                                 <TableCell>{m.durum === 'tamamlandi' ? 'Tamamlandı' : m.durum === 'stokta' ? 'Stokta' : m.durum}</TableCell>
-                                <TableCell>{formatDate(m.satis_tarihi || m.tarih)}</TableCell>
+                                <TableCell>{tarihYaz(m.satis_tarihi || m.tarih)}</TableCell>
                               </TableRow>
                             );
                           })}
@@ -246,7 +246,7 @@ const Musteriler = () => {
                               <TableCell>₺{formatTL(a.toplam_satis)}</TableCell>
                               <TableCell sx={{ color: parseFloat(a.kar || 0) >= 0 ? 'green' : 'red' }}>₺{formatTL(a.kar)}</TableCell>
                               <TableCell>{a.durum === 'tamamlandi' ? 'Tamamlandı' : 'Beklemede'}</TableCell>
-                              <TableCell>{formatDate(a.satis_tarihi)}</TableCell>
+                              <TableCell>{tarihYaz(a.satis_tarihi)}</TableCell>
                             </TableRow>
                           ))}
                         </TableBody>
@@ -276,7 +276,7 @@ const Musteriler = () => {
                               <TableCell>{ie.marka} {ie.model_tip}</TableCell>
                               <TableCell>₺{formatTL(ie.gercek_toplam_ucret)}</TableCell>
                               <TableCell>{ie.durum === 'tamamlandi' ? 'Tamamlandı' : ie.durum === 'beklemede' ? 'Beklemede' : ie.durum}</TableCell>
-                              <TableCell>{formatDate(ie.created_at)}</TableCell>
+                              <TableCell>{tarihYaz(ie.created_at)}</TableCell>
                             </TableRow>
                           ))}
                         </TableBody>

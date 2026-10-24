@@ -14,6 +14,7 @@ import OpenIcon from '@mui/icons-material/OpenInNew';
 import ViewIcon from '@mui/icons-material/Visibility';
 import CloseIcon from '@mui/icons-material/Close';
 import { veresiyeService } from './raporApi';
+import { sayiYaz, tarihYaz } from '../../shared/utils/bicim';
 
 const KAYNAK_INFO = {
   motor: { label: 'Motor Satış', color: '#C62828', bg: '#ffebee', icon: <MotorIcon fontSize="small" />, path: '/ikinci-el-motor' },
@@ -55,8 +56,7 @@ const Veresiye = () => {
            (b.aciklama || '').toLowerCase().includes(q);
   });
 
-  const fmtTL = (v) => `₺${parseFloat(v || 0).toLocaleString('tr-TR')}`;
-  const fmtDate = (v) => v ? new Date(v).toLocaleDateString('tr-TR') : '-';
+  const fmtTL = (v) => `₺${sayiYaz(v)}`;
 
   const ozetCards = [
     { key: 'toplam', label: 'Toplam Borç', value: ozet.toplam, color: '#C62828', bg: '#ffebee' },
@@ -115,7 +115,7 @@ const Veresiye = () => {
                 <Paper key={i} sx={{ p: 1.5, borderLeft: `4px solid ${info.color || '#999'}` }}>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
                     <Chip icon={info.icon} label={info.label || b.kaynak} size="small" sx={{ bgcolor: info.bg, color: info.color, fontWeight: 'bold' }} />
-                    <Typography variant="caption" color="text.secondary">{fmtDate(b.tarih)}</Typography>
+                    <Typography variant="caption" color="text.secondary">{tarihYaz(b.tarih)}</Typography>
                   </Box>
                   <Typography variant="subtitle2" fontWeight="bold">{b.musteri_adi}</Typography>
                   {b.telefon && <Typography variant="body2" color="text.secondary">📞 {b.telefon}</Typography>}
@@ -157,7 +157,7 @@ const Veresiye = () => {
                       <TableCell><strong>{b.musteri_adi}</strong></TableCell>
                       <TableCell>{b.telefon || '-'}</TableCell>
                       <TableCell sx={{ maxWidth: 280 }}>{b.aciklama || '-'}</TableCell>
-                      <TableCell>{fmtDate(b.tarih)}</TableCell>
+                      <TableCell>{tarihYaz(b.tarih)}</TableCell>
                       <TableCell>{fmtTL(b.toplam_tutar)}</TableCell>
                       <TableCell sx={{ color: '#C62828', fontWeight: 'bold' }}>{fmtTL(b.kalan_odeme)}</TableCell>
                       <TableCell>
@@ -199,7 +199,7 @@ const Veresiye = () => {
                 <Grid container spacing={1.5} sx={{ mb: 2 }}>
                   <Grid size={{ xs: 6, sm: 4 }}><Typography variant="caption" color="text.secondary">Müşteri</Typography><Typography fontWeight="bold">{b.musteri_adi}</Typography></Grid>
                   <Grid size={{ xs: 6, sm: 4 }}><Typography variant="caption" color="text.secondary">Telefon</Typography><Typography>{b.telefon || '-'}</Typography></Grid>
-                  <Grid size={{ xs: 6, sm: 4 }}><Typography variant="caption" color="text.secondary">Tarih</Typography><Typography>{fmtDate(b.tarih)}</Typography></Grid>
+                  <Grid size={{ xs: 6, sm: 4 }}><Typography variant="caption" color="text.secondary">Tarih</Typography><Typography>{tarihYaz(b.tarih)}</Typography></Grid>
                 </Grid>
 
                 {/* Ödeme özeti */}

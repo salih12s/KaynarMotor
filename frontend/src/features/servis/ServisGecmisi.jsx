@@ -4,6 +4,7 @@ import { Box, AppBar, Toolbar, Typography, Paper, Chip, Divider, CircularProgres
 import MotoIcon from '@mui/icons-material/TwoWheeler';
 import BuildIcon from '@mui/icons-material/Build';
 import { servisGecmisiService } from './servisApi';
+import { sayiYaz, tarihYaz } from '../../shared/utils/bicim';
 
 const RED = '#C62828';
 
@@ -29,7 +30,6 @@ const ServisGecmisi = () => {
     })();
   }, [token]);
 
-  const formatDate = (d) => d ? new Date(d).toLocaleDateString('tr-TR') : '-';
   const durumLabel = (d) => d === 'tamamlandi' ? 'Tamamlandı' : d === 'devam_ediyor' ? 'Devam Ediyor' : 'Beklemede';
   const durumRenk = (d) => d === 'tamamlandi' ? 'success' : d === 'devam_ediyor' ? 'info' : 'warning';
   const fmtPlaka = (p) => String(p || '').replace(/^(\d{2})([A-Z]+)(\d+)$/, '$1 $2 $3');
@@ -75,7 +75,7 @@ const ServisGecmisi = () => {
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <BuildIcon sx={{ color: RED, fontSize: 20 }} />
-                      <Typography fontWeight="bold">{formatDate(s.tarih)}</Typography>
+                      <Typography fontWeight="bold">{tarihYaz(s.tarih)}</Typography>
                       {(s.marka || s.model_tip) && (
                         <Typography variant="body2" color="text.secondary">{[s.marka, s.model_tip].filter(Boolean).join(' ')}</Typography>
                       )}
@@ -99,7 +99,7 @@ const ServisGecmisi = () => {
                   )}
                   <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
                     <Typography fontWeight="bold" sx={{ color: RED }}>
-                      Toplam: ₺{parseFloat(s.toplam_tutar || 0).toLocaleString('tr-TR')}
+                      Toplam: ₺{sayiYaz(s.toplam_tutar)}
                     </Typography>
                   </Box>
                 </Paper>

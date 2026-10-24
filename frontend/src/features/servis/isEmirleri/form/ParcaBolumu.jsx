@@ -3,6 +3,7 @@ import { Box, Paper, Typography, Grid, TextField, Table, TableBody, TableCell, T
 import AddIcon from '@mui/icons-material/Add';
 import CloseIcon from '@mui/icons-material/Close';
 import { useKarGor } from '../../../auth/AuthContext';
+import { sayiYaz } from '../../../../shared/utils/bicim';
 
 // Parçalar ve işçilik: stok araması/barkod, ekleme ve parça tablosu (kâr sütunu yalnızca karGor için).
 const ParcaBolumu = ({ parcalar, newParca, setNewParca, stokOptions, addParca, removeParca, handleStokSearch, selectStok, handleParcaKeyDown, isMobile }) => {
@@ -34,7 +35,7 @@ const ParcaBolumu = ({ parcalar, newParca, setNewParca, stokOptions, addParca, r
               <Box sx={{ width: '100%' }}>
                 <Typography variant="body2" fontWeight="bold">{o.stok_adi}</Typography>
                 <Typography variant="caption" color="text.secondary">
-                  Kod: {o.stok_kodu} • Stok: {o.mevcut ?? 0} • Satış: ₺{parseFloat(o.satis_fiyati || 0).toLocaleString('tr-TR')}
+                  Kod: {o.stok_kodu} • Stok: {o.mevcut ?? 0} • Satış: ₺{sayiYaz(o.satis_fiyati)}
                 </Typography>
               </Box>
             </Box>

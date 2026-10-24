@@ -4,6 +4,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import CloseIcon from '@mui/icons-material/Close';
 import { hesaplaKomisyon, detectPlatform } from '../../komisyon';
 import { karEtiketi, formatTL } from '../eticaretVeri';
+import { tarihYaz } from '../../../../shared/utils/bicim';
 
 // Satış detay penceresi: ürün/fiyat bilgileri, net kâr ve platforma özel komisyon ve KDV dökümü.
 const SatisDetayModal = ({ open, data, onClose, onDuzenle, isMobile, karGor }) => {
@@ -12,7 +13,6 @@ const SatisDetayModal = ({ open, data, onClose, onDuzenle, isMobile, karGor }) =
   const s = data;
   const detayPlatformTipi = detectPlatform(s.platform_adi);
   const h = hesaplaKomisyon(s.satis_fiyati, s.alis_fiyati, s.komisyon_orani, s.kdv_orani || 20, s.kargo_ucreti || 0, s.adet, detayPlatformTipi);
-  const formatDate = (d) => d ? new Date(d).toLocaleDateString('tr-TR') : '-';
   return (
     <Dialog {...dialogProps}>
       <DialogTitle sx={{ bgcolor: '#C62828', color: 'white', py: 1.5, display: 'flex', alignItems: 'center' }}>
@@ -29,7 +29,7 @@ const SatisDetayModal = ({ open, data, onClose, onDuzenle, isMobile, karGor }) =
               <Typography variant="body2"><strong>Ürün:</strong> {s.urun_adi}</Typography>
               <Typography variant="body2"><strong>Platform:</strong> {s.platform_adi || '-'}</Typography>
               <Typography variant="body2"><strong>Adet:</strong> {s.adet}</Typography>
-              <Typography variant="body2"><strong>Tarih:</strong> {formatDate(s.tarih)}</Typography>
+              <Typography variant="body2"><strong>Tarih:</strong> {tarihYaz(s.tarih)}</Typography>
             </Paper>
           </Grid>
           <Grid size={{ xs: 12, md: 4 }}>

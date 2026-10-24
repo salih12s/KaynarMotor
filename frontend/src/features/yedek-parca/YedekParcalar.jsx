@@ -12,6 +12,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { yedekParcaService, yedekParcaStokService } from './yedekParcaApi';
 import { musteriService } from '../musteriler/musteriApi';
 import { useKarGor } from '../auth/AuthContext';
+import { sayiYaz } from '../../shared/utils/bicim';
 
 // Hızlı yazarken eski aramanın yanıtı yeniyi ezmesin
 const sonAra = sonIstek();
@@ -173,8 +174,8 @@ const YedekParcalar = () => {
                   </Box>
                 </Box>
                 <Box sx={{ display: 'flex', gap: 2 }}>
-                  <Typography variant="body2">Alış: <strong>{parseFloat(p.alis_fiyati || 0).toLocaleString('tr-TR')} ₺</strong></Typography>
-                  <Typography variant="body2">Satış: <strong>{parseFloat(p.satis_fiyati || 0).toLocaleString('tr-TR')} ₺</strong></Typography>
+                  <Typography variant="body2">Alış: <strong>{sayiYaz(p.alis_fiyati)} ₺</strong></Typography>
+                  <Typography variant="body2">Satış: <strong>{sayiYaz(p.satis_fiyati)} ₺</strong></Typography>
                   {karGor && <Typography variant="body2" sx={{ color: pKar >= 0 ? 'green' : 'red' }}>Kâr: <strong>{pKar.toLocaleString('tr-TR')} ₺</strong></Typography>}
                 </Box>
                 <Box sx={{ mt: 0.5 }}>
@@ -210,8 +211,8 @@ const YedekParcalar = () => {
               return (
                 <TableRow key={p.id} hover>
                   <TableCell>{p.urun_adi}{(p.adet || 1) > 1 ? ` (x${p.adet})` : ''}</TableCell>
-                  <TableCell>{parseFloat(p.alis_fiyati || 0).toLocaleString('tr-TR')}</TableCell>
-                  <TableCell>{parseFloat(p.satis_fiyati || 0).toLocaleString('tr-TR')}</TableCell>
+                  <TableCell>{sayiYaz(p.alis_fiyati)}</TableCell>
+                  <TableCell>{sayiYaz(p.satis_fiyati)}</TableCell>
                   <TableCell>{p.musteri_adi || '-'}</TableCell>
                   <TableCell>{p.musteri_telefon || '-'}</TableCell>
                   {karGor && <TableCell sx={{ color: pKar >= 0 ? 'green' : 'red', fontWeight: 'bold' }}>{pKar.toLocaleString('tr-TR')}</TableCell>}

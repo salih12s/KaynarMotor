@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, Button, Chip } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import { sayiYaz } from '../../../../shared/utils/bicim';
 
 // Üst çipler (toplam, bugün, beklemede, tamamlandı, gelir, yalnızca kâr yetkisi olana kâr) ve "Yeni Satış" düğmesi.
 const IstatistikSatiri = ({ satislar, stats, karGor, onYeni }) => {
@@ -15,8 +16,8 @@ const IstatistikSatiri = ({ satislar, stats, karGor, onYeni }) => {
     { label: `İşlemde: 0`, color: '#C62828', bg: '#ffebee' },
     { label: `Tamamlandı: ${tamamlandiCnt}`, color: '#C62828', bg: '#ffebee' },
     { label: `İptal: 0`, color: '#C62828', bg: '#ffebee' },
-    { label: `₺${parseFloat(stats.toplam_gelir || 0).toLocaleString('tr-TR')}`, color: '#C62828', bg: '#ffebee' },
-    ...(karGor ? [{ label: `Kâr: ₺${parseFloat(stats.toplam_kar || 0).toLocaleString('tr-TR')}`, color: '#C62828', bg: '#ffebee' }] : []),
+    { label: `₺${sayiYaz(stats.toplam_gelir)}`, color: '#C62828', bg: '#ffebee' },
+    ...(karGor ? [{ label: `Kâr: ₺${sayiYaz(stats.toplam_kar)}`, color: '#C62828', bg: '#ffebee' }] : []),
   ];
   return (
     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2, alignItems: 'center' }}>

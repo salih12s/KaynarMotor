@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, Paper, Typography, Grid, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Dialog, DialogTitle, DialogContent, DialogActions, Button } from '@mui/material';
 import { formatDate } from '../bicim';
+import { sayiYaz } from '../../../shared/utils/bicim';
 
 // İş emri detay penceresi (parça listesi JSON metin olarak gelebilir).
 const IsEmriDetayModal = ({ open, data, onClose, isMobile }) => {
@@ -66,7 +67,7 @@ const IsEmriDetayModal = ({ open, data, onClose, isMobile }) => {
               return (
                 <Paper key={i} variant="outlined" sx={{ p: 1.5 }}>
                   <Typography variant="body2" fontWeight="bold">{p.takilan_parca}</Typography>
-                  <Typography variant="caption" color="text.secondary">Adet: {p.adet} • Birim: ₺{parseFloat(p.birim_fiyat || 0).toLocaleString('tr-TR')} • Toplam: ₺{pSatis.toLocaleString('tr-TR')}</Typography>
+                  <Typography variant="caption" color="text.secondary">Adet: {p.adet} • Birim: ₺{sayiYaz(p.birim_fiyat)} • Toplam: ₺{pSatis.toLocaleString('tr-TR')}</Typography>
                   <Typography variant="caption" sx={{ display: 'block' }}>Maliyet: ₺{pMaliyet.toLocaleString('tr-TR')} • <span style={{ color: pKar >= 0 ? '#2e7d32' : '#c62828', fontWeight: 'bold' }}>Kâr: ₺{pKar.toLocaleString('tr-TR')}</span></Typography>
                 </Paper>
               );
@@ -91,7 +92,7 @@ const IsEmriDetayModal = ({ open, data, onClose, isMobile }) => {
                     <TableRow key={i}>
                       <TableCell>{p.takilan_parca}</TableCell>
                       <TableCell>{p.adet}</TableCell>
-                      <TableCell>₺{parseFloat(p.birim_fiyat || 0).toLocaleString('tr-TR')}</TableCell>
+                      <TableCell>₺{sayiYaz(p.birim_fiyat)}</TableCell>
                       <TableCell sx={{ fontWeight: 'bold' }}>₺{pSatis.toLocaleString('tr-TR')}</TableCell>
                       <TableCell>₺{pMaliyet.toLocaleString('tr-TR')}</TableCell>
                       <TableCell sx={{ color: pKar >= 0 ? '#2e7d32' : '#c62828', fontWeight: 'bold' }}>₺{pKar.toLocaleString('tr-TR')}</TableCell>

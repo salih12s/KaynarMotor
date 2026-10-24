@@ -1,6 +1,7 @@
+import { paraYaz, tarihYaz } from '../../shared/utils/bicim';
 // Raporlar ekranlarının ortak biçimleyicileri (para, tarih, kâr rengi). Saf fonksiyonlar: durumları yok.
-export const formatTL = (v) => parseFloat(v || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 });
-export const formatDate = (d) => d ? new Date(d).toLocaleDateString('tr-TR') : '-';
+export const formatTL = (v) => paraYaz(v);
+export const formatDate = (d) => tarihYaz(d);
 
 // Tablo başlık hücresi stili (kırmızı başlık satırında beyaz yazı)
 export const headerSx = { color: 'white', fontWeight: 'bold', whiteSpace: 'nowrap' };

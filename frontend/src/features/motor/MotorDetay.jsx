@@ -8,6 +8,7 @@ import PrintIcon from '@mui/icons-material/Print';
 import { useReactToPrint } from 'react-to-print';
 import { ikinciElMotorService } from './motorApi';
 import { useKarGor } from '../auth/AuthContext';
+import { sayiYaz, tarihYaz } from '../../shared/utils/bicim';
 
 const MotorDetay = () => {
   const karGor = useKarGor();
@@ -28,8 +29,7 @@ const MotorDetay = () => {
 
   if (!data) return null;
 
-  const formatTL = (v) => parseFloat(v || 0).toLocaleString('tr-TR', { minimumFractionDigits: 0 });
-  const formatDate = (d) => d ? new Date(d).toLocaleDateString('tr-TR') : '-';
+  const formatTL = (v) => sayiYaz(v);
 
   const alis = parseFloat(data.alis_fiyati || 0);
   const satis = parseFloat(data.satis_fiyati || 0);
@@ -87,7 +87,7 @@ const MotorDetay = () => {
                 </Box>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                   <Typography variant="body2" color="text.secondary">Tarih:</Typography>
-                  <Typography>{formatDate(data.tarih)}</Typography>
+                  <Typography>{tarihYaz(data.tarih)}</Typography>
                 </Box>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                   <Typography variant="body2" color="text.secondary">Ödeme Şekli:</Typography>
@@ -146,7 +146,7 @@ const MotorDetay = () => {
               <Grid size={{ xs: 12, md: 4 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                   <Typography variant="body2" color="text.secondary">Tutar:</Typography>
-                  <Typography fontWeight="bold">₺{parseFloat(data.komisyoncu_tutari || 0).toLocaleString('tr-TR')}</Typography>
+                  <Typography fontWeight="bold">₺{sayiYaz(data.komisyoncu_tutari)}</Typography>
                 </Box>
               </Grid>
             </Grid>

@@ -5,6 +5,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import ViewIcon from '@mui/icons-material/Visibility';
 import { hesaplaKomisyon, detectPlatform } from '../../komisyon';
 import { formatTL } from '../eticaretVeri';
+import { tarihYaz } from '../../../../shared/utils/bicim';
 
 // Satış listesi: dar ekranda kartlar, geniş ekranda tablo; kâr sütunu yalnızca e-ticaret yetkisi olanlar için.
 const SatisListesi = ({ satislar, platformFiltre, isMobile, karGor, onDetay, onDuzenle, onSil }) => {
@@ -21,7 +22,7 @@ const SatisListesi = ({ satislar, platformFiltre, isMobile, karGor, onDetay, onD
           <Typography variant="subtitle2" fontWeight="bold">{s.urun_adi}</Typography>
           <Chip label={s.platform_adi || '-'} size="small" sx={{ bgcolor: '#ffebee', color: '#C62828', fontWeight: 'bold', fontSize: '0.7rem' }} />
         </Box>
-        <Typography variant="body2" color="text.secondary">Adet: {s.adet} • {s.tarih ? new Date(s.tarih).toLocaleDateString('tr-TR') : '-'}</Typography>
+        <Typography variant="body2" color="text.secondary">Adet: {s.adet} • {tarihYaz(s.tarih)}</Typography>
         <Box sx={{ display: 'flex', gap: 2, mt: 0.5 }}>
           <Typography variant="body2">Alış: <strong>{formatTL(s.alis_fiyati)} ₺</strong></Typography>
           <Typography variant="body2">Satış: <strong>{formatTL(s.satis_fiyati)} ₺</strong></Typography>
@@ -60,7 +61,7 @@ const SatisListesi = ({ satislar, platformFiltre, isMobile, karGor, onDetay, onD
             <TableCell>%{parseFloat(s.kdv_orani || 20).toFixed(0)}</TableCell>
             <TableCell>{formatTL(sHesap.komisyonTutari)}</TableCell>
             {karGor && <TableCell sx={{ color: sHesap.netKar >= 0 ? 'green' : 'red', fontWeight: 'bold' }}>{formatTL(sHesap.netKar)}</TableCell>}
-            <TableCell>{s.tarih ? new Date(s.tarih).toLocaleDateString('tr-TR') : '-'}</TableCell>
+            <TableCell>{tarihYaz(s.tarih)}</TableCell>
             <TableCell sx={{ whiteSpace: 'nowrap' }}>
               <IconButton size="small" color="primary" onClick={() => onDetay(s)}><ViewIcon /></IconButton>
               <IconButton size="small" color="info" onClick={() => onDuzenle(s)}><EditIcon /></IconButton>

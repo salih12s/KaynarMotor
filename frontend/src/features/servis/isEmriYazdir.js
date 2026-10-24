@@ -1,11 +1,11 @@
 import { escapeHtml as e } from '../../shared/utils/htmlKacis';
+import { sayiYaz, tarihYaz } from '../../shared/utils/bicim';
 
 // İş emri yazdırma sayfasının HTML'ini üretir (saf fonksiyon: pencere açmaz, yazdırmaz).
 // Serbest metin alanlarının TAMAMI kaçışlanır; bkz. htmlKacis.js.
 export const isEmriYazdirHtml = (data) => {
   const parcalar = data.parcalar || [];
   const toplamFiyat = parcalar.reduce((t, p) => t + parseFloat(p.toplam_fiyat || 0), 0);
-  const formatDate = (d) => (d ? new Date(d).toLocaleDateString('tr-TR') : '-');
   const durumLabel = (d) => (d === 'tamamlandi' ? 'Tamamlandı' : d === 'devam_ediyor' ? 'Devam Ediyor' : 'Beklemede');
 
   const parcaRows = parcalar.map((p) => {
@@ -13,7 +13,7 @@ export const isEmriYazdirHtml = (data) => {
     return `<tr>
       <td style="padding:6px;border:1px solid #ddd">${e(p.takilan_parca)}</td>
       <td style="padding:6px;border:1px solid #ddd;text-align:center">${e(p.adet)}</td>
-      <td style="padding:6px;border:1px solid #ddd;text-align:right">₺${parseFloat(p.birim_fiyat || 0).toLocaleString('tr-TR')}</td>
+      <td style="padding:6px;border:1px solid #ddd;text-align:right">₺${sayiYaz(p.birim_fiyat)}</td>
       <td style="padding:6px;border:1px solid #ddd;text-align:right;font-weight:bold">₺${pSatis.toLocaleString('tr-TR')}</td>
     </tr>`;
   }).join('');
@@ -41,7 +41,7 @@ export const isEmriYazdirHtml = (data) => {
   </style></head><body>
   <div class="header">
     <h2>KAYNAR MOTOR - İŞ EMRİ</h2>
-    <div>Fiş No: <strong>#${e(data.fis_no)}</strong> | Tarih: ${formatDate(data.created_at)}</div>
+    <div>Fiş No: <strong>#${e(data.fis_no)}</strong> | Tarih: ${tarihYaz(data.created_at)}</div>
   </div>
   <div class="info-grid">
     <div class="info-box">
@@ -61,9 +61,9 @@ export const isEmriYazdirHtml = (data) => {
     </div>
     <div class="info-box">
       <div class="section-title">Tarih ve Teslim</div>
-      <div class="info-row"><span class="label">Oluşturma:</span><span class="value">${formatDate(data.created_at)}</span></div>
-      <div class="info-row"><span class="label">Tah. Teslim:</span><span class="value">${formatDate(data.tahmini_teslim_tarihi)}</span></div>
-      <div class="info-row"><span class="label">Teslim Tarihi:</span><span class="value">${formatDate(data.teslim_tarihi)}</span></div>
+      <div class="info-row"><span class="label">Oluşturma:</span><span class="value">${tarihYaz(data.created_at)}</span></div>
+      <div class="info-row"><span class="label">Tah. Teslim:</span><span class="value">${tarihYaz(data.tahmini_teslim_tarihi)}</span></div>
+      <div class="info-row"><span class="label">Teslim Tarihi:</span><span class="value">${tarihYaz(data.teslim_tarihi)}</span></div>
       <div class="info-row"><span class="label">Teslim Alan:</span><span class="value">${e(data.teslim_alan_ad_soyad || '-')}</span></div>
       <div class="info-row"><span class="label">Teslim Eden:</span><span class="value">${e(data.teslim_eden_teknisyen || '-')}</span></div>
     </div>

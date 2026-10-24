@@ -5,6 +5,7 @@ import PrintIcon from '@mui/icons-material/Print';
 import { BelgeBolumu } from '../../SatisBelgeleri';
 import { useReactToPrint } from 'react-to-print';
 import { parseOdeme } from '../motorStokVeri';
+import { sayiYaz, tarihYaz } from '../../../../shared/utils/bicim';
 
 // Motor stok detay penceresi: yetkiye göre fiyat/satıcı/kâr bölümleri, ödeme dağılımı, yazdırma ve belgeler.
 const InfoRow = ({ label, value }) => (
@@ -19,8 +20,7 @@ const StokDetayModal = ({ open, data, onClose, printRef, isMobile, perms = {} })
   const handlePrint = useReactToPrint({ contentRef: printRef });
   if (!data) return null;
 
-  const formatTL = (v) => parseFloat(v || 0).toLocaleString('tr-TR', { minimumFractionDigits: 0 });
-  const formatDate = (d) => d ? new Date(d).toLocaleDateString('tr-TR') : '-';
+  const formatTL = (v) => sayiYaz(v);
   const alis = parseFloat(data.alis_fiyati || 0);
   const noterAlis = parseFloat(data.noter_alis || 0);
 
@@ -43,7 +43,7 @@ const StokDetayModal = ({ open, data, onClose, printRef, isMobile, perms = {} })
               <InfoRow label="Yıl" value={data.yil} />
               <InfoRow label="KM" value={data.km ? Number(data.km).toLocaleString('tr-TR') : null} />
               <InfoRow label="Stok Tipi" value={data.stok_tipi === 'konsinye' ? 'Konsinye' : 'Sahip'} />
-              <InfoRow label="Alım Tarihi" value={formatDate(data.tarih)} />
+              <InfoRow label="Alım Tarihi" value={tarihYaz(data.tarih)} />
               {data.yevmiye_no && <InfoRow label="Yevmiye No" value={data.yevmiye_no} />}
               {canListe && <InfoRow label="İlan Fiyatı" value={`₺${formatTL(data.liste_fiyati)}`} />}
             </Grid>
@@ -123,7 +123,7 @@ const StokDetayModal = ({ open, data, onClose, printRef, isMobile, perms = {} })
                 <Typography variant="subtitle1" fontWeight="bold" color="primary" gutterBottom>💳 Ödeme Dağılımı</Typography>
                 <Divider sx={{ mb: 1 }} />
                 {data.satis_fiyati ? <InfoRow label="Toplam Satış" value={`₺${formatTL(data.satis_fiyati)}`} /> : null}
-                {odemeler.map((o, i) => <InfoRow key={i} label={o.tip} value={`₺${parseFloat(o.tutar || 0).toLocaleString('tr-TR')}`} />)}
+                {odemeler.map((o, i) => <InfoRow key={i} label={o.tip} value={`₺${sayiYaz(o.tutar)}`} />)}
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', pt: 0.5, mt: 0.5, borderTop: '1px solid #eee' }}>
                   <Typography variant="body2" fontWeight="bold">Toplam Ödeme</Typography>
                   <Typography variant="body2" fontWeight="bold">₺{toplam.toLocaleString('tr-TR')}</Typography>

@@ -4,6 +4,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ViewIcon from '@mui/icons-material/Visibility';
 import { filtrele } from '../aksesuarVeri';
+import { sayiYaz, tarihYaz } from '../../../../shared/utils/bicim';
 
 // Satış listesi: dar ekranda kartlar (süzgeç sonucu boşsa bilgi kutusu), geniş ekranda tablo; kâr yalnızca kâr yetkisi olana.
 const SatisListesi = ({ satislar, aksSearch, aksStart, aksEnd, isMobile, karGor, onDetay, onDuzenle, onSil }) => {
@@ -20,10 +21,10 @@ const SatisListesi = ({ satislar, aksSearch, aksStart, aksEnd, isMobile, karGor,
               <Chip label={s.durum === 'tamamlandi' ? 'Tamamlandı' : 'Beklemede'} size="small" color={durumRenk(s.durum)} sx={{ height: 20, fontSize: '0.7rem' }} />
             </Box>
             <Typography variant="body2" color="text.secondary">{s.telefon || '-'} • {s.olusturan_kisi || '-'}</Typography>
-            <Typography variant="body2" color="text.secondary">{s.satis_tarihi ? new Date(s.satis_tarihi).toLocaleDateString('tr-TR') : '-'}</Typography>
+            <Typography variant="body2" color="text.secondary">{tarihYaz(s.satis_tarihi)}</Typography>
             <Box sx={{ display: 'flex', gap: 2, mt: 0.5 }}>
-              <Typography variant="body2">Satış: <strong>{parseFloat(s.toplam_satis || 0).toLocaleString('tr-TR')} ₺</strong></Typography>
-              {karGor && <Typography variant="body2" sx={{ color: parseFloat(s.kar || 0) >= 0 ? 'green' : 'red' }}>Kâr: <strong>{parseFloat(s.kar || 0).toLocaleString('tr-TR')} ₺</strong></Typography>}
+              <Typography variant="body2">Satış: <strong>{sayiYaz(s.toplam_satis)} ₺</strong></Typography>
+              {karGor && <Typography variant="body2" sx={{ color: parseFloat(s.kar || 0) >= 0 ? 'green' : 'red' }}>Kâr: <strong>{sayiYaz(s.kar)} ₺</strong></Typography>}
             </Box>
             <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 0.5 }} onClick={e => e.stopPropagation()}>
               <IconButton size="small" color="info" onClick={() => onDuzenle(s)}><EditIcon /></IconButton>
@@ -48,11 +49,11 @@ const SatisListesi = ({ satislar, aksSearch, aksStart, aksEnd, isMobile, karGor,
             <TableRow key={s.id} hover>
               <TableCell>{s.ad_soyad}</TableCell>
               <TableCell>{s.telefon || '-'}</TableCell>
-              <TableCell>{parseFloat(s.toplam_satis || 0).toLocaleString('tr-TR')} ₺</TableCell>
-              {karGor && <TableCell sx={{ color: parseFloat(s.kar || 0) >= 0 ? 'green' : 'red' }}>{parseFloat(s.kar || 0).toLocaleString('tr-TR')} ₺</TableCell>}
+              <TableCell>{sayiYaz(s.toplam_satis)} ₺</TableCell>
+              {karGor && <TableCell sx={{ color: parseFloat(s.kar || 0) >= 0 ? 'green' : 'red' }}>{sayiYaz(s.kar)} ₺</TableCell>}
               <TableCell>{s.olusturan_kisi || '-'}</TableCell>
               <TableCell><Chip label={s.durum === 'tamamlandi' ? 'Tamamlandı' : 'Beklemede'} size="small" color={durumRenk(s.durum)} /></TableCell>
-              <TableCell>{s.satis_tarihi ? new Date(s.satis_tarihi).toLocaleDateString('tr-TR') : '-'}</TableCell>
+              <TableCell>{tarihYaz(s.satis_tarihi)}</TableCell>
               <TableCell>
                 <IconButton size="small" color="primary" onClick={() => onDetay(s.id)}><ViewIcon /></IconButton>
                 <IconButton size="small" color="info" onClick={() => onDuzenle(s)}><EditIcon /></IconButton>

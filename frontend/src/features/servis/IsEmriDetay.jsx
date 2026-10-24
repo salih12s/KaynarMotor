@@ -10,6 +10,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import { useReactToPrint } from 'react-to-print';
 import { isEmriService } from './servisApi';
 import { useKarGor } from '../auth/AuthContext';
+import { sayiYaz, tarihYaz } from '../../shared/utils/bicim';
 
 const IsEmriDetay = () => {
   const karGor = useKarGor();
@@ -45,7 +46,6 @@ const IsEmriDetay = () => {
     if (d === 'devam_ediyor') return 'info';
     return 'warning';
   };
-  const formatDate = (d) => d ? new Date(d).toLocaleDateString('tr-TR') : '-';
 
   const InfoRow = ({ label, value }) => (
     <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 0.3 }}>
@@ -102,9 +102,9 @@ const IsEmriDetay = () => {
                 📅 Tarih ve Teslim
               </Typography>
               <Divider sx={{ mb: 1 }} />
-              <InfoRow label="Oluşturma" value={formatDate(data.created_at)} />
-              <InfoRow label="Tahmini Teslim" value={formatDate(data.tahmini_teslim_tarihi)} />
-              <InfoRow label="Teslim Tarihi" value={formatDate(data.teslim_tarihi)} />
+              <InfoRow label="Oluşturma" value={tarihYaz(data.created_at)} />
+              <InfoRow label="Tahmini Teslim" value={tarihYaz(data.tahmini_teslim_tarihi)} />
+              <InfoRow label="Teslim Tarihi" value={tarihYaz(data.teslim_tarihi)} />
               <InfoRow label="Teslim Alan" value={data.teslim_alan_ad_soyad} />
               <InfoRow label="Teslim Eden" value={data.teslim_eden_teknisyen} />
             </Paper>
@@ -140,8 +140,8 @@ const IsEmriDetay = () => {
                 {parcalar.map((p, i) => (
                   <Paper key={i} variant="outlined" sx={{ p: 1.5 }}>
                     <Typography variant="body2" fontWeight="bold">{p.takilan_parca}</Typography>
-                    <Typography variant="caption" color="text.secondary">{p.parca_kodu ? `Kod: ${p.parca_kodu} • ` : ''}Adet: {p.adet} • Birim: ₺{parseFloat(p.birim_fiyat || 0).toLocaleString('tr-TR')}</Typography>
-                    <Typography variant="caption" sx={{ display: 'block' }}>Maliyet: ₺{parseFloat(p.maliyet || 0).toLocaleString('tr-TR')} • <strong>Toplam: ₺{parseFloat(p.toplam_fiyat || 0).toLocaleString('tr-TR')}</strong></Typography>
+                    <Typography variant="caption" color="text.secondary">{p.parca_kodu ? `Kod: ${p.parca_kodu} • ` : ''}Adet: {p.adet} • Birim: ₺{sayiYaz(p.birim_fiyat)}</Typography>
+                    <Typography variant="caption" sx={{ display: 'block' }}>Maliyet: ₺{sayiYaz(p.maliyet)} • <strong>Toplam: ₺{sayiYaz(p.toplam_fiyat)}</strong></Typography>
                   </Paper>
                 ))}
               </Box>
@@ -161,9 +161,9 @@ const IsEmriDetay = () => {
                         <TableCell>{p.parca_kodu || '-'}</TableCell>
                         <TableCell>{p.takilan_parca}</TableCell>
                         <TableCell>{p.adet}</TableCell>
-                        <TableCell>₺{parseFloat(p.birim_fiyat || 0).toLocaleString('tr-TR')}</TableCell>
-                        <TableCell>₺{parseFloat(p.maliyet || 0).toLocaleString('tr-TR')}</TableCell>
-                        <TableCell sx={{ fontWeight: 'bold' }}>₺{parseFloat(p.toplam_fiyat || 0).toLocaleString('tr-TR')}</TableCell>
+                        <TableCell>₺{sayiYaz(p.birim_fiyat)}</TableCell>
+                        <TableCell>₺{sayiYaz(p.maliyet)}</TableCell>
+                        <TableCell sx={{ fontWeight: 'bold' }}>₺{sayiYaz(p.toplam_fiyat)}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>

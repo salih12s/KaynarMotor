@@ -12,6 +12,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import PrintIcon from '@mui/icons-material/Print';
 import { yedekParcaStokService } from './yedekParcaApi';
 import JsBarcode from 'jsbarcode';
+import { sayiYaz, paraYaz } from '../../shared/utils/bicim';
 
 // Hızlı yazarken eski aramanın yanıtı yeniyi ezmesin
 const sonAra = sonIstek();
@@ -35,7 +36,7 @@ const printYedekParcaLabel = (stok) => {
     return;
   }
   const svgStr = new XMLSerializer().serializeToString(svg);
-  const fiyat = parseFloat(stok.satis_fiyati || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 }) + ' ₺';
+  const fiyat = paraYaz(stok.satis_fiyati) + ' ₺';
   const win = window.open('', '_blank', 'width=420,height=320');
   if (!win) {
     alert('Yazdırma penceresi açılamadı. Tarayıcı pop-up engelleyicisini kapatın.');
@@ -175,8 +176,8 @@ const YedekParcaStok = () => {
               </Box>
               <Typography variant="body2" color="text.secondary">{s.stok_kodu || '-'} • {s.marka || '-'}</Typography>
               <Box sx={{ display: 'flex', gap: 2, mt: 0.5 }}>
-                <Typography variant="body2">Alış: <strong>{parseFloat(s.alis_fiyati || 0).toLocaleString('tr-TR')} ₺</strong></Typography>
-                <Typography variant="body2">Satış: <strong>{parseFloat(s.satis_fiyati || 0).toLocaleString('tr-TR')} ₺</strong></Typography>
+                <Typography variant="body2">Alış: <strong>{sayiYaz(s.alis_fiyati)} ₺</strong></Typography>
+                <Typography variant="body2">Satış: <strong>{sayiYaz(s.satis_fiyati)} ₺</strong></Typography>
               </Box>
               <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 0.5 }}>
                 <IconButton size="small" color="primary" onClick={() => printYedekParcaLabel(s)} title="Etiket Yazdır"><PrintIcon /></IconButton>
@@ -202,8 +203,8 @@ const YedekParcaStok = () => {
                 <TableCell>{s.stok_kodu || '-'}</TableCell>
                 <TableCell>{s.stok_adi}</TableCell>
                 <TableCell>{s.marka || '-'}</TableCell>
-                <TableCell>{parseFloat(s.alis_fiyati || 0).toLocaleString('tr-TR')}</TableCell>
-                <TableCell>{parseFloat(s.satis_fiyati || 0).toLocaleString('tr-TR')}</TableCell>
+                <TableCell>{sayiYaz(s.alis_fiyati)}</TableCell>
+                <TableCell>{sayiYaz(s.satis_fiyati)}</TableCell>
                 <TableCell sx={{ fontWeight: 'bold', color: (s.mevcut || 0) <= 0 ? 'red' : 'green' }}>{s.mevcut || 0}</TableCell>
                 <TableCell>
                   <IconButton size="small" color="primary" onClick={() => printYedekParcaLabel(s)} title="Etiket Yazdır"><PrintIcon /></IconButton>

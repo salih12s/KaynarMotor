@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, Paper, Typography, Grid, Chip, Dialog, DialogTitle, DialogContent, DialogActions, Button } from '@mui/material';
 import { formatTL, formatDate, karColor } from '../bicim';
+import { sayiYaz } from '../../../shared/utils/bicim';
 
 // Motor satış detay penceresi. Net kâr = toplam kâr - yatırımcı payı.
 const MotorDetayModal = ({ open, data, onClose, isMobile }) => {
@@ -126,7 +127,7 @@ const MotorDetayModal = ({ open, data, onClose, isMobile }) => {
                 <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#f57f17' }} gutterBottom>Komisyoncu</Typography>
                 <Typography variant="body2"><strong>Ad Soyad:</strong> {m.komisyoncu_adi}</Typography>
                 <Typography variant="body2"><strong>Telefon:</strong> {m.komisyoncu_telefon || '-'}</Typography>
-                <Typography variant="body2"><strong>Tutar:</strong> ₺{parseFloat(m.komisyoncu_tutari || 0).toLocaleString('tr-TR')}</Typography>
+                <Typography variant="body2"><strong>Tutar:</strong> ₺{sayiYaz(m.komisyoncu_tutari)}</Typography>
               </Paper>
             </Grid>
           )}
