@@ -4,7 +4,8 @@
  * API ve oturum sahte (mock): gerçek ağ/sunucu yok. Sayılar elle hesaplandı (aşağıdaki RAPOR sabitine bakın).
  */
 import React from 'react';
-import { render, screen, within, waitFor, act } from '@testing-library/react';
+import { screen, within, waitFor, act } from '@testing-library/react';
+import { sorguluRender } from '../../shared/sorgu/sorguluRender';
 import userEvent from '@testing-library/user-event';
 import Raporlar from './Raporlar';
 import { raporService } from './raporApi';
@@ -182,10 +183,11 @@ const kur = ({ rol = 'admin', rapor = RAPOR, fisKar = FIS_KAR } = {}) => {
   aksesuarStokService.getAll.mockResolvedValue({ data: STOK });
 };
 
+let sonEkran; // son render sonucu (istemci ve unmount, yeniden açılış testi için)
 const ekranAc = async (secenek) => {
   kur(secenek);
   const user = userEvent.setup();
-  render(<Raporlar />);
+  sonEkran = sorguluRender(<Raporlar />);
   await screen.findByText('Toplam Gelir'); // Genel Özet açılınca veri gelmiştir
   return user;
 };
@@ -246,7 +248,7 @@ describe('Raporlar: roller ve sekmeler', () => {
       },
     });
     const user = userEvent.setup();
-    render(<Raporlar />);
+    sorguluRender(<Raporlar />);
 
     expect(await screen.findByText('Yatırım Raporum')).toBeInTheDocument();
     await screen.findByText('Toplam Kazancım'); // veri gelene dek dönen çark görünür
@@ -292,12 +294,12 @@ describe('Raporlar: tarih aralığı ve yükleme', () => {
   test('rapor isteği hata verirse hata mesajı görünür, kartlar görünmez', async () => {
     kur();
     raporService.getAralik.mockRejectedValue(new Error('ağ'));
-    render(<Raporlar />);
+    sorguluRender(<Raporlar />);
     expect(await screen.findByText('Rapor yüklenirken hata oluştu')).toBeInTheDocument();
     expect(screen.queryByText('Toplam Gelir')).not.toBeInTheDocument();
   });
 
-  test('eski isteğin geç gelen yanıtı yenisinin üzerine yazmaz (sonIstek koruması)', async () => {
+  test('eski isteğin geç gelen yanıtı yenisinin üzerine yazmaz (her aralık ayrı önbellek anahtarı; eskiden sonIstek)', async () => {
     kur();
     let eskiyiBitir;
     const eski = new Promise((coz) => {
@@ -308,7 +310,7 @@ describe('Raporlar: tarih aralığı ve yükleme', () => {
       .mockImplementationOnce(() => eski) // açılıştaki istek: yavaş
       .mockImplementationOnce(() => Promise.resolve({ data: yeni })); // "Geçen Yıl" tıklaması: hızlı
     const user = userEvent.setup();
-    render(<Raporlar />);
+    sorguluRender(<Raporlar />);
     await user.click(screen.getByRole('button', { name: 'Geçen Yıl' }));
     expect(await screen.findByText('Toplam Gelir')).toBeInTheDocument();
     expect(kart('Toplam Gelir')).toBe('₺5.000,00');
@@ -318,6 +320,37 @@ describe('Raporlar: tarih aralığı ve yükleme', () => {
     }); // eski yanıt şimdi geliyor
     expect(kart('Toplam Gelir')).toBe('₺5.000,00');
     expect(screen.queryByText('Rapor yüklenirken hata oluştu')).not.toBeInTheDocument(); // yok sayılır, hata sayılmaz
+  });
+
+  // ---- Önbellek (TanStack Query) ----
+  test('önbellek: tarih aralığı değişince personel ve stok listeleri yeniden istenmez (tarihe bağlı değiller)', async () => {
+    const user = await ekranAc();
+    await user.click(screen.getByRole('button', { name: 'Geçen Yıl' }));
+    const y = new Date().getFullYear() - 1;
+    await waitFor(() => expect(raporService.getAralik).toHaveBeenLastCalledWith(`${y}-01-01`, `${y}-12-31`));
+    expect(raporService.getPersoneller).toHaveBeenCalledTimes(1);
+    expect(aksesuarStokService.getAll).toHaveBeenCalledTimes(1);
+  });
+
+  test('önbellek: 30 sn içinde önceki aralığa dönünce rapor sunucuya gitmeden gelir', async () => {
+    const user = await ekranAc();
+    await user.click(screen.getByRole('button', { name: 'Geçen Yıl' }));
+    await waitFor(() => expect(raporService.getAralik).toHaveBeenCalledTimes(2));
+    await screen.findByText('Toplam Gelir');
+    await user.click(screen.getByRole('button', { name: 'Bu Ay' }));
+    expect(await screen.findByText('Toplam Gelir')).toBeInTheDocument();
+    expect(raporService.getAralik).toHaveBeenCalledTimes(2);
+    expect(raporService.getFisKar).toHaveBeenCalledTimes(2);
+  });
+
+  test('önbellek: sayfa kapatılıp yeniden açılınca rapor yine sunucudan istenir (yeni satışlar görünsün); personel listesi istenmez', async () => {
+    await ekranAc();
+    const { istemci, unmount } = sonEkran;
+    unmount();
+    sorguluRender(<Raporlar />, { istemci });
+    await waitFor(() => expect(raporService.getAralik).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(raporService.getFisKar).toHaveBeenCalledTimes(2));
+    expect(raporService.getPersoneller).toHaveBeenCalledTimes(1);
   });
 });
 

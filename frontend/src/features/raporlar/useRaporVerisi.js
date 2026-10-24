@@ -1,18 +1,30 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { raporService } from './raporApi';
 import { aksesuarStokService } from '../aksesuar/aksesuarApi';
-import { sonIstek } from '../../shared/utils/sonIstek';
+import { yerelTarih } from '../../shared/utils/tarih';
 
-// Tarih aralığı hızlı değişirken eski isteğin yanıtı yenisini ezmesin
-const sonRapor = sonIstek();
-const sonFisKar = sonIstek();
+const BOS = [];
 
-// Yerel tarihi YYYY-AA-GG biçimine çevirir (UTC kayması olmadan)
-const yerelTarih = (d) => {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
+// Önbellek anahtarları. Tarihe bağlı olanlar aralığı anahtarda taşır: her aralık ayrı saklanır, geç gelen eski yanıt
+// yeni aralığın üzerine yazamaz (eskiden bunu elle `sonIstek` sağlıyordu).
+export const raporAnahtari = {
+  hepsi: ['raporlar'],
+  aralik: (b, e) => ['raporlar', 'aralik', { b, e }],
+  fisKar: (b, e) => ['raporlar', 'fisKar', { b, e }],
+  yatirimciOzet: (b, e) => ['raporlar', 'yatirimciOzet', { b, e }],
+  personeller: ['raporlar', 'personeller'],
+  stok: ['aksesuarStok', 'liste'],
+};
+
+// Hata ekrana düşmeden önce konsola da yazılsın (eski davranış)
+const konsolaYaz = (istek) => async () => {
+  try {
+    return (await istek()).data;
+  } catch (err) {
+    console.error(err);
+    throw err;
+  }
 };
 
 // Raporlar ekranının verisi: tarih aralığı + sunucudan gelen rapor/fiş kârı/personel/stok/yatırımcı özeti.
@@ -21,13 +33,6 @@ export const useRaporVerisi = ({ yatirimci, admin }) => {
   const bugun = new Date();
   const [baslangic, setBaslangic] = useState(yerelTarih(new Date(bugun.getFullYear(), bugun.getMonth(), 1)));
   const [bitis, setBitis] = useState(yerelTarih(new Date(bugun.getFullYear(), bugun.getMonth() + 1, 0)));
-  const [rapor, setRapor] = useState(null);
-  const [fisKar, setFisKar] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [personeller, setPersoneller] = useState([]);
-  const [stokOptions, setStokOptions] = useState([]);
-  const [yatirimciOzet, setYatirimciOzet] = useState([]);
 
   // Hızlı tarih ön ayarları — filtreyi tek tıkla veri olan aralığa taşımak için
   const aralik = (b, e) => {
@@ -57,53 +62,56 @@ export const useRaporVerisi = ({ yatirimci, admin }) => {
     },
   };
 
-  const loadRapor = async () => {
-    setLoading(true);
-    setError('');
-    try {
-      const res = await sonRapor(raporService.getAralik(baslangic, bitis));
-      if (!res) return; // tarih aralığı bu arada değişti: eski yanıt yok sayılır
-      setRapor(res.data);
-    } catch (err) {
-      setError('Rapor yüklenirken hata oluştu');
-      console.error(err);
-    }
-    setLoading(false);
+  const etkin = !yatirimci;
+  // Tarihe bağlı veriler: sayfa her açılışta tazelenir (başka ekranda yapılan satış raporda hemen görünsün);
+  // aralık değişirken yeni veri gelene kadar eskisi tutulur (ekran boşa düşmez, yükleniyor göstergesi çıkar).
+  const tarihli = { enabled: etkin, refetchOnMount: 'always', placeholderData: keepPreviousData };
+
+  const rapor = useQuery({
+    queryKey: raporAnahtari.aralik(baslangic, bitis),
+    queryFn: konsolaYaz(() => raporService.getAralik(baslangic, bitis)),
+    ...tarihli,
+  });
+  const fisKar = useQuery({
+    queryKey: raporAnahtari.fisKar(baslangic, bitis),
+    queryFn: konsolaYaz(() => raporService.getFisKar(baslangic, bitis)),
+    ...tarihli,
+  });
+  const yatirimciOzet = useQuery({
+    queryKey: raporAnahtari.yatirimciOzet(baslangic, bitis),
+    queryFn: async () => (await raporService.getYatirimciOzet(baslangic, bitis)).data,
+    ...tarihli,
+    enabled: etkin && !!admin,
+  });
+  // Tarihe bağlı değil: bir kez istenir (eskiden her aralık değişiminde yeniden isteniyordu)
+  const personeller = useQuery({
+    queryKey: raporAnahtari.personeller,
+    queryFn: async () => (await raporService.getPersoneller()).data,
+    enabled: etkin,
+  });
+  const stok = useQuery({
+    queryKey: raporAnahtari.stok,
+    queryFn: async () => (await aksesuarStokService.getAll()).data,
+    enabled: etkin,
+  });
+
+  // Rapor ve fiş kârı birlikte yüklenir: biri bitip diğeri sürerken ekran erken açılmaz
+  const loading = rapor.isFetching || fisKar.isFetching;
+  // Placeholder (önceki aralık) verisi hata durumunda gösterilmez: yanlış aralığın raporu ekranda kalmasın
+  const error = rapor.isError ? 'Rapor yüklenirken hata oluştu' : fisKar.isError ? 'Fiş kâr verileri yüklenirken hata oluştu' : '';
+
+  return {
+    baslangic,
+    bitis,
+    setBaslangic,
+    setBitis,
+    presetler,
+    rapor: rapor.data ?? null,
+    fisKar: fisKar.data ?? null,
+    loading,
+    error,
+    personeller: personeller.data ?? BOS,
+    stokOptions: stok.data ?? BOS,
+    yatirimciOzet: yatirimciOzet.data ?? BOS,
   };
-
-  const loadFisKar = async () => {
-    setLoading(true);
-    setError('');
-    try {
-      const res = await sonFisKar(raporService.getFisKar(baslangic, bitis));
-      if (!res) return;
-      setFisKar(res.data);
-    } catch (err) {
-      setError('Fiş kâr verileri yüklenirken hata oluştu');
-      console.error(err);
-    }
-    setLoading(false);
-  };
-
-  // Yalnızca tarih aralığı değişince yeniden çekilir (rol oturum boyunca sabittir).
-  useEffect(() => {
-    if (yatirimci) return;
-    loadRapor();
-    loadFisKar();
-    raporService
-      .getPersoneller()
-      .then((r) => setPersoneller(r.data))
-      .catch(() => {});
-    aksesuarStokService
-      .getAll()
-      .then((r) => setStokOptions(r.data))
-      .catch(() => {});
-    if (admin)
-      raporService
-        .getYatirimciOzet(baslangic, bitis)
-        .then((r) => setYatirimciOzet(r.data))
-        .catch(() => {});
-  }, [baslangic, bitis]);
-
-  return { baslangic, bitis, setBaslangic, setBitis, presetler, rapor, fisKar, loading, error, personeller, stokOptions, yatirimciOzet };
 };
