@@ -11,10 +11,12 @@
     "seed:gorseller": "cd backend && npm run seed:gorseller",
     "package:hostinger": "node scripts/package-hostinger.cjs",
     "test": "cd backend && npm test",
-    "format": "prettier --write \"frontend/src/**/*.{js,jsx}\" \"backend/**/*.{ts,js,cjs}\"",
-    "format:check": "prettier --check \"frontend/src/**/*.{js,jsx}\" \"backend/**/*.{ts,js,cjs}\""
+    "format": "prettier --write \"frontend/src/**/*.{js,jsx}\" \"backend/**/*.{ts,js,cjs}\" \"e2e/**/*.{js,cjs}\" playwright.config.js",
+    "format:check": "prettier --check \"frontend/src/**/*.{js,jsx}\" \"backend/**/*.{ts,js,cjs}\" \"e2e/**/*.{js,cjs}\" playwright.config.js",
+    "test:e2e": "playwright test"
   },
   "devDependencies": {
+    "@playwright/test": "^1.64.1",
     "concurrently": "^8.2.2",
     "prettier": "^3.9.10"
   }

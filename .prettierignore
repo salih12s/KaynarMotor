@@ -7,3 +7,4 @@ docs
 yerel-arsiv
 package-lock.json
 *.md
+e2e/sonuclar

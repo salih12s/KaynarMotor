@@ -25,6 +25,7 @@ npm run dev      # tsx watch (port 5100); frontend: npm start (port 3100)
 # kökte
 npm run package:hostinger             # tsc + frontend build + esbuild + zip  → deploy/hostinger/
 npm run format:check                  # Prettier (yazmak için: npm run format); frontend: npm run lint (ESLint)
+npm run test:e2e                      # Playwright (gerçek Chrome + sıfırdan kurulan test_kaynar_e2e; yerel MariaDB açık olmalı; ~1,5 dk)
 ```
 
 ## Kurallar
@@ -44,5 +45,5 @@ tetiklenir (kırmızı ✗ üretmesin diye) ve GitHub'da hiç doğrulanmadı. As
 `.githooks/pre-push` (etkinleştirme: `git config core.hooksPath .githooks`; tsc + birim, ~3 sn). README'de CI rozeti KOYMA; kanıt olarak test sayılarını yaz.
 Frontend bölme **bitti (2026-10-19)**: Raporlar 1563->95, IsEmirleri 950->53, Vitrin 972->75, MotorStok 779->66, IkinciElMotor 709->57, Storefront 721->77, ETicaret 622->52, Aksesuarlar 614->33.
 Yöntem ve kurallar `docs/FRONTEND-BOLME-RAPORU.md` §9'da (önce karakterizasyon testi, betikle taşıma, eski-yeni HTML karşılaştırması).
-Sonraki işler: TanStack Query (ayrı adım), Vite+TSX, Playwright. (bicim.js, ESLint ve Prettier 2026-10-24 tamam.)
+Sonraki işler: Vite+TSX, tasarım gözden geçirme, README cilası. (bicim.js, ESLint/Prettier, TanStack Query, Playwright E2E 2026-10-25 tamam.) (bicim.js, ESLint ve Prettier 2026-10-24 tamam.)
 **Tüm kalan işler, öncelik sırası ve sunum (portföy) hedefi: `docs/YOL-HARITASI.md`.** Yeni sohbette önce onu oku.
