@@ -280,7 +280,7 @@ describe('İkinci El Motor: satış formu', () => {
 
   test('canlı net kâr (yalnızca admin): satış - (alış + masraf + komisyon); yatırımcı payı varsa "Benim Kârım" ayrışır', async () => {
     const user = await ekranAc();
-    const p = await yeniAc(user);
+    await yeniAc(user);
     await user.type(alan('Alış Fiyatı (₺)'), '50000');
     await user.type(alan('Satış Fiyatı (₺)'), '60000');
     await user.type(alan('Masraflar (₺)'), '1000');

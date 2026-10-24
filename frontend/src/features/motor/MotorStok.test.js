@@ -73,7 +73,6 @@ const hucreler = (row) => within(row).getAllByRole('cell').map((c) => c.textCont
 const basliklar = () => screen.getAllByRole('columnheader').map((h) => h.textContent);
 const ikon = (kapsam, ad) => within(kapsam).getByTestId(ad);
 const alan = (etiket) => screen.getByLabelText(etiket);
-const kart = (etiket) => screen.getByText(etiket).nextElementSibling.textContent;
 const bekleDialogKapanana = () => waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
 const plakalar = () => screen.getAllByRole('row').slice(1).map((r) => within(r).getAllByRole('cell')[0].textContent);
 

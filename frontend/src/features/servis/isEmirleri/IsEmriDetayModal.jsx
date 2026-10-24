@@ -6,7 +6,6 @@ import PrintIcon from '@mui/icons-material/Print';
 import QrIcon from '@mui/icons-material/QrCode2';
 import { useKarGor } from '../../auth/AuthContext';
 import { printServisQr, printIsEmri } from './servisYazdir';
-import { durumRenk, durumLabel } from './isEmriVeri';
 import { sayiYaz, tarihYaz } from '../../../shared/utils/bicim';
 
 // İş emri detay penceresi (liste sayfasından açılır; düzenle/yazdır/QR düğmeleri içinde).
