@@ -2,6 +2,8 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { sorguIstemcisiOlustur } from '../shared/sorgu/sorguIstemcisi';
 import { AuthProvider, useAuth } from '../features/auth/AuthContext';
 import { CustomThemeProvider, useCustomTheme } from './ThemeContext';
 
@@ -417,11 +419,16 @@ const ThemedApp = () => {
   );
 };
 
+// Uygulama boyunca tek önbellek (render dışında kurulur: her render'da sıfırlanmasın)
+const sorguIstemcisi = sorguIstemcisiOlustur();
+
 function App() {
   return (
-    <CustomThemeProvider>
-      <ThemedApp />
-    </CustomThemeProvider>
+    <QueryClientProvider client={sorguIstemcisi}>
+      <CustomThemeProvider>
+        <ThemedApp />
+      </CustomThemeProvider>
+    </QueryClientProvider>
   );
 }
 

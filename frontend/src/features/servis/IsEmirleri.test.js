@@ -4,7 +4,8 @@
  * API, oturum, QR kütüphanesi ve tarayıcı pencereleri (open/alert/confirm) sahte (mock). Sayılar elle hesaplandı.
  */
 import React from 'react';
-import { render, screen, within, waitFor, fireEvent } from '@testing-library/react';
+import { screen, within, waitFor, fireEvent } from '@testing-library/react';
+import { sorguluRender } from '../../shared/sorgu/sorguluRender';
 import userEvent from '@testing-library/user-event';
 import IsEmirleri from './IsEmirleri';
 import { isEmriService, servisGecmisiService } from './servisApi';
@@ -125,7 +126,7 @@ const kur = ({ rol = 'admin', liste = LISTE } = {}) => {
 const ekranAc = async (secenek = {}) => {
   kur(secenek);
   const user = userEvent.setup();
-  const sonuc = render(<IsEmirleri />);
+  const sonuc = sorguluRender(<IsEmirleri />);
   if (!secenek.bekleme) await screen.findByText('Zeynep Kaya');
   return { user, ...sonuc };
 };
@@ -261,6 +262,37 @@ describe('İş Emirleri: süzgeçler', () => {
     await waitFor(() => expect(isEmriService.getAll).toHaveBeenLastCalledWith({ durum: 'tamamlandi' }));
     await waitFor(() => expect(screen.queryByText('Veli Demir')).not.toBeInTheDocument());
     expect(screen.getByText('Toplam: 1')).toBeInTheDocument();
+  });
+
+  // ---- Önbellek (TanStack Query) ----
+  const durumSec = async (user, ad) => {
+    await user.click(screen.getByRole('combobox', { name: 'Durum' }));
+    await user.click(screen.getByRole('option', { name: ad }));
+  };
+
+  test('önbellek: personel listesi bir kez istenir, durum süzgeci değişince yeniden istenmez', async () => {
+    const { user } = await ekranAc();
+    await durumSec(user, 'Tamamlandı');
+    await waitFor(() => expect(isEmriService.getAll).toHaveBeenLastCalledWith({ durum: 'tamamlandi' }));
+    expect(authService.getPersonelListesi).toHaveBeenCalledTimes(1);
+  });
+
+  test('önbellek: daha önce bakılan duruma dönünce liste sunucuya gitmeden gelir', async () => {
+    const { user } = await ekranAc();
+    await durumSec(user, 'Tamamlandı');
+    await waitFor(() => expect(screen.queryByText('Veli Demir')).not.toBeInTheDocument());
+    const cagri = isEmriService.getAll.mock.calls.length;
+    await durumSec(user, 'Tümü');
+    expect(await screen.findByText('Veli Demir')).toBeInTheDocument();
+    expect(isEmriService.getAll.mock.calls.length).toBe(cagri);
+  });
+
+  test('önbellek: sayfa kapatılıp yeniden açılınca liste yine sunucudan istenir (başka ekranda yapılan değişiklik görünsün)', async () => {
+    const { istemci, unmount } = await ekranAc();
+    const cagri = isEmriService.getAll.mock.calls.length;
+    unmount();
+    sorguluRender(<IsEmirleri />, { istemci });
+    await waitFor(() => expect(isEmriService.getAll.mock.calls.length).toBe(cagri + 1));
   });
 });
 
