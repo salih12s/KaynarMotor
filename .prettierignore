@@ -1,0 +1,9 @@
+node_modules
+build
+dist
+deploy
+coverage
+docs
+yerel-arsiv
+package-lock.json
+*.md

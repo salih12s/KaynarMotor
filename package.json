@@ -10,9 +10,12 @@
     "seed": "cd backend && npm run seed",
     "seed:gorseller": "cd backend && npm run seed:gorseller",
     "package:hostinger": "node scripts/package-hostinger.cjs",
-    "test": "cd backend && npm test"
+    "test": "cd backend && npm test",
+    "format": "prettier --write \"frontend/src/**/*.{js,jsx}\" \"backend/**/*.{ts,js,cjs}\"",
+    "format:check": "prettier --check \"frontend/src/**/*.{js,jsx}\" \"backend/**/*.{ts,js,cjs}\""
   },
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "concurrently": "^8.2.2",
+    "prettier": "^3.9.10"
   }
 }
