@@ -1,47 +1,37 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ikinciElMotorService } from '../motorApi';
-import { authService } from '../../auth/authApi';
+import { useMotorListesi, useMotorIstatistik, useYatirimcilar, useMotorYenile } from '../motorSorgulari';
+
+// Veri gelene kadar her render'da yeni nesne üretilmesin
+const BOS = [];
+const BOS_NESNE = {};
 
 // Satış listesi (yalnızca "tamamlandi" motorlar), istatistikler, stoktaki motorlar (plaka seçimi), yatırımcı adları, silme ve detay penceresi.
 // Başka sayfadan `state.openDetailId` ile gelinirse detay otomatik açılır ve konum durumu temizlenir.
+// Liste ve yatırımcılar Motor Stok ile ortak önbellekten gelir (motorSorgulari.js).
 export const useSatisListesi = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [motorlar, setMotorlar] = useState([]);
   const [detayModal, setDetayModal] = useState({ open: false, data: null });
-  const [stats, setStats] = useState({});
-  const [stokMotorlar, setStokMotorlar] = useState([]);
-  const [yatirimciMap, setYatirimciMap] = useState({}); // id -> ad_soyad (ibarede isim göstermek için)
 
-  const loadData = async () => {
-    try {
-      const [motorRes, statsRes] = await Promise.all([ikinciElMotorService.getAll(), ikinciElMotorService.getStats()]);
-      const allMotors = motorRes.data;
-      const satisMotorlar = allMotors.filter((m) => m.durum === 'tamamlandi');
-      setMotorlar(satisMotorlar);
-      setStats(statsRes.data);
-      setStokMotorlar(allMotors.filter((m) => m.durum === 'stokta' || m.durum === 'kapora'));
-    } catch {}
-  };
+  const liste = useMotorListesi();
+  const istatistik = useMotorIstatistik();
+  // Yetki yoksa (403) sessiz geçilir: ibare yine "Yatırımcı Motoru" gösterir
+  const yatirimcilar = useYatirimcilar();
+  const yenile = useMotorYenile();
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  // Yatırımcı isimlerini yükle (yetki yoksa sessiz geç — ibare yine "Yatırımcı Motoru" gösterir)
-  useEffect(() => {
-    authService
-      .getYatirimcilar()
-      .then((res) => {
-        const map = {};
-        res.data.forEach((y) => {
-          map[y.id] = y.ad_soyad;
-        });
-        setYatirimciMap(map);
-      })
-      .catch(() => {});
-  }, []);
+  const tumu = liste.data ?? BOS;
+  const motorlar = useMemo(() => tumu.filter((m) => m.durum === 'tamamlandi'), [tumu]);
+  const stokMotorlar = useMemo(() => tumu.filter((m) => m.durum === 'stokta' || m.durum === 'kapora'), [tumu]);
+  // id -> ad_soyad (ibarede isim göstermek için)
+  const yatirimciMap = useMemo(() => {
+    const map = {};
+    (yatirimcilar.data ?? BOS).forEach((y) => {
+      map[y.id] = y.ad_soyad;
+    });
+    return map;
+  }, [yatirimcilar.data]);
 
   useEffect(() => {
     const id = location.state?.openDetailId;
@@ -59,7 +49,7 @@ export const useSatisListesi = () => {
     if (!window.confirm('Bu kaydı silmek istediğinizden emin misiniz?')) return;
     try {
       await ikinciElMotorService.delete(id);
-      loadData();
+      yenile();
     } catch (err) {
       alert(err.response?.data?.message || 'Hata');
     }
@@ -73,5 +63,15 @@ export const useSatisListesi = () => {
   };
   const detayKapat = () => setDetayModal({ open: false, data: null });
 
-  return { motorlar, stats, stokMotorlar, yatirimciMap, detayModal, detayAc, detayKapat, yenile: loadData, sil: handleDelete };
+  return {
+    motorlar,
+    stats: istatistik.data ?? BOS_NESNE,
+    stokMotorlar,
+    yatirimciMap,
+    detayModal,
+    detayAc,
+    detayKapat,
+    yenile,
+    sil: handleDelete,
+  };
 };

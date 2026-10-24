@@ -10,6 +10,7 @@ import { authService } from '../auth/authApi';
 export const motorAnahtari = {
   hepsi: ['motorlar'],
   liste: ['motorlar', 'liste'],
+  istatistik: ['motorlar', 'istatistik'],
   yatirimcilar: ['yatirimcilar'],
 };
 
@@ -18,6 +19,14 @@ export const useMotorListesi = () =>
   useQuery({
     queryKey: motorAnahtari.liste,
     queryFn: async () => (await ikinciElMotorService.getAll()).data,
+    refetchOnMount: 'always',
+  });
+
+// Satış sayaçları (toplam satış, kâr...). Liste ile aynı kural: her açılışta tazelenir, `yenile` ile birlikte geçersiz olur.
+export const useMotorIstatistik = () =>
+  useQuery({
+    queryKey: motorAnahtari.istatistik,
+    queryFn: async () => (await ikinciElMotorService.getStats()).data,
     refetchOnMount: 'always',
   });
 
@@ -30,7 +39,7 @@ export const useYatirimcilar = ({ etkin = true } = {}) =>
     retry: false,
   });
 
-// Motor verisini (liste ve ileride istatistik) geçersiz kılar: açık olan ekranlar yeniden çeker.
+// Motor verisini (liste ve istatistik) geçersiz kılar: açık olan ekranlar yeniden çeker.
 export const useMotorYenile = () => {
   const istemci = useQueryClient();
   return () => istemci.invalidateQueries({ queryKey: motorAnahtari.hepsi });

@@ -4,7 +4,8 @@
  * stoktaki bir motor plakasından seçilerek satışa çevrilir; Excel dışa aktarma. API, oturum, belge bölümü, yazdırma ve yönlendirme sahte.
  */
 import React from 'react';
-import { render, screen, within, waitFor, fireEvent } from '@testing-library/react';
+import { screen, within, waitFor, fireEvent } from '@testing-library/react';
+import { sorguluRender } from '../../shared/sorgu/sorguluRender';
 import userEvent from '@testing-library/user-event';
 import IkinciElMotor from './IkinciElMotor';
 import { ikinciElMotorService } from './motorApi';
@@ -107,6 +108,7 @@ const YETKISIZ = { rol: 'personel' };
 
 // ---- Yardımcılar -------------------------------------------------------------------------------------------------
 let yazdir;
+let sonEkran; // son render sonucu (istemci ve unmount, yeniden açılış testi için)
 const kur = ({ user = ADMIN, liste = HEPSI } = {}) => {
   useAuth.mockReturnValue({ user });
   ikinciElMotorService.getAll.mockResolvedValue({ data: liste });
@@ -126,7 +128,7 @@ const kur = ({ user = ADMIN, liste = HEPSI } = {}) => {
 const ekranAc = async (secenek = {}) => {
   kur(secenek);
   const user = userEvent.setup();
-  render(<IkinciElMotor />);
+  sonEkran = sorguluRender(<IkinciElMotor />);
   if (!secenek.bekleme) await screen.findByText('34SAT111');
   return user;
 };
@@ -261,12 +263,26 @@ describe('İkinci El Motor: roller, liste ve süzgeçler', () => {
     await user.click(ikon(satir('06SAT222'), 'DeleteIcon'));
     expect(ikinciElMotorService.delete).not.toHaveBeenCalled();
     const cagri = ikinciElMotorService.getAll.mock.calls.length;
+    const istatistikCagri = ikinciElMotorService.getStats.mock.calls.length;
     await user.click(ikon(satir('06SAT222'), 'DeleteIcon'));
     await waitFor(() => expect(ikinciElMotorService.delete).toHaveBeenCalledWith(2));
     await waitFor(() => expect(ikinciElMotorService.getAll.mock.calls.length).toBe(cagri + 1));
+    await waitFor(() => expect(ikinciElMotorService.getStats.mock.calls.length).toBe(istatistikCagri + 1)); // sayaçlar da tazelenir
     ikinciElMotorService.delete.mockRejectedValue({ response: { data: { message: 'Bağlı kayıt' } } });
     await user.click(ikon(satir('06SAT222'), 'DeleteIcon'));
     await waitFor(() => expect(window.alert).toHaveBeenCalledWith('Bağlı kayıt'));
+  });
+
+  test('önbellek: sayfa kapatılıp yeniden açılınca liste ve istatistik yine istenir; yatırımcılar önbellekten gelir', async () => {
+    await ekranAc();
+    const { istemci, unmount } = sonEkran;
+    const cagri = ikinciElMotorService.getAll.mock.calls.length;
+    const istatistikCagri = ikinciElMotorService.getStats.mock.calls.length;
+    unmount();
+    sorguluRender(<IkinciElMotor />, { istemci });
+    await waitFor(() => expect(ikinciElMotorService.getAll.mock.calls.length).toBe(cagri + 1));
+    await waitFor(() => expect(ikinciElMotorService.getStats.mock.calls.length).toBe(istatistikCagri + 1));
+    expect(authService.getYatirimcilar).toHaveBeenCalledTimes(1);
   });
 
   test('liste boşsa "Kayıt yok" satırı görünür', async () => {
