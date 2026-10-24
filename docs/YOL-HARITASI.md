@@ -35,7 +35,7 @@ Her dosya: önce karakterizasyon testi, testi bozarak sına, betikle taşı, esk
 
 ## C. Bölmeden sonra (her biri ayrı karar)
 - ~~`shared/utils/bicim.js`~~ **YAPILDI (2026-10-24):** `sayiYaz`/`paraYaz`/`tarihYaz` (61 karakterizasyon testi); ~340 çağrı taşındı, `toLocale…` 169 -> 5 (bilerek kalanlar: Layout uzun tarih, `en-CA` ISO giriş, e-ticaret `formatTL` tam 2 ondalık, raporlar/bicim.js sarmalayıcıları).
-- **ESLint + Prettier** (`react-hooks` kuralı dahil: şu an tanımlı değil, bağımlılık uyarıları hiç üretilmiyor; CRLF/LF karışıklığı da biter).
+- ~~**ESLint + Prettier**~~ **YAPILDI (2026-10-24):** ESLint `react-app` (react-hooks dahil; kaynakta 0 hata, 13 `exhaustive-deps` uyarısı bilerek açık: her biri davranış analizi ister), `.gitattributes`/`.editorconfig` (LF), Prettier (tek tırnak, 160 genişlik; 257 dosya, +17k/-6k satır, `.git-blame-ignore-revs`). NOT: bu belgedeki satır sayıları (95, 53...) Prettier ÖNCESİDİR.
 - **TanStack Query**: veri çekme/önbellek; `useRaporVerisi` gibi hook'ların yerini alır.
 - Frontend **TypeScript** (`.tsx`; önce `shared/`, sonra özellikler) ve **CRA -> Vite** (react-scripts bakımsız).
 - **E2E (Playwright)**: yalnızca 2-3 kritik akış (giriş, iş emri oluştur/tamamla, motor satışı); API testleri gerçek MariaDB'yi zaten kapsıyor.

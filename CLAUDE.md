@@ -24,6 +24,7 @@ npm run typecheck | npm test | npm run test:api | npm run test:api:paket
 npm run dev      # tsx watch (port 5100); frontend: npm start (port 3100)
 # kökte
 npm run package:hostinger             # tsc + frontend build + esbuild + zip  → deploy/hostinger/
+npm run format:check                  # Prettier (yazmak için: npm run format); frontend: npm run lint (ESLint)
 ```
 
 ## Kurallar
