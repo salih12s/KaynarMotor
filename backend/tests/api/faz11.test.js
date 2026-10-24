@@ -120,4 +120,19 @@ describe('#53 kimlik doğrulama: HTTP sözleşmesi', () => {
     assert.ok(loglar.some((l) => l.islem_tipi === 'REGISTER' && l.kullanici_adi === ad), 'kayıt günlükte');
     assert.equal((await api('POST', '/api/auth/logout', undefined, admin)).govde.message, 'Çıkış başarılı');
   });
+
+  it('giriş sınırı hesap başınadır: bir çalışanın yanlış denemeleri 429 alır, AYNI IP\'deki başka hesap etkilenmez', async () => {
+    const calisan = benzersiz('f11_lim_');
+    for (let i = 0; i < 10; i++) {
+      assert.equal((await api('POST', '/api/auth/login', { kullanici_adi: calisan, sifre: 'yanlis' })).durum, 401, `deneme ${i + 1}`);
+    }
+    const bloke = await api('POST', '/api/auth/login', { kullanici_adi: calisan, sifre: 'yanlis' });
+    assert.equal(bloke.durum, 429);
+    assert.match(bloke.govde.message, /Çok fazla başarısız giriş denemesi/);
+    // büyük/küçük harf farkıyla sayaç atlatılamaz
+    assert.equal((await api('POST', '/api/auth/login', { kullanici_adi: calisan.toUpperCase(), sifre: 'yanlis' })).durum, 429);
+    // aynı IP'den başka hesap (patron) hâlâ girebilir ya da en azından 429 almaz
+    const patron = await api('POST', '/api/auth/login', { kullanici_adi: benzersiz('f11_patron_'), sifre: 'yanlis' });
+    assert.equal(patron.durum, 401);
+  });
 });

@@ -116,7 +116,8 @@ Gizli bilgiler (`.env.mariadb.*`, `.env.pg.ref`, canlı yedek) git dışındadı
 
 - **`req.ip` / hız sınırlama:** uygulama LiteSpeed ve CDN arkasında. `trust proxy` 1 olarak ayarlı; ilk dağıtımda
   giriş denemesinin `aktivite_log.ip_adresi` kaydına bakılmalı. Hep aynı (vekil) IP görünüyorsa `TRUST_PROXY`
-  artırılır, aksi halde 30 başarısız giriş tüm kullanıcıları 15 dakika kilitler.
+  artırılır. (2026-10-22'den beri giriş sınırı IP + kullanıcı adı başınadır: bir çalışanın yanlış denemeleri yalnızca
+  kendi hesabını 15 dakika bekletir, aynı IP'deki diğer kullanıcıları kilitlemez; IP başına geniş yedek sınır 200.)
 - **HTTP/3 (hcdn) takılması:** aynı hesaptaki diğer sitelerde, bazı ağlardan, tarayıcı HTTP/3'e geçince sayfa geç
   açılabiliyor (uygulama kaynaklı değil). Kullanıcı şikâyet ederse hPanel'den CDN/HTTP3 ayarına bakılır.
 - **Süreç kotası:** açıklanamayan 503'te ilk bakılacak yer; paket `UV_THREADPOOL_SIZE=1` ile gelir.
