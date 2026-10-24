@@ -6,8 +6,8 @@ import ViewIcon from '@mui/icons-material/Visibility';
 import { hesaplaKomisyon, detectPlatform } from '../../komisyon';
 import { formatTL } from '../eticaretVeri';
 
-// Satış listesi: dar ekranda kartlar, geniş ekranda tablo; kâr sütunu yalnızca admin için.
-const SatisListesi = ({ satislar, platformFiltre, isMobile, isAdmin, onDetay, onDuzenle, onSil }) => {
+// Satış listesi: dar ekranda kartlar, geniş ekranda tablo; kâr sütunu yalnızca e-ticaret yetkisi olanlar için.
+const SatisListesi = ({ satislar, platformFiltre, isMobile, karGor, onDetay, onDuzenle, onSil }) => {
   const filtered = platformFiltre ? satislar.filter(s => s.platform_id === Number(platformFiltre)) : satislar;
   return isMobile ? (
   <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
@@ -25,7 +25,7 @@ const SatisListesi = ({ satislar, platformFiltre, isMobile, isAdmin, onDetay, on
         <Box sx={{ display: 'flex', gap: 2, mt: 0.5 }}>
           <Typography variant="body2">Alış: <strong>{formatTL(s.alis_fiyati)} ₺</strong></Typography>
           <Typography variant="body2">Satış: <strong>{formatTL(s.satis_fiyati)} ₺</strong></Typography>
-          {isAdmin && <Typography variant="body2" sx={{ color: sHesap.netKar >= 0 ? 'green' : 'red' }}>Kâr: <strong>{formatTL(sHesap.netKar)} ₺</strong></Typography>}
+          {karGor && <Typography variant="body2" sx={{ color: sHesap.netKar >= 0 ? 'green' : 'red' }}>Kâr: <strong>{formatTL(sHesap.netKar)} ₺</strong></Typography>}
         </Box>
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 0.5 }} onClick={e => e.stopPropagation()}>
           <IconButton size="small" color="info" onClick={() => onDuzenle(s)}><EditIcon /></IconButton>
@@ -40,7 +40,7 @@ const SatisListesi = ({ satislar, platformFiltre, isMobile, isAdmin, onDetay, on
     <Table size="small">
       <TableHead>
         <TableRow sx={{ bgcolor: '#C62828' }}>
-          {['Ürün', 'Platform', 'Adet', 'Alış (₺)', 'Satış (₺)', 'Komisyon (%)', 'KDV (%)', 'Komisyon (₺)', ...(isAdmin ? ['Kâr (₺)'] : []), 'Tarih', 'İşlemler'].map(h => (
+          {['Ürün', 'Platform', 'Adet', 'Alış (₺)', 'Satış (₺)', 'Komisyon (%)', 'KDV (%)', 'Komisyon (₺)', ...(karGor ? ['Kâr (₺)'] : []), 'Tarih', 'İşlemler'].map(h => (
             <TableCell key={h} sx={{ color: 'white', fontWeight: 'bold' }}>{h}</TableCell>
           ))}
         </TableRow>
@@ -59,7 +59,7 @@ const SatisListesi = ({ satislar, platformFiltre, isMobile, isAdmin, onDetay, on
             <TableCell>%{parseFloat(s.komisyon_orani || 0).toFixed(2)}</TableCell>
             <TableCell>%{parseFloat(s.kdv_orani || 20).toFixed(0)}</TableCell>
             <TableCell>{formatTL(sHesap.komisyonTutari)}</TableCell>
-            {isAdmin && <TableCell sx={{ color: sHesap.netKar >= 0 ? 'green' : 'red', fontWeight: 'bold' }}>{formatTL(sHesap.netKar)}</TableCell>}
+            {karGor && <TableCell sx={{ color: sHesap.netKar >= 0 ? 'green' : 'red', fontWeight: 'bold' }}>{formatTL(sHesap.netKar)}</TableCell>}
             <TableCell>{s.tarih ? new Date(s.tarih).toLocaleDateString('tr-TR') : '-'}</TableCell>
             <TableCell sx={{ whiteSpace: 'nowrap' }}>
               <IconButton size="small" color="primary" onClick={() => onDetay(s)}><ViewIcon /></IconButton>

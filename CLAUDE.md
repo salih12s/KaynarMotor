@@ -13,6 +13,7 @@ açıktır: gerçek müşteri verisi, parola, token ve kullanıcı adı **commit
 - `frontend/`: CRA + React + MUI (JS), `src/features/<alan>/`. Bölme sürüyor (bkz. `docs/FRONTEND-BOLME-RAPORU.md`): **büyük dosyaların hepsi bölündü** (Raporlar, IsEmirleri, Vitrin, MotorStok, IkinciElMotor, Storefront, ETicaret, Aksesuarlar)
 - Roller: admin, personel (modül yetkileri), yatırımcı, muhasebeci. **Kâr yalnızca admin görür.** Alan düzeyinde görünürlük:
   `backend/modules/motor/ikinciElMotor/ikinciElMotor.gorunum.ts` + `core/middleware/yetki.ts` (`kariGizle`).
+  **İstisna (2026-10-22): e-ticaret kârı, `eticaret_yetkisi` olan herkese açıktır** (`/api/eticaret` `kariGizle` dışında; arayüzde `karGor`).
 
 ## Komutlar
 ```

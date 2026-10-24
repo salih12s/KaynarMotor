@@ -123,7 +123,8 @@ app.use('/api/aksesuar-stok', denetimKaydi('aksesuar_stok'), authenticateToken, 
 app.use('/api/ikinci-el-motor', authenticateToken, kariGizle, motorYazmaYetkisi, ikinciElMotorRoutes);
 // Satış belgeleri (sözleşme vb.): yetki kontrolü route dosyasında; yükleme gövdesi ham ikili (express.raw)
 app.use('/api/satis-belgeleri', authenticateToken, satisBelgeRoutes);
-app.use('/api/eticaret', authenticateToken, kariGizle, modulYetkisi('eticaret_yetkisi'), eticaretRoutes);
+// E-ticaret kârı bilerek kariGizle DIŞINDADIR (Salih'in kararı, 2026-10-22): sayfaya girebilen herkes (eticaret_yetkisi) kârı görür.
+app.use('/api/eticaret', authenticateToken, modulYetkisi('eticaret_yetkisi'), eticaretRoutes);
 app.use('/api/yedek-parcalar', denetimKaydi('yedek_parcalar'), authenticateToken, modulYetkisi('yedek_parca_yetkisi'), yedekParcaRoutes);
 app.use('/api/yedek-parca-stok', denetimKaydi('yedek_parca_stok'), authenticateToken, modulYetkisi(...YEDEK_PARCA_STOK_OKUYANLAR), yazmaYetkisi('yedek_parca_yetkisi'), yedekParcaStokRoutes);
 app.use('/api/raporlar', authenticateToken, kariGizle, rolYetkisi('admin', 'yatirimci'), raporRoutes);

@@ -431,6 +431,20 @@ describe('#50 e-ticaret: HTTP sözleşmesi', () => {
     assert.equal((await api('GET', '/api/eticaret', undefined, admin)).durum, 200);
   });
 
+  it('kâr: e-ticaret yetkilisi (admin olmasa da) satış kârını ve toplam kârı görür; yetkisiz personel 403', async () => {
+    const r = await api('POST', '/api/eticaret', { platform_id: platformId, urun_adi: 'Kâr görünürlüğü', alis_fiyati: 100, satis_fiyati: 300, komisyon_orani: 10, kargo_ucreti: 20, adet: 1 }, admin);
+    assert.equal(r.durum, 201);
+    const liste = await api('GET', '/api/eticaret', undefined, k.eticaret.token);
+    assert.equal(liste.durum, 200);
+    const satir = liste.govde.find((x) => x.id === r.govde.id);
+    assert.ok('kar' in satir, 'liste satırında kar alanı var');
+    assert.equal(Number(satir.kar), Number(r.govde.kar));
+    assert.ok('kar' in (await api('GET', `/api/eticaret/${r.govde.id}`, undefined, k.eticaret.token)).govde, 'detayda kar alanı var');
+    assert.ok('toplam_kar' in (await api('GET', '/api/eticaret/stats', undefined, k.eticaret.token)).govde, 'istatistikte toplam_kar var');
+    assert.equal((await api('GET', '/api/eticaret', undefined, k.motor.token)).durum, 403, 'e-ticaret yetkisi olmayan göremez');
+    assert.equal((await api('DELETE', `/api/eticaret/${r.govde.id}`, undefined, admin)).durum, 200);
+  });
+
   it('platform silme 200 "Platform silindi"', async () => {
     const r = await api('DELETE', `/api/eticaret/platformlar/${platformId}`, undefined, admin);
     assert.equal(r.durum, 200);

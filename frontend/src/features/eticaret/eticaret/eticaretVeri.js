@@ -2,7 +2,7 @@
 import { bugunYerel } from '../../../shared/utils/tarih';
 import { hesaplaKomisyon, detectPlatform } from '../komisyon';
 
-// Kâr, kâr oranı ve yatırım geri dönüş oranı yalnızca admin'e gösterilir
+// Kâr, kâr oranı ve yatırım geri dönüş oranı e-ticaret yetkisi olanlara gösterilir (yetkisizler sayfaya zaten giremez)
 export const karEtiketi = (etiket) => /kâr|geri dönüş/i.test(etiket);
 
 export const formatTL = (v) => parseFloat(v || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });

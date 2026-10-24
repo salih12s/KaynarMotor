@@ -5,8 +5,8 @@ import CloseIcon from '@mui/icons-material/Close';
 import { hesaplaKomisyon, detectPlatform } from '../../komisyon';
 import { karEtiketi, formatTL } from '../eticaretVeri';
 
-// Satış detay penceresi: ürün/fiyat bilgileri, net kâr (admin) ve platforma özel komisyon ve KDV dökümü.
-const SatisDetayModal = ({ open, data, onClose, onDuzenle, isMobile, isAdmin }) => {
+// Satış detay penceresi: ürün/fiyat bilgileri, net kâr ve platforma özel komisyon ve KDV dökümü.
+const SatisDetayModal = ({ open, data, onClose, onDuzenle, isMobile, karGor }) => {
   const dialogProps = { open, onClose, maxWidth: 'md', fullWidth: true, fullScreen: isMobile };
   if (!data) return <Dialog {...dialogProps} />;
   const s = data;
@@ -43,7 +43,7 @@ const SatisDetayModal = ({ open, data, onClose, onDuzenle, isMobile, isAdmin }) 
               <Typography variant="body2"><strong>Kargo:</strong> {formatTL(s.kargo_ucreti)} ₺</Typography>
             </Paper>
           </Grid>
-          {isAdmin && (
+          {karGor && (
           <Grid size={{ xs: 12, md: 4 }}>
             <Paper sx={{ p: 2, bgcolor: h.netKar >= 0 ? '#e8f5e9' : '#ffebee', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
               <Typography variant="body2" color="text.secondary">Net Kâr</Typography>
@@ -92,7 +92,7 @@ const SatisDetayModal = ({ open, data, onClose, onDuzenle, isMobile, isAdmin }) 
                   { label: 'KDV', value: `${formatTL(h.odenecekKDV)} ₺` },
                 ];
               }
-              return items.filter(item => isAdmin || !karEtiketi(item.label)).map((item, i) => (
+              return items.filter(item => karGor || !karEtiketi(item.label)).map((item, i) => (
                 <Grid size={{ xs: 4, md: 2 }} key={i}>
                   <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>{item.label}</Typography>
                   <Typography variant="body1" fontWeight="bold">{item.value}</Typography>

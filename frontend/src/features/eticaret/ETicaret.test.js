@@ -1,6 +1,6 @@
 /*
  * E-Ticaret sayfası için KARAKTERİZASYON testleri: satışlar/platformlar sekmeleri, platform süzgeci, satış formu (stok ve platform
- * seçimiyle otomatik doldurma, 3 platform tipi için canlı komisyon önizlemesi), detay penceresi, rol farkları (kâr yalnızca admin).
+ * seçimiyle otomatik doldurma, 3 platform tipi için canlı komisyon önizlemesi), detay penceresi, rol farkları (kâr e-ticaret yetkisi olanlara açık; platform yönetimi yalnız admin).
  * Komisyon hesabı gerçek fonksiyonla (hesaplaKomisyon) üretilir; beklenen değerler aynı fonksiyondan alınır, ekranın ona uyduğu sınanır.
  */
 import React from 'react';
@@ -34,7 +34,8 @@ const STOK = [{ id: 10, stok_adi: 'Kask Visor', mevcut: 5, alis_fiyati: '650.00'
 const STATS = { toplam_satis: 3, toplam_gelir: 3000, toplam_komisyon: 480 };
 
 const ADMIN = { rol: 'admin' };
-const PERSONEL = { rol: 'personel' };
+const PERSONEL = { rol: 'personel', eticaret_yetkisi: true };
+const YETKISIZ = { rol: 'personel' }; // sayfaya normalde giremez; kâr yine de gösterilmemeli (savunma)
 
 const tl = (v) => parseFloat(v || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const hesap = (s) => hesaplaKomisyon(s.satis_fiyati, s.alis_fiyati, s.komisyon_orani, s.kdv_orani || 20, s.kargo_ucreti || 0, s.adet, detectPlatform(s.platform_adi));
@@ -98,8 +99,17 @@ describe('E-Ticaret: satışlar', () => {
     expect(screen.getByText(`Kâr: ₺${toplamKar.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`)).toBeInTheDocument();
   });
 
-  test('personel: kâr sütunu ve kâr çipi yoktur', async () => {
+  test('e-ticaret yetkili personel: admin gibi kâr sütununu ve kâr çipini görür', async () => {
     await ekranAc({ user: PERSONEL });
+    const h = hesap(E1);
+    expect(basliklar()).toContain('Kâr (₺)');
+    expect(screen.getByText(/^Kâr: ₺/)).toBeInTheDocument();
+    expect(hucreler(satir('Kask Visor'))).toHaveLength(11);
+    expect(hucreler(satir('Kask Visor'))[8]).toBe(tl(h.netKar));
+  });
+
+  test('e-ticaret yetkisi olmayan kullanıcıya kâr gösterilmez (savunma)', async () => {
+    await ekranAc({ user: YETKISIZ });
     expect(basliklar()).not.toContain('Kâr (₺)');
     expect(screen.queryByText(/^Kâr:/)).not.toBeInTheDocument();
     expect(hucreler(satir('Kask Visor'))).toHaveLength(10);
@@ -252,12 +262,22 @@ describe('E-Ticaret: satış formu', () => {
     expect(within(p).queryByText('Ödeme Bedeli')).not.toBeInTheDocument();
   });
 
-  test('personel önizlemede kâr oranı, yatırım geri dönüşü ve Net Kâr görmez; komisyon ve KDV görür', async () => {
+  test('e-ticaret yetkili personel önizlemede kâr oranı, yatırım geri dönüşü ve Net Kâr görür', async () => {
     const user = await ekranAc({ user: PERSONEL });
     const p = await yeniAc(user);
     await user.type(alan('Ürün Satış Fiyatı (₺)'), '1000');
     expect(within(p).getByText('Komisyon (Toplam)')).toBeInTheDocument();
     expect(within(p).getByText('Satıştan Oluşan KDV')).toBeInTheDocument();
+    expect(within(p).getByText('Kâr Oranı')).toBeInTheDocument();
+    expect(within(p).getByText('Yat. Geri Dönüş Oranı')).toBeInTheDocument();
+    expect(within(p).getByText(/^Net Kâr/)).toBeInTheDocument();
+  });
+
+  test('yetkisiz kullanıcı önizlemede kâr alanlarını görmez; komisyon ve KDV görür (savunma)', async () => {
+    const user = await ekranAc({ user: YETKISIZ });
+    const p = await yeniAc(user);
+    await user.type(alan('Ürün Satış Fiyatı (₺)'), '1000');
+    expect(within(p).getByText('Komisyon (Toplam)')).toBeInTheDocument();
     expect(within(p).queryByText('Kâr Oranı')).not.toBeInTheDocument();
     expect(within(p).queryByText('Yat. Geri Dönüş Oranı')).not.toBeInTheDocument();
     expect(within(p).queryByText(/^Net Kâr/)).not.toBeInTheDocument();
@@ -326,8 +346,16 @@ describe('E-Ticaret: detay penceresi', () => {
     expect(within(p).getByText('Pazarlama ve Hizmet KDV')).toBeInTheDocument();
   });
 
-  test('personel: Net Kâr kutusu, kâr oranı ve yatırım geri dönüşü görünmez', async () => {
+  test('e-ticaret yetkili personel: Net Kâr kutusu, kâr oranı ve yatırım geri dönüşü görünür', async () => {
     const user = await ekranAc({ user: PERSONEL });
+    await user.click(ikon(satir('Kask Visor'), 'VisibilityIcon'));
+    const p = await screen.findByRole('dialog');
+    expect(within(p).getByText('Net Kâr')).toBeInTheDocument();
+    expect(within(p).getByText('Stopaj')).toBeInTheDocument();
+  });
+
+  test('yetkisiz kullanıcı: detayda Net Kâr kutusu, kâr oranı ve yatırım geri dönüşü görünmez (savunma)', async () => {
+    const user = await ekranAc({ user: YETKISIZ });
     await user.click(ikon(satir('Kask Visor'), 'VisibilityIcon'));
     const p = await screen.findByRole('dialog');
     expect(within(p).queryByText('Net Kâr')).not.toBeInTheDocument();
@@ -351,7 +379,7 @@ describe('E-Ticaret: mobil görünüm', () => {
   });
   afterEach(() => { delete window.matchMedia; });
 
-  test('kart listesi: kâr yalnızca admin; karta dokunmak detayı açar; platform sekmesi kartlarla', async () => {
+  test('kart listesi: kâr görünür; karta dokunmak detayı açar; platform sekmesi kartlarla', async () => {
     const user = await ekranAc();
     expect(screen.queryByRole('table')).not.toBeInTheDocument();
     const h = hesap(E1);
@@ -364,8 +392,13 @@ describe('E-Ticaret: mobil görünüm', () => {
     expect(screen.getByText('Trendyol')).toBeInTheDocument();
   });
 
-  test('personel kartında kâr yok', async () => {
+  test('e-ticaret yetkili personel kartında kâr var; yetkisizde yok', async () => {
     await ekranAc({ user: PERSONEL });
+    expect(screen.getAllByText(/Kâr:/).length).toBeGreaterThan(0);
+  });
+
+  test('yetkisiz kullanıcı kartında kâr yok (savunma)', async () => {
+    await ekranAc({ user: YETKISIZ });
     expect(screen.queryByText(/Kâr:/)).not.toBeInTheDocument();
   });
 });

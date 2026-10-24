@@ -2,8 +2,8 @@ import React from 'react';
 import { Box, Paper, Typography, Divider } from '@mui/material';
 import { karEtiketi, formatTL } from '../eticaretVeri';
 
-// Satış formu: platforma göre canlı komisyon, KDV ve (yalnızca admin) net kâr önizlemesi; satış fiyatı girilince görünür.
-const KomisyonOnizleme = ({ sf, canliPlatformTipi, canliHesap, isAdmin }) => {
+// Satış formu: platforma göre canlı komisyon, KDV ve (yalnızca e-ticaret yetkisi olanlar) net kâr önizlemesi; satış fiyatı girilince görünür.
+const KomisyonOnizleme = ({ sf, canliPlatformTipi, canliHesap, karGor }) => {
   if (!(Number(sf.satis_fiyati) > 0)) return null;
   return (
     <Box sx={{ mt: 3 }}>
@@ -43,7 +43,7 @@ const KomisyonOnizleme = ({ sf, canliPlatformTipi, canliHesap, isAdmin }) => {
               { label: 'KDV', value: `${formatTL(canliHesap.odenecekKDV)} ₺`, color: '#f57f17', bg: '#fff8e1' },
             ];
           }
-          return cards.filter(c => isAdmin || !karEtiketi(c.label)).map((c, i) => (
+          return cards.filter(c => karGor || !karEtiketi(c.label)).map((c, i) => (
             <Paper key={i} sx={{ p: 1.5, flex: 1, minWidth: 100, textAlign: 'center', bgcolor: c.bg, borderTop: `3px solid ${c.color}` }}>
               <Typography variant="caption" color="text.secondary">{c.label}</Typography>
               <Typography fontWeight="bold" color={c.color}>{c.value}</Typography>
@@ -82,8 +82,8 @@ const KomisyonOnizleme = ({ sf, canliPlatformTipi, canliHesap, isAdmin }) => {
         </Box>
       </Paper>
 
-      {/* Net Kâr büyük gösterim (yalnızca admin) */}
-      {isAdmin && (
+      {/* Net Kâr büyük gösterim (yalnızca e-ticaret yetkisi olanlar) */}
+      {karGor && (
       <Paper sx={{ p: 2, textAlign: 'center', bgcolor: canliHesap.netKar >= 0 ? '#e8f5e9' : '#ffebee', borderRadius: 2, border: `2px solid ${canliHesap.netKar >= 0 ? '#2e7d32' : '#c62828'}` }}>
         <Typography variant="body2" color="text.secondary">Net Kâr ({canliHesap.miktar} adet)</Typography>
         <Typography variant="h4" fontWeight="bold" sx={{ color: canliHesap.netKar >= 0 ? '#2e7d32' : '#c62828' }}>

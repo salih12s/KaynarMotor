@@ -16,6 +16,8 @@ const ETicaret = () => {
   const { user } = useAuth();
   const isMobile = useMediaQuery(useTheme().breakpoints.down('sm'));
   const isAdmin = user?.rol === 'admin';
+  // Kâr: sayfayı görebilen herkes (admin ya da e-ticaret yetkisi olan) görür; platform yönetimi yine yalnız admin'in
+  const karGor = isAdmin || !!user?.eticaret_yetkisi;
   const [tab, setTab] = useState(0);
   // Platform filtre
   const [platformFiltre, setPlatformFiltre] = useState('');
@@ -23,14 +25,14 @@ const ETicaret = () => {
 
   return (
     <Box>
-      <IstatistikSatiri stats={e.stats} hesaplananToplamKar={e.hesaplananToplamKar} isAdmin={isAdmin} tab={tab}
+      <IstatistikSatiri stats={e.stats} hesaplananToplamKar={e.hesaplananToplamKar} karGor={karGor} isAdmin={isAdmin} tab={tab}
         onYeniSatis={() => e.openSatisDialog()} onYeniPlatform={() => e.openPlatformDialog()} />
 
       <Sekmeler tab={tab} setTab={setTab} platformFiltre={platformFiltre} setPlatformFiltre={setPlatformFiltre} platformlar={e.platformlar} />
 
       {/* Satışlar Tab */}
       {tab === 0 && (
-        <SatisListesi satislar={e.satislar} platformFiltre={platformFiltre} isMobile={isMobile} isAdmin={isAdmin}
+        <SatisListesi satislar={e.satislar} platformFiltre={platformFiltre} isMobile={isMobile} karGor={karGor}
           onDetay={(s) => e.setDetayDialog({ open: true, data: s })} onDuzenle={e.openSatisDialog} onSil={e.handleSatisDelete} />
       )}
 
@@ -39,12 +41,12 @@ const ETicaret = () => {
         <PlatformListesi platformlar={e.platformlar} isMobile={isMobile} isAdmin={isAdmin} onDuzenle={e.openPlatformDialog} onSil={e.handlePlatformDelete} />
       )}
 
-      <SatisFormModal e={e} stokOptions={e.stokOptions} platformlar={e.platformlar} isAdmin={isAdmin} isMobile={isMobile} />
+      <SatisFormModal e={e} stokOptions={e.stokOptions} platformlar={e.platformlar} karGor={karGor} isMobile={isMobile} />
 
       <PlatformFormModal e={e} isMobile={isMobile} />
 
       <SatisDetayModal open={e.detayDialog.open} data={e.detayDialog.data} onClose={() => e.setDetayDialog({ open: false, data: null })}
-        onDuzenle={e.openSatisDialog} isMobile={isMobile} isAdmin={isAdmin} />
+        onDuzenle={e.openSatisDialog} isMobile={isMobile} karGor={karGor} />
     </Box>
   );
 };

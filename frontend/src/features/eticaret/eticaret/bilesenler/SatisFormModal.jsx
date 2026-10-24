@@ -3,7 +3,7 @@ import { Button, TextField, Dialog, DialogTitle, DialogContent, DialogActions, A
 import KomisyonOnizleme from './KomisyonOnizleme';
 
 // Satış ekleme / düzenleme penceresi: stok ve platform seçimiyle otomatik doldurma + canlı komisyon önizlemesi.
-const SatisFormModal = ({ e, stokOptions, platformlar, isAdmin, isMobile }) => {
+const SatisFormModal = ({ e, stokOptions, platformlar, karGor, isMobile }) => {
   const { satisDialog, setSatisDialog, error, setSatisForm, handleStokSelect, handlePlatformSelect, sf, canliPlatformTipi, canliHesap, handleSatisSave } = e;
   const kapat = () => setSatisDialog({ open: false, data: null });
   return (
@@ -51,7 +51,7 @@ const SatisFormModal = ({ e, stokOptions, platformlar, isAdmin, isMobile }) => {
             <TextField fullWidth label="Kargo (₺)" type="number" value={sf.kargo_ucreti} onChange={e => setSatisForm({ ...sf, kargo_ucreti: e.target.value })} />
           </Grid>
         </Grid>
-        <KomisyonOnizleme sf={sf} canliPlatformTipi={canliPlatformTipi} canliHesap={canliHesap} isAdmin={isAdmin} />
+        <KomisyonOnizleme sf={sf} canliPlatformTipi={canliPlatformTipi} canliHesap={canliHesap} karGor={karGor} />
       </DialogContent>
       <DialogActions>
         <Button onClick={kapat}>İptal</Button>
