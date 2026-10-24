@@ -13,7 +13,10 @@ const MotorBilgileriBolumu = ({ f, setFormData, stokMotorlar, setSelectedStokId 
           <Autocomplete
             freeSolo
             options={stokMotorlar.map((m) => m.plaka)}
-            value={f.plaka}
+            // Yazılan metin (inputValue) ile "seçilmiş değer" (value) AYRI tutulur. Metin `value` olarak verilirse plaka tam yazıldığında
+            // öneri zaten "seçili" sayılır ve MUI onChange'i hiç çağırmaz: stok kaydı forma dolmaz.
+            value={null}
+            inputValue={f.plaka}
             onInputChange={(e, val) => setFormData({ ...f, plaka: (val || '').toUpperCase() })}
             onChange={(e, val) => {
               if (val) {

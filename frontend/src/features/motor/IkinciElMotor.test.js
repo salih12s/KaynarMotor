@@ -452,6 +452,22 @@ describe('İkinci El Motor: satış formu', () => {
     expect(ikinciElMotorService.create).not.toHaveBeenCalled();
   });
 
+  // Regression: plaka TAM yazılıp öneriye tıklanınca form dolmuyordu (alan yazılan metni `value` tutuyordu; MUI seçilen öneri
+  // mevcut değere eşitse onChange'i hiç çağırmaz). E2E'de de kayıtlıydı (e2e/3-motor-satisi.spec.js).
+  test('plaka TAM yazılıp öneri seçilince de alanlar dolar ve kayıt update(stokId) ile yapılır', async () => {
+    const user = await ekranAc();
+    const p = await yeniAc(user);
+    await user.type(within(p).getByRole('combobox', { name: /Plaka/ }), '16STK333');
+    await user.click(screen.getByRole('option', { name: '16STK333' }));
+    expect(alan('Marka *')).toHaveValue('Suzuki');
+    expect(alan('Alış Fiyatı (₺)')).toHaveValue(30000);
+    await user.type(alan('Satış Fiyatı (₺)'), '45000');
+    await user.click(within(p).getByRole('button', { name: 'Kaydet' }));
+    await waitFor(() => expect(ikinciElMotorService.update).toHaveBeenCalled());
+    expect(ikinciElMotorService.update.mock.calls[0][0]).toBe(3);
+    expect(ikinciElMotorService.create).not.toHaveBeenCalled(); // yeni kayıt değil, stok kaydı güncellenir (çift kayıt oluşmaz)
+  });
+
   test('kalan ödeme: işaret kalkınca alan çıkar ve değer yüke girer', async () => {
     const user = await ekranAc();
     const p = await yeniAc(user);

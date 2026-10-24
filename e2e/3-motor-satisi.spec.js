@@ -80,15 +80,15 @@ test('satıştan sonra Motor Stok: motor "Stokta" çipinden çıkar, "Satılan" 
   expect((await motorGetir(jeton, motor.id)).durum).toBe('tamamlandi');
 });
 
-// BİLİNEN HATA (test.fail = "bu testin başarısız olması beklenir"): plaka TAM yazılıp öneriye tıklanırsa form dolmuyor.
-// Neden: Plaka alanı yazılan metni `value` olarak tutuyor; MUI Autocomplete, seçilen öneri mevcut değere eşitse onChange'i çağırmaz,
-// bu yüzden stok kaydının bilgileri (marka, model, fiyat...) forma taşınmaz. Düzeltilince bu test "beklenmedik şekilde geçti"
-// diye uyarır; o zaman `test.fail` satırı `test` yapılmalı.
-test.fail('BİLİNEN HATA: plaka tam yazılıp öneri seçilince marka/model/alış fiyatı forma dolmalı', async ({ page }) => {
+// Regression (eskiden bilinen hata): plaka TAM yazılıp öneriye tıklanınca form dolmuyordu. Neden: Plaka alanı yazılan metni
+// value olarak tutuyordu; MUI Autocomplete seçilen öneri mevcut değere eşitse onChange'i çağırmaz. Düzeltme: yazılan metin
+// (inputValue) ile seçili değer (value) ayrıldı (MotorBilgileriBolumu.jsx). Hızlı bileşen testi de var (IkinciElMotor.test.js).
+test('plaka tam yazılıp öneri seçilince de marka/model/alış fiyatı forma dolar', async ({ page }) => {
   const plaka = plakaUret();
   await stokMotoruEkle(await adminJetonu(), plaka);
   await adminGirisi(page);
   await page.goto('/ikinci-el-motor');
   const pencere = await plakayiSec(page, plaka, plaka); // plakanın TAMAMI yazılır
-  await expect(pencere.getByLabel('Marka')).toHaveValue('Honda', { timeout: 3000 });
+  await expect(pencere.getByLabel('Marka')).toHaveValue('Honda');
+  await expect(pencere.getByLabel('Model')).toHaveValue('PCX');
 });
