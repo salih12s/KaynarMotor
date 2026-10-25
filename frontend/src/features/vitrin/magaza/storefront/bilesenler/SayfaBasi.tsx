@@ -1,11 +1,12 @@
 import React from 'react';
+import type { StorefrontDurumu } from '../useStorefront';
 import { Box, Typography, TextField, IconButton, InputAdornment } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import SearchIcon from '@mui/icons-material/Search';
 import { RENK, YAZI, KisiSessiz } from '../../../VitrinOrtak';
 
 // Sayfa başı: başlık, ilan sayısı, arama kutusu ve (masaüstünde) iletişim kişileri.
-const SayfaBasi = ({ s }) => {
+const SayfaBasi = ({ s }: { s: StorefrontDurumu }) => {
   const { sayfaBasligi, loading, aramaVar, q, setQ, gorunenUrunler, isMotor, kisiler } = s;
   return (
     <Box sx={{ maxWidth: 1400, width: '100%', mx: 'auto', px: { xs: 2, md: 3 }, pt: { xs: 2.5, md: 3 } }}>

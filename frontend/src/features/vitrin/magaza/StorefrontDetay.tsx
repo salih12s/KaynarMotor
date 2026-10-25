@@ -1,6 +1,6 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState, type TouchEvent } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { AppBar, Box, Button, ButtonBase, CircularProgress, Collapse, Dialog, IconButton, Toolbar, Typography } from '@mui/material';
+import { AppBar, Box, Button, ButtonBase, CircularProgress, Collapse, Dialog, IconButton, Toolbar, Typography, type SxProps, type Theme } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import PrevIcon from '@mui/icons-material/ArrowBackIosNew';
 import NextIcon from '@mui/icons-material/ArrowForwardIos';
@@ -11,8 +11,9 @@ import LoginIcon from '@mui/icons-material/Login';
 import PhoneIcon from '@mui/icons-material/Phone';
 import PlayIcon from '@mui/icons-material/PlayCircleOutline';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
-import { vitrinService } from '../vitrinApi';
-import { hesaplaTaksit } from '../../taksit/TaksitHesaplama';
+import { vitrinService, type VitrinIlanDetayi } from '../vitrinApi';
+import { hesaplaTaksit } from '../../taksit/taksitHesap';
+import type { VitrinIletisim, VitrinIlan } from '../../../shared/tipler';
 import {
   VitrinTema,
   RENK,
@@ -30,23 +31,23 @@ import {
 import { sayiYaz } from '../../../shared/utils/bicim';
 
 const bolumBasligi = { fontFamily: YAZI.baslik, fontWeight: 700, fontSize: { xs: 24, md: 28 }, lineHeight: 1.1, mb: 1.5 };
-const sahneDugmesi = { position: 'absolute', color: '#fff', bgcolor: 'rgba(0,0,0,.5)', '&:hover': { bgcolor: 'rgba(0,0,0,.75)' }, ...ODAK };
+const sahneDugmesi: SxProps<Theme> = { position: 'absolute', color: '#fff', bgcolor: 'rgba(0,0,0,.5)', '&:hover': { bgcolor: 'rgba(0,0,0,.75)' }, ...ODAK };
 
 const StorefrontDetay = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const [detay, setDetay] = useState(null);
-  const [iletisim, setIletisim] = useState(null);
-  const [digerleri, setDigerleri] = useState([]);
+  const [detay, setDetay] = useState<VitrinIlanDetayi | null>(null);
+  const [iletisim, setIletisim] = useState<VitrinIletisim | null>(null);
+  const [digerleri, setDigerleri] = useState<VitrinIlan[]>([]);
   const [gorselIdx, setGorselIdx] = useState(0);
-  const [yuklenenGorsel, setYuklenenGorsel] = useState(null);
-  const [hataliGorsel, setHataliGorsel] = useState(null);
+  const [yuklenenGorsel, setYuklenenGorsel] = useState<number | null>(null);
+  const [hataliGorsel, setHataliGorsel] = useState<number | null>(null);
   const [buyukGorsel, setBuyukGorsel] = useState(false);
   const [taksitAcik, setTaksitAcik] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const dokunmaX = useRef(null);
+  const dokunmaX = useRef<number | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -58,7 +59,7 @@ const StorefrontDetay = () => {
     setTaksitAcik(false);
     setBuyukGorsel(false);
     window.scrollTo(0, 0);
-    Promise.allSettled([vitrinService.getById(id), vitrinService.getIletisim()])
+    Promise.allSettled([vitrinService.getById(Number(id)), vitrinService.getIletisim()])
       .then(([detayRes, iletisimRes]) => {
         if (!active) return;
         if (detayRes.status !== 'fulfilled') throw new Error('İlan bulunamadı');
@@ -68,7 +69,7 @@ const StorefrontDetay = () => {
           setIletisim(iletisimRes.value.data.find((r) => r.kategori === urun.kategori) || null);
         }
         // Aynı türden diğer ilanlar (önce aynı segmenttekiler)
-        const params = { kategori: urun.kategori };
+        const params: Record<string, unknown> = { kategori: urun.kategori };
         if (urun.kategori === 'motor') params.durum = urun.motor_durumu;
         vitrinService
           .getAll(params)
@@ -110,7 +111,7 @@ const StorefrontDetay = () => {
   const video = useMemo(() => videoKaynak(detay?.video_url), [detay]);
 
   const gorselDegistir = useCallback(
-    (yon) => {
+    (yon: number) => {
       setGorselIdx((i) => (gorseller.length ? (i + yon + gorseller.length) % gorseller.length : 0));
     },
     [gorseller.length],
@@ -119,7 +120,7 @@ const StorefrontDetay = () => {
   // Sol/sağ ok tuşlarıyla görseller arasında gezinme
   useEffect(() => {
     if (!cokGorsel) return undefined;
-    const tus = (e) => {
+    const tus = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLElement && ['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
       if (e.key === 'ArrowLeft') gorselDegistir(-1);
       if (e.key === 'ArrowRight') gorselDegistir(1);
@@ -129,10 +130,10 @@ const StorefrontDetay = () => {
   }, [cokGorsel, gorselDegistir]);
 
   // Telefonda parmakla kaydırma
-  const dokunmaBasla = (e) => {
+  const dokunmaBasla = (e: TouchEvent) => {
     dokunmaX.current = e.touches[0].clientX;
   };
-  const dokunmaBitir = (e) => {
+  const dokunmaBitir = (e: TouchEvent) => {
     if (dokunmaX.current === null || !cokGorsel) return;
     const fark = e.changedTouches[0].clientX - dokunmaX.current;
     dokunmaX.current = null;
@@ -146,6 +147,7 @@ const StorefrontDetay = () => {
   const uzunTaksit = enUzunTaksit(fiyat);
   const kisiler = iletisimKisileri(iletisim);
   const aranacakKisi = kisiler.find((k) => k.tel);
+  const aramaWa = waLink(aranacakKisi?.tel);
 
   const ozellikler = useMemo(
     () =>
@@ -155,12 +157,12 @@ const StorefrontDetay = () => {
             detay.model && { label: 'Model', value: detay.model },
             detay.yil && { label: 'Yıl', value: String(detay.yil) },
             motor && { label: 'Durum', value: sifir ? 'Sıfır' : 'İkinci el' },
-            motor && !sifir && detay.km !== null && detay.km !== undefined && detay.km !== '' && { label: 'Kilometre', value: `${sayiYaz(detay.km)} km` },
+            motor && !sifir && detay.km !== null && detay.km !== undefined && { label: 'Kilometre', value: `${sayiYaz(detay.km)} km` },
             detay.motor_cc && { label: 'Motor hacmi', value: `${detay.motor_cc} cc` },
             detay.segment && { label: 'Tip', value: detay.segment },
             detay.hasar_kaydi && { label: 'Hasar kaydı', value: detay.hasar_kaydi },
             detay.ilan_no != null && { label: 'İlan no', value: `ILN-${String(detay.ilan_no).padStart(4, '0')}` },
-          ].filter(Boolean)
+          ].filter((o): o is { label: string; value: string } => !!o)
         : [],
     [detay, motor, sifir],
   );
@@ -171,7 +173,7 @@ const StorefrontDetay = () => {
     else navigate('/site');
   };
 
-  const gorselOklari = (konum) =>
+  const gorselOklari = (konum: number) =>
     cokGorsel && (
       <>
         <IconButton
@@ -436,7 +438,7 @@ const StorefrontDetay = () => {
                         </ButtonBase>
                         <Collapse in={taksitAcik}>
                           <Box sx={{ mt: 1.25, fontVariantNumeric: 'tabular-nums' }}>
-                            {taksitler.map((t) => (
+                            {taksitler?.map((t) => (
                               <Box
                                 key={t.ay}
                                 sx={{
@@ -540,7 +542,7 @@ const StorefrontDetay = () => {
                     >
                       <source src={vitrinService.videoUrl(detay.video_dosya_id)} />
                     </Box>
-                  ) : video.tip === 'embed' ? (
+                  ) : !video ? null : video.tip === 'embed' ? (
                     <Box sx={{ position: 'relative', width: '100%', aspectRatio: '16 / 9', borderRadius: 3, overflow: 'hidden', bgcolor: '#000' }}>
                       <iframe
                         src={video.src}
@@ -606,13 +608,13 @@ const StorefrontDetay = () => {
           <Button fullWidth size="large" variant="contained" color="error" disableElevation startIcon={<PhoneIcon />} href={`tel:${aranacakKisi.tel}`}>
             Ara
           </Button>
-          {waLink(aranacakKisi.tel) && (
+          {aramaWa && (
             <Button
               fullWidth
               size="large"
               variant="outlined"
               startIcon={<WhatsAppIcon />}
-              href={waLink(aranacakKisi.tel)}
+              href={aramaWa}
               target="_blank"
               rel="noopener noreferrer"
               sx={{ color: RENK.whatsapp, borderColor: RENK.whatsapp, '&:hover': { borderColor: RENK.whatsapp } }}

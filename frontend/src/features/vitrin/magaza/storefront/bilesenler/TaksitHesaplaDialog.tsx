@@ -8,7 +8,13 @@ import { RED } from '../kategoriSabitleri';
 
 // Ana sayfa header'ından açılan, giriş gerektirmeyen taksit hesaplama penceresi.
 // Müşteri nakit fiyat (ve isteğe bağlı peşinat) girip 3/6/9/12 ay taksit tablosunu görür.
-const TaksitHesaplaDialogIc = ({ open, onClose, isMobile }) => {
+interface TaksitHesaplaDialogProps {
+  open: boolean;
+  onClose: () => void;
+  isMobile: boolean;
+}
+
+const TaksitHesaplaDialogIc = ({ open, onClose, isMobile }: TaksitHesaplaDialogProps) => {
   const [nakit, setNakit] = useState('');
   const [pesinat, setPesinat] = useState('');
   const nakitNum = paraToNumber(nakit);
@@ -84,7 +90,7 @@ const TaksitHesaplaDialogIc = ({ open, onClose, isMobile }) => {
 };
 
 // Pencere açık zeminli hazır bir ekran olduğu için sayfanın koyu temasından ayrı, açık temayla gösterilir
-const TaksitHesaplaDialog = (props) => (
+const TaksitHesaplaDialog = (props: TaksitHesaplaDialogProps) => (
   <VitrinAcikTema>
     <TaksitHesaplaDialogIc {...props} />
   </VitrinAcikTema>

@@ -1,11 +1,12 @@
 import React from 'react';
+import type { StorefrontDurumu } from '../useStorefront';
 import { Box, Typography, Stack, Paper } from '@mui/material';
 import { vitrinService } from '../../../vitrinApi';
 import { KATEGORILER } from '../../../vitrinSabitleri';
 import { RENK, YAZI, KisiDugmeleri } from '../../../VitrinOrtak';
 
 // Hizmet kategorileri (bakım, nakliye, sigorta): görsel, başlık, açıklama ve kişi düğmeleri; ilan yok.
-const HizmetSayfasi = ({ s }) => {
+const HizmetSayfasi = ({ s }: { s: StorefrontDurumu }) => {
   const { curIletisim, kategori, tab, kisiler } = s;
   return (
     <Box sx={{ flex: 1, width: '100%', maxWidth: 900, mx: 'auto', p: { xs: 1.5, md: 3 } }}>

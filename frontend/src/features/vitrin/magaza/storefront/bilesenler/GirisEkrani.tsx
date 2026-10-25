@@ -1,4 +1,6 @@
 import React from 'react';
+import type { StorefrontDurumu } from '../useStorefront';
+import type { NavigateFunction } from 'react-router-dom';
 import { Box, Button, ButtonBase, Typography, Fade } from '@mui/material';
 import LoginIcon from '@mui/icons-material/Login';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
@@ -9,7 +11,7 @@ import { RED, KATEGORI_ICON } from '../kategoriSabitleri';
 import TaksitHesaplaDialog from './TaksitHesaplaDialog';
 
 // Giriş (video) ekranı: marka başlığı, taksit ve servis düğmeleri, 6 kategori kartı. Masaüstünde video tüm ekranı kaplar.
-const GirisEkrani = ({ s, isMobile, navigate }) => {
+const GirisEkrani = ({ s, isMobile, navigate }: { s: StorefrontDurumu; isMobile: boolean; navigate: NavigateFunction }) => {
   const { taksitOpen, setTaksitOpen, enterKategori } = s;
   return (
     <Box

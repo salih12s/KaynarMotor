@@ -1,4 +1,6 @@
 import React from 'react';
+import type { StorefrontDurumu } from '../useStorefront';
+import type { NavigateFunction } from 'react-router-dom';
 import { Box, AppBar, Toolbar, Button, Typography, IconButton } from '@mui/material';
 import LoginIcon from '@mui/icons-material/Login';
 import MenuIcon from '@mui/icons-material/Menu';
@@ -8,7 +10,7 @@ import { KATEGORILER } from '../../../vitrinSabitleri';
 import { RED } from '../kategoriSabitleri';
 
 // Üst çubuk: logo, masaüstü menüsü (kategoriler), mobilde hamburger, taksit hesapla ve servise git.
-const UstBar = ({ s, isMobile, navigate }) => {
+const UstBar = ({ s, isMobile, navigate }: { s: StorefrontDurumu; isMobile: boolean; navigate: NavigateFunction }) => {
   const { goHome, tab, handleTab, setTaksitOpen, setMobilMenu } = s;
   return (
     <AppBar position="sticky" sx={{ bgcolor: '#1a1a1a', borderRadius: 0 }} elevation={3}>

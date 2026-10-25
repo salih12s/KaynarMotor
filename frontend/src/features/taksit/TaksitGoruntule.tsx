@@ -10,7 +10,7 @@ const RED = '#C62828';
 const TaksitGoruntule = () => {
   const { fiyat } = useParams();
   const isMobile = useMediaQuery(useTheme().breakpoints.down('sm'));
-  const nakit = parseFloat(fiyat) || 0;
+  const nakit = parseFloat(fiyat ?? '') || 0;
   const sonuc = hesaplaTaksit(nakit, 0);
 
   return (

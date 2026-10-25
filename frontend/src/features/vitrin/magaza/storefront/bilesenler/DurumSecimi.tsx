@@ -1,4 +1,5 @@
 import React from 'react';
+import type { StorefrontDurumu } from '../useStorefront';
 import { Box, ButtonBase, Typography } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { vitrinService } from '../../../vitrinApi';
@@ -7,7 +8,7 @@ import { RENK, YAZI, ODAK } from '../../../VitrinOrtak';
 import { MOTOR_DURUM_BASLIK, MOTOR_DURUM_ACIKLAMA } from '../kategoriSabitleri';
 
 // Motor kategorisinde önce Sıfır / İkinci El seçimi: arka planda o türden bir ilanın fotoğrafı ve ilan sayısı.
-const DurumSecimi = ({ s }) => {
+const DurumSecimi = ({ s }: { s: StorefrontDurumu }) => {
   const { durumOzet, secMotorDurumu } = s;
   return (
     <Box sx={{ flex: 1, width: '100%', maxWidth: 1000, mx: 'auto', px: { xs: 2, md: 3 }, py: { xs: 3, md: 8 } }}>

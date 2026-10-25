@@ -1,4 +1,5 @@
 import React from 'react';
+import type { StorefrontDurumu } from '../useStorefront';
 import { Box, Typography, IconButton, Divider, List, ListItem, ListItemButton, ListItemText, ListItemIcon, Drawer } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import HomeIcon from '@mui/icons-material/Home';
@@ -7,7 +8,7 @@ import { KATEGORILER } from '../../../vitrinSabitleri';
 import { RED, KATEGORI_ICON } from '../kategoriSabitleri';
 
 // Mobil menü çekmecesi (hamburger): ana sayfa, kategoriler ve taksit hesapla.
-const MobilMenu = ({ s }) => {
+const MobilMenu = ({ s }: { s: StorefrontDurumu }) => {
   const { mobilMenu, setMobilMenu, goHome, tab, handleTab, setTaksitOpen } = s;
   return (
     <Drawer anchor="right" open={mobilMenu} onClose={() => setMobilMenu(false)} PaperProps={{ sx: { width: 260, bgcolor: '#1a1a1a', color: '#fff' } }}>

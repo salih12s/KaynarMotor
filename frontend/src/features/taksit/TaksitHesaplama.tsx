@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, type ReactNode } from 'react';
 import {
   Box,
   Paper,
@@ -10,6 +10,7 @@ import {
   Snackbar,
   Alert,
   Table,
+  type TextFieldProps,
   TableHead,
   TableRow,
   TableCell,
@@ -20,14 +21,21 @@ import CalculateIcon from '@mui/icons-material/Calculate';
 import ClearIcon from '@mui/icons-material/Clear';
 import ShareIcon from '@mui/icons-material/Share';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
-import { ORANLAR, MAKS_NAKIT, fmtTL, formatParaInput, paraToNumber, hesaplaTaksit } from './taksitHesap';
+import { ORANLAR, MAKS_NAKIT, fmtTL, formatParaInput, paraToNumber, hesaplaTaksit, type TaksitSatiri } from './taksitHesap';
 
 // Hesap taksitHesap.js'te; eski içe aktarma yolları (TaksitGoruntule, vitrin) bozulmasın diye buradan da dışa verilir.
 export { ORANLAR, MAKS_NAKIT, fmtTL, formatParaInput, paraToNumber, hesaplaTaksit };
 import { FONT, RENK } from '../../app/tokenlar';
 
 // Para formatlı (₺) giriş alanı — peşinat vb. için hem admin hem müşteri sayfasında kullanılır
-export const ParaInput = ({ value, onChange, label, helperText, ...props }) => (
+type ParaInputProps = Omit<TextFieldProps, 'value' | 'onChange' | 'label' | 'helperText'> & {
+  value: unknown;
+  onChange: (deger: string) => void;
+  label: string;
+  helperText?: ReactNode;
+};
+
+export const ParaInput = ({ value, onChange, label, helperText, ...props }: ParaInputProps) => (
   <TextField
     fullWidth
     label={label}
@@ -41,7 +49,7 @@ export const ParaInput = ({ value, onChange, label, helperText, ...props }) => (
 );
 
 // Sonuç tablosu (hem admin sayfasında hem paylaşım sayfasında kullanılır)
-export const TaksitTablo = ({ sonuc, isMobile }) => {
+export const TaksitTablo = ({ sonuc, isMobile }: { sonuc: TaksitSatiri[] | null; isMobile: boolean }) => {
   if (!sonuc) return null;
   if (isMobile) {
     return (
@@ -95,7 +103,7 @@ export const TaksitTablo = ({ sonuc, isMobile }) => {
 };
 
 // Yönetim sayfasındaki sonuç: her taksit süresi için solda kırmızı şeritli kart (paylaşım sayfası TaksitTablo'yu kullanmaya devam eder).
-const TaksitKartlari = ({ sonuc }) => (
+const TaksitKartlari = ({ sonuc }: { sonuc: TaksitSatiri[] }) => (
   <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 2 }}>
     {sonuc.map((r) => (
       <Paper key={r.ay} sx={{ p: 2, borderLeft: `4px solid ${RENK.kirmizi}`, bgcolor: RENK.yuzey }}>
@@ -106,7 +114,7 @@ const TaksitKartlari = ({ sonuc }) => (
         ].map(([etiket, deger, boyut]) => (
           <Box key={etiket} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 1 }}>
             <Typography sx={{ color: RENK.soluk }}>{etiket}</Typography>
-            <Typography sx={{ fontFamily: FONT.baslik, fontWeight: 700, fontSize: boyut, whiteSpace: 'nowrap' }}>{fmtTL(deger)}</Typography>
+            <Typography sx={{ fontFamily: FONT.baslik, fontWeight: 700, fontSize: boyut, whiteSpace: 'nowrap' }}>{fmtTL(Number(deger))}</Typography>
           </Box>
         ))}
       </Paper>

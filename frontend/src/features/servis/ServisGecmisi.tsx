@@ -5,6 +5,7 @@ import { Box, AppBar, Toolbar, Typography, Paper, Chip, Divider, CircularProgres
 import MotoIcon from '@mui/icons-material/TwoWheeler';
 import BuildIcon from '@mui/icons-material/Build';
 import { servisGecmisiService } from './servisApi';
+import type { ServisGecmisiYaniti } from '../../shared/tipler';
 import { sayiYaz, tarihYaz } from '../../shared/utils/bicim';
 
 const RED = '#C62828';
@@ -14,14 +15,14 @@ const RED = '#C62828';
 // Giriş gerektirmez; sistemin başka hiçbir bölümüne erişim yoktur.
 const ServisGecmisi = () => {
   const { token } = useParams();
-  const [data, setData] = useState(null);
+  const [data, setData] = useState<ServisGecmisiYaniti | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     (async () => {
       try {
-        const res = await servisGecmisiService.getByToken(token);
+        const res = await servisGecmisiService.getByToken(token ?? '');
         setData(res.data);
       } catch (err) {
         setError(hataMesaji(err, 'Servis geçmişi yüklenemedi'));
@@ -31,9 +32,9 @@ const ServisGecmisi = () => {
     })();
   }, [token]);
 
-  const durumLabel = (d) => (d === 'tamamlandi' ? 'Tamamlandı' : d === 'devam_ediyor' ? 'Devam Ediyor' : 'Beklemede');
-  const durumRenk = (d) => (d === 'tamamlandi' ? 'success' : d === 'devam_ediyor' ? 'info' : 'warning');
-  const fmtPlaka = (p) => String(p || '').replace(/^(\d{2})([A-Z]+)(\d+)$/, '$1 $2 $3');
+  const durumLabel = (d: string) => (d === 'tamamlandi' ? 'Tamamlandı' : d === 'devam_ediyor' ? 'Devam Ediyor' : 'Beklemede');
+  const durumRenk = (d: string) => (d === 'tamamlandi' ? 'success' : d === 'devam_ediyor' ? 'info' : 'warning');
+  const fmtPlaka = (p: string | null | undefined) => String(p || '').replace(/^(\d{2})([A-Z]+)(\d+)$/, '$1 $2 $3');
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: '#f5f5f5', display: 'flex', flexDirection: 'column' }}>
@@ -64,7 +65,7 @@ const ServisGecmisi = () => {
           <Paper sx={{ p: 4, textAlign: 'center', color: 'text.secondary', borderRadius: 3 }}>
             <Typography>{error}</Typography>
           </Paper>
-        ) : (
+        ) : !data ? null : (
           <>
             <Paper sx={{ p: 2, mb: 2, borderRadius: 3, textAlign: 'center', bgcolor: '#fff' }}>
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
@@ -108,7 +109,7 @@ const ServisGecmisi = () => {
                       {s.islemler.map((p, j) => (
                         <Typography component="li" variant="body2" key={j} sx={{ py: 0.25 }}>
                           {p.islem}
-                          {(p.adet || 1) > 1 ? ` (x${p.adet})` : ''}
+                          {Number(p.adet || 1) > 1 ? ` (x${p.adet})` : ''}
                         </Typography>
                       ))}
                     </Box>

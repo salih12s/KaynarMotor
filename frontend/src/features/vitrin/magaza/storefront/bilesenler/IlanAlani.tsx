@@ -1,9 +1,10 @@
 import React from 'react';
+import type { StorefrontDurumu } from '../useStorefront';
 import { Box, Button, Typography, Stack, Fade } from '@mui/material';
 import { RENK, YAZI, IlanKarti, IlanIskelet, ilanIzgarasi, KisiDugmeleri } from '../../../VitrinOrtak';
 
 // İlan ızgarası (yükleniyor iskeleti, boş/sonuç yok mesajları, kartlar) ve dar ekranda iletişim bölümü.
-const IlanAlani = ({ s }) => {
+const IlanAlani = ({ s }: { s: StorefrontDurumu }) => {
   const { loading, isMotor, gorunenUrunler, aramaVar, urunler, q, setQ, aktifFiltreSayisi, filtreleriTemizle, motorDurumu, kategori, kisiler, openDetay } = s;
   return (
     <Box sx={{ flex: 1, width: '100%', maxWidth: 1400, mx: 'auto', px: { xs: 2, md: 3 }, py: { xs: 2.5, md: 2.5 } }}>

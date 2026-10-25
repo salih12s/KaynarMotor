@@ -1,5 +1,5 @@
 import api, { type Govde } from '../../shared/api/istemci';
-import type { IsEmri, IsEmriDetayi } from '../../shared/tipler';
+import type { IsEmri, IsEmriDetayi, ServisGecmisiYaniti } from '../../shared/tipler';
 
 // İş Emirleri
 export const isEmriService = {
@@ -13,6 +13,6 @@ export const isEmriService = {
 
 // Servis geçmişi (müşteri QR sayfası — token halka açık, oluşturma yetkili)
 export const servisGecmisiService = {
-  getByToken: (token: string) => api.get<unknown>(`/servis-gecmisi/${encodeURIComponent(token)}`),
+  getByToken: (token: string) => api.get<ServisGecmisiYaniti>(`/servis-gecmisi/${encodeURIComponent(token)}`),
   getQrToken: (plaka: string) => api.post<{ token: string }>('/is-emirleri/qr-token', { plaka }),
 };

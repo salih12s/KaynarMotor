@@ -1,9 +1,9 @@
-import React from 'react';
-import { Box, ButtonBase, Typography } from '@mui/material';
+import React, { type ReactNode } from 'react';
+import { Box, ButtonBase, Typography, type ButtonBaseProps, type SxProps, type Theme } from '@mui/material';
 import { RENK, ODAK } from '../../../VitrinOrtak';
 
 // Filtre grubunu kısa bir başlık ve yan yana seçeneklerle göster
-export const FiltreSatiri = ({ baslik, children, sx = {} }) => (
+export const FiltreSatiri = ({ baslik, children, sx = {} }: { baslik: string; children?: ReactNode; sx?: SxProps<Theme> }) => (
   <Box
     role="group"
     aria-label={baslik}
@@ -25,7 +25,7 @@ export const FiltreSatiri = ({ baslik, children, sx = {} }) => (
 );
 
 // Filtre seçeneği: seçiliyken kırmızı çerçeve ve hafif kırmızı zemin, değilken koyu yüzey
-export const Secim = ({ secili, children, ...props }) => (
+export const Secim = ({ secili, children, ...props }: ButtonBaseProps & { secili: boolean }) => (
   <ButtonBase
     aria-pressed={secili}
     {...props}

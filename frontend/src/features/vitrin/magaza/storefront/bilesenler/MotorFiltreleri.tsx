@@ -1,4 +1,5 @@
 import React from 'react';
+import type { StorefrontDurumu } from '../useStorefront';
 import { Box, Button, TextField, Collapse } from '@mui/material';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import { MOTOR_DURUMLARI } from '../../../vitrinSabitleri';
@@ -6,7 +7,7 @@ import { RENK } from '../../../VitrinOrtak';
 import { FiltreSatiri, Secim } from './FiltreBilesenleri';
 
 // Motor filtreleri: masaüstünde iki kısa satır, dar ekranda açılır panel.
-const MotorFiltreleri = ({ s, darEkran }) => {
+const MotorFiltreleri = ({ s, darEkran }: { s: StorefrontDurumu; darEkran: boolean }) => {
   const {
     filtreAcik,
     setFiltreAcik,

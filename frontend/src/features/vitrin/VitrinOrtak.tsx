@@ -1,11 +1,12 @@
-import React from 'react';
+import React, { type ReactNode } from 'react';
 import { Box, Button, ButtonBase, IconButton, Skeleton, Typography } from '@mui/material';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import PhoneIcon from '@mui/icons-material/Phone';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import { vitrinService } from './vitrinApi';
-import { hesaplaTaksit } from '../taksit/TaksitHesaplama';
-import { sayiYaz } from '../../shared/utils/bicim';
+import { hesaplaTaksit, type TaksitSatiri } from '../taksit/taksitHesap';
+import { sayiYaz, type Sayi } from '../../shared/utils/bicim';
+import type { VitrinIletisim, VitrinIlan } from '../../shared/tipler';
 
 // Müşteriye açık vitrin sayfalarının (ilan listesi + ilan detayı) ortak görsel dili.
 // Yönetim panelinin temasından bağımsızdır; yalnızca bu sayfaları sarar.
@@ -66,16 +67,16 @@ const acikTema = createTheme({
   },
 });
 
-export const VitrinTema = ({ children }) => <ThemeProvider theme={vitrinTema}>{children}</ThemeProvider>;
-export const VitrinAcikTema = ({ children }) => <ThemeProvider theme={acikTema}>{children}</ThemeProvider>;
+export const VitrinTema = ({ children }: { children?: ReactNode }) => <ThemeProvider theme={vitrinTema}>{children}</ThemeProvider>;
+export const VitrinAcikTema = ({ children }: { children?: ReactNode }) => <ThemeProvider theme={acikTema}>{children}</ThemeProvider>;
 
 // Klavye ile gezinenler için belirgin odak çerçevesi
 export const ODAK = { '&:focus-visible': { outline: `3px solid ${RENK.kirmiziAcik}`, outlineOffset: 3 } };
 
-export const tlYaz = (v) => `${sayiYaz(Math.round(Number(v) || 0))} ₺`;
+export const tlYaz = (v: Sayi) => `${sayiYaz(Math.round(Number(v) || 0))} ₺`;
 
 // WhatsApp linki üret (TR numarası, baştaki 0 -> 90)
-export const waLink = (tel) => {
+export const waLink = (tel: string | null | undefined): string | null => {
   let d = String(tel || '').replace(/\D/g, '');
   if (!d) return null;
   if (d.startsWith('0')) d = `90${d.slice(1)}`;
@@ -84,7 +85,13 @@ export const waLink = (tel) => {
 };
 
 // Video linkini nasıl göstereceğimizi belirler: { tip: 'embed'|'file'|'link', src }
-export const videoKaynak = (url) => {
+/** Video bağlantısının nasıl gösterileceği: gömülü oynatıcı, dosya ya da yeni sekmede bağlantı. */
+export interface VideoKaynagi {
+  tip: 'embed' | 'file' | 'link';
+  src: string;
+}
+
+export const videoKaynak = (url: string | null | undefined): VideoKaynagi | null => {
   if (!url) return null;
   const u = url.trim();
   const yt = u.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([\w-]{11})/);
@@ -97,13 +104,19 @@ export const videoKaynak = (url) => {
 };
 
 // En uzun vadedeki aylık taksit (taksit hesaplama sayfasıyla aynı oranlar). Fiyat yoksa null.
-export const enUzunTaksit = (fiyat) => {
+export const enUzunTaksit = (fiyat: Sayi): TaksitSatiri | null => {
   const sonuc = hesaplaTaksit(fiyat);
   return sonuc ? sonuc[sonuc.length - 1] : null;
 };
 
 // Kategori iletişim kaydından kişi listesi (ikinci personel isteğe bağlıdır)
-export const iletisimKisileri = (iletisim) =>
+/** İletişim kişisi: ad ve telefon (ikisinden biri olabilir). */
+export interface Kisi {
+  ad: string | null | undefined;
+  tel: string | null | undefined;
+}
+
+export const iletisimKisileri = (iletisim: Pick<VitrinIletisim, 'personel_adi' | 'telefon' | 'personel_adi_2' | 'telefon_2'> | null | undefined): Kisi[] =>
   iletisim
     ? [
         { ad: iletisim.personel_adi, tel: iletisim.telefon },
@@ -112,45 +125,48 @@ export const iletisimKisileri = (iletisim) =>
     : [];
 
 // Bir kişi için "Ara" ve "WhatsApp" düğmeleri
-export const KisiDugmeleri = ({ kisi, boyut = 'medium', tamGenislik = false }) => (
-  <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-    {kisi.tel && (
-      <Button
-        size={boyut}
-        variant="contained"
-        color="error"
-        disableElevation
-        startIcon={<PhoneIcon />}
-        href={`tel:${kisi.tel}`}
-        sx={{ flex: tamGenislik ? 1 : 'none', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}
-      >
-        {kisi.tel}
-      </Button>
-    )}
-    {waLink(kisi.tel) && (
-      <Button
-        size={boyut}
-        variant="outlined"
-        startIcon={<WhatsAppIcon />}
-        href={waLink(kisi.tel)}
-        target="_blank"
-        rel="noopener noreferrer"
-        sx={{
-          flex: tamGenislik ? 1 : 'none',
-          whiteSpace: 'nowrap',
-          color: RENK.whatsapp,
-          borderColor: RENK.whatsapp,
-          '&:hover': { borderColor: RENK.whatsapp, bgcolor: 'rgba(31,168,85,0.12)' },
-        }}
-      >
-        WhatsApp
-      </Button>
-    )}
-  </Box>
-);
+export const KisiDugmeleri = ({ kisi, boyut = 'medium', tamGenislik = false }: { kisi: Kisi; boyut?: 'small' | 'medium' | 'large'; tamGenislik?: boolean }) => {
+  const wa = waLink(kisi.tel);
+  return (
+    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+      {kisi.tel && (
+        <Button
+          size={boyut}
+          variant="contained"
+          color="error"
+          disableElevation
+          startIcon={<PhoneIcon />}
+          href={`tel:${kisi.tel}`}
+          sx={{ flex: tamGenislik ? 1 : 'none', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}
+        >
+          {kisi.tel}
+        </Button>
+      )}
+      {wa && (
+        <Button
+          size={boyut}
+          variant="outlined"
+          startIcon={<WhatsAppIcon />}
+          href={wa}
+          target="_blank"
+          rel="noopener noreferrer"
+          sx={{
+            flex: tamGenislik ? 1 : 'none',
+            whiteSpace: 'nowrap',
+            color: RENK.whatsapp,
+            borderColor: RENK.whatsapp,
+            '&:hover': { borderColor: RENK.whatsapp, bgcolor: 'rgba(31,168,85,0.12)' },
+          }}
+        >
+          WhatsApp
+        </Button>
+      )}
+    </Box>
+  );
+};
 
 // İlanın kısa künyesi: yıl, km, motor hacmi, segment. Aksesuar/yedek parçada marka.
-const kunyeParcalari = (u) => {
+const kunyeParcalari = (u: VitrinIlan) => {
   if (u.kategori !== 'motor') return [u.marka].filter(Boolean);
   const sifir = u.motor_durumu === 'sifir';
   return [u.yil, sifir ? 'Sıfır km' : u.km ? `${sayiYaz(u.km)} km` : null, u.motor_cc ? `${u.motor_cc} cc` : null, u.segment].filter(Boolean);
@@ -158,7 +174,7 @@ const kunyeParcalari = (u) => {
 
 // İlan kartı. Fotoğrafın üzerine hiçbir şey konmaz: etiketler, başlık, ölçüler ve fiyat kartın içinde, fotoğrafın altındadır.
 // Motor kartında ayrıca üç ölçü (yıl, km, hacim) satırı vardır. Kartın tamamı tek bir düğmedir.
-export const IlanKarti = ({ u, onClick, kucuk = false }) => {
+export const IlanKarti = ({ u, onClick, kucuk = false }: { u: VitrinIlan; onClick: () => void; kucuk?: boolean }) => {
   const motor = u.kategori === 'motor';
   const sifir = u.motor_durumu === 'sifir';
   const fiyat = Number(u.fiyat) || 0;
@@ -169,13 +185,13 @@ export const IlanKarti = ({ u, onClick, kucuk = false }) => {
         u.yil ? { deger: String(u.yil), etiket: 'Model yılı' } : null,
         sifir ? { deger: 'Sıfır', etiket: 'Kilometre' } : u.km ? { deger: sayiYaz(u.km), etiket: 'Kilometre' } : null,
         u.motor_cc ? { deger: String(u.motor_cc), etiket: 'Hacim (cc)' } : null,
-      ].filter(Boolean)
+      ].filter((o): o is { deger: string; etiket: string } => !!o)
     : [];
   const etiketler = [
     sifir && { metin: 'Sıfır', zemin: '#FFFFFF', renk: '#111111' },
     buyuk && u.segment && { metin: u.segment, zemin: RENK.yuzey2, renk: RENK.murekkep },
     u.one_cikan && { metin: 'Öne çıkan', zemin: RENK.sari, renk: '#111111' },
-  ].filter(Boolean);
+  ].filter((e): e is { metin: string; zemin: string; renk: string } => !!e);
   const kunye = kunyeParcalari(u);
   const gorsel = u.kapak_gorsel_id ? vitrinService.gorselUrl(u.kapak_gorsel_id) : null;
 
@@ -303,7 +319,7 @@ export const IlanKarti = ({ u, onClick, kucuk = false }) => {
 };
 
 // Fiyat + (varsa) taksit özeti
-const FiyatSatiri = ({ fiyat, taksit, buyuk }) => (
+const FiyatSatiri = ({ fiyat, taksit, buyuk }: { fiyat: number; taksit: TaksitSatiri | null; buyuk: boolean }) => (
   <Box sx={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', flexWrap: 'wrap', columnGap: 1.5 }}>
     <Typography
       sx={{
@@ -325,7 +341,7 @@ const FiyatSatiri = ({ fiyat, taksit, buyuk }) => (
   </Box>
 );
 
-const Etiket = ({ zemin, renk, children }) => (
+const Etiket = ({ zemin, renk, children }: { zemin: string; renk: string; children?: ReactNode }) => (
   <Box component="span" sx={{ bgcolor: zemin, color: renk, fontSize: 12.5, fontWeight: 700, lineHeight: 1, px: 1, py: 0.75, borderRadius: 1 }}>
     {children}
   </Box>
@@ -333,47 +349,50 @@ const Etiket = ({ zemin, renk, children }) => (
 
 // Başlıktaki iletişim satırı için sessiz görünüm: ad + numara düz yazı, yanında küçük WhatsApp simgesi.
 // (Dolu kırmızı/yeşil düğmeler başlıkta göze batıyordu; tam düğmeler ilan detayında kalır.)
-export const KisiSessiz = ({ kisi }) => (
-  <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1 }}>
-    {kisi.ad && (
-      <Typography component="span" sx={{ color: 'text.secondary' }}>
-        {kisi.ad}
-      </Typography>
-    )}
-    {kisi.tel && (
-      <Box
-        component="a"
-        href={`tel:${kisi.tel}`}
-        sx={{
-          color: 'text.primary',
-          fontWeight: 600,
-          textDecoration: 'none',
-          fontVariantNumeric: 'tabular-nums',
-          borderRadius: 0.5,
-          ...ODAK,
-          '&:hover': { textDecoration: 'underline', textUnderlineOffset: 3 },
-        }}
-      >
-        {kisi.tel}
-      </Box>
-    )}
-    {waLink(kisi.tel) && (
-      <IconButton
-        size="small"
-        href={waLink(kisi.tel)}
-        target="_blank"
-        rel="noopener noreferrer"
-        aria-label={`${kisi.ad || kisi.tel} ile WhatsApp'ta yaz`}
-        sx={{ color: RENK.whatsapp, ...ODAK }}
-      >
-        <WhatsAppIcon fontSize="small" />
-      </IconButton>
-    )}
-  </Box>
-);
+export const KisiSessiz = ({ kisi }: { kisi: Kisi }) => {
+  const wa = waLink(kisi.tel);
+  return (
+    <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1 }}>
+      {kisi.ad && (
+        <Typography component="span" sx={{ color: 'text.secondary' }}>
+          {kisi.ad}
+        </Typography>
+      )}
+      {kisi.tel && (
+        <Box
+          component="a"
+          href={`tel:${kisi.tel}`}
+          sx={{
+            color: 'text.primary',
+            fontWeight: 600,
+            textDecoration: 'none',
+            fontVariantNumeric: 'tabular-nums',
+            borderRadius: 0.5,
+            ...ODAK,
+            '&:hover': { textDecoration: 'underline', textUnderlineOffset: 3 },
+          }}
+        >
+          {kisi.tel}
+        </Box>
+      )}
+      {wa && (
+        <IconButton
+          size="small"
+          href={wa}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={`${kisi.ad || kisi.tel} ile WhatsApp'ta yaz`}
+          sx={{ color: RENK.whatsapp, ...ODAK }}
+        >
+          <WhatsAppIcon fontSize="small" />
+        </IconButton>
+      )}
+    </Box>
+  );
+};
 
 // İlanlar yüklenirken kartların yerini tutan iskelet
-export const IlanIskelet = ({ buyuk = false }) => (
+export const IlanIskelet = ({ buyuk = false }: { buyuk?: boolean }) => (
   <Box aria-hidden sx={{ border: `1px solid ${RENK.cizgi}`, borderRadius: 3, overflow: 'hidden', bgcolor: RENK.yuzey }}>
     <Skeleton variant="rectangular" sx={{ aspectRatio: '4 / 3', height: 'auto', bgcolor: 'rgba(255,255,255,0.06)' }} />
     <Box sx={{ p: 2 }}>
@@ -384,7 +403,7 @@ export const IlanIskelet = ({ buyuk = false }) => (
 );
 
 // İlan ızgarası: motor ilanları geniş, aksesuar/yedek parça daha küçük karolarla dizilir
-export const ilanIzgarasi = (motor) => ({
+export const ilanIzgarasi = (motor: boolean) => ({
   display: 'grid',
   gap: { xs: 1.5, sm: 2.5 },
   gridTemplateColumns: motor

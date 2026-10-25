@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import type { NavigateFunction } from 'react-router-dom';
+import type { VitrinIletisim, VitrinIlan } from '../../../../shared/tipler';
 import { vitrinService } from '../../vitrinApi';
 import { KATEGORILER, SEGMENTLER, HIZMET_KATEGORILER, MOTOR_DURUMLARI } from '../../vitrinSabitleri';
 import { ilanAramaUygunMu } from '../../ilanArama';
@@ -11,7 +13,24 @@ const sonUrun = sonIstek();
 
 // Mağaza sayfasının tüm durumu ve işlemleri: giriş/kategori, Sıfır-İkinci El seçimi, süzgeçler, ilan ve iletişim yükleme, mobil menü,
 // taksit penceresi. `geriDonus`: detaydan dönüşte taşınan süzgeç durumu; `navigate`: ilan detayına gitmek için.
-export const useStorefront = ({ geriDonus, navigate }) => {
+/** İlan detayından dönüşte taşınan süzgeç durumu (konum durumundaki `storefront` alanı). */
+export interface GeriDonusDurumu {
+  tab: number;
+  motorDurumu: string;
+  marka: string;
+  segment: string;
+  ccMax: string;
+  kmMax: string;
+  q: string;
+}
+
+/** Sıfır / İkinci El seçim karolarının özeti: ilan adedi ve kapak görseli. */
+interface DurumOzeti {
+  adet: number;
+  kapak: number | null;
+}
+
+export const useStorefront = ({ geriDonus, navigate }: { geriDonus: Partial<GeriDonusDurumu> | undefined; navigate: NavigateFunction }) => {
   // Giriş (video) ekranı mı yoksa kategori listesi mi gösteriliyor
   const [intro, setIntro] = useState(!geriDonus);
 
@@ -20,15 +39,15 @@ export const useStorefront = ({ geriDonus, navigate }) => {
   const isMotor = kategori === 'motor';
   const isHizmet = HIZMET_KATEGORILER.includes(kategori);
 
-  const [urunler, setUrunler] = useState([]);
+  const [urunler, setUrunler] = useState<VitrinIlan[]>([]);
   const [loading, setLoading] = useState(false);
-  const [iletisim, setIletisim] = useState({});
-  const [segmentler, setSegmentler] = useState(SEGMENTLER);
+  const [iletisim, setIletisim] = useState<Record<string, VitrinIletisim>>({});
+  const [segmentler, setSegmentler] = useState<string[]>(SEGMENTLER);
 
   // filtreler (motor) — önce Sıfır / İkinci El seçilir, sonra marka/segment ile daraltılır
   const [motorDurumu, setMotorDurumu] = useState(geriDonus?.motorDurumu || '');
   const [marka, setMarka] = useState(geriDonus?.marka || '');
-  const [markalar, setMarkalar] = useState([]);
+  const [markalar, setMarkalar] = useState<string[]>([]);
   const [segment, setSegment] = useState(geriDonus?.segment || '');
   const [ccMax, setCcMax] = useState(geriDonus?.ccMax || '');
   const [kmMax, setKmMax] = useState(geriDonus?.kmMax || '');
@@ -43,7 +62,7 @@ export const useStorefront = ({ geriDonus, navigate }) => {
   const loadIletisim = useCallback(async () => {
     try {
       const res = await vitrinService.getIletisim();
-      const map = {};
+      const map: Record<string, VitrinIletisim> = {};
       res.data.forEach((r) => {
         map[r.kategori] = r;
       });
@@ -56,7 +75,7 @@ export const useStorefront = ({ geriDonus, navigate }) => {
   const loadUrunler = useCallback(async () => {
     setLoading(true);
     try {
-      const params = { kategori };
+      const params: Record<string, unknown> = { kategori };
       if (isMotor) {
         params.durum = motorDurumu;
         if (marka) params.marka = marka;
@@ -127,7 +146,7 @@ export const useStorefront = ({ geriDonus, navigate }) => {
   const durumSecimi = isMotor && !motorDurumu;
 
   // Seçim ekranındaki iki karo için: o türde kaç ilan var ve arka plana hangi fotoğraf konacak
-  const [durumOzet, setDurumOzet] = useState({});
+  const [durumOzet, setDurumOzet] = useState<Record<string, DurumOzeti>>({});
   useEffect(() => {
     if (intro || !durumSecimi) return undefined;
     let active = true;
@@ -135,12 +154,12 @@ export const useStorefront = ({ geriDonus, navigate }) => {
       MOTOR_DURUMLARI.map((d) =>
         vitrinService
           .getAll({ kategori: 'motor', durum: d.key })
-          .then((res) => [d.key, res.data])
-          .catch(() => [d.key, []]),
+          .then((res): [string, VitrinIlan[]] => [d.key, res.data])
+          .catch((): [string, VitrinIlan[]] => [d.key, []]),
       ),
     ).then((sonuclar) => {
       if (!active) return;
-      const ozet = {};
+      const ozet: Record<string, DurumOzeti> = {};
       sonuclar.forEach(([key, liste]) => {
         ozet[key] = { adet: liste.length, kapak: liste.find((u) => u.kapak_gorsel_id)?.kapak_gorsel_id || null };
       });
@@ -159,7 +178,7 @@ export const useStorefront = ({ geriDonus, navigate }) => {
   }, [loadUrunler, intro, durumSecimi, isHizmet]);
 
   // sekme değişince filtreleri sıfırla + eski listeyi anında temizle (yumuşak geçiş)
-  const handleTab = (v) => {
+  const handleTab = (v: number) => {
     setTab(v);
     setMotorDurumu('');
     setMarka('');
@@ -172,7 +191,7 @@ export const useStorefront = ({ geriDonus, navigate }) => {
   };
 
   // Sıfır / İkinci El değişince marka ve km filtreleri o türe ait olmayabilir → sıfırla
-  const secMotorDurumu = (d) => {
+  const secMotorDurumu = (d: string) => {
     if (d === motorDurumu) return;
     setMotorDurumu(d);
     setMarka('');
@@ -183,7 +202,7 @@ export const useStorefront = ({ geriDonus, navigate }) => {
   };
 
   // Giriş ekranından bir kategoriye gir
-  const enterKategori = (i) => {
+  const enterKategori = (i: number) => {
     handleTab(i);
     setIntro(false);
     window.scrollTo(0, 0);
@@ -193,7 +212,7 @@ export const useStorefront = ({ geriDonus, navigate }) => {
     setUrunler([]);
   };
 
-  const openDetay = (u) => {
+  const openDetay = (u: VitrinIlan) => {
     navigate(`/ilan/${u.id}`, { state: { storefront: { tab, motorDurumu, marka, segment, ccMax, kmMax, q } } });
   };
 
@@ -244,3 +263,5 @@ export const useStorefront = ({ geriDonus, navigate }) => {
     sayfaBasligi,
   };
 };
+
+export type StorefrontDurumu = ReturnType<typeof useStorefront>;

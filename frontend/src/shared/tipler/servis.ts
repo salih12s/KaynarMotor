@@ -49,6 +49,27 @@ export interface IsEmri {
   plaka: string | null;
 }
 
+/** Servis geçmişi satırı (herkese açık QR sayfası): maliyet, kâr ve iletişim bilgisi içermez. */
+export interface ServisGecmisiSatiri {
+  fis_no: number | null;
+  plaka: string | null;
+  marka: string | null;
+  model_tip: string | null;
+  km: number | null;
+  durum: string;
+  tarih: string;
+  teslim_tarihi: string | null;
+  tamamlama_tarihi: string | null;
+  toplam_tutar: Sayi;
+  islemler: Array<{ islem: string | null; adet: number | string | null }>;
+}
+
+/** `/servis-gecmisi/:token` yanıtı. */
+export interface ServisGecmisiYaniti {
+  plaka: string;
+  servisler: ServisGecmisiSatiri[];
+}
+
 /** Tek iş emri yanıtı: parçalarıyla birlikte. */
 export interface IsEmriDetayi extends IsEmri {
   parcalar: Parca[];
