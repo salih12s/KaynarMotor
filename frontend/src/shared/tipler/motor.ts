@@ -50,6 +50,8 @@ export interface Motor {
   yatirimci_id?: number | null;
   yatirimci_kar_orani?: Sayi;
   yatirimci_kar?: Sayi;
+  /** Sunucu kaydında bu alan yok; formlar boş metinle başlatır (yatırımcı adı arayüzde listeden bulunur). */
+  yatirimci_adi?: string | null;
   liste_fiyati?: Sayi;
   // Vitrin alanları (stok kaydıyla birlikte tutulur)
   vitrin_baslik?: string | null;

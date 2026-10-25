@@ -20,28 +20,11 @@ import CalculateIcon from '@mui/icons-material/Calculate';
 import ClearIcon from '@mui/icons-material/Clear';
 import ShareIcon from '@mui/icons-material/Share';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
-import { sayiYaz } from '../../shared/utils/bicim';
+import { ORANLAR, MAKS_NAKIT, fmtTL, formatParaInput, paraToNumber, hesaplaTaksit } from './taksitHesap';
+
+// Hesap taksitHesap.js'te; eski içe aktarma yolları (TaksitGoruntule, vitrin) bozulmasın diye buradan da dışa verilir.
+export { ORANLAR, MAKS_NAKIT, fmtTL, formatParaInput, paraToNumber, hesaplaTaksit };
 import { FONT, RENK } from '../../app/tokenlar';
-
-// Taksit oranları (nakit fiyat / oran = taksitli toplam)
-export const ORANLAR = [
-  { ay: 3, oran: 0.9 },
-  { ay: 6, oran: 0.83 },
-  { ay: 9, oran: 0.78 },
-  { ay: 12, oran: 0.73 },
-];
-
-export const fmtTL = (v) => `${sayiYaz(Math.round(v))} ₺`;
-
-// Para formatlı input yardımcıları: "50000" -> "50.000", girilen değerden sayı çıkarır
-export const formatParaInput = (val) => {
-  const digits = String(val ?? '').replace(/\D/g, '');
-  return digits ? sayiYaz(parseInt(digits, 10)) : '';
-};
-export const paraToNumber = (val) => {
-  const digits = String(val ?? '').replace(/\D/g, '');
-  return digits ? parseInt(digits, 10) : 0;
-};
 
 // Para formatlı (₺) giriş alanı — peşinat vb. için hem admin hem müşteri sayfasında kullanılır
 export const ParaInput = ({ value, onChange, label, helperText, ...props }) => (
@@ -56,22 +39,6 @@ export const ParaInput = ({ value, onChange, label, helperText, ...props }) => (
     {...props}
   />
 );
-
-// Makul üst sınır: paylaşım linki (/taksit/:fiyat) herkesçe değiştirilebildiğinden, absürt tutarlar "işletme teklifi" gibi görünmesin
-export const MAKS_NAKIT = 10000000;
-
-// Nakit fiyattan (peşinat düşülerek) taksit tablosunu hesaplar
-export const hesaplaTaksit = (nakit, pesinat = 0) => {
-  const n = parseFloat(nakit);
-  const p = parseFloat(pesinat) || 0;
-  if (!n || n <= 0 || n > MAKS_NAKIT) return null;
-  const kalan = n - p;
-  if (kalan <= 0) return null;
-  return ORANLAR.map((o) => {
-    const toplam = kalan / o.oran;
-    return { ay: o.ay, toplam, aylik: toplam / o.ay };
-  });
-};
 
 // Sonuç tablosu (hem admin sayfasında hem paylaşım sayfasında kullanılır)
 export const TaksitTablo = ({ sonuc, isMobile }) => {

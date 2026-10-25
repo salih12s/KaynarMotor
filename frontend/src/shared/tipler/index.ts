@@ -6,3 +6,4 @@ export type * from './aksesuar';
 export type * from './yedekParca';
 export type * from './eticaret';
 export type * from './vitrin';
+export type * from './rapor';

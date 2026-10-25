@@ -4,8 +4,12 @@
  * (backend/tests/unit/komisyon.test.js ve bu klasördeki komisyon.test.js); biri değişirse diğeri de değişmeli.
  */
 
+import type { Sayi } from '../../shared/utils/bicim';
+
+export type PlatformTipi = 'trendyol' | 'hepsiburada' | 'n11' | 'shoppier';
+
 // Platform adından tür çıkarır. "hb" yalnızca tek başına bir sözcük olarak sayılır (ör. "Shbank" Hepsiburada olmaz).
-export const detectPlatform = (platformAdi) => {
+export const detectPlatform = (platformAdi: string | null | undefined): PlatformTipi => {
   if (!platformAdi) return 'trendyol';
   // Türkçe büyük harfler için: 'İ'.toLowerCase() birleşik noktalı 'i̇' üretir; aksan işaretlerini at, ı→i
   const name = String(platformAdi).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/ı/g, 'i');
@@ -16,13 +20,52 @@ export const detectPlatform = (platformAdi) => {
 };
 
 // KDV: 0 geçerli bir orandır (eskiden `Number(kdv) || 20` 0'ı sessizce 20 yapıyordu). Yalnızca boş/geçersizse %20.
-export const kdvCoz = (kdvOrani) => {
+export const kdvCoz = (kdvOrani: Sayi): number => {
   if (kdvOrani === '' || kdvOrani === null || kdvOrani === undefined) return 20;
   const n = Number(kdvOrani);
   return Number.isFinite(n) ? n : 20;
 };
 
-export const hesaplaKomisyon = (satisFiyati, alisFiyati, komisyonOrani, kdvOrani, kargoUcreti, adet, platformTipi = 'trendyol') => {
+/** Hesabın sonucu: tutarlar adetle çarpılmış ve kuruşa yuvarlanmıştır. */
+export interface KomisyonHesabi {
+  platformTipi: PlatformTipi;
+  satis: number;
+  alis: number;
+  komisyon: number;
+  kdv: number;
+  kargo: number;
+  miktar: number;
+  kdvHaricSatis: number;
+  komisyonTutari: number;
+  toplamKomisyon: number;
+  toplamKesinti: number;
+  komisyonKDV: number;
+  hizmetBedeli: number;
+  hizmetKDV: number;
+  stopaj: number;
+  odemeBedeli: number;
+  islemBedeli: number;
+  odemIslemKDV: number;
+  pazarlamaHizmet: number;
+  pazarlamaHizmetKDV: number;
+  satistanKDV: number;
+  alisKDV: number;
+  kargoKDV: number;
+  odenecekKDV: number;
+  netKar: number;
+  karOrani: number;
+  yatirimGeriDonus: number;
+}
+
+export const hesaplaKomisyon = (
+  satisFiyati: Sayi,
+  alisFiyati: Sayi,
+  komisyonOrani: Sayi,
+  kdvOrani: Sayi,
+  kargoUcreti: Sayi,
+  adet: Sayi,
+  platformTipi: PlatformTipi = 'trendyol',
+): KomisyonHesabi => {
   const satis = Number(satisFiyati) || 0;
   const alis = Number(alisFiyati) || 0;
   const komisyon = Number(komisyonOrani) || 0;
@@ -37,7 +80,7 @@ export const hesaplaKomisyon = (satisFiyati, alisFiyati, komisyonOrani, kdvOrani
   const alisKDV = alis - kdvHaricAlis;
   const kargoKDV = kargo - kargo / (1 + kdv / 100);
 
-  let komisyonTutari, komisyonKDV, hizmetBedeli, hizmetKDV, stopaj;
+  let komisyonTutari: number, komisyonKDV: number, hizmetBedeli: number, hizmetKDV: number, stopaj: number;
   let odemeBedeli = 0,
     islemBedeli = 0,
     odemIslemKDV = 0;
@@ -85,7 +128,7 @@ export const hesaplaKomisyon = (satisFiyati, alisFiyati, komisyonOrani, kdvOrani
   const karOrani = alis > 0 ? (netKar / alis) * 100 : 0; // KDV dahil alışa göre
   const yatirimGeriDonus = kdvHaricAlis > 0 ? (netKar / kdvHaricAlis) * 100 : 0; // KDV hariç alışa göre
 
-  const r = (v) => Math.round(v * 100) / 100;
+  const r = (v: number) => Math.round(v * 100) / 100;
   return {
     platformTipi,
     satis,
