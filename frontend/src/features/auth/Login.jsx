@@ -73,13 +73,13 @@ const Login = () => {
           },
         }}
       >
-        <Box sx={{ textAlign: 'left' }}>
+        <Box sx={{ textAlign: 'center' }}>
           <img
             src="/kaynar-logo.png"
             alt="Kaynar Motor"
             width="190"
             height="102"
-            style={{ width: 190, maxWidth: '70%', height: 'auto', display: 'block', margin: 0 }}
+            style={{ width: 190, maxWidth: '70%', height: 'auto', display: 'block', margin: '0 auto' }}
           />
         </Box>
         <Typography
@@ -89,6 +89,7 @@ const Login = () => {
             fontWeight: 700,
             fontSize: { xs: 34, sm: 40 },
             lineHeight: 1.1,
+            textAlign: 'center',
             color: RENK.murekkep,
             mt: 1.5,
             pb: 2.5,
