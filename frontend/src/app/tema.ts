@@ -6,12 +6,14 @@ import { RENK, TON, FONT } from './tokenlar';
 const ONAY_SIMGESI =
   "center / contain no-repeat url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z'/></svg>\")";
 
-const chipRenk = (renk, ton) => ({
-  props: { color: renk, variant: 'filled' },
+type ChipRengi = 'success' | 'warning' | 'info' | 'error' | 'primary' | 'secondary';
+
+const chipRenk = (renk: ChipRengi, ton: { fg: string; bg: string }) => ({
+  props: { color: renk, variant: 'filled' as const },
   style: { backgroundColor: ton.bg, color: ton.fg, border: `1.5px solid ${ton.fg}` },
 });
 
-export const temaOlustur = ({ primary = RENK.kirmizi, secondary = RENK.murekkep } = {}) =>
+export const temaOlustur = ({ primary = RENK.kirmizi, secondary = RENK.murekkep }: { primary?: string; secondary?: string } = {}) =>
   createTheme({
     palette: {
       primary: { main: primary, dark: RENK.kirmiziKoyu },

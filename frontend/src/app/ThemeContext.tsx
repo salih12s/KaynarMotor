@@ -1,10 +1,32 @@
-import React, { createContext, useState, useContext, useMemo } from 'react';
-import { createTheme } from '@mui/material/styles';
+import React, { createContext, useState, useContext, useMemo, type ReactNode } from 'react';
+import { createTheme, type Theme } from '@mui/material/styles';
 import { temaOlustur } from './tema';
 
-const ThemeContext = createContext(null);
+export type TemaAdi = 'default' | 'aksesuar' | 'motor' | 'eticaret' | 'yedekParca';
 
-const themeConfigs = {
+interface TemaAyari {
+  primary: string;
+  secondary: string;
+  name: string;
+}
+
+interface TemaDegeri {
+  /** Vitrin ve müşteriye açık sayfaların (eski) teması. */
+  theme: Theme;
+  /** Yönetim paneli teması (Servis Defteri). */
+  panelTheme: Theme;
+  currentTheme: TemaAdi;
+  themeConfigs: Record<TemaAdi, TemaAyari>;
+  setDefaultTheme: () => void;
+  setAksesuarTheme: () => void;
+  setMotorTheme: () => void;
+  setEticaretTheme: () => void;
+  setYedekParcaTheme: () => void;
+}
+
+const ThemeContext = createContext<TemaDegeri | null>(null);
+
+const themeConfigs: Record<TemaAdi, TemaAyari> = {
   default: { primary: '#C62828', secondary: '#1a1a1a', name: 'Servis' },
   aksesuar: { primary: '#C62828', secondary: '#1a1a1a', name: 'Aksesuar' },
   motor: { primary: '#C62828', secondary: '#1a1a1a', name: '2. El Motor' },
@@ -12,8 +34,8 @@ const themeConfigs = {
   yedekParca: { primary: '#C62828', secondary: '#1a1a1a', name: 'Yedek Parça' },
 };
 
-export const CustomThemeProvider = ({ children }) => {
-  const [currentTheme, setCurrentTheme] = useState('default');
+export const CustomThemeProvider = ({ children }: { children?: ReactNode }) => {
+  const [currentTheme, setCurrentTheme] = useState<TemaAdi>('default');
 
   const setDefaultTheme = () => setCurrentTheme('default');
   const setAksesuarTheme = () => setCurrentTheme('aksesuar');
@@ -71,5 +93,9 @@ export const CustomThemeProvider = ({ children }) => {
   );
 };
 
-export const useCustomTheme = () => useContext(ThemeContext);
+export const useCustomTheme = (): TemaDegeri => {
+  const deger = useContext(ThemeContext);
+  if (!deger) throw new Error('useCustomTheme, CustomThemeProvider içinde kullanılmalı');
+  return deger;
+};
 export default ThemeContext;

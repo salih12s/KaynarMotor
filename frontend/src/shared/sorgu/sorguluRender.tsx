@@ -1,6 +1,6 @@
-import React from 'react';
-import { render } from '@testing-library/react';
-import { QueryClientProvider } from '@tanstack/react-query';
+import React, { type ReactElement } from 'react';
+import { render, type RenderOptions } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { sorguIstemcisiOlustur } from './sorguIstemcisi';
 
 /*
@@ -10,7 +10,10 @@ import { sorguIstemcisiOlustur } from './sorguIstemcisi';
  * retry kapalı (hata senaryosu beklemeden düşsün); gcTime sonsuz (test bitince bekleyen çöp toplama zamanlayıcısı kalmasın).
  * `istemci` verilirse o önbellek kullanılır: "sayfa kapatılıp yeniden açılınca" senaryosu için.
  */
-export const sorguluRender = (ui, { istemci = sorguIstemcisiOlustur({ retry: false, gcTime: Infinity }), ...secenekler } = {}) => {
+export const sorguluRender = (
+  ui: ReactElement,
+  { istemci = sorguIstemcisiOlustur({ retry: false, gcTime: Infinity }), ...secenekler }: { istemci?: QueryClient } & RenderOptions = {},
+) => {
   const sonuc = render(<QueryClientProvider client={istemci}>{ui}</QueryClientProvider>, secenekler);
   return { ...sonuc, istemci };
 };

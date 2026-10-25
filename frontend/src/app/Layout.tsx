@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, type ReactNode } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { Typography, Drawer, IconButton, Box, Collapse, useMediaQuery, useTheme, Avatar, ButtonBase } from '@mui/material';
+import { Typography, Drawer, IconButton, Box, Collapse, useMediaQuery, useTheme, Avatar, ButtonBase, type SxProps, type Theme } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import BuildIcon from '@mui/icons-material/BuildOutlined';
 import PeopleIcon from '@mui/icons-material/PeopleOutline';
@@ -32,6 +32,24 @@ const MOBIL_GENISLIK = 300;
 // Alt sekme çubuğunda (telefon) gösterilecek menü kodları, öncelik sırasıyla; yetkisi olan ilk 4 tanesi görünür.
 const ALT_SEKME_SIRASI = ['servis', 'motor', 'raporlar', 'musteriler', 'aksesuar', 'eticaret', 'yedek', 'vitrin', 'veresiye'];
 
+type MenuKodu = keyof typeof MENU_RENK;
+
+interface AltMenuOgesi {
+  title: string;
+  path: string;
+  icon: ReactNode;
+}
+
+interface MenuOgesi {
+  title: string;
+  kod: MenuKodu;
+  icon: ReactNode;
+  show: boolean;
+  path?: string;
+  key?: string;
+  subItems?: AltMenuOgesi[];
+}
+
 const Layout = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -40,8 +58,8 @@ const Layout = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [mobileOpen, setMobileOpen] = useState(false);
   // Alt menü açık/kapalı durumu grup başlığına göre ayrı ayrı tutulur
-  const [openMenus, setOpenMenus] = useState({});
-  const toggleMenu = (key, varsayilanAcik) => setOpenMenus((prev) => ({ ...prev, [key]: !(prev[key] ?? varsayilanAcik) }));
+  const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({});
+  const toggleMenu = (key: string, varsayilanAcik: boolean) => setOpenMenus((prev) => ({ ...prev, [key]: !(prev[key] ?? varsayilanAcik) }));
   const { setDefaultTheme, setAksesuarTheme, setMotorTheme, setEticaretTheme, setYedekParcaTheme } = useCustomTheme();
 
   const pathname = location.pathname;
@@ -68,7 +86,7 @@ const Layout = () => {
     navigate('/login');
   };
 
-  const handleNavigate = (path) => {
+  const handleNavigate = (path: string) => {
     navigate(path);
     if (isMobile) setMobileOpen(false);
   };
@@ -112,42 +130,42 @@ const Layout = () => {
   const today = new Date();
   const dateStr = today.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric', weekday: 'long' });
 
-  const menuItems = [
+  const menuItems: MenuOgesi[] = [
     {
       title: 'Motorsiklet',
       icon: <MotorIcon />,
       kod: 'motor',
-      show: isAdmin || hasMotor || isYatirimci || muhasebeMotor,
+      show: !!(isAdmin || hasMotor || isYatirimci || muhasebeMotor),
       key: 'motor',
       subItems: [
         ...(isAdmin || hasMotor || muhasebeMotor ? [{ title: 'Motor Satış', path: '/ikinci-el-motor', icon: <SellIcon /> }] : []),
         ...(!muhasebeMotor ? [{ title: isYatirimci ? 'Motorlarım' : 'Motor Stok', path: '/motor-stok', icon: <StokIcon /> }] : []),
       ],
     },
-    { title: 'Servis', path: '/servis', icon: <BuildIcon />, show: isAdmin || hasServis, kod: 'servis' },
+    { title: 'Servis', path: '/servis', icon: <BuildIcon />, show: !!(isAdmin || hasServis), kod: 'servis' },
     {
       title: 'Aksesuarlar',
       icon: <ShopIcon />,
       kod: 'aksesuar',
-      show: isAdmin || hasAksesuar || hasAksesuarStok,
+      show: !!(isAdmin || hasAksesuar || hasAksesuarStok),
       subItems: [
         ...(isAdmin || hasAksesuar ? [{ title: 'Aksesuar Satış', path: '/aksesuarlar', icon: <SellIcon /> }] : []),
         ...(isAdmin || hasAksesuarStok ? [{ title: 'Aksesuar Stok', path: '/aksesuar-stok', icon: <StokIcon /> }] : []),
       ],
     },
-    { title: 'E-Ticaret', path: '/eticaret', icon: <StoreIcon />, show: isAdmin || hasEticaret, kod: 'eticaret' },
+    { title: 'E-Ticaret', path: '/eticaret', icon: <StoreIcon />, show: !!(isAdmin || hasEticaret), kod: 'eticaret' },
     { title: 'Taksit Hesaplama', path: '/taksit-hesaplama', icon: <CalculateIcon />, show: !isYatirimci && !isMuhasebeci, kod: 'taksit' },
     {
       title: 'Yedek Parça',
       icon: <SettingsIcon />,
       kod: 'yedek',
-      show: isAdmin || hasYedekParca,
+      show: !!(isAdmin || hasYedekParca),
       subItems: [
         { title: 'Yedek Parça Satış', path: '/yedek-parcalar', icon: <SellIcon /> },
         { title: 'Yedek Parça Stok', path: '/yedek-parca-stok', icon: <StokIcon /> },
       ],
     },
-    { title: 'Vitrin / Site', path: '/vitrin', icon: <PublicIcon />, show: isAdmin || hasMotorVitrin || hasAksesuarVitrin, kod: 'vitrin' },
+    { title: 'Vitrin / Site', path: '/vitrin', icon: <PublicIcon />, show: !!(isAdmin || hasMotorVitrin || hasAksesuarVitrin), kod: 'vitrin' },
     { title: 'Veresiye', path: '/veresiye', icon: <VeresiyeIcon />, show: isAdmin, kod: 'veresiye' },
     { title: isYatirimci ? 'Raporum' : 'Raporlar', path: '/raporlar', icon: <ReportIcon />, show: isAdmin || isYatirimci, kod: 'raporlar' },
     { title: 'Müşteriler', path: '/musteriler', icon: <PeopleIcon />, show: isAdmin, kod: 'musteriler' },
@@ -155,17 +173,17 @@ const Layout = () => {
     { title: 'Kullanıcılar', path: '/kullanicilar', icon: <AdminIcon />, show: isAdmin, kod: 'kullanicilar' },
     { title: 'Yetkilendirme', path: '/yetkilendirme', icon: <GppGoodIcon />, show: isAdmin, kod: 'yetki' },
   ];
-  const anaSayfa = { title: 'Ana Sayfaya Git', path: '/site', icon: <HomeIcon />, show: !isMuhasebeci, kod: 'ana' };
+  const anaSayfa: MenuOgesi = { title: 'Ana Sayfaya Git', path: '/site', icon: <HomeIcon />, show: !isMuhasebeci, kod: 'ana' };
   const gorunenler = menuItems.filter((item) => item.show);
 
-  const isActive = (path) => pathname === path;
-  const isSubActive = (item) => item.subItems?.some((s) => pathname === s.path);
+  const isActive = (path?: string) => pathname === path;
+  const isSubActive = (item: MenuOgesi) => !!item.subItems?.some((s) => pathname === s.path);
   // Grup, kullanıcı elle açıp kapatmadıkça içinde bulunulan bölümde kendiliğinden açıktır
-  const grupAcik = (item) => openMenus[item.key || item.title] ?? !!isSubActive(item);
-  const hedefYol = (item) => item.path || item.subItems?.[0]?.path;
+  const grupAcik = (item: MenuOgesi) => openMenus[item.key || item.title] ?? isSubActive(item);
+  const hedefYol = (item: MenuOgesi): string => item.path || item.subItems?.[0]?.path || '/';
 
   // Ortak satır görünümü: renkli simge + ad; seçili satır açık yüzey rengi ve ince çerçeve alır.
-  const satirStili = (aktif, ic = false) => ({
+  const satirStili = (aktif: boolean, ic = false): SxProps<Theme> => ({
     display: 'flex',
     alignItems: 'center',
     gap: ic ? 1.25 : 1.5,
@@ -185,7 +203,7 @@ const Layout = () => {
     '&:hover': { bgcolor: aktif ? RENK.yuzey : 'rgba(22,24,28,.06)' },
     '& svg': { fontSize: ic ? 17 : 20 },
   });
-  const ikonKutusu = (kod, ic = false) => ({ display: 'inline-flex', color: MENU_RENK[kod], opacity: ic ? 0.9 : 1, flex: 'none' });
+  const ikonKutusu = (kod: MenuKodu, ic = false): SxProps<Theme> => ({ display: 'inline-flex', color: MENU_RENK[kod], opacity: ic ? 0.9 : 1, flex: 'none' });
 
   const drawer = (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: RENK.kenarMenu, overflow: 'hidden' }}>
@@ -237,7 +255,7 @@ const Layout = () => {
               </Collapse>
             </React.Fragment>
           ) : (
-            <ButtonBase key={item.kod} onClick={() => handleNavigate(item.path)} sx={satirStili(isActive(item.path))}>
+            <ButtonBase key={item.kod} onClick={() => handleNavigate(hedefYol(item))} sx={satirStili(isActive(item.path))}>
               <Box component="span" sx={ikonKutusu(item.kod)}>
                 {item.icon}
               </Box>
@@ -248,7 +266,7 @@ const Layout = () => {
       </Box>
       <Box sx={{ px: 1.5, pb: 2, pt: 1, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '3px' }}>
         {anaSayfa.show && (
-          <ButtonBase onClick={() => handleNavigate(anaSayfa.path)} sx={satirStili(false)}>
+          <ButtonBase onClick={() => handleNavigate(hedefYol(anaSayfa))} sx={satirStili(false)}>
             <Box component="span" sx={ikonKutusu(anaSayfa.kod)}>
               {anaSayfa.icon}
             </Box>
@@ -269,9 +287,9 @@ const Layout = () => {
 
   // Telefon alt sekmeleri: yetkisi olan ilk dört bölüm + Menü
   const altSekmeler = ALT_SEKME_SIRASI.map((kod) => gorunenler.find((m) => m.kod === kod))
-    .filter(Boolean)
+    .filter((m): m is MenuOgesi => !!m)
     .slice(0, 4);
-  const altSekmeAktif = (item) => (item.subItems ? isSubActive(item) : isActive(item.path));
+  const altSekmeAktif = (item: MenuOgesi) => (item.subItems ? isSubActive(item) : isActive(item.path));
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh' }}>

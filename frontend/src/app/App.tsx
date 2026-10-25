@@ -1,4 +1,4 @@
-import React, { lazy, Suspense } from 'react';
+import React, { lazy, Suspense, type ReactElement, type ReactNode } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -6,6 +6,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { OnayProvider } from '../shared/ui';
 import { sorguIstemcisiOlustur } from '../shared/sorgu/sorguIstemcisi';
 import { AuthProvider, useAuth } from '../features/auth/AuthContext';
+import type { Kullanici } from '../shared/tipler';
 import { CustomThemeProvider, useCustomTheme } from './ThemeContext';
 
 // Rota bazlı kod bölme: vitrin ziyaretçisi yönetim panelinin kodunu indirmez. Her sayfa kendi parçasıdır; ortak kütüphaneler (MUI vb.) paylaşılan parçada kalır.
@@ -36,14 +37,16 @@ const TaksitGoruntule = lazy(() => import('../features/taksit/TaksitGoruntule'))
 const BelgeArsivi = lazy(() => import('../features/motor/BelgeArsivi'));
 
 // Route Guards
-const ProtectedRoute = ({ children }) => {
+type RotaProps = { children: ReactElement };
+
+const ProtectedRoute = ({ children }: RotaProps) => {
   const { user, loading } = useAuth();
   if (loading) return null;
   if (!user) return <Navigate to="/login" />;
   return children;
 };
 
-const AdminRoute = ({ children }) => {
+const AdminRoute = ({ children }: RotaProps) => {
   const { user, loading } = useAuth();
   if (loading) return null;
   if (!user) return <Navigate to="/login" />;
@@ -51,7 +54,7 @@ const AdminRoute = ({ children }) => {
   return children;
 };
 
-const AksesuarRoute = ({ children }) => {
+const AksesuarRoute = ({ children }: RotaProps) => {
   const { user, loading } = useAuth();
   if (loading) return null;
   if (!user) return <Navigate to="/login" />;
@@ -59,7 +62,7 @@ const AksesuarRoute = ({ children }) => {
   return children;
 };
 
-const MotorSatisRoute = ({ children }) => {
+const MotorSatisRoute = ({ children }: RotaProps) => {
   const { user, loading } = useAuth();
   if (loading) return null;
   if (!user) return <Navigate to="/login" />;
@@ -70,7 +73,7 @@ const MotorSatisRoute = ({ children }) => {
 };
 
 // Motor Stok: admin, motor yetkisi olan personel veya yatırımcı erişebilir
-const MotorStokRoute = ({ children }) => {
+const MotorStokRoute = ({ children }: RotaProps) => {
   const { user, loading } = useAuth();
   if (loading) return null;
   if (!user) return <Navigate to="/login" />;
@@ -79,7 +82,7 @@ const MotorStokRoute = ({ children }) => {
 };
 
 // Belge Arşivi: muhasebeci (tek sayfası) ve admin
-const BelgeArsivRoute = ({ children }) => {
+const BelgeArsivRoute = ({ children }: RotaProps) => {
   const { user, loading } = useAuth();
   if (loading) return null;
   if (!user) return <Navigate to="/login" />;
@@ -88,7 +91,7 @@ const BelgeArsivRoute = ({ children }) => {
 };
 
 // Raporlar: admin veya yatırımcı (yatırımcı sadece kendi raporunu görür)
-const RaporRoute = ({ children }) => {
+const RaporRoute = ({ children }: RotaProps) => {
   const { user, loading } = useAuth();
   if (loading) return null;
   if (!user) return <Navigate to="/login" />;
@@ -96,7 +99,7 @@ const RaporRoute = ({ children }) => {
   return children;
 };
 
-const EticaretRoute = ({ children }) => {
+const EticaretRoute = ({ children }: RotaProps) => {
   const { user, loading } = useAuth();
   if (loading) return null;
   if (!user) return <Navigate to="/login" />;
@@ -104,7 +107,7 @@ const EticaretRoute = ({ children }) => {
   return children;
 };
 
-const ServisRoute = ({ children }) => {
+const ServisRoute = ({ children }: RotaProps) => {
   const { user, loading } = useAuth();
   if (loading) return null;
   if (!user) return <Navigate to="/login" />;
@@ -112,7 +115,7 @@ const ServisRoute = ({ children }) => {
   return children;
 };
 
-const AksesuarStokRoute = ({ children }) => {
+const AksesuarStokRoute = ({ children }: RotaProps) => {
   const { user, loading } = useAuth();
   if (loading) return null;
   if (!user) return <Navigate to="/login" />;
@@ -121,7 +124,7 @@ const AksesuarStokRoute = ({ children }) => {
 };
 
 // Vitrin: admin veya motor/aksesuar vitrin yetkisi olan personel
-const VitrinRoute = ({ children }) => {
+const VitrinRoute = ({ children }: RotaProps) => {
   const { user, loading } = useAuth();
   if (loading) return null;
   if (!user) return <Navigate to="/login" />;
@@ -129,7 +132,7 @@ const VitrinRoute = ({ children }) => {
   return children;
 };
 
-const YedekParcaRoute = ({ children }) => {
+const YedekParcaRoute = ({ children }: RotaProps) => {
   const { user, loading } = useAuth();
   if (loading) return null;
   if (!user) return <Navigate to="/login" />;
@@ -137,7 +140,7 @@ const YedekParcaRoute = ({ children }) => {
   return children;
 };
 
-const PublicRoute = ({ children }) => {
+const PublicRoute = ({ children }: RotaProps) => {
   const { user, loading } = useAuth();
   if (loading) return null;
   if (user) {
@@ -157,7 +160,7 @@ const PublicRoute = ({ children }) => {
 };
 
 // Giriş yapmış kullanıcıyı rolüne göre uygun panele yönlendiren hedef
-const panelHedefi = (user) => {
+const panelHedefi = (user: Kullanici): string | null => {
   if (user.rol === 'admin') return '/servis';
   if (user.rol === 'yatirimci') return '/motor-stok';
   if (user.rol === 'muhasebeci') return '/belge-arsivi';
@@ -228,7 +231,7 @@ const RootRoute = () => {
 };
 
 // Yönetim paneli ve giriş ekranı yeni tasarımla (Servis Defteri) çizilir; vitrin ve müşteriye açık sayfalar eski temada kalır.
-const PanelTema = ({ children }) => {
+const PanelTema = ({ children }: { children?: ReactNode }) => {
   const { panelTheme } = useCustomTheme();
   return (
     <ThemeProvider theme={panelTheme}>
