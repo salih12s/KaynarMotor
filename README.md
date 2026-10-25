@@ -12,6 +12,8 @@
   <img src="https://img.shields.io/badge/Express-4-000000?logo=express&logoColor=white" alt="Express 4">
   <img src="https://img.shields.io/badge/MariaDB-11-003545?logo=mariadb&logoColor=white" alt="MariaDB 11">
   <img src="https://img.shields.io/badge/MUI-7-007FFF?logo=mui&logoColor=white" alt="MUI 7">
+  <img src="https://img.shields.io/badge/TanStack_Query-5-FF4154?logo=reactquery&logoColor=white" alt="TanStack Query 5">
+  <img src="https://img.shields.io/badge/Playwright-E2E-2EAD33?logo=playwright&logoColor=white" alt="Playwright E2E">
   <img src="https://img.shields.io/badge/Hostinger-deploy-673DE6?logo=hostinger&logoColor=white" alt="Hostinger">
 </p>
 
@@ -38,8 +40,10 @@ I developed the React interface, the layered TypeScript (strict) / Express API w
 - Publishing and removing showroom listings automatically as inventory status changes
 - Exposing privacy-safe QR service history without leaking cost or customer data
 - Recovering cleanly from database cold starts and deployment-time connection delays
-- Migrating the whole backend to TypeScript and a routes/controller/service/repository layout without changing the HTTP contract: 201 API tests run against both the source and the bundled build
-- Refactoring the frontend safely: characterization tests first, then splitting a 1,563-line screen into a 95-line shell plus small components, verified by identical rendered HTML
+- Migrating the whole backend to TypeScript and a routes/controller/service/repository layout without changing the HTTP contract: 203 API tests run against both the source and the bundled build
+- Refactoring the frontend safely: characterization tests first, then splitting a 1,563-line screen into a 126-line shell plus small components, verified by identical rendered HTML
+- Moving server state to TanStack Query without stale screens: cache keys per date range, invalidation after writes, "always refetch on page open" for lists, each rule pinned by a test that was proven to fail when the rule is removed (mutation check) and measured in a real browser
+- Browser end-to-end tests (Playwright, real Chrome + real MariaDB, a throw-away database rebuilt on every run) for login/roles, work orders and motorcycle sales; writing them exposed a real form bug that the 400+ component tests had missed, now fixed with a regression test
 
 **See it in action:** the [Nasıl Çalışır](#nasıl-çalışır) section has four end-to-end recordings: public showroom, service work order with QR history, inventory ↔ showroom sync, and role-based access. The [Mimari](#mimari) section has the C4 container view, the request lifecycle, and the listing lifecycle.
 <!-- english-overview:end -->
@@ -178,10 +182,11 @@ kim tarafından ne zaman yapıldığını kaydeden aktivite logu.
 
 | Katman | Teknolojiler |
 |---|---|
-| **Frontend** | React 19, React Router 7, Material UI 7, Axios, jsbarcode, qrcode, react-to-print; testler: Jest + Testing Library |
+| **Frontend** | React 19, React Router 7, Material UI 7, **TanStack Query 5** (sunucu verisi önbelleği), Axios, jsbarcode, qrcode, react-to-print; testler: Jest + Testing Library |
 | **Backend** | Node.js (>=20), Express 4, **TypeScript (strict)**, **zod** (girdi doğrulama), JSON Web Token, bcryptjs, helmet, express-rate-limit; `tsx` ile çalışır, `esbuild` ile tek dosyaya paketlenir |
 | **Veritabanı** | MariaDB 11 — ORM kullanılmadan, `mysql2` ile doğrudan parametreli SQL (`$1` tarzı parametreleri MariaDB'ye çeviren ince katman: `backend/core/veritabani/`) |
-| **Test** | Birim (sahte veritabanıyla), API (gerçek MariaDB'ye karşı, kaynak ve paket), paket duman testi, frontend bileşen testleri |
+| **Test** | Birim (sahte veritabanıyla), API (gerçek MariaDB'ye karşı, kaynak ve paket), paket duman testi, frontend bileşen testleri, **Playwright E2E** (gerçek Chrome + gerçek backend + tek kullanımlık veritabanı) |
+| **Kalite** | ESLint (`react-app`, react-hooks dahil), Prettier, `.editorconfig` + `.gitattributes` (LF), TypeScript strict |
 | **Altyapı** | Hostinger Node.js barındırma (tek uygulama + MariaDB) |
 
 ## Mimari
@@ -337,6 +342,8 @@ flowchart LR
 - **Veritabanına dayanıklı başlangıç.** Backend veritabanı henüz hazır değilken de ayağa kalkar (`/api/health` yanıt verir) ve bağlantıyı artan gecikmelerle yeniden dener. Bu, barındırmadaki soğuk başlatma senaryolarına karşı dayanıklılık sağlar.
 - **Para ve stok işlemleri transaction içindedir.** Çok adımlı yazma işlemleri (iş emri + parçalar + stok düşümü) tek transaction'da yürür. Fiş numarası üretimi tek satırlık bir kilit tablosunda satır kilidiyle (`SELECT … FOR UPDATE`) serileştirilir.
 - **Katmanlı, sade fonksiyonlu yapı.** Her özellik `routes → controller → service → repository` ve `schemas` (zod) olarak ayrılır; service Express bilmez (hatalar `IstemciHatasi` sınıflarıyla), SQL repository'lerde (ve modüller arası ortak yardımcılarda, `shared/`) bulunur; service ve controller'larda yoktur. Kâr gizleme gibi saf kurallar `*.gorunum.ts` / `*.hesap.ts` dosyalarındadır ve doğrudan test edilir. Ayrıntı: [docs/TS-GECISI.md](docs/TS-GECISI.md).
+- **Sunucu verisi önbelleği (TanStack Query) ve bayat veri riski.** Önbellek yeni bir hata türü getirir: ekranın eski veriyi göstermesi. Bu yüzden kural açıktır: tarihe/süzgece bağlı veriler anahtarda taşınır (her tarih aralığı ayrı saklanır, geç gelen eski yanıt yenisini ezemez), yazma işleminden sonra ilgili anahtar geçersiz kılınır, listeler her sayfa açılışında tazelenir (başka ekranda yapılan değişiklik 30 sn beklemez), nadiren değişen veriler (personel, yatırımcı listesi) tekrar istenmez. Her kural, kaldırıldığında kırmızıya dönen bir testle sabitlendi ve gerçek tarayıcıda istek sayısı ölçülerek doğrulandı.
+- **Giriş hız sınırı IP + kullanıcı adı başınadır.** İşletmedeki tüm personel tek bir genel IP arkasından bağlanır; yalnızca IP'ye bağlı bir sınır, bir çalışanın yanlış denemeleriyle patronu da kilitlerdi. Bu yüzden asıl sayaç IP + kullanıcı adıdır (10 başarısız deneme / 15 dk), IP başına geniş bir yedek sınır (200) parola püskürtmeyi engeller.
 - **Denetim izi.** Giriş/çıkış ve başarısız giriş denemeleri (IP ile), kayıt/onay işlemleri, iş emri ve motor satışının oluşturma/güncelleme/silme adımları, aksesuar ve e-ticaret satışları, işlemi yapan kullanıcıyla birlikte `aktivite_log` tablosuna yazılır.
 
 ## Kurulum
@@ -413,9 +420,13 @@ ve TC bilgileri uydurmadır.
 | Katman | Ne sınar | Sayı |
 |---|---|---|
 | Birim (backend) | Servis kuralları, kâr gizleme, komisyon/hesap fonksiyonları; sahte veritabanı (`tests/unit/sahteDb.js`) | 248 |
-| API (backend) | HTTP sözleşmesi, yetki, transaction/rollback, eşzamanlılık; **gerçek MariaDB**'ye karşı, hem kaynak koddan hem **esbuild paketinden** | 201 + 201 |
+| API (backend) | HTTP sözleşmesi, yetki, transaction/rollback, eşzamanlılık; **gerçek MariaDB**'ye karşı, hem kaynak koddan hem **esbuild paketinden** | 203 + 203 |
 | Duman (paket) | Canlıdaki gibi üretilen zip açılır, sunucu ayağa kalkar, sağlık ve giriş uçları denenir (`npm run package:hostinger` sonrası: `node --test tests/smoke/paket.smoke.test.js`) | ayrı çalıştırılır |
-| Frontend | Sekiz büyük ekran (Raporlar, İş Emirleri, Vitrin yönetimi, Motor stok, İkinci el motor, Mağaza, E-Ticaret, Aksesuar) için bileşen testleri (roller, süzgeçler, formlar, sıralama, detay/yazdırma, mobil), saf fonksiyonlar, servis çağrı denetimi | 328 |
+| Frontend | Sekiz büyük ekran (Raporlar, İş Emirleri, Vitrin yönetimi, Motor stok, İkinci el motor, Mağaza, E-Ticaret, Aksesuar) için bileşen testleri (roller, süzgeçler, formlar, sıralama, detay/yazdırma, mobil, **önbellek davranışı**), saf fonksiyonlar (para/tarih biçimleme dahil), servis çağrı denetimi | 406 |
+| **E2E** (Playwright) | Gerçek Chrome + gerçek frontend + gerçek backend + her koşuda sıfırdan kurulan tek kullanımlık veritabanı: giriş ve rol kısıtı, iş emri oluştur/düzenle/tamamla, motor satışı (ekranda ve sunucuda). Üç tur üst üste 27/27 yeşil (flaky yok) | 13 |
+
+Test piramidi: çok sayıda hızlı birim ve bileşen testi, daha az API testi, **yalnızca kritik akışlar için** birkaç E2E. E2E bunların yerine değil üstüne gelir:
+arayüz ile API arasındaki kablolamayı (form alanı → istek → veritabanı → liste) yalnızca o sınar. Ayrı tarayıcı indirmez, makinedeki Chrome'u kullanır.
 
 Her şey tek komutla yeniden üretilir (yerel MariaDB açık olmalı):
 
@@ -423,12 +434,23 @@ Her şey tek komutla yeniden üretilir (yerel MariaDB açık olmalı):
 cd backend
 set -a; . ./.env.mariadb.test; set +a     # test veritabanı: adı "_test" ile biten yerel bir veritabanı
 bash scripts/hepsiniDogrula.sh            # tsc (strict) + birim + API (kaynak) + API (paket)
-cd ../frontend && CI=true npx react-scripts test --watchAll=false   # ~4-8 dk: bileşen testleri ağır (MUI + jsdom)
-npm run test:hizli                                                  # ~26 sn: ağır bileşen testleri atlanır
+cd ../frontend && CI=true npx react-scripts test --watchAll=false --maxWorkers=2   # ~4-8 dk: bileşen testleri ağır (MUI + jsdom)
+npm run test:hizli                                                                  # ~26 sn: ağır bileşen testleri atlanır
+npm run lint                                                                        # ESLint
+cd .. && npm run test:e2e                 # Playwright: sunucuları ve test veritabanını kendisi açar (~1,5 dk)
+npm run format:check                      # Prettier
 ```
 
-Testlerin gerçekten bir şey yakaladığı **mutasyonla** sınanır: kritik kural bilerek bozulur, ilgili testin kırmızıya dönmesi beklenir.
-API testleri yalnızca yerel ve adı `_test` ile biten bir veritabanında çalışır (canlıya yanlışlıkla yazmayı engelleyen koruma).
+Testlerin gerçekten bir şey yakaladığı **mutasyonla** sınanır: kritik kural bilerek bozulur, ilgili testin kırmızıya dönmesi beklenir
+(önbellek kuralları, kâr gizleme, rol kısıtları, liste tazeleme: hepsinde yapıldı).
+API testleri yalnızca yerel ve adı `_test` ile biten bir veritabanında çalışır; E2E ise yalnızca `test_kaynar_e2e` adlı tek kullanımlık veritabanını
+siler ve kurar. İkisi de canlıya yanlışlıkla yazmayı engelleyen korumalardır.
+
+**E2E'nin yakaladığı gerçek hata:** satış formunda plaka *tam* yazılıp öneriye tıklanınca stok kaydı forma dolmuyordu (400'den fazla bileşen testi bunu
+görmemişti, çünkü hepsi plakayı yarım yazıyordu). Önce hatayı kırmızıya çeviren bir bileşen testi yazıldı, sonra düzeltildi.
+
+**Bilinen sınırlamalar (dürüstçe):** iş emri listesi sayfalamasız (binlerce kayıtta ağır çizilir; geliştirme modunda 1.400 kayıtla pencere açılışı ~12 sn ölçüldü),
+yük/stres testleri (load, stress) yok (eşzamanlılık API testlerinde var), E2E yalnızca üç akışı kapsıyor.
 
 > CI: `.github/workflows/dogrula.yml` aynı adımları tanımlar; sahibinin GitHub hesabındaki faturalandırma kısıtı nedeniyle Actions'ta
 > çalıştırılmadı ve yalnızca elle tetiklenecek şekilde bırakıldı. Doğrulama yerelde yukarıdaki komutlarla yapılır.
@@ -467,17 +489,20 @@ KaynarMotorCRM/
 │       ├── features/            # Her iş alanı kendi ekranları, API çağrıları ve yardımcılarıyla
 │       │   ├── auth/            # Login, Kullanıcılar, Yetkilendirme, AuthContext, authApi
 │       │   ├── musteriler/
-│       │   ├── servis/          # IsEmirleri (53 satırlık kabuk) + isEmirleri/ (hook'lar, saf kurallar, liste, form, detay); form/detay sayfaları, servis geçmişi, yazdırma
-│       │   ├── aksesuar/        # Aksesuarlar (33 satırlık kabuk) + aksesuarlar/ (hook, saf kurallar, bileşenler); stok
+│       │   ├── servis/          # IsEmirleri (72 satırlık kabuk) + isEmirleri/ (hook'lar, saf kurallar, liste, form, detay); form/detay sayfaları, servis geçmişi, yazdırma
+│       │   ├── aksesuar/        # Aksesuarlar (49 satırlık kabuk) + aksesuarlar/ (hook, saf kurallar, bileşenler); stok
 │       │   ├── yedek-parca/     # Satış + stok
-│       │   ├── motor/           # MotorStok (66) ve IkinciElMotor (57) kabukları + hook/saf kural/bileşen klasörleri; detay, belge arşivi, satış belgeleri
-│       │   ├── eticaret/        # ETicaret (52 satırlık kabuk) + eticaret/ (hook, saf kurallar, bileşenler) + komisyon hesabı (testli)
-│       │   ├── vitrin/          # yonetim/ (admin: 75 satırlık kabuk + hook'lar + bilesenler/) ve magaza/ (herkese açık: 77 satırlık Storefront kabuğu + hook + bileşenler); ortak vitrinSabitleri, ilanArama
+│       │   ├── motor/           # MotorStok (102) ve IkinciElMotor (84) kabukları + hook/saf kural/bileşen klasörleri; motorSorgulari.js (iki ekranın ortak önbelleği); detay, belge arşivi, satış belgeleri
+│       │   ├── eticaret/        # ETicaret (74 satırlık kabuk) + eticaret/ (hook, saf kurallar, bileşenler) + komisyon hesabı (testli)
+│       │   ├── vitrin/          # yonetim/ (admin: 107 satırlık kabuk + hook'lar + bilesenler/) ve magaza/ (herkese açık: 77 satırlık Storefront kabuğu + hook + bileşenler); ortak vitrinSabitleri, ilanArama
 │       │   ├── taksit/
-│       │   └── raporlar/        # Raporlar (95 satırlık kabuk) + useRaporVerisi + raporHesap; sekmeler/ modallar/ bilesenler/ ; Veresiye
+│       │   └── raporlar/        # Raporlar (126 satırlık kabuk) + useRaporVerisi + raporHesap; sekmeler/ modallar/ bilesenler/ ; Veresiye
 │       └── shared/
 │           ├── api/istemci.js   # Axios örneği ve oturum yönetimi (özellik API'leri bunu kullanır)
-│           └── utils/           # htmlKacis, tarih, sonIstek
+│           ├── sorgu/           # TanStack Query istemcisi (sorguIstemcisi) ve test sarmalayıcısı (sorguluRender)
+│           └── utils/           # htmlKacis, tarih, bicim (sayı/para/tarih biçimleme), sonIstek
+├── e2e/                         # Playwright E2E: 3 akış (giriş+rol, iş emri, motor satışı), yardımcılar, tek kullanımlık veritabanı kurulumu
+├── playwright.config.js         # gerçek Chrome + backend/frontend'i kendisi açar; yalnızca yerel test_kaynar_e2e
 └── docs/
     ├── TS-GECISI.md             # Backend mimarisi, yeni özellik ekleme adımları, test stratejisi
     ├── FRONTEND-BOLME-RAPORU.md # Frontend bölme planı, yöntem ve ilerleme
@@ -556,9 +581,6 @@ npm run package:hostinger   # deploy/hostinger/kaynarmotor-hostinger.zip
 Sunucu tek dosyaya (`dist/main.cjs`, esbuild) paketlenir, arayüz `dist/public` içine derlenir ve
 Express ikisini de aynı adresten sunar (`/api` + SPA). Ayrıntılı adımlar, ortam değişkenleri ve
 geçiş kılavuzu: [docs/HOSTINGER.md](docs/HOSTINGER.md).
-
-Eski Railway/nixpacks yapılandırması (`nixpacks.toml`, `railway.json`, `Procfile`) geçiş tamamlandığı için silindi
-(git geçmişinde durur).
 
 ## Lisans
 
