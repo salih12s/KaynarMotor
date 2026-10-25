@@ -1,11 +1,16 @@
 import { useState } from 'react';
 
+interface DetayDurumu<T> {
+  open: boolean;
+  data: T | null;
+}
+
 // Detay penceresinin açık/kapalı durumu ve gösterilen kayıt. Kapanınca kayıt hemen silinir (eski davranış).
-export const useDetayModal = () => {
-  const [durum, setDurum] = useState({ open: false, data: null });
+export const useDetayModal = <T>() => {
+  const [durum, setDurum] = useState<DetayDurumu<T>>({ open: false, data: null });
   return {
     ...durum,
-    ac: (data) => setDurum({ open: true, data }),
+    ac: (data: T) => setDurum({ open: true, data }),
     kapat: () => setDurum({ open: false, data: null }),
   };
 };

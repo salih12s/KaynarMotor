@@ -1,4 +1,6 @@
 import React from 'react';
+import type { DialogProps } from '@mui/material';
+import type { IsEmriDetayi, Parca } from '../../../shared/tipler';
 import { BilgiKarti, BolumBasligi, DialogBasligi, Not, SayiKutusu } from '../../../shared/ui';
 import {
   Box,
@@ -15,19 +17,26 @@ import {
   DialogActions,
   Button,
 } from '@mui/material';
-import { formatDate } from '../bicim';
+import { formatDate, parcaListesi } from '../bicim';
 import { sayiYaz, sayiDegeri } from '../../../shared/utils/bicim';
 
 const SUTUN_3 = { display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' }, gap: 2, mb: 2 };
 const sagaSx = { textAlign: 'right' };
-const karRengi = (v) => (v >= 0 ? '#1D6A3B' : '#c62828');
+const karRengi = (v: number) => (v >= 0 ? '#1D6A3B' : '#c62828');
 
 // İş emri detay penceresi (parça listesi JSON metin olarak gelebilir).
-const IsEmriDetayModal = ({ open, data, onClose, isMobile }) => {
-  const dialogProps = { open, onClose, maxWidth: 'md', fullWidth: true, fullScreen: isMobile };
+interface Props {
+  open: boolean;
+  data: IsEmriDetayi | null;
+  onClose: () => void;
+  isMobile: boolean;
+}
+
+const IsEmriDetayModal = ({ open, data, onClose, isMobile }: Props) => {
+  const dialogProps: DialogProps = { open, onClose, maxWidth: 'md', fullWidth: true, fullScreen: isMobile };
   if (!data) return <Dialog {...dialogProps} />;
   const d = data;
-  const parcalar = typeof d.parcalar === 'string' ? JSON.parse(d.parcalar) : d.parcalar || [];
+  const parcalar = parcaListesi<Parca>(d.parcalar);
   const toplamFiyat = parcalar.reduce((t, p) => t + sayiDegeri(p.toplam_fiyat), 0);
   const toplamMaliyet = parcalar.reduce((t, p) => t + (Number(p.adet) || 0) * (Number(p.maliyet) || 0), 0);
   const kar = toplamFiyat - toplamMaliyet;
@@ -56,7 +65,7 @@ const IsEmriDetayModal = ({ open, data, onClose, isMobile }) => {
             satirlar={[
               ['Marka', d.marka || '-'],
               ['Model / Tip', d.model_tip || '-'],
-              ['KM', d.km ? `${sayiYaz(parseInt(d.km))} km` : '-'],
+              ['KM', d.km ? `${sayiYaz(parseInt(String(d.km)))} km` : '-'],
             ]}
           />
           <BilgiKarti

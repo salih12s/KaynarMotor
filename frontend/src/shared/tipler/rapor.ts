@@ -91,6 +91,76 @@ export type YatirimciMotoru = Pick<
   | 'yatirimci_kar'
 >;
 
+/** Veresiye (açık borç) kaynağı: borcun hangi satıştan geldiği. */
+export type BorcKaynagi = 'motor' | 'servis' | 'aksesuar' | 'yedek_parca';
+
+/** Borç kaydındaki parça/ürün satırı (servis ve aksesuar borçlarında). */
+export interface BorcParcasi {
+  takilan_parca?: string | null;
+  urun_adi?: string | null;
+  adet?: number | string | null;
+  birim_fiyat?: Sayi;
+  toplam_fiyat?: Sayi;
+  satis_fiyati?: Sayi;
+}
+
+/** Borcun kaynağa özgü ayrıntıları (backend veresiye.service.ts borclariBirlestir): hangi alanların dolu olduğu kaynağa göre değişir. */
+export interface BorcDetayi {
+  plaka?: string | null;
+  marka?: string | null;
+  model?: string | null;
+  model_tip?: string | null;
+  yil?: number | string | null;
+  km?: number | string | null;
+  fis_no?: number | null;
+  adres?: string | null;
+  ariza_sikayetler?: string | null;
+  odeme_sekli?: string | null;
+  odeme_detaylari?: string | null;
+  alici_tc?: string | null;
+  alici_adres?: string | null;
+  alis_fiyati?: number;
+  satis_fiyati?: number;
+  noter_satis?: number;
+  tahmini_toplam_ucret?: number;
+  fatura_kesildi?: boolean | null;
+  yevmiye_no?: string | null;
+  notlar?: string | null;
+  durum?: string | null;
+  urun_adi?: string | null;
+  parcalar?: BorcParcasi[];
+}
+
+/** `/veresiye` yanıtındaki tek borç satırı. */
+export interface Borc {
+  kaynak: string;
+  kaynak_key: BorcKaynagi;
+  id: number;
+  fis_no?: number | null;
+  musteri_adi: string;
+  telefon: string;
+  kalan_odeme: number;
+  toplam_tutar: number;
+  tarih: string | null;
+  aciklama: string;
+  detay: BorcDetayi;
+}
+
+export interface VeresiyeOzeti {
+  motor: number;
+  servis: number;
+  aksesuar: number;
+  yedek_parca: number;
+  toplam: number;
+  kayit_sayisi: number;
+}
+
+/** `/veresiye` yanıtı: borçlar (en yeni önce) ve kaynak bazında özet. */
+export interface VeresiyeYaniti {
+  borclar: Borc[];
+  ozet: VeresiyeOzeti;
+}
+
 /** `/raporlar/yatirimci-rapor`. */
 export interface YatirimciRaporu {
   stoktakiler: YatirimciMotoru[];

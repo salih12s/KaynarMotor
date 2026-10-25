@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { type ReactNode } from 'react';
+import type { AksesuarSatis, AralikRaporu } from '../../../shared/tipler';
 import { IslemDugmesi } from '../../../shared/ui';
 import { Box, Paper, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Alert } from '@mui/material';
 
@@ -7,16 +8,24 @@ import DurumChip from '../bilesenler/DurumChip';
 import KartItem, { KART_RENKLERI } from '../bilesenler/KartItem';
 
 // Aksesuar Satışları sekmesi.
-const AksesuarSatislari = ({ rapor, isMobile, onDetay }) => {
+interface AksesuarSatislariProps {
+  rapor: AralikRaporu;
+  isMobile: boolean;
+  onDetay: (satis: AksesuarSatis) => void;
+}
+
+const AksesuarSatislari = ({ rapor, isMobile, onDetay }: AksesuarSatislariProps) => {
   return (
     <>
       <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 2, mb: 2 }}>
-        {[
-          { label: 'Toplam Satış', value: rapor.aksesuarlar?.length || 0 },
-          { label: 'Aksesuar Gelir', value: `₺${formatTL(rapor.aksesuarGelir)}` },
-          { label: 'Aksesuar Maliyet', value: `₺${formatTL(rapor.aksesuarMaliyet)}` },
-          { label: 'Aksesuar Kâr', value: `₺${formatTL(rapor.aksesuarKar)}` },
-        ].map((k, i) => (
+        {(
+          [
+            { label: 'Toplam Satış', value: rapor.aksesuarlar?.length || 0 },
+            { label: 'Aksesuar Gelir', value: `₺${formatTL(rapor.aksesuarGelir)}` },
+            { label: 'Aksesuar Maliyet', value: `₺${formatTL(rapor.aksesuarMaliyet)}` },
+            { label: 'Aksesuar Kâr', value: `₺${formatTL(rapor.aksesuarKar)}` },
+          ] as Array<{ label: string; value: ReactNode; color?: string }>
+        ).map((k, i) => (
           <KartItem key={i} label={k.label} value={k.value} color={k.color || KART_RENKLERI[i % KART_RENKLERI.length]} />
         ))}
       </Box>

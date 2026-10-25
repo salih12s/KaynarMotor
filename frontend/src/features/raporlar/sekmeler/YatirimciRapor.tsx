@@ -17,10 +17,11 @@ import {
 } from '@mui/material';
 import { formatTL, formatDate, headerSx } from '../bicim';
 import { raporService } from '../raporApi';
+import type { YatirimciRaporu } from '../../../shared/tipler';
 
 // Yatırımcının kendi raporu: yalnızca kendi stoğu ve satılan motorlarındaki payı.
-const YatirimciRapor = ({ isMobile }) => {
-  const [data, setData] = useState(null);
+const YatirimciRapor = ({ isMobile }: { isMobile: boolean }) => {
+  const [data, setData] = useState<YatirimciRaporu | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -28,7 +29,7 @@ const YatirimciRapor = ({ isMobile }) => {
   const [bitis, setBitis] = useState('');
 
   // Yerel tarihi YYYY-AA-GG formatına çevir (UTC kayması olmadan)
-  const isoLocal = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  const isoLocal = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   const buHafta = () => {
     const n = new Date();
     const g = (n.getDay() + 6) % 7;
@@ -45,7 +46,7 @@ const YatirimciRapor = ({ isMobile }) => {
 
   useEffect(() => {
     setLoading(true);
-    const params = {};
+    const params: Record<string, string> = {};
     if (baslangic) params.baslangic = baslangic;
     if (bitis) params.bitis = bitis;
     raporService
@@ -55,7 +56,7 @@ const YatirimciRapor = ({ isMobile }) => {
       .finally(() => setLoading(false));
   }, [baslangic, bitis]);
 
-  const o = data?.ozet || {};
+  const o: Partial<YatirimciRaporu['ozet']> = data?.ozet || {};
   const stoktakiler = data?.stoktakiler || [];
   const satilanlar = data?.satilanlar || [];
 
@@ -113,7 +114,7 @@ const YatirimciRapor = ({ isMobile }) => {
               { label: 'Stok Değeri', value: `₺${formatTL(o.stok_degeri)}`, color: '#A5530F' },
               { label: 'Toplam Kazancım', value: `₺${formatTL(o.toplam_yatirimci_kar)}`, color: '#1D6A3B' },
             ].map((k, i) => {
-              const bgMap = { '#C62828': '#F6DAD7', '#1E4A86': '#DCE6F4', '#A5530F': '#F7E7C4', '#1D6A3B': '#D8EBDD' };
+              const bgMap: Record<string, string> = { '#C62828': '#F6DAD7', '#1E4A86': '#DCE6F4', '#A5530F': '#F7E7C4', '#1D6A3B': '#D8EBDD' };
               return (
                 <Grid size={{ xs: 6, md: 3 }} key={i}>
                   <Paper sx={{ p: 2, textAlign: 'center', bgcolor: bgMap[k.color], borderLeft: `4px solid ${k.color}` }}>

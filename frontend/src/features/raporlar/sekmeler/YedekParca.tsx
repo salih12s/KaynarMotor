@@ -1,20 +1,23 @@
-import React from 'react';
+import React, { type ReactNode } from 'react';
+import type { AralikRaporu } from '../../../shared/tipler';
 import { sayiDegeri } from '../../../shared/utils/bicim';
 import { Box, Paper, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Alert } from '@mui/material';
 import { formatTL, karColor, headerSx, sagaSutunlar } from '../bicim';
 import KartItem, { KART_RENKLERI } from '../bilesenler/KartItem';
 
 // Yedek Parça (envanter) sekmesi.
-const YedekParca = ({ rapor, isMobile }) => {
+const YedekParca = ({ rapor, isMobile }: { rapor: AralikRaporu; isMobile: boolean }) => {
   return (
     <>
       <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 2, mb: 2 }}>
-        {[
-          { label: 'Toplam Ürün', value: rapor.yedekParcalar?.length || 0 },
-          { label: 'Toplam Satış Değeri', value: `₺${formatTL(rapor.yedekParcaToplamDeger)}` },
-          { label: 'Toplam Maliyet', value: `₺${formatTL(rapor.yedekParcaToplamMaliyet)}` },
-          { label: 'Potansiyel Kâr', value: `₺${formatTL((rapor.yedekParcaToplamDeger || 0) - (rapor.yedekParcaToplamMaliyet || 0))}` },
-        ].map((k, i) => (
+        {(
+          [
+            { label: 'Toplam Ürün', value: rapor.yedekParcalar?.length || 0 },
+            { label: 'Toplam Satış Değeri', value: `₺${formatTL(rapor.yedekParcaToplamDeger)}` },
+            { label: 'Toplam Maliyet', value: `₺${formatTL(rapor.yedekParcaToplamMaliyet)}` },
+            { label: 'Potansiyel Kâr', value: `₺${formatTL((rapor.yedekParcaToplamDeger || 0) - (rapor.yedekParcaToplamMaliyet || 0))}` },
+          ] as Array<{ label: string; value: ReactNode; color?: string }>
+        ).map((k, i) => (
           <KartItem key={i} label={k.label} value={k.value} color={k.color || KART_RENKLERI[i % KART_RENKLERI.length]} />
         ))}
       </Box>

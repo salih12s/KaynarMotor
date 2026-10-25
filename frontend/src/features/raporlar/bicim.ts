@@ -10,6 +10,9 @@ export { sagaSutunlar } from '../../shared/ui/sagaSutunlar';
 
 export const karColor = (v: Sayi): string => (sayiDegeri(v) >= 0 ? '#1D6A3B' : '#C62828');
 
+// Kayıtla gelen parça listesi: eski yanıtlarda JSON metni olarak da gelebilir (PostgreSQL json_agg dönemi); dizi ise aynen döner.
+export const parcaListesi = <T>(v: T[] | string | null | undefined): T[] => (typeof v === 'string' ? (JSON.parse(v) as T[]) : v || []);
+
 // Motorun toplam kârından yatırımcıya ayrılan pay düşüldükten sonra işletmede kalan tutar.
 export const motorIsletmeKari = (motor: { kar?: Sayi; yatirimci_kar?: Sayi } | null | undefined): number =>
   sayiDegeri(motor?.kar) - sayiDegeri(motor?.yatirimci_kar);

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, type ReactElement } from 'react';
 import { DialogBasligi, IslemDugmesi } from '../../shared/ui';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -34,10 +34,11 @@ import SettingsIcon from '@mui/icons-material/SettingsOutlined';
 import OpenIcon from '@mui/icons-material/OpenInNew';
 
 import { veresiyeService } from './raporApi';
-import { sayiYaz, tarihYaz } from '../../shared/utils/bicim';
+import { sayiYaz, tarihYaz, type Sayi } from '../../shared/utils/bicim';
+import type { Borc, BorcKaynagi, VeresiyeOzeti } from '../../shared/tipler';
 import { FONT, RENK, TON } from '../../app/tokenlar';
 
-const KAYNAK_INFO = {
+const KAYNAK_INFO: Record<BorcKaynagi, { label: string; color: string; bg: string; icon: ReactElement; path: string }> = {
   motor: { label: 'Motor Satış', color: '#C62828', bg: '#F6DAD7', icon: <MotorIcon fontSize="small" />, path: '/ikinci-el-motor' },
   servis: { label: 'Servis', color: '#1E4A86', bg: '#DCE6F4', icon: <BuildIcon fontSize="small" />, path: '/' },
   aksesuar: { label: 'Aksesuar', color: '#1D6A3B', bg: '#D8EBDD', icon: <ShopIcon fontSize="small" />, path: '/aksesuarlar' },
@@ -47,28 +48,28 @@ const KAYNAK_INFO = {
 const Veresiye = () => {
   const isMobile = useMediaQuery(useTheme().breakpoints.down('sm'));
   const navigate = useNavigate();
-  const [borclar, setBorclar] = useState([]);
-  const [ozet, setOzet] = useState({ motor: 0, servis: 0, aksesuar: 0, yedek_parca: 0, toplam: 0, kayit_sayisi: 0 });
+  const [borclar, setBorclar] = useState<Borc[]>([]);
+  const [ozet, setOzet] = useState<VeresiyeOzeti>({ motor: 0, servis: 0, aksesuar: 0, yedek_parca: 0, toplam: 0, kayit_sayisi: 0 });
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [kaynakFilter, setKaynakFilter] = useState('hepsi');
-  const [detayModal, setDetayModal] = useState({ open: false, borc: null });
+  const [kaynakFilter, setKaynakFilter] = useState<BorcKaynagi | 'hepsi'>('hepsi');
+  const [detayModal, setDetayModal] = useState<{ open: boolean; borc: Borc | null }>({ open: false, borc: null });
 
-  const openDetail = (b) => setDetayModal({ open: true, borc: b });
+  const openDetail = (b: Borc) => setDetayModal({ open: true, borc: b });
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     try {
       const res = await veresiyeService.getAll();
       setBorclar(res.data.borclar || []);
-      setOzet(res.data.ozet || {});
+      setOzet(res.data.ozet || ({} as VeresiyeOzeti));
     } catch {}
     setLoading(false);
-  };
+  }, []);
 
   useEffect(() => {
     load();
-  }, []);
+  }, [load]);
 
   const filtered = borclar.filter((b) => {
     if (kaynakFilter !== 'hepsi' && b.kaynak_key !== kaynakFilter) return false;
@@ -77,7 +78,7 @@ const Veresiye = () => {
     return (b.musteri_adi || '').toLowerCase().includes(q) || (b.telefon || '').includes(search) || (b.aciklama || '').toLowerCase().includes(q);
   });
 
-  const fmtTL = (v) => `₺${sayiYaz(v)}`;
+  const fmtTL = (v: Sayi) => `₺${sayiYaz(v)}`;
 
   const ozetCards = [
     { key: 'toplam', label: 'Toplam Borç', value: ozet.toplam, color: '#C62828', bg: '#F6DAD7' },
@@ -123,9 +124,9 @@ const Veresiye = () => {
           select
           size="small"
           aria-label="Kaynak"
-          SelectProps={{ renderValue: (v) => `Kaynak: ${v === 'hepsi' ? 'Tümü' : KAYNAK_INFO[v]?.label}` }}
+          SelectProps={{ renderValue: (v) => `Kaynak: ${v === 'hepsi' ? 'Tümü' : KAYNAK_INFO[v as BorcKaynagi]?.label}` }}
           value={kaynakFilter}
-          onChange={(e) => setKaynakFilter(e.target.value)}
+          onChange={(e) => setKaynakFilter(e.target.value as BorcKaynagi | 'hepsi')}
           sx={{ minWidth: 190 }}
         >
           <MenuItem value="hepsi">Tümü</MenuItem>
@@ -162,7 +163,7 @@ const Veresiye = () => {
         (isMobile ? (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
             {filtered.map((b, i) => {
-              const info = KAYNAK_INFO[b.kaynak_key] || {};
+              const info: Partial<(typeof KAYNAK_INFO)[BorcKaynagi]> = KAYNAK_INFO[b.kaynak_key] || {};
               return (
                 <Paper key={i} sx={{ p: 1.5, borderLeft: `4px solid ${info.color || '#999'}` }}>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
@@ -218,7 +219,7 @@ const Veresiye = () => {
               </TableHead>
               <TableBody>
                 {filtered.map((b, i) => {
-                  const info = KAYNAK_INFO[b.kaynak_key] || {};
+                  const info: Partial<(typeof KAYNAK_INFO)[BorcKaynagi]> = KAYNAK_INFO[b.kaynak_key] || {};
                   return (
                     <TableRow key={i} hover>
                       <TableCell>
@@ -260,10 +261,11 @@ const Veresiye = () => {
         {detayModal.borc &&
           (() => {
             const b = detayModal.borc;
-            const info = KAYNAK_INFO[b.kaynak_key] || {};
+            const info: Partial<(typeof KAYNAK_INFO)[BorcKaynagi]> = KAYNAK_INFO[b.kaynak_key] || {};
+            const yol = info.path;
             const d = b.detay || {};
             const parcalar = d.parcalar || [];
-            const odenen = (parseFloat(b.toplam_tutar) || 0) - (parseFloat(b.kalan_odeme) || 0);
+            const odenen = (parseFloat(String(b.toplam_tutar)) || 0) - (parseFloat(String(b.kalan_odeme)) || 0);
             return (
               <>
                 <DialogBasligi ikon={info.icon} baslik={`${info.label} Detayı`} onKapat={() => setDetayModal({ open: false, borc: null })} />
@@ -492,7 +494,7 @@ const Veresiye = () => {
                                     <TableCell align="center">{p.adet}</TableCell>
                                     <TableCell align="right">{fmtTL(p.birim_fiyat)}</TableCell>
                                     <TableCell align="right">
-                                      <strong>{fmtTL(p.toplam_fiyat || p.adet * p.birim_fiyat)}</strong>
+                                      <strong>{fmtTL(p.toplam_fiyat || Number(p.adet) * Number(p.birim_fiyat))}</strong>
                                     </TableCell>
                                   </TableRow>
                                 ))}
@@ -614,12 +616,12 @@ const Veresiye = () => {
                   )}
                 </DialogContent>
                 <DialogActions>
-                  {info.path && (
+                  {yol && (
                     <Button
                       startIcon={<OpenIcon />}
                       onClick={() => {
                         setDetayModal({ open: false, borc: null });
-                        navigate(info.path);
+                        navigate(yol);
                       }}
                     >
                       {info.label} Sayfasına Git

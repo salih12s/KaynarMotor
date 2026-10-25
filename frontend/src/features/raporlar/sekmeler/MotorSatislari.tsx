@@ -1,4 +1,5 @@
 import React from 'react';
+import type { AralikRaporu, Motor } from '../../../shared/tipler';
 import { sayiDegeri } from '../../../shared/utils/bicim';
 import { Damga, IslemDugmesi, Plaka } from '../../../shared/ui';
 import { RENK } from '../../../app/tokenlar';
@@ -24,14 +25,26 @@ import { formatTL, formatDate, karColor, motorIsletmeKari, headerSx } from '../b
 import KartItem from '../bilesenler/KartItem';
 
 const SAYISAL = ['Alış', 'Satış', 'Masraf', 'Payınız', 'Kom. Tutar'];
-const sagaSx = { textAlign: 'right' };
-const FaturaDamgasi = ({ kesildi }) => <Damga ton={kesildi ? 'yesil' : 'kirmizi'}>{kesildi ? 'Kesildi' : 'Kesilmedi'}</Damga>;
+const sagaSx = { textAlign: 'right' } as const;
+const FaturaDamgasi = ({ kesildi }: { kesildi: boolean | null | undefined }) => (
+  <Damga ton={kesildi ? 'yesil' : 'kirmizi'}>{kesildi ? 'Kesildi' : 'Kesilmedi'}</Damga>
+);
 
 // Motor Satışları sekmesi (Satışlar / Komisyonlu alt sekmeleri). Alt sekme ve komisyoncu süzgeci üstte tutulur: sekme değişince kaybolmaz.
-const MotorSatislari = ({ rapor, isMobile, motorSubTab, setMotorSubTab, komisyoncuFilter, setKomisyoncuFilter, onDetay }) => {
+interface MotorSatislariProps {
+  rapor: AralikRaporu;
+  isMobile: boolean;
+  motorSubTab: number;
+  setMotorSubTab: (sekme: number) => void;
+  komisyoncuFilter: string;
+  setKomisyoncuFilter: (komisyoncu: string) => void;
+  onDetay: (motor: Motor) => void;
+}
+
+const MotorSatislari = ({ rapor, isMobile, motorSubTab, setMotorSubTab, komisyoncuFilter, setKomisyoncuFilter, onDetay }: MotorSatislariProps) => {
   const allMotorlar = rapor.motorlar || [];
   const komisyonluAll = allMotorlar.filter((m) => (m.komisyoncu_adi && m.komisyoncu_adi.trim()) || sayiDegeri(m.komisyoncu_tutari) > 0);
-  const komisyoncuList = Array.from(new Set(komisyonluAll.map((m) => (m.komisyoncu_adi || '').trim()).filter(Boolean))).sort((a, b) =>
+  const komisyoncuList = Array.from(new Set<string>(komisyonluAll.map((m) => (m.komisyoncu_adi || '').trim()).filter(Boolean))).sort((a, b) =>
     a.localeCompare(b, 'tr'),
   );
   const komisyonluMotorlar = komisyoncuFilter

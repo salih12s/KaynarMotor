@@ -1,10 +1,11 @@
 import React from 'react';
+import type { YatirimciOzeti } from '../../../shared/tipler';
 import { Box, Paper, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Alert } from '@mui/material';
 import { formatTL, headerSx, sagaSutunlar } from '../bicim';
 import KartItem, { KART_RENKLERI } from '../bilesenler/KartItem';
 
 // Yatırımcılar sekmesi (yalnızca admin): stok + motor satışlarından türetilen özet.
-const Yatirimcilar = ({ yatirimciOzetGosterim, isMobile }) => {
+const Yatirimcilar = ({ yatirimciOzetGosterim, isMobile }: { yatirimciOzetGosterim: YatirimciOzeti[]; isMobile: boolean }) => {
   return (
     <>
       {yatirimciOzetGosterim.length === 0 ? (

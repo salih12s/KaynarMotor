@@ -1,5 +1,5 @@
 import api, { type Govde } from '../../shared/api/istemci';
-import type { AralikRaporu, FisKarSatiri, YatirimciOzeti, YatirimciRaporu } from '../../shared/tipler';
+import type { AralikRaporu, FisKarSatiri, VeresiyeYaniti, YatirimciOzeti, YatirimciRaporu } from '../../shared/tipler';
 
 // Raporlar
 export const raporService = {
@@ -12,7 +12,7 @@ export const raporService = {
   getYatirimciOzet: (baslangic: string, bitis: string) => api.get<YatirimciOzeti[]>('/raporlar/yatirimci-ozet', { params: { baslangic, bitis } }),
 };
 
-// Veresiye (Açık borçlar). Yanıt şekli Veresiye ekranı TypeScript'e geçerken (aşama 4.6) tanımlanır.
+// Veresiye (Açık borçlar)
 export const veresiyeService = {
-  getAll: () => api.get<unknown>('/veresiye'),
+  getAll: () => api.get<VeresiyeYaniti>('/veresiye'),
 };

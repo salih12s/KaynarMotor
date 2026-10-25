@@ -1,23 +1,31 @@
 import React from 'react';
+import type { AralikRaporu, EticaretSatis } from '../../../shared/tipler';
 import { sayiDegeri } from '../../../shared/utils/bicim';
 import { IslemDugmesi } from '../../../shared/ui';
 import { Box, Paper, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Alert, Chip } from '@mui/material';
 
 import { formatTL, formatDate, karColor, headerSx, sagaSutunlar } from '../bicim';
-import KartItem, { KART_RENKLERI } from '../bilesenler/KartItem';
+import KartItem, { KART_RENKLERI, kartlar } from '../bilesenler/KartItem';
 import { hesaplaKomisyon, detectPlatform } from '../../eticaret/komisyon';
 
 // E-Ticaret sekmesi. Net kâr sunucudan değil hesaplaKomisyon ile satır satır hesaplanır.
-const ETicaret = ({ rapor, hesaplananEticaretKar, isMobile, onDetay }) => {
+interface ETicaretProps {
+  rapor: AralikRaporu;
+  hesaplananEticaretKar: number;
+  isMobile: boolean;
+  onDetay: (satis: EticaretSatis) => void;
+}
+
+const ETicaret = ({ rapor, hesaplananEticaretKar, isMobile, onDetay }: ETicaretProps) => {
   return (
     <>
       <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 2, mb: 2 }}>
-        {[
+        {kartlar([
           { label: 'Toplam Satış', value: rapor.eticaret?.length || 0 },
           { label: 'E-Ticaret Gelir', value: `₺${formatTL(rapor.eticaretGelir)}` },
           { label: 'E-Ticaret Maliyet', value: `₺${formatTL(rapor.eticaretMaliyet)}` },
           { label: 'E-Ticaret Kâr', value: `₺${formatTL(hesaplananEticaretKar)}` },
-        ].map((k, i) => (
+        ]).map((k, i) => (
           <KartItem key={i} label={k.label} value={k.value} color={k.color || KART_RENKLERI[i % KART_RENKLERI.length]} />
         ))}
       </Box>
@@ -25,7 +33,7 @@ const ETicaret = ({ rapor, hesaplananEticaretKar, isMobile, onDetay }) => {
         isMobile ? (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
             {rapor.eticaret.map((e, i) => {
-              const miktar = parseInt(e.adet || 1);
+              const miktar = parseInt(String(e.adet || 1));
               const satis = sayiDegeri(e.satis_fiyati);
               const alis = sayiDegeri(e.alis_fiyati);
               const pt = detectPlatform(e.platform_adi);
@@ -75,7 +83,7 @@ const ETicaret = ({ rapor, hesaplananEticaretKar, isMobile, onDetay }) => {
               </TableHead>
               <TableBody>
                 {rapor.eticaret.map((e, i) => {
-                  const miktar = parseInt(e.adet || 1);
+                  const miktar = parseInt(String(e.adet || 1));
                   const satis = sayiDegeri(e.satis_fiyati);
                   const alis = sayiDegeri(e.alis_fiyati);
                   const komisyonOrani = sayiDegeri(e.komisyon_orani);

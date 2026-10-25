@@ -1,4 +1,5 @@
 import React from 'react';
+import type { AralikRaporu, IsEmriDetayi } from '../../../shared/tipler';
 import { IslemDugmesi } from '../../../shared/ui';
 import { Box, Paper, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
 
@@ -8,10 +9,17 @@ import KartItem from '../bilesenler/KartItem';
 import { sayiYaz, sayiDegeri } from '../../../shared/utils/bicim';
 
 const SAYISAL = ['KM', 'Gelir', 'Maliyet', 'Kâr'];
-const sagaSx = { textAlign: 'right' };
+const sagaSx = { textAlign: 'right' } as const;
 
 // İş Emirleri (servis) sekmesi; personel süzgeci üstteki tarih çubuğundadır.
-const IsEmirleri = ({ rapor, isMobile, seciliPersonel, onDetay }) => {
+interface IsEmirleriProps {
+  rapor: AralikRaporu;
+  isMobile: boolean;
+  seciliPersonel: string;
+  onDetay: (isEmri: IsEmriDetayi) => void;
+}
+
+const IsEmirleri = ({ rapor, isMobile, seciliPersonel, onDetay }: IsEmirleriProps) => {
   const filtered = (rapor.isEmirleri || []).filter((ie) => {
     if (!seciliPersonel) return true;
     const personel = (ie.teslim_eden_teknisyen || ie.olusturan_kisi || '').toLowerCase();
@@ -49,7 +57,7 @@ const IsEmirleri = ({ rapor, isMobile, seciliPersonel, onDetay }) => {
                   {ie.musteri_ad_soyad} • {ie.marka} {ie.model_tip || ''}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  {ie.teslim_eden_teknisyen || ie.olusturan_kisi || '-'} • {ie.km ? `${sayiYaz(parseInt(ie.km))} km` : ''}
+                  {ie.teslim_eden_teknisyen || ie.olusturan_kisi || '-'} • {ie.km ? `${sayiYaz(parseInt(String(ie.km)))} km` : ''}
                 </Typography>
                 <Box sx={{ display: 'flex', gap: 2, mt: 0.5 }}>
                   <Typography variant="body2">
@@ -87,7 +95,7 @@ const IsEmirleri = ({ rapor, isMobile, seciliPersonel, onDetay }) => {
                     <TableCell>
                       {ie.marka} {ie.model_tip || ''}
                     </TableCell>
-                    <TableCell sx={{ ...sagaSx, whiteSpace: 'nowrap' }}>{ie.km ? `${sayiYaz(parseInt(ie.km))} km` : '-'}</TableCell>
+                    <TableCell sx={{ ...sagaSx, whiteSpace: 'nowrap' }}>{ie.km ? `${sayiYaz(parseInt(String(ie.km)))} km` : '-'}</TableCell>
                     <TableCell>{ie.teslim_eden_teknisyen || ie.olusturan_kisi || '-'}</TableCell>
                     <TableCell sx={{ maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {ie.ariza_sikayetler || '-'}

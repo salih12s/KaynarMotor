@@ -4,42 +4,48 @@ import { raporService } from './raporApi';
 import { aksesuarStokService } from '../aksesuar/aksesuarApi';
 import { yerelTarih } from '../../shared/utils/tarih';
 
-const BOS = [];
+const BOS: never[] = [];
 
 // Önbellek anahtarları. Tarihe bağlı olanlar aralığı anahtarda taşır: her aralık ayrı saklanır, geç gelen eski yanıt
 // yeni aralığın üzerine yazamaz (eskiden bunu elle `sonIstek` sağlıyordu).
 export const raporAnahtari = {
   hepsi: ['raporlar'],
-  aralik: (b, e) => ['raporlar', 'aralik', { b, e }],
-  fisKar: (b, e) => ['raporlar', 'fisKar', { b, e }],
-  yatirimciOzet: (b, e) => ['raporlar', 'yatirimciOzet', { b, e }],
+  aralik: (b: string, e: string) => ['raporlar', 'aralik', { b, e }],
+  fisKar: (b: string, e: string) => ['raporlar', 'fisKar', { b, e }],
+  yatirimciOzet: (b: string, e: string) => ['raporlar', 'yatirimciOzet', { b, e }],
   personeller: ['raporlar', 'personeller'],
   stok: ['aksesuarStok', 'liste'],
 };
 
 // Hata ekrana düşmeden önce konsola da yazılsın (eski davranış)
-const konsolaYaz = (istek) => async () => {
-  try {
-    return (await istek()).data;
-  } catch (err) {
-    console.error(err);
-    throw err;
-  }
-};
+const konsolaYaz =
+  <T>(istek: () => Promise<{ data: T }>) =>
+  async (): Promise<T> => {
+    try {
+      return (await istek()).data;
+    } catch (err) {
+      console.error(err);
+      throw err;
+    }
+  };
+
+/** Tarih aralığı hızlı seçimleri (TarihFiltresi düğmeleri). */
+export type PresetAdi = 'bugun' | 'buAy' | 'gecenAy' | 'buYil' | 'gecenYil';
+export type Presetler = Record<PresetAdi, () => void>;
 
 // Raporlar ekranının verisi: tarih aralığı + sunucudan gelen rapor/fiş kârı/personel/stok/yatırımcı özeti.
 // Yatırımcı kendi ekranında (YatirimciRapor) veriyi kendisi çeker; bu yüzden `yatirimci` iken hiçbir şey istenmez.
-export const useRaporVerisi = ({ yatirimci, admin }) => {
+export const useRaporVerisi = ({ yatirimci, admin }: { yatirimci: boolean; admin: boolean }) => {
   const bugun = new Date();
   const [baslangic, setBaslangic] = useState(yerelTarih(new Date(bugun.getFullYear(), bugun.getMonth(), 1)));
   const [bitis, setBitis] = useState(yerelTarih(new Date(bugun.getFullYear(), bugun.getMonth() + 1, 0)));
 
   // Hızlı tarih ön ayarları — filtreyi tek tıkla veri olan aralığa taşımak için
-  const aralik = (b, e) => {
+  const aralik = (b: Date, e: Date) => {
     setBaslangic(yerelTarih(b));
     setBitis(yerelTarih(e));
   };
-  const presetler = {
+  const presetler: Presetler = {
     bugun: () => {
       const t = new Date();
       aralik(t, t);
@@ -65,7 +71,7 @@ export const useRaporVerisi = ({ yatirimci, admin }) => {
   const etkin = !yatirimci;
   // Tarihe bağlı veriler: sayfa her açılışta tazelenir (başka ekranda yapılan satış raporda hemen görünsün);
   // aralık değişirken yeni veri gelene kadar eskisi tutulur (ekran boşa düşmez, yükleniyor göstergesi çıkar).
-  const tarihli = { enabled: etkin, refetchOnMount: 'always', placeholderData: keepPreviousData };
+  const tarihli = { enabled: etkin, refetchOnMount: 'always' as const, placeholderData: keepPreviousData };
 
   const rapor = useQuery({
     queryKey: raporAnahtari.aralik(baslangic, bitis),

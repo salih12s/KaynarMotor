@@ -1,14 +1,22 @@
-import React from 'react';
-import { sayiDegeri } from '../../../shared/utils/bicim';
+import React, { type ReactNode } from 'react';
+import { sayiDegeri, type Sayi } from '../../../shared/utils/bicim';
+import type { AralikRaporu } from '../../../shared/tipler';
+import type { hesaplaToplamlar } from '../raporHesap';
 import { Box, Paper, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
 import { formatTL, karColor, headerSx } from '../bicim';
-import { FONT, RENK, TON } from '../../../app/tokenlar';
+import { FONT, RENK, TON, type TonAdi } from '../../../app/tokenlar';
 
-const SEKME_NO = { 'Motor Satışları': 1, 'İş Emirleri (Servis)': 2, 'Aksesuar Satışları': 3, 'E-Ticaret': 4, 'Yedek Parça (Envanter)': 5 };
-const oranYaz = (kar, gelir) => (sayiDegeri(gelir) > 0 ? ((sayiDegeri(kar) / sayiDegeri(gelir, 1)) * 100).toFixed(1) : '0.0');
+const SEKME_NO: Record<string, number> = {
+  'Motor Satışları': 1,
+  'İş Emirleri (Servis)': 2,
+  'Aksesuar Satışları': 3,
+  'E-Ticaret': 4,
+  'Yedek Parça (Envanter)': 5,
+};
+const oranYaz = (kar: Sayi, gelir: Sayi) => (sayiDegeri(gelir) > 0 ? ((sayiDegeri(kar) / sayiDegeri(gelir, 1)) * 100).toFixed(1) : '0.0');
 
 // Üst sıradaki büyük rakam kartı: geniş ekranda kâğıt zemin ve solda yazı; telefonda tonlu zemin ve ortalı yazı.
-const RakamKarti = ({ etiket, deger, renk = RENK.murekkep, ton }) => {
+const RakamKarti = ({ etiket, deger, renk = RENK.murekkep, ton }: { etiket: string; deger: ReactNode; renk?: string; ton: TonAdi }) => {
   const t = TON[ton];
   return (
     <Paper sx={{ px: 2.25, py: 1.75, bgcolor: { xs: t.bg, lg: RENK.yuzey }, textAlign: { xs: 'center', lg: 'left' } }}>
@@ -21,7 +29,7 @@ const RakamKarti = ({ etiket, deger, renk = RENK.murekkep, ton }) => {
 };
 
 // Gelir payı: gelirin toplam içindeki yüzdesi, ince çubuk + yüzde yazısı.
-const PayCubugu = ({ pay }) => (
+const PayCubugu = ({ pay }: { pay: number }) => (
   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 150 }}>
     <Box sx={{ flex: 1, height: 8, bgcolor: RENK.cizgiSoluk, borderRadius: '2px', overflow: 'hidden' }}>
       <Box sx={{ width: `${Math.min(100, Math.max(0, pay))}%`, minWidth: pay > 0 ? 3 : 0, height: '100%', bgcolor: RENK.murekkep }} />
@@ -32,10 +40,17 @@ const PayCubugu = ({ pay }) => (
   </Box>
 );
 
-const sagaSx = { textAlign: 'right' };
+const sagaSx = { textAlign: 'right' } as const;
 
 // Genel Özet sekmesi: toplam kartları + kategori tablosu (satıra tıklamak o sekmeye geçirir).
-const GenelOzet = ({ rapor, toplamlar, isMobile, onSekmeAc }) => {
+interface GenelOzetProps {
+  rapor: AralikRaporu;
+  toplamlar: ReturnType<typeof hesaplaToplamlar>;
+  isMobile: boolean;
+  onSekmeAc: (sekme: number) => void;
+}
+
+const GenelOzet = ({ rapor, toplamlar, isMobile, onSekmeAc }: GenelOzetProps) => {
   const { hesaplananEticaretKar, duzeltilmisTotalKar, duzeltilmisTotalGelir, duzeltilmisTotalMaliyet } = toplamlar;
   const satirlar = [
     { label: 'Motor Satışları', count: rapor.motorlar?.length || 0, gelir: rapor.motorGelir, maliyet: rapor.motorMaliyet, kar: rapor.motorKar },
@@ -52,7 +67,7 @@ const GenelOzet = ({ rapor, toplamlar, isMobile, onSekmeAc }) => {
   ];
   const toplamIslem = satirlar.reduce((t, r) => t + r.count, 0);
   const satirGelirToplami = satirlar.reduce((t, r) => t + sayiDegeri(r.gelir), 0);
-  const pay = (gelir) => (satirGelirToplami > 0 ? (sayiDegeri(gelir) / satirGelirToplami) * 100 : 0);
+  const pay = (gelir: Sayi) => (satirGelirToplami > 0 ? (sayiDegeri(gelir) / satirGelirToplami) * 100 : 0);
 
   return (
     <>

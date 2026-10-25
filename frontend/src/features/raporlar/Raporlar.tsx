@@ -5,6 +5,7 @@ import { useAuth } from '../auth/AuthContext';
 import { useRaporVerisi } from './useRaporVerisi';
 import { useDetayModal } from './useDetayModal';
 import { hesaplaToplamlar, yatirimciOzetBirlestir } from './raporHesap';
+import type { AksesuarSatis, EticaretSatis, IsEmriDetayi, Motor } from '../../shared/tipler';
 import TarihFiltresi from './bilesenler/TarihFiltresi';
 import YatirimciRapor from './sekmeler/YatirimciRapor';
 import GenelOzet from './sekmeler/GenelOzet';
@@ -33,10 +34,10 @@ const Raporlar = () => {
   const [seciliPersonel, setSeciliPersonel] = useState('');
   const veri = useRaporVerisi({ yatirimci: isYatirimci, admin: isAdmin });
   const { rapor, fisKar, loading, error, personeller, stokOptions } = veri;
-  const isEmriModal = useDetayModal();
-  const aksesuarModal = useDetayModal();
-  const eticaretModal = useDetayModal();
-  const motorModal = useDetayModal();
+  const isEmriModal = useDetayModal<IsEmriDetayi>();
+  const aksesuarModal = useDetayModal<AksesuarSatis>();
+  const eticaretModal = useDetayModal<EticaretSatis>();
+  const motorModal = useDetayModal<Motor>();
 
   const toplamlar = hesaplaToplamlar(rapor);
   const yatirimciOzetGosterim = yatirimciOzetBirlestir(rapor, veri.yatirimciOzet);
@@ -72,7 +73,7 @@ const Raporlar = () => {
             select
             value={seciliPersonel}
             onChange={(e) => setSeciliPersonel(e.target.value)}
-            SelectProps={{ displayEmpty: true, renderValue: (v) => v || 'Personel', SelectDisplayProps: { 'aria-label': 'Personel' } }}
+            SelectProps={{ displayEmpty: true, renderValue: (v) => (v as string) || 'Personel', SelectDisplayProps: { 'aria-label': 'Personel' } }}
             inputProps={{ 'aria-label': 'Personel' }}
             sx={{ minWidth: { xs: '100%', sm: 220 } }}
           >

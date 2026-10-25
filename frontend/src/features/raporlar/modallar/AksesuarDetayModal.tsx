@@ -1,4 +1,6 @@
-import React from 'react';
+import React, { type ReactNode } from 'react';
+import type { DialogProps } from '@mui/material';
+import type { AksesuarParca, AksesuarSatis, AksesuarStok } from '../../../shared/tipler';
 import { BilgiKarti, BolumBasligi, DialogBasligi, Not, SayiKutusu } from '../../../shared/ui';
 import {
   Box,
@@ -15,19 +17,27 @@ import {
   DialogActions,
   Button,
 } from '@mui/material';
-import { formatDate } from '../bicim';
+import { formatDate, parcaListesi } from '../bicim';
 import DurumChip from '../bilesenler/DurumChip';
 import { sayiYaz } from '../../../shared/utils/bicim';
 
 const SUTUN_3 = { display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' }, gap: 2, mb: 2 };
-const karRengi = (v) => (v >= 0 ? '#1D6A3B' : '#c62828');
+const karRengi = (v: number) => (v >= 0 ? '#1D6A3B' : '#c62828');
 
 // Aksesuar satış detay penceresi; ürünlerin marka/beden/renk bilgisi stok listesinden eşlenir.
-const AksesuarDetayModal = ({ open, data, onClose, isMobile, stokOptions }) => {
-  const dialogProps = { open, onClose, maxWidth: 'md', fullWidth: true, fullScreen: isMobile };
+interface Props {
+  open: boolean;
+  data: AksesuarSatis | null;
+  onClose: () => void;
+  isMobile: boolean;
+  stokOptions: AksesuarStok[];
+}
+
+const AksesuarDetayModal = ({ open, data, onClose, isMobile, stokOptions }: Props) => {
+  const dialogProps: DialogProps = { open, onClose, maxWidth: 'md', fullWidth: true, fullScreen: isMobile };
   if (!data) return <Dialog {...dialogProps} />;
   const a = data;
-  const parcalar = typeof a.parcalar === 'string' ? JSON.parse(a.parcalar) : a.parcalar || [];
+  const parcalar = parcaListesi<AksesuarParca>(a.parcalar);
   const enrichedParcalar = parcalar.map((p) => {
     const stok = stokOptions.find((s) => s.stok_adi === p.urun_adi);
     return { ...p, marka: stok?.marka, platform: stok?.platform, beden: stok?.beden, renk: stok?.renk };
@@ -35,7 +45,7 @@ const AksesuarDetayModal = ({ open, data, onClose, isMobile, stokOptions }) => {
   const topSatis = parcalar.reduce((t, p) => t + (Number(p.adet) || 0) * (Number(p.satis_fiyati) || 0), 0);
   const topMaliyet = parcalar.reduce((t, p) => t + (Number(p.adet) || 0) * (Number(p.maliyet) || 0), 0);
   const topKar = topSatis - topMaliyet;
-  const kayitSatirlari = [
+  const kayitSatirlari: Array<[string, ReactNode]> = [
     ['Oluşturan', a.olusturan_kisi || '-'],
     ['Oluşturma', formatDate(a.created_at)],
   ];

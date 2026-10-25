@@ -1,4 +1,7 @@
-import React from 'react';
+import React, { type ReactNode } from 'react';
+import type { DialogProps } from '@mui/material';
+import type { Motor } from '../../../shared/tipler';
+import type { Sayi } from '../../../shared/utils/bicim';
 import { Box, Dialog, DialogContent, DialogActions, Button } from '@mui/material';
 import { BilgiKarti, Damga, DialogBasligi, Not, plakaBicim } from '../../../shared/ui';
 import { formatTL, formatDate, karColor } from '../bicim';
@@ -9,8 +12,15 @@ const SUTUN_3 = { display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat
 const SUTUN_2 = { display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' }, gap: 2, mb: 2 };
 
 // Motor satış detay penceresi. Net kâr = toplam kâr - yatırımcı payı.
-const MotorDetayModal = ({ open, data, onClose, isMobile }) => {
-  const dialogProps = { open, onClose, maxWidth: 'md', fullWidth: true, fullScreen: isMobile };
+interface Props {
+  open: boolean;
+  data: Motor | null;
+  onClose: () => void;
+  isMobile: boolean;
+}
+
+const MotorDetayModal = ({ open, data, onClose, isMobile }: Props) => {
+  const dialogProps: DialogProps = { open, onClose, maxWidth: 'md', fullWidth: true, fullScreen: isMobile };
   if (!data) return <Dialog {...dialogProps} />;
   const m = data;
   const alis = sayiDegeri(m.alis_fiyati);
@@ -21,8 +31,8 @@ const MotorDetayModal = ({ open, data, onClose, isMobile }) => {
   const toplamKar = sayiDegeri(m.kar);
   const yatirimciPayi = sayiDegeri(m.yatirimci_kar);
   const kar = toplamKar - yatirimciPayi;
-  const para = (v) => `${formatTL(v)} ₺`;
-  const fiyatSatirlari = [
+  const para = (v: Sayi) => `${formatTL(v)} ₺`;
+  const fiyatSatirlari: Array<[string, ReactNode]> = [
     ['Alış Fiyatı', para(alis)],
     ['Satış Fiyatı', para(satis)],
     ['Masraflar', para(masraf)],
@@ -32,7 +42,7 @@ const MotorDetayModal = ({ open, data, onClose, isMobile }) => {
     fiyatSatirlari.push(['Yatırımcı Payı', <span style={{ color: '#1E4A86' }}>- {para(yatirimciPayi)}</span>]);
   }
   fiyatSatirlari.push(['Net Kâr (Payınız)', <span style={{ color: karColor(kar) }}>{para(kar)}</span>]);
-  const noterSatirlari = [
+  const noterSatirlari: Array<[string, ReactNode]> = [
     ['Noter Alış', para(noterAlis)],
     ['Noter Satış', para(noterSatis)],
     ['Ödeme Şekli', m.odeme_sekli || 'nakit'],
