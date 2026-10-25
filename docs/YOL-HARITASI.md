@@ -42,11 +42,11 @@ Her dosya: önce karakterizasyon testi, testi bozarak sına, betikle taşı, esk
 - Backend: `scripts/` ve `tests/` hâlâ JS (tsx ile çalışır).
 
 ## D. Tasarım gözden geçirme (arayüz işlerinde tasarım skill'leri kullanılır)
-**Tasarım A "Servis Defteri" uygulanıyor (`tasarim-a` dalı, 2026-10-25, canlıya çıkmadı).** Yapıldı: tokenlar/tema (anahtarlar, pencere başlığı/altı), ortak parçalar
+**Tasarım A "Servis Defteri" CANLIDA (2026-10-25, kaynak `typescript` dalı; `tasarim-a` aynı commit'e birleşti).** Yapıldı: tokenlar/tema (anahtarlar, pencere başlığı/altı), ortak parçalar
 (`shared/ui`: Plaka, Damga, IslemDugmesi, OzetSeridi, DialogBasligi, BolumBasligi, BilgiKarti/SayiKutusu/Not, Onay, `sagaSutunlar`), yan menü + alt gezinme, Servis, giriş/kayıt, Müşteriler,
 Raporlar (tüm sekmeler + detay pencereleri), Kullanıcılar, Yetkilendirme, Veresiye, Belge Arşivi, Taksit (yönetim), Vitrin yönetimi, E-Ticaret, motor/aksesuar/yedek parça listeleri, form
 başlıkları (simgeli), stok etiketi (`shared/utils/stokEtiketi.js`). Kapsam kuralı: müşterinin gördüğü sayfalara (`/site`, `/ilan`, `/taksit/:fiyat`, `/s/:token`) dokunulmadı.
-Kaydet düğmelerinde onay simgesi tema ile geldi. Kalan cilalar (isteğe bağlı): iş emri fişi A4 yazdırma çıktısının yeni dile uyarlanması, stok etiketi ve QR etiketinin gerçek yazıcıda denenmesi, README ekran görüntüleri/GIF'lerinin yenilenmesi (`readme-media`).
+Kalan cilalar (isteğe bağlı): telefonda iş emri formunun tek sütun olması ve Motor Stok'ta tam genişlikte "Motor ekle" düğmesi, iş emri A4 yazdırma çıktısının yeni dile uyarlanması, stok ve QR etiketlerinin gerçek yazıcıda denenmesi, README ekran görüntüleri/GIF'leri (`readme-media`), müşteriye dönük sayfaların (vitrin, ilan, taksit, servis geçmişi) aynı dile getirilip getirilmeyeceği kararı. Menü düzeni E2E ile korunuyor (`e2e/4-menu.spec.js`).
 - Ayrık sol/sağ bölünmüş sayfa düzeni yok; ürünün kendi diline ait dokunuşlar (plaka, fiş, damga); açık tema ana tema, koyu tema kendi kimliğiyle.
 - Gözden geçir: vitrin (ana sayfa ve ilan sayfası), mobil görünüm, erişilebilirlik (odak, kontrast, klavye), tutarlı boşluk/renk (şimdi kırmızı `#C62828` değerleri
   dosyalara dağınık: tek tema belirteci olmalı).
