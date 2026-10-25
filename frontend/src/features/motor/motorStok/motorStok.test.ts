@@ -3,31 +3,39 @@
  * Ekran düzeyindeki karşılıkları ../MotorStok.test.js içinde.
  */
 import { motorYetkileri } from './yetkiler';
-import { filtrele, parseOdeme, bosForm, motordenForm } from './motorStokVeri';
+import { filtrele, parseOdeme, bosForm, motordenForm, type MotorStokSuzgeci } from './motorStokVeri';
+import { kayit, kayitlar } from '../../../shared/test/kayit';
+import type { Kullanici, Motor } from '../../../shared/tipler';
 
-const bayrak = (user) => {
+const bayrak = (user: Kullanici | null) => {
   const { canAlis, canMusteri, canListe, canKar, canEdit } = motorYetkileri(user);
   return { canAlis, canMusteri, canListe, canKar, canEdit };
 };
 
 describe('motorYetkileri: rol matrisi', () => {
   test('admin her şeyi görür ve düzenler', () => {
-    expect(bayrak({ rol: 'admin' })).toEqual({ canAlis: true, canMusteri: true, canListe: true, canKar: true, canEdit: true });
+    expect(bayrak(kayit<Kullanici>({ rol: 'admin' }))).toEqual({ canAlis: true, canMusteri: true, canListe: true, canKar: true, canEdit: true });
   });
 
   test('motor satış yetkilisi: alış ve müşteri açık, ilan fiyatı kapalı, KÂR KAPALI, düzenleyebilir', () => {
-    expect(bayrak({ rol: 'personel', motor_satis_yetkisi: true })).toEqual({ canAlis: true, canMusteri: true, canListe: false, canKar: false, canEdit: true });
+    expect(bayrak(kayit<Kullanici>({ rol: 'personel', motor_satis_yetkisi: true }))).toEqual({
+      canAlis: true,
+      canMusteri: true,
+      canListe: false,
+      canKar: false,
+      canEdit: true,
+    });
   });
 
   test('yetkisiz personel hiçbir şeyi görmez/düzenlemez; alan bayrakları tek tek açılır', () => {
-    expect(bayrak({ rol: 'personel' })).toEqual({ canAlis: false, canMusteri: false, canListe: false, canKar: false, canEdit: false });
-    expect(bayrak({ rol: 'personel', alis_fiyati_gor: true }).canAlis).toBe(true);
-    expect(bayrak({ rol: 'personel', musteri_gor: true }).canMusteri).toBe(true);
-    expect(bayrak({ rol: 'personel', liste_fiyati_gor: true }).canListe).toBe(true);
+    expect(bayrak(kayit<Kullanici>({ rol: 'personel' }))).toEqual({ canAlis: false, canMusteri: false, canListe: false, canKar: false, canEdit: false });
+    expect(bayrak(kayit<Kullanici>({ rol: 'personel', alis_fiyati_gor: true })).canAlis).toBe(true);
+    expect(bayrak(kayit<Kullanici>({ rol: 'personel', musteri_gor: true })).canMusteri).toBe(true);
+    expect(bayrak(kayit<Kullanici>({ rol: 'personel', liste_fiyati_gor: true })).canListe).toBe(true);
   });
 
   test('yatırımcı (vitrin): yalnızca ilan fiyatı; hiçbir işlem yapamaz; kâr kapalı', () => {
-    const y = motorYetkileri({ rol: 'yatirimci', liste_fiyati_gor: true });
+    const y = motorYetkileri(kayit<Kullanici>({ rol: 'yatirimci', liste_fiyati_gor: true }));
     expect(y).toMatchObject({
       isYatirimciVitrin: true,
       isYatirimciSahip: false,
@@ -41,12 +49,12 @@ describe('motorYetkileri: rol matrisi', () => {
   });
 
   test('yatırımcı (sahip): kendi motorunu tam görür ama işlem yapamaz ve kâr (admin payı) görmez', () => {
-    const y = motorYetkileri({ rol: 'yatirimci' });
+    const y = motorYetkileri(kayit<Kullanici>({ rol: 'yatirimci' }));
     expect(y).toMatchObject({ isYatirimciSahip: true, full: true, canAlis: true, canMusteri: true, canListe: true, canKar: false, canEdit: false });
   });
 
   test('yatırımcı motor_satis_yetkisi taşısa bile düzenleyemez', () => {
-    expect(motorYetkileri({ rol: 'yatirimci', motor_satis_yetkisi: true }).canEdit).toBe(false);
+    expect(motorYetkileri(kayit<Kullanici>({ rol: 'yatirimci', motor_satis_yetkisi: true })).canEdit).toBe(false);
   });
 
   test('oturum yoksa her bayrak kapalı (hata vermez)', () => {
@@ -55,15 +63,15 @@ describe('motorYetkileri: rol matrisi', () => {
 });
 
 describe('filtrele', () => {
-  const liste = [
+  const liste = kayitlar<Motor>([
     { id: 1, plaka: 'AAA', marka: 'Honda', durum: 'tamamlandi', fatura_kesildi: true },
     { id: 2, plaka: 'BBB', marka: 'Yamaha', durum: 'stokta', stok_tipi: 'konsinye', kalan_odeme: '100' },
     { id: 3, plaka: 'CCC', marka: 'Suzuki', durum: 'stokta', stok_tipi: 'sahip' },
     { id: 4, plaka: 'DDD', marka: 'BMW', durum: 'perte' },
     { id: 5, plaka: 'EEE', marka: 'KTM', durum: 'kapora' },
-  ];
-  const bos = { isYatirimci: false, activeFilter: null, secondaryFilter: null, search: '' };
-  const idler = (o) => filtrele(liste, { ...bos, ...o }).map((m) => m.id);
+  ]);
+  const bos: MotorStokSuzgeci = { isYatirimci: false, activeFilter: null, secondaryFilter: null, search: '' };
+  const idler = (o: Partial<MotorStokSuzgeci>) => filtrele(liste, { ...bos, ...o }).map((m) => m.id);
 
   test('durum sırası: stokta(sahip) -> kapora -> konsinye -> perte -> satılan', () => {
     expect(idler({})).toEqual([3, 5, 2, 4, 1]);
@@ -98,7 +106,7 @@ describe('form dönüşümleri ve ödeme çözümleme', () => {
   });
 
   test('motordenForm: boşlar "", tarih yyyy-aa-gg, yatırımcı varlığı bayrağa dönüşür', () => {
-    const f = motordenForm({ plaka: 'X', tarih: '2026-09-01T12:00:00', yatirimci_id: 9, fatura_kesildi: true });
+    const f = motordenForm(kayit<Motor>({ plaka: 'X', tarih: '2026-09-01T12:00:00', yatirimci_id: 9, fatura_kesildi: true }));
     expect(f).toMatchObject({
       plaka: 'X',
       marka: '',
@@ -109,7 +117,7 @@ describe('form dönüşümleri ve ödeme çözümleme', () => {
       durum: 'stokta',
       stok_tipi: 'sahip',
     });
-    expect(motordenForm({}).yatirimci).toBe(false);
+    expect(motordenForm(kayit<Motor>({})).yatirimci).toBe(false);
   });
 
   test('parseOdeme: dizi, JSON metni ya da bozuk/boş değer -> her zaman dizi', () => {

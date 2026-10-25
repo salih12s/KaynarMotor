@@ -9,7 +9,7 @@ import { authService } from './authApi';
 
 vi.mock('./authApi', () => ({ authService: { getUsers: vi.fn(), setYetkiler: vi.fn() } }));
 
-const kisi = (id, ad, rol, onay) => ({ id, ad_soyad: ad, kullanici_adi: `k${id}`, rol, onay_durumu: onay });
+const kisi = (id: number, ad: string, rol: string, onay: string) => ({ id, ad_soyad: ad, kullanici_adi: `k${id}`, rol, onay_durumu: onay });
 const KULLANICILAR = [
   kisi(1, 'Onaylı Personel', 'personel', 'onaylandi'),
   kisi(2, 'Bekleyen Personel', 'personel', 'beklemede'),
@@ -19,7 +19,7 @@ const KULLANICILAR = [
 ];
 
 beforeEach(() => {
-  authService.getUsers.mockResolvedValue({ data: KULLANICILAR });
+  vi.mocked(authService.getUsers).mockResolvedValue({ data: KULLANICILAR } as never);
 });
 
 describe('Yetkilendirme', () => {

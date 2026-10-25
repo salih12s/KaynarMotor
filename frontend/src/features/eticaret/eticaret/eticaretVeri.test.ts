@@ -4,6 +4,8 @@
  */
 import { karEtiketi, formatTL, bosSatisForm, satistanForm, bosPlatformForm, platformdanForm, platformSuz, hesaplaToplamKar } from './eticaretVeri';
 import { hesaplaKomisyon, detectPlatform } from '../komisyon';
+import { kayit, kayitlar } from '../../../shared/test/kayit';
+import type { EticaretSatis, Platform } from '../../../shared/tipler';
 
 describe("karEtiketi: yalnızca admin'e gösterilecek etiketler", () => {
   test('kâr ve yatırım geri dönüşü içeren etiketler (büyük/küçük harf farkı olmadan)', () => {
@@ -32,7 +34,7 @@ describe('form dönüşümleri', () => {
   });
 
   test('satistanForm: boşlar "", KDV yoksa "20" ama 0 geçerli bir KDV\'dir, tarih yyyy-aa-gg', () => {
-    expect(satistanForm({ urun_adi: 'A', tarih: '2026-10-02T12:00:00' })).toMatchObject({
+    expect(satistanForm(kayit<EticaretSatis>({ urun_adi: 'A', tarih: '2026-10-02T12:00:00' }))).toMatchObject({
       urun_adi: 'A',
       stok_id: '',
       kdv_orani: '20',
@@ -40,27 +42,32 @@ describe('form dönüşümleri', () => {
       adet: 1,
       tarih: '2026-10-02',
     });
-    expect(satistanForm({ kdv_orani: 0 }).kdv_orani).toBe(0);
-    expect(satistanForm({}).tarih).toBe('');
+    expect(satistanForm(kayit<EticaretSatis>({ kdv_orani: 0 })).kdv_orani).toBe(0);
+    expect(satistanForm(kayit<EticaretSatis>({})).tarih).toBe('');
   });
 
   test('platform formları', () => {
     expect(bosPlatformForm()).toEqual({ platform_adi: '', komisyon_orani: '', kdv_orani: '20', kargo_ucreti: '0' });
-    expect(platformdanForm({ platform_adi: 'N11', komisyon_orani: 10, kdv_orani: 18, kargo_ucreti: 30 })).toEqual({
+    expect(platformdanForm(kayit<Platform>({ platform_adi: 'N11', komisyon_orani: 10, kdv_orani: 18, kargo_ucreti: 30 }))).toEqual({
       platform_adi: 'N11',
       komisyon_orani: 10,
       kdv_orani: 18,
       kargo_ucreti: 30,
     });
-    expect(platformdanForm({ platform_adi: 'X', komisyon_orani: 5 })).toEqual({ platform_adi: 'X', komisyon_orani: 5, kdv_orani: '20', kargo_ucreti: '0' });
+    expect(platformdanForm(kayit<Platform>({ platform_adi: 'X', komisyon_orani: 5 }))).toEqual({
+      platform_adi: 'X',
+      komisyon_orani: 5,
+      kdv_orani: '20',
+      kargo_ucreti: '0',
+    });
   });
 });
 
 describe('platformSuz ve hesaplaToplamKar', () => {
-  const satislar = [
+  const satislar = kayitlar<EticaretSatis>([
     { id: 1, platform_id: 1, platform_adi: 'Trendyol', satis_fiyati: 1000, alis_fiyati: 600, komisyon_orani: 15, kdv_orani: 20, kargo_ucreti: 50, adet: 2 },
     { id: 2, platform_id: 2, platform_adi: 'Hepsiburada', satis_fiyati: 500, alis_fiyati: 300, komisyon_orani: 12, kdv_orani: 20, kargo_ucreti: 40, adet: 1 },
-  ];
+  ]);
   test('platform süzgeci: boşsa hepsi, doluysa yalnızca o platform (id metin de olabilir)', () => {
     expect(platformSuz(satislar, '')).toHaveLength(2);
     expect(platformSuz(satislar, '2').map((s) => s.id)).toEqual([2]);

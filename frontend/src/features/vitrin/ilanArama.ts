@@ -10,7 +10,10 @@ const aramaMetni = (s: unknown) =>
 
 // İlan, aramadaki HER kelimeyi başlık/marka/model/segment/açıklama/yıl/ilan no alanlarından birinde içeriyorsa eşleşir.
 // ("yamaha 2021" → marka Yamaha + yıl 2021 olan ilan da bulunur)
-export const ilanAramaUygunMu = (u: Pick<VitrinIlan, 'ilan_no' | 'baslik' | 'marka' | 'model' | 'segment' | 'aciklama' | 'yil'>, arama: string): boolean => {
+export const ilanAramaUygunMu = (
+  u: Pick<VitrinIlan, 'ilan_no' | 'baslik' | 'marka' | 'model' | 'segment' | 'aciklama' | 'yil'>,
+  arama: string | null | undefined,
+): boolean => {
   const kelimeler = aramaMetni(arama).split(/\s+/).filter(Boolean);
   if (kelimeler.length === 0) return true;
   const ilanNo = u.ilan_no != null ? `iln-${String(u.ilan_no).padStart(4, '0')}` : '';

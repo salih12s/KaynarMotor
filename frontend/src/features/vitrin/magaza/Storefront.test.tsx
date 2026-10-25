@@ -21,7 +21,7 @@ vi.mock('../vitrinApi', () => ({
   },
 }));
 // Yönlendirme kancaları sahte (Jest 27 zamanında react-router-dom v7'nin "exports" alanı okunamadığı için eklendi; sözleşme aynı kalsın diye korundu)
-let mockLocation = { pathname: '/', state: null };
+let mockLocation: { pathname: string; state: unknown } = { pathname: '/', state: null };
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', () => ({ useNavigate: () => mockNavigate, useLocation: () => mockLocation }));
 
@@ -70,44 +70,53 @@ const ILETISIM = [
 ];
 
 // ---- Yardımcılar -------------------------------------------------------------------------------------------------
-const kur = ({ getAll } = {}) => {
-  vitrinService.getAll.mockImplementation(
-    getAll ||
-      (async (p) => {
+type Cagri = { kategori?: string; durum?: string; marka?: string; segment?: string };
+type Kullanim = ReturnType<typeof userEvent.setup>;
+interface KurSecenegi {
+  getAll?: (p: Cagri) => Promise<unknown>;
+}
+const kur = ({ getAll }: KurSecenegi = {}) => {
+  vi.mocked(vitrinService.getAll).mockImplementation(
+    (getAll as never) ||
+      (async (cagri?: object) => {
+        const p = (cagri ?? {}) as Cagri;
         if (p.kategori === 'motor')
           return {
             data: [V1, V2, V3]
               .filter((v) => !p.durum || v.motor_durumu === p.durum)
               .filter((v) => !p.marka || v.marka === p.marka)
               .filter((v) => !p.segment || v.segment === p.segment),
-          };
-        if (p.kategori === 'aksesuar') return { data: [AKS] };
-        return { data: [] };
+          } as never;
+        if (p.kategori === 'aksesuar') return { data: [AKS] } as never;
+        return { data: [] } as never;
       }),
   );
-  vitrinService.getIletisim.mockResolvedValue({ data: ILETISIM });
-  vitrinService.getSegmentler.mockResolvedValue({ data: [{ ad: 'Scooter' }, { ad: 'Chopper' }] });
-  vitrinService.getMarkalar.mockImplementation(async (durum) => ({
-    data: durum === 'sifir' ? [{ marka: 'Honda' }] : [{ marka: 'Kawasaki' }, { marka: 'Yamaha' }],
-  }));
-  vitrinService.gorselUrl.mockImplementation((id) => `/g/${id}`);
-  vitrinService.iletisimGorselUrl.mockImplementation((k) => `/ig/${k}`);
+  vi.mocked(vitrinService.getIletisim).mockResolvedValue({ data: ILETISIM } as never);
+  vi.mocked(vitrinService.getSegmentler).mockResolvedValue({ data: [{ ad: 'Scooter' }, { ad: 'Chopper' }] } as never);
+  vi.mocked(vitrinService.getMarkalar).mockImplementation(
+    async (durum) =>
+      ({
+        data: durum === 'sifir' ? [{ marka: 'Honda' }] : [{ marka: 'Kawasaki' }, { marka: 'Yamaha' }],
+      }) as never,
+  );
+  vi.mocked(vitrinService.gorselUrl).mockImplementation((id) => `/g/${id}`);
+  vi.mocked(vitrinService.iletisimGorselUrl).mockImplementation((k) => `/ig/${k}`);
 };
 
-const ac = async (konum = null, secenek = {}) => {
+const ac = async (konum: unknown = null, secenek: KurSecenegi = {}) => {
   mockLocation = { pathname: '/', state: konum };
   kur(secenek);
   const user = userEvent.setup();
   render(<Storefront />);
   return user;
 };
-const kategoriKarti = (ad) => screen.getByRole('button', { name: new RegExp(ad) });
-const motorListesineGir = async (user, durum = 'İkinci el motorlar') => {
+const kategoriKarti = (ad: string) => screen.getByRole('button', { name: new RegExp(ad) });
+const motorListesineGir = async (user: Kullanim, durum = 'İkinci el motorlar') => {
   await user.click(kategoriKarti('Motor Satışı'));
   await user.click(await screen.findByRole('button', { name: new RegExp(durum) }));
   await screen.findByRole('heading', { name: durum });
 };
-const sonCagri = () => vitrinService.getAll.mock.calls[vitrinService.getAll.mock.calls.length - 1][0];
+const sonCagri = () => vi.mocked(vitrinService.getAll).mock.calls[vi.mocked(vitrinService.getAll).mock.calls.length - 1][0];
 
 beforeEach(() => {
   window.scrollTo = vi.fn();
@@ -124,7 +133,7 @@ beforeEach(() => {
   vi.spyOn(console, 'error').mockImplementation(() => {});
 });
 afterEach(() => {
-  delete window.matchMedia;
+  delete (window as Partial<Window>).matchMedia;
   vi.restoreAllMocks();
 });
 
@@ -160,11 +169,11 @@ describe('Storefront: giriş ekranı', () => {
         .getAllByText(/ Ay$/)
         .map((x) => x.textContent),
     ).toEqual(['3 Ay', '6 Ay', '9 Ay', '12 Ay']);
-    expect(within(p).getByText(fmtTL(sonuc[0].toplam))).toBeInTheDocument();
+    expect(within(p).getByText(fmtTL(sonuc![0].toplam))).toBeInTheDocument();
     expect(within(p).getByText('111.111 ₺')).toBeInTheDocument(); // 100000 / 0.90
     await user.type(within(p).getByLabelText('Peşinat / Peşin Ödeme'), '40000');
     expect(within(p).getByText('Kalan tutar: 60.000 ₺')).toBeInTheDocument();
-    expect(within(p).getByText(fmtTL(hesaplaTaksit(100000, 40000)[3].aylik))).toBeInTheDocument();
+    expect(within(p).getByText(fmtTL(hesaplaTaksit(100000, 40000)![3].aylik))).toBeInTheDocument();
     await user.clear(within(p).getByLabelText('Peşinat / Peşin Ödeme'));
     await user.type(within(p).getByLabelText('Peşinat / Peşin Ödeme'), '100000');
     expect(within(p).getByText(/Peşinat tutarı nakit fiyata eşit veya daha büyük/)).toBeInTheDocument();
@@ -230,7 +239,7 @@ describe('Storefront: motor akışı', () => {
     const user = await ac();
     await motorListesineGir(user);
     await screen.findByRole('button', { name: /NMAX Fırsat/ });
-    const cagri = vitrinService.getAll.mock.calls.length;
+    const cagri = vi.mocked(vitrinService.getAll).mock.calls.length;
     await user.type(screen.getByLabelText('İlan ara'), 'kawasaki');
     expect(screen.queryByRole('button', { name: /NMAX Fırsat/ })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Chopper Klasik/ })).toBeInTheDocument();
@@ -242,12 +251,12 @@ describe('Storefront: motor akışı', () => {
     expect(temizleDugmeleri).toHaveLength(2);
     await user.click(temizleDugmeleri[1]);
     expect(screen.getByRole('button', { name: /NMAX Fırsat/ })).toBeInTheDocument();
-    expect(vitrinService.getAll.mock.calls.length).toBe(cagri);
+    expect(vi.mocked(vitrinService.getAll).mock.calls.length).toBe(cagri);
   });
 
   test('ilan yoksa / yükleme hatasında yönlendirici mesaj çıkar', async () => {
     const user = await ac(null, {
-      getAll: async (p) => {
+      getAll: async (p: Cagri) => {
         if (p.kategori === 'motor' && !p.durum) return { data: [] };
         throw new Error('ağ');
       },

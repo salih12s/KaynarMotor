@@ -4,6 +4,7 @@
  * stoktaki bir motor plakasından seçilerek satışa çevrilir; Excel dışa aktarma. API, oturum, belge bölümü, yazdırma ve yönlendirme sahte.
  */
 import React from 'react';
+import type { Mock } from 'vitest';
 import { screen, within, waitFor, fireEvent } from '@testing-library/react';
 import { sorguluRender } from '../../shared/sorgu/sorguluRender';
 import userEvent from '@testing-library/user-event';
@@ -24,12 +25,14 @@ vi.mock('../auth/authApi', () => ({ authService: { getYatirimcilar: vi.fn() } })
 vi.mock('../auth/AuthContext', () => ({ useAuth: vi.fn() }));
 vi.mock('react-to-print', () => ({ useReactToPrint: vi.fn() }));
 vi.mock('./SatisBelgeleri', () => ({
-  BelgeBolumu: ({ motorId }) => <div>BELGE-BOLUMU-{motorId}</div>,
-  BekleyenBelgeler: ({ dosyalar, setDosyalar }) => <button onClick={() => setDosyalar([{ name: 'ruhsat.pdf' }])}>BELGE-EKLE ({dosyalar.length})</button>,
+  BelgeBolumu: ({ motorId }: { motorId: number }) => <div>BELGE-BOLUMU-{motorId}</div>,
+  BekleyenBelgeler: ({ dosyalar, setDosyalar }: { dosyalar: unknown[]; setDosyalar: (d: unknown[]) => void }) => (
+    <button onClick={() => setDosyalar([{ name: 'ruhsat.pdf' }])}>BELGE-EKLE ({dosyalar.length})</button>
+  ),
   bekleyenBelgeleriYukle: vi.fn(),
 }));
 // Yönlendirme kancaları sahte (Jest 27 zamanında react-router-dom v7'nin "exports" alanı okunamadığı için eklendi; sözleşme aynı kalsın diye korundu)
-let mockLocation = { pathname: '/ikinci-el-motor', state: null };
+let mockLocation: { pathname: string; state: unknown } = { pathname: '/ikinci-el-motor', state: null };
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', () => ({ useNavigate: () => mockNavigate, useLocation: () => mockLocation }));
 
@@ -108,25 +111,31 @@ const SATIS = { rol: 'personel', motor_satis_yetkisi: true };
 const YETKISIZ = { rol: 'personel' };
 
 // ---- Yardımcılar -------------------------------------------------------------------------------------------------
-let yazdir;
-let sonEkran; // son render sonucu (istemci ve unmount, yeniden açılış testi için)
-const kur = ({ user = ADMIN, liste = HEPSI } = {}) => {
-  useAuth.mockReturnValue({ user });
-  ikinciElMotorService.getAll.mockResolvedValue({ data: liste });
-  ikinciElMotorService.getStats.mockResolvedValue({ data: STATS });
-  ikinciElMotorService.getById.mockImplementation(async (id) => ({ data: liste.find((x) => x.id === id) }));
-  ikinciElMotorService.create.mockResolvedValue({ data: { id: 99 } });
-  ikinciElMotorService.update.mockResolvedValue({ data: {} });
-  ikinciElMotorService.delete.mockResolvedValue({ data: {} });
-  musteriService.search.mockResolvedValue({ data: [{ id: 5, ad_soyad: 'Mehmet Aksoy', telefon: '0555', adres: 'Üsküdar' }] });
-  musteriService.searchByPhone.mockResolvedValue({ data: null });
-  authService.getYatirimcilar.mockResolvedValue({ data: [{ id: 9, ad_soyad: 'Yatırımcı Veli' }] });
-  bekleyenBelgeleriYukle.mockResolvedValue([]);
+let yazdir: Mock;
+let sonEkran: ReturnType<typeof sorguluRender>; // son render sonucu (istemci ve unmount, yeniden açılış testi için)
+type Kullanim = ReturnType<typeof userEvent.setup>;
+interface KurSecenegi {
+  user?: object;
+  liste?: Array<{ id: number } & Record<string, unknown>>;
+  bekleme?: boolean;
+}
+const kur = ({ user = ADMIN, liste = HEPSI }: KurSecenegi = {}) => {
+  vi.mocked(useAuth).mockReturnValue({ user } as never);
+  vi.mocked(ikinciElMotorService.getAll).mockResolvedValue({ data: liste } as never);
+  vi.mocked(ikinciElMotorService.getStats).mockResolvedValue({ data: STATS } as never);
+  vi.mocked(ikinciElMotorService.getById).mockImplementation(async (id) => ({ data: liste.find((x) => x.id === id) }) as never);
+  vi.mocked(ikinciElMotorService.create).mockResolvedValue({ data: { id: 99 } } as never);
+  vi.mocked(ikinciElMotorService.update).mockResolvedValue({ data: {} } as never);
+  vi.mocked(ikinciElMotorService.delete).mockResolvedValue({ data: {} } as never);
+  vi.mocked(musteriService.search).mockResolvedValue({ data: [{ id: 5, ad_soyad: 'Mehmet Aksoy', telefon: '0555', adres: 'Üsküdar' }] } as never);
+  vi.mocked(musteriService.searchByPhone).mockResolvedValue({ data: null } as never);
+  vi.mocked(authService.getYatirimcilar).mockResolvedValue({ data: [{ id: 9, ad_soyad: 'Yatırımcı Veli' }] } as never);
+  vi.mocked(bekleyenBelgeleriYukle).mockResolvedValue([] as never);
   yazdir = vi.fn();
-  useReactToPrint.mockReturnValue(yazdir);
+  vi.mocked(useReactToPrint).mockReturnValue(yazdir as never);
 };
 
-const ekranAc = async (secenek = {}) => {
+const ekranAc = async (secenek: KurSecenegi = {}) => {
   kur(secenek);
   const user = userEvent.setup();
   sonEkran = sorguluRender(<IkinciElMotor />);
@@ -134,16 +143,16 @@ const ekranAc = async (secenek = {}) => {
   return user;
 };
 
-const satir = (plaka) => screen.getByRole('row', { name: new RegExp(plakaBicim(plaka)) });
-const ozet = (etiket) => within(screen.getByLabelText('Özet')).getByText(etiket).previousSibling.textContent;
-const ozetYok = (etiket) => within(screen.getByLabelText('Özet')).queryByText(etiket);
-const hucreler = (row) =>
+const satir = (plaka: string) => screen.getByRole('row', { name: new RegExp(plakaBicim(plaka)) });
+const ozet = (etiket: string) => within(screen.getByLabelText('Özet')).getByText(etiket).previousSibling?.textContent;
+const ozetYok = (etiket: string) => within(screen.getByLabelText('Özet')).queryByText(etiket);
+const hucreler = (row: HTMLElement) =>
   within(row)
     .getAllByRole('cell')
     .map((c) => c.textContent);
 const basliklar = () => screen.getAllByRole('columnheader').map((h) => h.textContent);
-const ikon = (kapsam, ad) => within(kapsam).getByTestId(ad);
-const alan = (etiket) => screen.getByLabelText(etiket);
+const ikon = (kapsam: HTMLElement, ad: string) => within(kapsam).getByTestId(ad);
+const alan = (etiket: string) => screen.getByLabelText(etiket);
 const plakalar = () =>
   screen
     .getAllByRole('row')
@@ -249,16 +258,16 @@ describe('İkinci El Motor: roller, liste ve süzgeçler', () => {
 
   test('silme: onay, iptal ve hata', async () => {
     const user = await ekranAc();
-    window.confirm.mockReturnValueOnce(false);
+    vi.mocked(window.confirm).mockReturnValueOnce(false as never);
     await user.click(ikon(satir('06SAT222'), 'DeleteIcon'));
     expect(ikinciElMotorService.delete).not.toHaveBeenCalled();
-    const cagri = ikinciElMotorService.getAll.mock.calls.length;
-    const istatistikCagri = ikinciElMotorService.getStats.mock.calls.length;
+    const cagri = vi.mocked(ikinciElMotorService.getAll).mock.calls.length;
+    const istatistikCagri = vi.mocked(ikinciElMotorService.getStats).mock.calls.length;
     await user.click(ikon(satir('06SAT222'), 'DeleteIcon'));
     await waitFor(() => expect(ikinciElMotorService.delete).toHaveBeenCalledWith(2));
-    await waitFor(() => expect(ikinciElMotorService.getAll.mock.calls.length).toBe(cagri + 1));
-    await waitFor(() => expect(ikinciElMotorService.getStats.mock.calls.length).toBe(istatistikCagri + 1)); // sayaçlar da tazelenir
-    ikinciElMotorService.delete.mockRejectedValue({ response: { data: { message: 'Bağlı kayıt' } } });
+    await waitFor(() => expect(vi.mocked(ikinciElMotorService.getAll).mock.calls.length).toBe(cagri + 1));
+    await waitFor(() => expect(vi.mocked(ikinciElMotorService.getStats).mock.calls.length).toBe(istatistikCagri + 1)); // sayaçlar da tazelenir
+    vi.mocked(ikinciElMotorService.delete).mockRejectedValue({ response: { data: { message: 'Bağlı kayıt' } } } as never);
     await user.click(ikon(satir('06SAT222'), 'DeleteIcon'));
     await waitFor(() => expect(window.alert).toHaveBeenCalledWith('Bağlı kayıt'));
   });
@@ -266,12 +275,12 @@ describe('İkinci El Motor: roller, liste ve süzgeçler', () => {
   test('önbellek: sayfa kapatılıp yeniden açılınca liste ve istatistik yine istenir; yatırımcılar önbellekten gelir', async () => {
     await ekranAc();
     const { istemci, unmount } = sonEkran;
-    const cagri = ikinciElMotorService.getAll.mock.calls.length;
-    const istatistikCagri = ikinciElMotorService.getStats.mock.calls.length;
+    const cagri = vi.mocked(ikinciElMotorService.getAll).mock.calls.length;
+    const istatistikCagri = vi.mocked(ikinciElMotorService.getStats).mock.calls.length;
     unmount();
     sorguluRender(<IkinciElMotor />, { istemci });
-    await waitFor(() => expect(ikinciElMotorService.getAll.mock.calls.length).toBe(cagri + 1));
-    await waitFor(() => expect(ikinciElMotorService.getStats.mock.calls.length).toBe(istatistikCagri + 1));
+    await waitFor(() => expect(vi.mocked(ikinciElMotorService.getAll).mock.calls.length).toBe(cagri + 1));
+    await waitFor(() => expect(vi.mocked(ikinciElMotorService.getStats).mock.calls.length).toBe(istatistikCagri + 1));
     expect(authService.getYatirimcilar).toHaveBeenCalledTimes(1);
   });
 
@@ -283,22 +292,22 @@ describe('İkinci El Motor: roller, liste ve süzgeçler', () => {
 
 // ---- Excel -------------------------------------------------------------------------------------------------------
 describe('İkinci El Motor: Excel dışa aktarma', () => {
-  const aktar = async (user) => {
-    let blob;
-    let dosyaAdi;
-    global.URL.createObjectURL = vi.fn((b) => {
+  const aktar = async (user: Kullanim) => {
+    let blob: Blob | MediaSource | undefined;
+    let dosyaAdi: string | undefined;
+    global.URL.createObjectURL = vi.fn((b: Blob | MediaSource) => {
       blob = b;
       return 'blob:x';
     });
     global.URL.revokeObjectURL = vi.fn();
-    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function () {
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) {
       dosyaAdi = this.download;
     });
     await user.click(screen.getByRole('button', { name: "Excel'e Aktar" }));
-    const metin = await new Promise((coz) => {
+    const metin = await new Promise<string>((coz) => {
       const r = new FileReader();
-      r.onload = () => coz(r.result);
-      r.readAsText(blob);
+      r.onload = () => coz(r.result as string);
+      r.readAsText(blob as Blob);
     });
     return { metin, dosyaAdi };
   };
@@ -384,7 +393,7 @@ describe('İkinci El Motor: detay penceresi', () => {
 
 // ---- Satış formu -------------------------------------------------------------------------------------------------
 describe('İkinci El Motor: satış formu', () => {
-  const yeniAc = async (user) => {
+  const yeniAc = async (user: Kullanim) => {
     await user.click(screen.getByRole('button', { name: 'Motor Satış' }));
     return screen.findByRole('dialog');
   };
@@ -398,7 +407,7 @@ describe('İkinci El Motor: satış formu', () => {
     await user.type(alan('Marka *'), 'Honda');
     await user.click(within(p).getByRole('button', { name: 'Kaydet' }));
     await waitFor(() => expect(ikinciElMotorService.create).toHaveBeenCalled());
-    const yuk = ikinciElMotorService.create.mock.calls[0][0];
+    const yuk = vi.mocked(ikinciElMotorService.create).mock.calls[0][0];
     expect(yuk).toMatchObject({ plaka: 'ABC1', marka: 'Honda', durum: 'tamamlandi', odeme_sekli: 'nakit', kalan_odeme: 0, fatura_kesildi: false });
     expect(yuk).not.toHaveProperty('odeme_tamamlandi');
     await bekleDialogKapanana();
@@ -411,7 +420,7 @@ describe('İkinci El Motor: satış formu', () => {
     await user.type(alan('Satış Fiyatı (₺)'), '60000');
     await user.type(alan('Masraflar (₺)'), '1000');
     await user.type(alan('Komisyoncu Tutarı (₺)'), '500');
-    expect(screen.getByText((_, el) => el.tagName === 'H6' && el.textContent === 'Net Kâr: 8.500 ₺')).toBeInTheDocument();
+    expect(screen.getByText((_, el) => el?.tagName === 'H6' && el.textContent === 'Net Kâr: 8.500 ₺')).toBeInTheDocument();
   });
 
   test('personel (kâr yetkisiz) canlı net kâr panelini görmez', async () => {
@@ -436,7 +445,7 @@ describe('İkinci El Motor: satış formu', () => {
     await user.type(alan('Yatırımcı Kârı (₺)'), '2000');
     await user.click(within(p).getByRole('button', { name: 'Kaydet' }));
     await waitFor(() => expect(ikinciElMotorService.update).toHaveBeenCalled());
-    const [id, yuk] = ikinciElMotorService.update.mock.calls[0];
+    const [id, yuk] = vi.mocked(ikinciElMotorService.update).mock.calls[0];
     expect(id).toBe(3);
     expect(yuk).toMatchObject({ plaka: '16STK333', durum: 'tamamlandi', satis_fiyati: '45000', yatirimci_id: 9, yatirimci_kar: '2000', eski_kayit: false });
     expect(ikinciElMotorService.create).not.toHaveBeenCalled();
@@ -454,7 +463,7 @@ describe('İkinci El Motor: satış formu', () => {
     await user.type(alan('Satış Fiyatı (₺)'), '45000');
     await user.click(within(p).getByRole('button', { name: 'Kaydet' }));
     await waitFor(() => expect(ikinciElMotorService.update).toHaveBeenCalled());
-    expect(ikinciElMotorService.update.mock.calls[0][0]).toBe(3);
+    expect(vi.mocked(ikinciElMotorService.update).mock.calls[0][0]).toBe(3);
     expect(ikinciElMotorService.create).not.toHaveBeenCalled(); // yeni kayıt değil, stok kaydı güncellenir (çift kayıt oluşmaz)
   });
 
@@ -467,13 +476,13 @@ describe('İkinci El Motor: satış formu', () => {
     await user.type(alan('Marka *'), 'Y');
     await user.click(within(p).getByRole('button', { name: 'Kaydet' }));
     await waitFor(() => expect(ikinciElMotorService.create).toHaveBeenCalled());
-    expect(ikinciElMotorService.create.mock.calls[0][0].kalan_odeme).toBe('2500');
+    expect((vi.mocked(ikinciElMotorService.create).mock.calls[0][0] as Record<string, unknown>).kalan_odeme).toBe('2500');
   });
 
   test('alıcı telefonu 10+ hane olunca kayıtlı müşteri boş alanlara dolar; komisyoncu telefonu adı doldurur', async () => {
     const user = await ekranAc();
     const p = await yeniAc(user);
-    musteriService.searchByPhone.mockResolvedValue({ data: { ad_soyad: 'Kayıtlı Müşteri', adres: 'Beşiktaş' } });
+    vi.mocked(musteriService.searchByPhone).mockResolvedValue({ data: { ad_soyad: 'Kayıtlı Müşteri', adres: 'Beşiktaş' } } as never);
     await user.type(within(p).getByLabelText('Telefon'), '05551112233');
     await waitFor(() => expect(alan('Ad Soyad')).toHaveValue('Kayıtlı Müşteri'));
     expect(alan('Adres')).toHaveValue('Beşiktaş');
@@ -494,7 +503,7 @@ describe('İkinci El Motor: satış formu', () => {
     const user = await ekranAc();
     let p = await yeniAc(user);
     await user.click(within(p).getByRole('button', { name: /BELGE-EKLE \(0\)/ }));
-    bekleyenBelgeleriYukle.mockResolvedValue(['ruhsat.pdf: büyük']);
+    vi.mocked(bekleyenBelgeleriYukle).mockResolvedValue(['ruhsat.pdf: büyük'] as never);
     await user.type(alan('Plaka *'), 'X');
     await user.type(alan('Marka *'), 'Y');
     await user.click(within(p).getByRole('button', { name: 'Kaydet' }));
@@ -502,7 +511,7 @@ describe('İkinci El Motor: satış formu', () => {
     await waitFor(() => expect(window.alert).toHaveBeenCalledWith(expect.stringContaining('ruhsat.pdf: büyük')));
     await bekleDialogKapanana();
 
-    ikinciElMotorService.create.mockRejectedValue({ response: { data: { message: 'Plaka çakışıyor' } } });
+    vi.mocked(ikinciElMotorService.create).mockRejectedValue({ response: { data: { message: 'Plaka çakışıyor' } } } as never);
     p = await yeniAc(user);
     await user.type(alan('Plaka *'), 'Z');
     await user.type(alan('Marka *'), 'Y');
@@ -522,8 +531,8 @@ describe('İkinci El Motor: satış formu', () => {
     expect(within(p).getByText('BELGE-BOLUMU-1')).toBeInTheDocument();
     await user.click(within(p).getByRole('button', { name: 'Güncelle' }));
     await waitFor(() => expect(ikinciElMotorService.update).toHaveBeenCalled());
-    expect(ikinciElMotorService.update.mock.calls[0][0]).toBe(1);
-    expect(ikinciElMotorService.update.mock.calls[0][1]).toMatchObject({ plaka: '34SAT111', satis_fiyati: 60000, kalan_odeme: 0 });
+    expect(vi.mocked(ikinciElMotorService.update).mock.calls[0][0]).toBe(1);
+    expect(vi.mocked(ikinciElMotorService.update).mock.calls[0][1]).toMatchObject({ plaka: '34SAT111', satis_fiyati: 60000, kalan_odeme: 0 });
   });
 
   test('veritabanından "0.00" (metin) gelen kalan ödeme ödendi sayılır ve 0 (sayı) olarak gönderilir', async () => {
@@ -533,7 +542,7 @@ describe('İkinci El Motor: satış formu', () => {
     expect(within(p).getByRole('checkbox', { name: 'Ödeme Tamamlandı' })).toBeChecked();
     await user.click(within(p).getByRole('button', { name: 'Güncelle' }));
     await waitFor(() => expect(ikinciElMotorService.update).toHaveBeenCalled());
-    expect(ikinciElMotorService.update.mock.calls[0][1].kalan_odeme).toBe(0);
+    expect((vi.mocked(ikinciElMotorService.update).mock.calls[0][1] as Record<string, unknown>).kalan_odeme).toBe(0);
   });
 
   test('yatırımcılı satışı (düzenleme) kâr yetkisiz personel açınca yatırımcı kârı alanı çıkmaz', async () => {
@@ -559,14 +568,14 @@ describe('İkinci El Motor: mobil görünüm', () => {
     });
   });
   afterEach(() => {
-    delete window.matchMedia;
+    delete (window as Partial<Window>).matchMedia;
   });
 
   test('kart listesi: alım ve kâr yetkiye göre; karta dokunmak detayı açar', async () => {
     const user = await ekranAc();
     expect(screen.queryByRole('table')).not.toBeInTheDocument();
-    expect(screen.getByText((_, el) => el.tagName === 'P' && el.textContent === 'Alım: ₺50.000')).toBeInTheDocument();
-    expect(screen.getByText((_, el) => el.tagName === 'P' && el.textContent === 'Kâr: ₺9.000')).toBeInTheDocument();
+    expect(screen.getByText((_, el) => el?.tagName === 'P' && el.textContent === 'Alım: ₺50.000')).toBeInTheDocument();
+    expect(screen.getByText((_, el) => el?.tagName === 'P' && el.textContent === 'Kâr: ₺9.000')).toBeInTheDocument();
     await user.click(screen.getByText(plakaBicim('34SAT111')));
     expect(await screen.findByText('Motor Detay')).toBeInTheDocument();
   });

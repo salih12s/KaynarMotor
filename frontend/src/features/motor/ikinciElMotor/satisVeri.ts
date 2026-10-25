@@ -147,7 +147,7 @@ export const motordenForm = (motor: Motor): MotorSatisFormu => ({
 });
 
 // Kâr = Satış - (Alış + Masraflar + Komisyoncu Tutarı)
-export const hesaplaCanliKar = (f: Pick<MotorSatisFormu, 'satis_fiyati' | 'alis_fiyati' | 'masraflar' | 'komisyoncu_tutari'>): number =>
+export const hesaplaCanliKar = (f: Partial<Pick<MotorSatisFormu, 'satis_fiyati' | 'alis_fiyati' | 'masraflar' | 'komisyoncu_tutari'>>): number =>
   (Number(f.satis_fiyati) || 0) - (Number(f.alis_fiyati) || 0) - (Number(f.masraflar) || 0) - (Number(f.komisyoncu_tutari) || 0);
 
 export interface MotorSuzgeci {

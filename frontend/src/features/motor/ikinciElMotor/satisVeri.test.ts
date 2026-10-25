@@ -2,8 +2,10 @@
  * İkinci El Motor'un saf kurallarının (form dönüşümleri, süzme+sıralama, canlı kâr, Excel HTML'i) BİRİM testleri:
  * ekran, sahte API, bekleme yok; girdi -> çıktı. Ekran düzeyindeki karşılıkları ../IkinciElMotor.test.js içinde.
  */
-import { ilkForm, bosForm, motordenForm, hesaplaCanliKar, filtrele } from './satisVeri';
+import { ilkForm, bosForm, motordenForm, hesaplaCanliKar, filtrele, type MotorSuzgeci } from './satisVeri';
 import { excelHtml } from './excel';
+import { kayit, kayitlar } from '../../../shared/test/kayit';
+import type { Motor } from '../../../shared/tipler';
 
 describe('hesaplaCanliKar', () => {
   test('kâr = satış - (alış + masraf + komisyoncu); boş/metin değerler 0 sayılır', () => {
@@ -21,7 +23,7 @@ describe('form dönüşümleri', () => {
   });
 
   test('motordenForm: boşlar "", tarihler yyyy-aa-gg; kalan ödeme varsa ödeme tamamlanmadı, "0.00" metni ödendi sayılır', () => {
-    const f = motordenForm({ plaka: 'X', tarih: '2026-09-01T12:00:00', satis_tarihi: '2026-10-05T12:00:00', kalan_odeme: '2500.00' });
+    const f = motordenForm(kayit<Motor>({ plaka: 'X', tarih: '2026-09-01T12:00:00', satis_tarihi: '2026-10-05T12:00:00', kalan_odeme: '2500.00' }));
     expect(f).toMatchObject({
       plaka: 'X',
       marka: '',
@@ -32,20 +34,20 @@ describe('form dönüşümleri', () => {
       durum: 'tamamlandi',
       odeme_sekli: 'nakit',
     });
-    expect(motordenForm({ kalan_odeme: '0.00' }).odeme_tamamlandi).toBe(true);
-    expect(motordenForm({}).odeme_tamamlandi).toBe(true);
-    expect(motordenForm({}).tarih).toBe('');
+    expect(motordenForm(kayit<Motor>({ kalan_odeme: '0.00' })).odeme_tamamlandi).toBe(true);
+    expect(motordenForm(kayit<Motor>({})).odeme_tamamlandi).toBe(true);
+    expect(motordenForm(kayit<Motor>({})).tarih).toBe('');
   });
 });
 
 describe('filtrele', () => {
-  const liste = [
+  const liste = kayitlar<Motor>([
     { id: 1, plaka: 'AAA', marka: 'Honda', alici_adi: 'Ahmet', satis_tarihi: '2026-10-05T12:00:00' },
     { id: 2, plaka: 'BBB', marka: 'Yamaha', satici_adi: 'Zeynep', tarih: '2026-09-20T12:00:00' },
     { id: 3, plaka: 'CCC', marka: 'Suzuki' }, // tarihsiz: en sona
-  ];
-  const bos = { search: '', tarihBaslangic: '', tarihBitis: '' };
-  const idler = (o) => filtrele(liste, { ...bos, ...o }).map((m) => m.id);
+  ]);
+  const bos: MotorSuzgeci = { search: '', tarihBaslangic: '', tarihBitis: '' };
+  const idler = (o: Partial<MotorSuzgeci>) => filtrele(liste, { ...bos, ...o }).map((m) => m.id);
 
   test('satış tarihine (yoksa alım tarihine) göre yeniden eskiye; tarihsiz kayıt sona', () => {
     expect(idler({})).toEqual([1, 2, 3]);
@@ -64,7 +66,7 @@ describe('filtrele', () => {
 });
 
 describe('excelHtml', () => {
-  const motorlar = [
+  const motorlar = kayitlar<Motor>([
     {
       plaka: 'A&B',
       marka: '<M>',
@@ -82,8 +84,8 @@ describe('excelHtml', () => {
       yevmiye_no: 'Y',
       satis_tarihi: '2026-10-05T12:00:00',
     },
-  ];
-  const basliklar = (html) => [...html.matchAll(/<th[^>]*>([^<]*)<\/th>/g)].map((m) => m[1]);
+  ]);
+  const basliklar = (html: string) => [...html.matchAll(/<th[^>]*>([^<]*)<\/th>/g)].map((m) => m[1]);
 
   test('admin: alım ve kâr sütunları var', () => {
     const b = basliklar(excelHtml(motorlar, { canAlis: true, canKar: true }));

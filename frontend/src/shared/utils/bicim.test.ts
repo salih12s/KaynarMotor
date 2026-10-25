@@ -8,12 +8,12 @@ const SAYI_GIRDILERI = [0, 5, 1234, 1234.5, 1234.5678, 0.1, -1500.25, '1234.5', 
 const TARIH_GIRDILERI = ['2026-10-16', '2026-10-16T21:30:00.000Z', '2026-01-05T00:00:00', new Date(2026, 11, 31, 23, 59), '', null, undefined, 'bozuk-tarih'];
 
 // Test başlığında girdiyi gösterir (metin tırnaklı, tarih ISO): "99" ile 99 ayrı görünür. Vitest'in %p biçimi bunu yapmıyor.
-const girdiAdi = (v) => (typeof v === 'string' ? JSON.stringify(v) : v instanceof Date ? v.toISOString() : String(v));
+const girdiAdi = (v: unknown) => (typeof v === 'string' ? JSON.stringify(v) : v instanceof Date ? v.toISOString() : String(v));
 
-describe('sayiYaz (eski: parseFloat(v || 0).toLocaleString("tr-TR"))', () => {
+describe('sayiYaz (eski: parseFloat(String(v || 0)).toLocaleString("tr-TR"))', () => {
   SAYI_GIRDILERI.forEach((v) => {
     test(`${girdiAdi(v)} eski ifadeyle aynı`, () => {
-      expect(sayiYaz(v)).toBe(parseFloat(v || 0).toLocaleString('tr-TR'));
+      expect(sayiYaz(v)).toBe(parseFloat(String(v || 0)).toLocaleString('tr-TR'));
     });
   });
 
@@ -32,7 +32,7 @@ describe('sayiYaz (eski: parseFloat(v || 0).toLocaleString("tr-TR"))', () => {
 describe('paraYaz (eski: minimumFractionDigits: 2)', () => {
   SAYI_GIRDILERI.forEach((v) => {
     test(`${girdiAdi(v)} eski ifadeyle aynı`, () => {
-      expect(paraYaz(v)).toBe(parseFloat(v || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 }));
+      expect(paraYaz(v)).toBe(parseFloat(String(v || 0)).toLocaleString('tr-TR', { minimumFractionDigits: 2 }));
     });
   });
 
@@ -45,7 +45,7 @@ describe('paraYaz (eski: minimumFractionDigits: 2)', () => {
 describe('sayiYaz, minimumFractionDigits: 0 yazan eski çağrılarla da aynı', () => {
   SAYI_GIRDILERI.forEach((v) => {
     test(`${girdiAdi(v)} eski ifadeyle aynı`, () => {
-      expect(sayiYaz(v)).toBe(parseFloat(v || 0).toLocaleString('tr-TR', { minimumFractionDigits: 0 }));
+      expect(sayiYaz(v)).toBe(parseFloat(String(v || 0)).toLocaleString('tr-TR', { minimumFractionDigits: 0 }));
     });
   });
 });

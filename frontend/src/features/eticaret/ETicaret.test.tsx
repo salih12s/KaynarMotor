@@ -4,6 +4,7 @@
  * Komisyon hesabı gerçek fonksiyonla (hesaplaKomisyon) üretilir; beklenen değerler aynı fonksiyondan alınır, ekranın ona uyduğu sınanır.
  */
 import React from 'react';
+import type { Sayi } from '../../shared/utils/bicim';
 import { render, screen, within, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import ETicaret from './ETicaret';
@@ -84,43 +85,49 @@ const ADMIN = { rol: 'admin' };
 const PERSONEL = { rol: 'personel', eticaret_yetkisi: true };
 const YETKISIZ = { rol: 'personel' }; // sayfaya normalde giremez; kâr yine de gösterilmemeli (savunma)
 
-const tl = (v) => parseFloat(v || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const hesap = (s) =>
+const tl = (v: Sayi) => parseFloat(String(v || 0)).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const hesap = (s: { satis_fiyati: Sayi; alis_fiyati: Sayi; komisyon_orani: Sayi; kdv_orani?: Sayi; kargo_ucreti?: Sayi; adet: Sayi; platform_adi: string }) =>
   hesaplaKomisyon(s.satis_fiyati, s.alis_fiyati, s.komisyon_orani, s.kdv_orani || 20, s.kargo_ucreti || 0, s.adet, detectPlatform(s.platform_adi));
 
 // ---- Yardımcılar -------------------------------------------------------------------------------------------------
-const kur = ({ user = ADMIN, satislar = SATISLAR } = {}) => {
-  useAuth.mockReturnValue({ user });
-  eticaretService.getSales.mockResolvedValue({ data: satislar });
-  eticaretService.getPlatforms.mockResolvedValue({ data: PLATFORMLAR });
-  eticaretService.getStats.mockResolvedValue({ data: STATS });
-  eticaretService.createSale.mockResolvedValue({ data: {} });
-  eticaretService.updateSale.mockResolvedValue({ data: {} });
-  eticaretService.deleteSale.mockResolvedValue({ data: {} });
-  eticaretService.createPlatform.mockResolvedValue({ data: {} });
-  eticaretService.updatePlatform.mockResolvedValue({ data: {} });
-  eticaretService.deletePlatform.mockResolvedValue({ data: {} });
-  aksesuarStokService.getAll.mockResolvedValue({ data: STOK });
+type Kullanim = ReturnType<typeof userEvent.setup>;
+interface KurSecenegi {
+  user?: object;
+  satislar?: typeof SATISLAR;
+  bekleme?: boolean;
+}
+const kur = ({ user = ADMIN, satislar = SATISLAR }: KurSecenegi = {}) => {
+  vi.mocked(useAuth).mockReturnValue({ user } as never);
+  vi.mocked(eticaretService.getSales).mockResolvedValue({ data: satislar } as never);
+  vi.mocked(eticaretService.getPlatforms).mockResolvedValue({ data: PLATFORMLAR } as never);
+  vi.mocked(eticaretService.getStats).mockResolvedValue({ data: STATS } as never);
+  vi.mocked(eticaretService.createSale).mockResolvedValue({ data: {} } as never);
+  vi.mocked(eticaretService.updateSale).mockResolvedValue({ data: {} } as never);
+  vi.mocked(eticaretService.deleteSale).mockResolvedValue({ data: {} } as never);
+  vi.mocked(eticaretService.createPlatform).mockResolvedValue({ data: {} } as never);
+  vi.mocked(eticaretService.updatePlatform).mockResolvedValue({ data: {} } as never);
+  vi.mocked(eticaretService.deletePlatform).mockResolvedValue({ data: {} } as never);
+  vi.mocked(aksesuarStokService.getAll).mockResolvedValue({ data: STOK } as never);
 };
-const ekranAc = async (secenek = {}) => {
+const ekranAc = async (secenek: KurSecenegi = {}) => {
   kur(secenek);
   const user = userEvent.setup();
   render(<ETicaret />);
   if (!secenek.bekleme) await screen.findByText('Kask Visor');
   return user;
 };
-const satir = (ad) => screen.getByRole('row', { name: new RegExp(ad) });
-const hucreler = (row) =>
+const satir = (ad: string) => screen.getByRole('row', { name: new RegExp(ad) });
+const hucreler = (row: HTMLElement) =>
   within(row)
     .getAllByRole('cell')
     .map((c) => c.textContent);
 const basliklar = () => screen.getAllByRole('columnheader').map((h) => h.textContent);
-const ikon = (kapsam, ad) => within(kapsam).getByTestId(ad);
-const ozet = (etiket) => within(screen.getByLabelText('Özet')).getByText(etiket).previousSibling.textContent;
-const alan = (etiket) => screen.getByLabelText(etiket);
-const kart = (etiket) => screen.getByText(etiket).nextElementSibling.textContent;
+const ikon = (kapsam: HTMLElement, ad: string) => within(kapsam).getByTestId(ad);
+const ozet = (etiket: string) => within(screen.getByLabelText('Özet')).getByText(etiket).previousSibling?.textContent;
+const alan = (etiket: string) => screen.getByLabelText(etiket);
+const kart = (etiket: string) => screen.getByText(etiket).nextElementSibling?.textContent;
 const bekleDialogKapanana = () => waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-const sec = async (user, kapsam, etiket, secenek) => {
+const sec = async (user: Kullanim, kapsam: HTMLElement, etiket: string, secenek: string) => {
   await user.click(within(kapsam).getByRole('combobox', { name: etiket }));
   await user.click(screen.getByRole('option', { name: secenek }));
 };
@@ -211,14 +218,14 @@ describe('E-Ticaret: satışlar', () => {
 
   test('silme: onay, iptal ve hata', async () => {
     const user = await ekranAc();
-    window.confirm.mockReturnValueOnce(false);
+    vi.mocked(window.confirm).mockReturnValueOnce(false as never);
     await user.click(ikon(satir('Eldiven'), 'DeleteIcon'));
     expect(eticaretService.deleteSale).not.toHaveBeenCalled();
-    const cagri = eticaretService.getSales.mock.calls.length;
+    const cagri = vi.mocked(eticaretService.getSales).mock.calls.length;
     await user.click(ikon(satir('Eldiven'), 'DeleteIcon'));
     await waitFor(() => expect(eticaretService.deleteSale).toHaveBeenCalledWith(2));
-    await waitFor(() => expect(eticaretService.getSales.mock.calls.length).toBe(cagri + 1));
-    eticaretService.deleteSale.mockRejectedValue({ response: { data: { message: 'Silinemez' } } });
+    await waitFor(() => expect(vi.mocked(eticaretService.getSales).mock.calls.length).toBe(cagri + 1));
+    vi.mocked(eticaretService.deleteSale).mockRejectedValue({ response: { data: { message: 'Silinemez' } } } as never);
     await user.click(ikon(satir('Eldiven'), 'DeleteIcon'));
     await waitFor(() => expect(window.alert).toHaveBeenCalledWith('Silinemez'));
   });
@@ -257,7 +264,7 @@ describe('E-Ticaret: platformlar', () => {
     );
     await bekleDialogKapanana();
 
-    eticaretService.createPlatform.mockRejectedValue({ response: { data: { message: 'Platform var' } } });
+    vi.mocked(eticaretService.createPlatform).mockRejectedValue({ response: { data: { message: 'Platform var' } } } as never);
     await user.click(screen.getByRole('button', { name: 'Yeni Platform' }));
     p = await screen.findByRole('dialog');
     await user.type(alan('Platform Adı *'), 'X');
@@ -286,7 +293,7 @@ describe('E-Ticaret: platformlar', () => {
 
 // ---- Satış formu -------------------------------------------------------------------------------------------------
 describe('E-Ticaret: satış formu', () => {
-  const yeniAc = async (user) => {
+  const yeniAc = async (user: Kullanim) => {
     await user.click(screen.getByRole('button', { name: 'Yeni Satış' }));
     return screen.findByRole('dialog');
   };
@@ -369,14 +376,14 @@ describe('E-Ticaret: satış formu', () => {
 
   test("kaydet: yük (form alanları olduğu gibi) createSale'e gider; pencere kapanır, liste yenilenir; hata gösterilir", async () => {
     const user = await ekranAc();
-    const cagri = eticaretService.getSales.mock.calls.length;
+    const cagri = vi.mocked(eticaretService.getSales).mock.calls.length;
     let p = await yeniAc(user);
     await sec(user, p, 'Platform', 'Trendyol (%15.00)');
     await user.type(alan('Ürün Adı *'), 'Test Ürün');
     await user.type(alan('Ürün Satış Fiyatı (₺)'), '1000');
     await user.click(within(p).getByRole('button', { name: 'Kaydet' }));
     await waitFor(() => expect(eticaretService.createSale).toHaveBeenCalled());
-    expect(eticaretService.createSale.mock.calls[0][0]).toMatchObject({
+    expect(vi.mocked(eticaretService.createSale).mock.calls[0][0]).toMatchObject({
       stok_id: '',
       platform_id: 1,
       urun_adi: 'Test Ürün',
@@ -387,9 +394,9 @@ describe('E-Ticaret: satış formu', () => {
       adet: 1,
     });
     await bekleDialogKapanana();
-    await waitFor(() => expect(eticaretService.getSales.mock.calls.length).toBe(cagri + 1));
+    await waitFor(() => expect(vi.mocked(eticaretService.getSales).mock.calls.length).toBe(cagri + 1));
 
-    eticaretService.createSale.mockRejectedValue({ response: { data: { message: 'Stok yetersiz' } } });
+    vi.mocked(eticaretService.createSale).mockRejectedValue({ response: { data: { message: 'Stok yetersiz' } } } as never);
     p = await yeniAc(user);
     await user.click(within(p).getByRole('button', { name: 'Kaydet' }));
     expect(await within(p).findByText('Stok yetersiz')).toBeInTheDocument();
@@ -405,8 +412,14 @@ describe('E-Ticaret: satış formu', () => {
     expect(alan('Adet')).toHaveValue(2);
     await user.click(within(p).getByRole('button', { name: 'Güncelle' }));
     await waitFor(() => expect(eticaretService.updateSale).toHaveBeenCalled());
-    expect(eticaretService.updateSale.mock.calls[0][0]).toBe(1);
-    expect(eticaretService.updateSale.mock.calls[0][1]).toMatchObject({ stok_id: 10, platform_id: 1, urun_adi: 'Kask Visor', adet: 2, tarih: '2026-10-02' });
+    expect(vi.mocked(eticaretService.updateSale).mock.calls[0][0]).toBe(1);
+    expect(vi.mocked(eticaretService.updateSale).mock.calls[0][1]).toMatchObject({
+      stok_id: 10,
+      platform_id: 1,
+      urun_adi: 'Kask Visor',
+      adet: 2,
+      tarih: '2026-10-02',
+    });
   });
 });
 
@@ -480,14 +493,14 @@ describe('E-Ticaret: mobil görünüm', () => {
     });
   });
   afterEach(() => {
-    delete window.matchMedia;
+    delete (window as Partial<Window>).matchMedia;
   });
 
   test('kart listesi: kâr görünür; karta dokunmak detayı açar; platform sekmesi kartlarla', async () => {
     const user = await ekranAc();
     expect(screen.queryByRole('table')).not.toBeInTheDocument();
     const h = hesap(E1);
-    expect(screen.getByText((_, el) => el.tagName === 'P' && el.textContent === `Kâr: ${tl(h.netKar)} ₺`)).toBeInTheDocument();
+    expect(screen.getByText((_, el) => el?.tagName === 'P' && el.textContent === `Kâr: ${tl(h.netKar)} ₺`)).toBeInTheDocument();
     await user.click(screen.getByText('Kask Visor'));
     expect(await screen.findByText('E-Ticaret Satış Detayı')).toBeInTheDocument();
     await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Kapat' }));

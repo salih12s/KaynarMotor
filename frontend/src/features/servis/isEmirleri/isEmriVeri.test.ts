@@ -2,9 +2,11 @@
  * İş emri liste kurallarının (saf fonksiyonlar) BİRİM testleri: ekran, sahte API, bekleme yok; girdi -> çıktı.
  * Ekran düzeyindeki karşılıkları ../IsEmirleri.test.js içinde.
  */
-import { filtrele, istatistikler, kayittanForm, bosForm, bosParca, durumRenk, durumLabel, durumTon, formatTarih } from './isEmriVeri';
+import { filtrele, istatistikler, kayittanForm, bosForm, bosParca, durumRenk, durumLabel, durumTon, formatTarih, type ListeSatiri } from './isEmriVeri';
+import { kayit, kayitlar } from '../../../shared/test/kayit';
+import type { IsEmri } from '../../../shared/tipler';
 
-const liste = [
+const liste = kayitlar<ListeSatiri>([
   {
     id: 1,
     fis_no: 101,
@@ -37,7 +39,7 @@ const liste = [
     gercek_toplam_ucret: 2500,
     kar: 1000,
   },
-];
+]);
 
 describe('filtrele', () => {
   const hepsi = { search: '', startDate: '', endDate: '' };
@@ -90,7 +92,9 @@ describe('form dönüşümleri', () => {
   });
 
   test('kayittanForm: boş alanlar "", tarihler yyyy-aa-gg, kalan ödeme varsa ödeme tamamlanmadı', () => {
-    const f = kayittanForm({ musteri_ad_soyad: 'Ayşe', tahmini_teslim_tarihi: '2026-10-20T12:00:00', kalan_odeme: '500.00', olusturan_kisi: 'ofis' });
+    const f = kayittanForm(
+      kayit<IsEmri>({ musteri_ad_soyad: 'Ayşe', tahmini_teslim_tarihi: '2026-10-20T12:00:00', kalan_odeme: '500.00', olusturan_kisi: 'ofis' }),
+    );
     expect(f).toMatchObject({
       musteri_ad_soyad: 'Ayşe',
       telefon: '',
@@ -105,8 +109,8 @@ describe('form dönüşümleri', () => {
   });
 
   test('kayittanForm: kalan ödeme "0.00" (metin) veya yok ise ödeme tamamlandı sayılır', () => {
-    expect(kayittanForm({ kalan_odeme: '0.00' }).odeme_tamamlandi).toBe(true);
-    expect(kayittanForm({}).odeme_tamamlandi).toBe(true);
+    expect(kayittanForm(kayit<IsEmri>({ kalan_odeme: '0.00' })).odeme_tamamlandi).toBe(true);
+    expect(kayittanForm(kayit<IsEmri>({})).odeme_tamamlandi).toBe(true);
   });
 });
 

@@ -1,8 +1,9 @@
-import { hesaplaKomisyon, detectPlatform } from './komisyon';
+import { hesaplaKomisyon, detectPlatform, type KomisyonHesabi } from './komisyon';
+import type { Sayi } from '../../shared/utils/bicim';
 
 // Bu dosyadaki vektörler backend/tests/unit/komisyon.test.js ile AYNIDIR: sunucu ve arayüz kopyası aynı sonucu vermeli.
 // Elle hesap (Trendyol, satış 1000, alış 500, komisyon %10, kargo 0): KDV %0 → 388,83; KDV %20 → 324,02.
-const T = (kdv, adet = 1) => hesaplaKomisyon(1000, 500, 10, kdv, 0, adet, 'trendyol');
+const T = (kdv: Sayi, adet: Sayi = 1) => hesaplaKomisyon(1000, 500, 10, kdv, 0, adet, 'trendyol');
 
 describe('hesaplaKomisyon', () => {
   test('KDV %0 gerçekten 0 olarak hesaplanır', () => {
@@ -29,7 +30,7 @@ describe('hesaplaKomisyon', () => {
   test('arayüzün kullandığı ek alanlar bulunur (kâr oranı, geri dönüş, KDV kalemleri)', () => {
     const h = T(20);
     for (const alan of ['netKar', 'komisyonTutari', 'toplamKomisyon', 'karOrani', 'yatirimGeriDonus', 'odenecekKDV', 'satistanKDV', 'alisKDV', 'stopaj']) {
-      expect(typeof h[alan]).toBe('number');
+      expect(typeof h[alan as keyof KomisyonHesabi]).toBe('number');
     }
   });
 

@@ -1,10 +1,10 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { OnayProvider, useOnay } from './Onay';
+import { OnayProvider, useOnay, type OnaySecenegi } from './Onay';
 
 // Düğmeye basınca onay ister, sonucu ekrana yazar: sağlayıcı sözünün doğru çözüldüğünü görmek için.
-const Deneme = ({ mesaj = 'Bu kaydı silmek istediğinizden emin misiniz?', secenek }) => {
+const Deneme = ({ mesaj = 'Bu kaydı silmek istediğinizden emin misiniz?', secenek }: { mesaj?: string; secenek?: OnaySecenegi }) => {
   const onay = useOnay();
   const [sonuc, setSonuc] = React.useState('bekliyor');
   return (

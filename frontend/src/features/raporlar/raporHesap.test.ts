@@ -5,6 +5,11 @@
 import { hesaplaToplamlar, yatirimciOzetBirlestir } from './raporHesap';
 import { hesaplaKomisyon } from '../eticaret/komisyon';
 import { formatTL, formatDate, karColor, motorIsletmeKari } from './bicim';
+import { kayit, kayitlar } from '../../shared/test/kayit';
+import type { AralikRaporu, YatirimciOzeti } from '../../shared/tipler';
+
+// Testler raporun yalnızca ilgilendikleri alanlarını yazar (sunucudan metin gelen DECIMAL'ler dahil)
+const toplamlar = (rapor: object) => hesaplaToplamlar(kayit<AralikRaporu>(rapor));
 
 describe('hesaplaToplamlar', () => {
   test('rapor henüz yokken (null) her şey 0', () => {
@@ -18,7 +23,7 @@ describe('hesaplaToplamlar', () => {
   });
 
   test('kâr = motor + iş emri + aksesuar + e-ticaret + yedek parça; gelir/maliyete yedek parça değeri eklenir', () => {
-    const t = hesaplaToplamlar({
+    const t = toplamlar({
       motorKar: 14000,
       isEmriKar: 1000,
       aksesuarKar: 400,
@@ -34,7 +39,7 @@ describe('hesaplaToplamlar', () => {
   });
 
   test('sunucudan metin olarak gelen sayılar (DECIMAL) da toplanır', () => {
-    const t = hesaplaToplamlar({
+    const t = toplamlar({
       motorKar: '100.50',
       isEmriKar: '0',
       aksesuarKar: null,
@@ -49,17 +54,17 @@ describe('hesaplaToplamlar', () => {
   test('e-ticaret kârı sunucudan değil hesaplaKomisyon sonucundan (satır satır) toplanır', () => {
     const satir = { platform_adi: 'Trendyol', satis_fiyati: 1000, alis_fiyati: 600, komisyon_orani: 15, kdv_orani: 20, kargo_ucreti: 50, adet: 2 };
     const beklenen = hesaplaKomisyon(1000, 600, 15, 20, 50, 2, 'trendyol').netKar;
-    const t = hesaplaToplamlar({ eticaret: [satir, satir], toplam: {} });
+    const t = toplamlar({ eticaret: [satir, satir], toplam: {} });
     expect(t.hesaplananEticaretKar).toBeCloseTo(beklenen * 2);
     expect(t.duzeltilmisTotalKar).toBeCloseTo(beklenen * 2);
   });
 });
 
 describe('yatirimciOzetBirlestir', () => {
-  const ozet = [
+  const ozet = kayitlar<YatirimciOzeti>([
     { id: 7, ad_soyad: 'Veli', stok_adet: 3, stok_degeri: 90000 },
     { id: 8, ad_soyad: 'Ayşe', stok_adet: 1 },
-  ];
+  ]);
 
   test('rapor yoksa sunucudaki özet olduğu gibi döner', () => {
     expect(yatirimciOzetBirlestir(null, ozet)).toBe(ozet);
@@ -73,7 +78,7 @@ describe('yatirimciOzetBirlestir', () => {
         { yatirimci_id: null, satis_fiyati: 99999, kar: 99999, yatirimci_kar: 0 }, // yatırımcısız motor sayılmaz
       ],
     };
-    const [veli, ayse] = yatirimciOzetBirlestir(rapor, ozet);
+    const [veli, ayse] = yatirimciOzetBirlestir(kayit<AralikRaporu>(rapor), ozet);
     expect(veli).toMatchObject({ stok_adet: 3, stok_degeri: 90000, satilan_adet: 2, toplam_satis: 70000, yatirimci_kar: 1500, isletme_kar: 6500 });
     expect(ayse).toMatchObject({ stok_adet: 1, satilan_adet: 0, toplam_satis: 0, yatirimci_kar: 0, isletme_kar: 0 });
   });

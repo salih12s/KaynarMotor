@@ -33,7 +33,7 @@ vi.mock('../vitrinApi', () => ({
 vi.mock('../../motor/motorApi', () => ({ ikinciElMotorService: { getAll: vi.fn() } }));
 vi.mock('../../aksesuar/aksesuarApi', () => ({ aksesuarStokService: { getAll: vi.fn() } }));
 vi.mock('../../auth/AuthContext', () => ({ useAuth: vi.fn() }));
-vi.mock('../../motor/SatisBelgeleri', () => ({ BelgeBolumu: ({ motorId }) => <div>BELGE-BOLUMU-{motorId}</div> }));
+vi.mock('../../motor/SatisBelgeleri', () => ({ BelgeBolumu: ({ motorId }: { motorId: number }) => <div>BELGE-BOLUMU-{motorId}</div> }));
 
 // ---- Sabit test verisi -------------------------------------------------------------------------------------------
 const U1 = {
@@ -92,30 +92,39 @@ const STOK_AKSESUAR = [{ id: 1, stok_adi: 'Kask', marka: 'LS2', kategori: 'Kask'
 const DETAY_U1 = { ...U1, aciklama: 'Temiz', video_url: '', hasar_kaydi: 'Yok', rubik_link: '', gorsel_idler: [11, 12, 13], video_dosya_id: 99 };
 
 // ---- Yardımcılar -------------------------------------------------------------------------------------------------
-const kur = ({ rol = 'admin', user = {}, liste = {} } = {}) => {
-  useAuth.mockReturnValue({ user: { rol, ...user } });
-  vitrinService.getAllAdmin.mockImplementation(async ({ kategori }) => ({
-    data: (liste[kategori] ?? (kategori === 'motor' ? MOTORLAR : [])).map((x) => ({ ...x })),
-  }));
-  vitrinService.getIletisim.mockResolvedValue({ data: ILETISIM });
-  vitrinService.getSegmentler.mockResolvedValue({ data: [{ ad: 'Chopper' }, { ad: 'Scooter' }, { ad: 'Naked' }] });
-  vitrinService.getYuklemeSiniri.mockResolvedValue({ data: { video_mb: 1 } });
-  vitrinService.getById.mockResolvedValue({ data: DETAY_U1 });
-  vitrinService.create.mockResolvedValue({ data: {} });
-  vitrinService.update.mockResolvedValue({ data: {} });
-  vitrinService.delete.mockResolvedValue({ data: {} });
-  vitrinService.reorder.mockResolvedValue({ data: {} });
-  vitrinService.setPublished.mockImplementation(async (id, yayinda) => ({ data: { yayinda } }));
-  vitrinService.moveToPosition.mockResolvedValue({ data: { urun_ids: [2, 1], sira: 2 } });
-  vitrinService.updateIletisim.mockResolvedValue({ data: {} });
-  vitrinService.gorselUrl.mockImplementation((id) => `/g/${id}`);
-  vitrinService.iletisimGorselUrl.mockImplementation((k) => `/ig/${k}`);
-  ikinciElMotorService.getAll.mockResolvedValue({ data: STOK_MOTORLAR });
-  aksesuarStokService.getAll.mockResolvedValue({ data: STOK_AKSESUAR });
-  global.fetch = vi.fn(async () => ({ blob: async () => new Blob(['x'], { type: 'image/jpeg' }) }));
+type Kullanim = ReturnType<typeof userEvent.setup>;
+interface KurSecenegi {
+  rol?: string;
+  user?: object;
+  liste?: Record<string, object[]>;
+  bekleme?: boolean;
+}
+const kur = ({ rol = 'admin', user = {}, liste = {} }: KurSecenegi = {}) => {
+  vi.mocked(useAuth).mockReturnValue({ user: { rol, ...user } } as never);
+  vi.mocked(vitrinService.getAllAdmin).mockImplementation(async (p) => {
+    const kategori = (p as { kategori: string }).kategori;
+    const kayitlar: object[] = liste[kategori] ?? (kategori === 'motor' ? MOTORLAR : []);
+    return { data: kayitlar.map((x) => ({ ...x })) } as never;
+  });
+  vi.mocked(vitrinService.getIletisim).mockResolvedValue({ data: ILETISIM } as never);
+  vi.mocked(vitrinService.getSegmentler).mockResolvedValue({ data: [{ ad: 'Chopper' }, { ad: 'Scooter' }, { ad: 'Naked' }] } as never);
+  vi.mocked(vitrinService.getYuklemeSiniri).mockResolvedValue({ data: { video_mb: 1 } } as never);
+  vi.mocked(vitrinService.getById).mockResolvedValue({ data: DETAY_U1 } as never);
+  vi.mocked(vitrinService.create).mockResolvedValue({ data: {} } as never);
+  vi.mocked(vitrinService.update).mockResolvedValue({ data: {} } as never);
+  vi.mocked(vitrinService.delete).mockResolvedValue({ data: {} } as never);
+  vi.mocked(vitrinService.reorder).mockResolvedValue({ data: {} } as never);
+  vi.mocked(vitrinService.setPublished).mockImplementation(async (id, yayinda) => ({ data: { yayinda } }) as never);
+  vi.mocked(vitrinService.moveToPosition).mockResolvedValue({ data: { urun_ids: [2, 1], sira: 2 } } as never);
+  vi.mocked(vitrinService.updateIletisim).mockResolvedValue({ data: {} } as never);
+  vi.mocked(vitrinService.gorselUrl).mockImplementation((id) => `/g/${id}`);
+  vi.mocked(vitrinService.iletisimGorselUrl).mockImplementation((k) => `/ig/${k}`);
+  vi.mocked(ikinciElMotorService.getAll).mockResolvedValue({ data: STOK_MOTORLAR } as never);
+  vi.mocked(aksesuarStokService.getAll).mockResolvedValue({ data: STOK_AKSESUAR } as never);
+  global.fetch = vi.fn(async () => ({ blob: async () => new Blob(['x'], { type: 'image/jpeg' }) })) as never;
 };
 
-const ekranAc = async (secenek = {}) => {
+const ekranAc = async (secenek: KurSecenegi = {}) => {
   kur(secenek);
   const user = userEvent.setup();
   render(<Vitrin />);
@@ -123,11 +132,11 @@ const ekranAc = async (secenek = {}) => {
   return user;
 };
 
-const kart = (baslik) => screen.getByText(baslik).closest('.MuiCard-root');
-const sekme = (user, ad) => user.click(screen.getByRole('tab', { name: ad }));
-const alan = (etiket) => screen.getByLabelText(etiket);
+const kart = (baslik: string) => screen.getByText(baslik).closest('.MuiCard-root') as HTMLElement;
+const sekme = (user: Kullanim, ad: string) => user.click(screen.getByRole('tab', { name: ad }));
+const alan = (etiket: string) => screen.getByLabelText(etiket);
 const bekleDialogKapanana = () => waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-const yaziVar = (metin) => expect(screen.getByText(metin)).toBeInTheDocument();
+const yaziVar = (metin: string) => expect(screen.getByText(metin)).toBeInTheDocument();
 
 beforeEach(() => {
   vi.spyOn(window, 'confirm').mockImplementation(() => true);
@@ -182,7 +191,7 @@ describe('Vitrin: sekmeler ve roller', () => {
 
   test('ilanlar yüklenemezse hata bildirimi çıkar', async () => {
     kur();
-    vitrinService.getAllAdmin.mockRejectedValue(new Error('ağ'));
+    vi.mocked(vitrinService.getAllAdmin).mockRejectedValue(new Error('ağ') as never);
     render(<Vitrin />);
     expect(await screen.findByText('Ürünler yüklenemedi')).toBeInTheDocument();
   });
@@ -294,7 +303,7 @@ describe('Vitrin: sıralama', () => {
 
   test('sıralama kaydı hata verirse eski sıra geri gelir ve hata bildirilir', async () => {
     const user = await ekranAc({ rol: 'personel', user: { motor_vitrin_yetkisi: true } });
-    vitrinService.reorder.mockRejectedValue(new Error('x'));
+    vi.mocked(vitrinService.reorder).mockRejectedValue(new Error('x') as never);
     await user.click(within(kart('NMAX Fırsat')).getByTitle('Bir sıra aşağı'));
     expect(await screen.findByText('Vitrin sırası kaydedilemedi')).toBeInTheDocument();
   });
@@ -310,8 +319,8 @@ describe('Vitrin: sıralama', () => {
 
   test('sürükle-bırak: bir kartı diğerinin üstüne bırakmak sırayı değiştirir', async () => {
     await ekranAc({ rol: 'personel', user: { motor_vitrin_yetkisi: true } });
-    const tutacak = screen.getByText('1. sıra').closest('[draggable="true"]');
-    const hedef = kart('PCX Sıfır').closest('.MuiGrid-root');
+    const tutacak = screen.getByText('1. sıra').closest('[draggable="true"]') as Element;
+    const hedef = kart('PCX Sıfır').closest('.MuiGrid-root') as Element;
     fireEvent.dragStart(tutacak, { dataTransfer: { effectAllowed: '' } });
     fireEvent.dragOver(hedef);
     fireEvent.drop(hedef);
@@ -343,14 +352,14 @@ describe('Vitrin: yayın ve silme', () => {
 
   test('silme: onay verilirse siler ve bildirir; onaylanmazsa silmez; hatada uyarır', async () => {
     const user = await ekranAc();
-    window.confirm.mockReturnValueOnce(false);
+    vi.mocked(window.confirm).mockReturnValueOnce(false as never);
     await user.click(within(kart('PCX Sıfır')).getByTestId('DeleteIcon'));
     expect(vitrinService.delete).not.toHaveBeenCalled();
     await user.click(within(kart('PCX Sıfır')).getByTestId('DeleteIcon'));
     expect(window.confirm).toHaveBeenLastCalledWith('Bu ilanı silmek istediğinize emin misiniz?');
     await waitFor(() => expect(vitrinService.delete).toHaveBeenCalledWith(2));
     expect(await screen.findByText('Silindi')).toBeInTheDocument();
-    vitrinService.delete.mockRejectedValue(new Error('x'));
+    vi.mocked(vitrinService.delete).mockRejectedValue(new Error('x') as never);
     await user.click(within(kart('PCX Sıfır')).getByTestId('DeleteIcon'));
     expect(await screen.findByText('Silinemedi')).toBeInTheDocument();
   });
@@ -358,7 +367,7 @@ describe('Vitrin: yayın ve silme', () => {
 
 // ---- İlan formu --------------------------------------------------------------------------------------------------
 describe('Vitrin: yeni ilan formu', () => {
-  const yeniAc = async (user) => {
+  const yeniAc = async (user: Kullanim) => {
     await user.click(screen.getByRole('button', { name: 'İlan Ekle' }));
     return screen.findByRole('dialog');
   };
@@ -386,7 +395,7 @@ describe('Vitrin: yeni ilan formu', () => {
     await user.type(alan('Segment *'), 'Naked');
     await user.click(within(p).getByRole('button', { name: 'Kaydet' }));
     await waitFor(() => expect(vitrinService.create).toHaveBeenCalled());
-    expect(vitrinService.create.mock.calls[0][0]).toEqual({
+    expect(vi.mocked(vitrinService.create).mock.calls[0][0]).toEqual({
       baslik: 'Deneme İlan',
       aciklama: '',
       fiyat: '',
@@ -413,7 +422,7 @@ describe('Vitrin: yeni ilan formu', () => {
 
   test('kaydedilemezse hata bildirimi çıkar ve pencere açık kalır', async () => {
     const user = await ekranAc();
-    vitrinService.create.mockRejectedValue(new Error('x'));
+    vi.mocked(vitrinService.create).mockRejectedValue(new Error('x') as never);
     const p = await yeniAc(user);
     await user.type(alan('Başlık *'), 'X');
     await user.type(alan('Segment *'), 'Naked');
@@ -452,7 +461,7 @@ describe('Vitrin: yeni ilan formu', () => {
     await user.type(alan('Segment *'), 'Naked');
     await user.click(within(p).getByRole('button', { name: 'Kaydet' }));
     await waitFor(() => expect(vitrinService.create).toHaveBeenCalled());
-    expect(vitrinService.create.mock.calls[0][0].motor_durumu).toBe('sifir');
+    expect((vi.mocked(vitrinService.create).mock.calls[0][0] as Record<string, unknown>).motor_durumu).toBe('sifir');
   });
 
   test('aksesuar sekmesi: stoktan seçmek başlık, marka, fiyat ve açıklamayı doldurur; segment zorunlu değildir', async () => {
@@ -469,7 +478,7 @@ describe('Vitrin: yeni ilan formu', () => {
     expect(alan('Açıklama')).toHaveValue('Marka: LS2\nKategori: Kask\nBeden: L\nRenk: Siyah');
     await user.click(within(p).getByRole('button', { name: 'Kaydet' }));
     await waitFor(() => expect(vitrinService.create).toHaveBeenCalled());
-    expect(vitrinService.create.mock.calls[0][0]).toMatchObject({ kategori: 'aksesuar', baslik: 'Kask', fiyat: 2500 });
+    expect(vi.mocked(vitrinService.create).mock.calls[0][0]).toMatchObject({ kategori: 'aksesuar', baslik: 'Kask', fiyat: 2500 });
   });
 
   test('yetkisiz personel "Sitede yayınla" anahtarını değiştiremez', async () => {
@@ -488,7 +497,7 @@ describe('Vitrin: yeni ilan formu', () => {
 });
 
 describe('Vitrin: ilan düzenleme, görseller ve video', () => {
-  const duzenleAc = async (user) => {
+  const duzenleAc = async (user: Kullanim) => {
     await user.click(within(kart('NMAX Fırsat')).getByTestId('EditIcon'));
     const p = await screen.findByRole('dialog');
     await waitFor(() => expect(within(p).getAllByAltText(/^gorsel-/)).toHaveLength(3));
@@ -502,7 +511,7 @@ describe('Vitrin: ilan düzenleme, görseller ve video', () => {
     expect(within(p).getByText('İlanı Düzenle: Motor Satışı')).toBeInTheDocument();
     expect(alan('Başlık *')).toHaveValue('NMAX Fırsat');
     expect(alan('Hasar Kaydı')).toHaveValue('Yok');
-    expect(global.fetch.mock.calls.map((c) => c[0])).toEqual(['/g/11', '/g/12', '/g/13']);
+    expect(vi.mocked(global.fetch).mock.calls.map((c) => c[0])).toEqual(['/g/11', '/g/12', '/g/13']);
     expect(within(p).getByText('BELGE-BOLUMU-5')).toBeInTheDocument(); // stok bağlı
     expect(within(p).getByText('Vitrin')).toBeInTheDocument(); // ilk görsel
   });
@@ -522,15 +531,15 @@ describe('Vitrin: ilan düzenleme, görseller ve video', () => {
     expect(kapat).toHaveLength(3);
     await user.click(kapat[2]); // sonuncuyu sil
     expect(imgs()).toHaveLength(2);
-    const kutular = imgs().map((i) => i.closest('[draggable="true"]'));
+    const kutular = imgs().map((i) => i.closest('[draggable="true"]') as Element);
     fireEvent.dragStart(kutular[0], { dataTransfer: { effectAllowed: '' } });
     fireEvent.drop(kutular[1]);
     await user.click(within(p).getByRole('button', { name: 'Kaydet' }));
     await waitFor(() => expect(vitrinService.update).toHaveBeenCalled());
-    const [id, yuk] = vitrinService.update.mock.calls[0];
+    const [id, yuk] = vi.mocked(vitrinService.update).mock.calls[0] as [number, Record<string, string[]>];
     expect(id).toBe(1);
     expect(yuk.gorseller).toHaveLength(2);
-    expect(yuk.gorseller.every((g) => g.startsWith('data:image/jpeg'))).toBe(true);
+    expect(yuk.gorseller.every((g: string) => g.startsWith('data:image/jpeg'))).toBe(true);
     expect(yuk).toMatchObject({ kategori: 'motor', baslik: 'NMAX Fırsat', stok_motor_id: 5, one_cikan: true });
     expect(yuk).not.toHaveProperty('video'); // yeni video seçilmedi
     expect(yuk).not.toHaveProperty('video_sil');
@@ -544,14 +553,14 @@ describe('Vitrin: ilan düzenleme, görseller ve video', () => {
     expect(within(p).getByRole('button', { name: 'Video Yükle' })).toBeInTheDocument();
     await user.click(within(p).getByRole('button', { name: 'Kaydet' }));
     await waitFor(() => expect(vitrinService.update).toHaveBeenCalled());
-    expect(vitrinService.update.mock.calls[0][1].video_sil).toBe(true);
+    expect((vi.mocked(vitrinService.update).mock.calls[0][1] as Record<string, unknown>).video_sil).toBe(true);
   });
 
   test('yeni video: dosya adı görünür, yüke video (data URL) girer; sunucu sınırını aşan dosya reddedilir', async () => {
     const user = await ekranAc();
     await user.click(screen.getByRole('button', { name: 'İlan Ekle' }));
     const p = await screen.findByRole('dialog');
-    const girdi = () => p.querySelector('input[type="file"][accept="video/*"]');
+    const girdi = () => p.querySelector('input[type="file"][accept="video/*"]') as HTMLInputElement;
     fireEvent.change(girdi(), { target: { files: [new File([new ArrayBuffer(2 * 1024 * 1024)], 'buyuk.mp4', { type: 'video/mp4' })] } });
     expect(await screen.findByText('Video çok büyük (en fazla ~1 MB). Lütfen sıkıştırın.')).toBeInTheDocument();
     expect(within(p).getByRole('button', { name: 'Video Yükle' })).toBeInTheDocument();
@@ -562,12 +571,12 @@ describe('Vitrin: ilan düzenleme, görseller ve video', () => {
     await user.type(alan('Segment *'), 'Naked');
     await user.click(within(p).getByRole('button', { name: 'Kaydet' }));
     await waitFor(() => expect(vitrinService.create).toHaveBeenCalled());
-    expect(vitrinService.create.mock.calls[0][0].video).toMatch(/^data:video\/mp4;base64,/);
+    expect((vi.mocked(vitrinService.create).mock.calls[0][0] as Record<string, string>).video).toMatch(/^data:video\/mp4;base64,/);
   });
 
   test('ilan yüklenemezse hata bildirilir', async () => {
     const user = await ekranAc();
-    vitrinService.getById.mockRejectedValue(new Error('x'));
+    vi.mocked(vitrinService.getById).mockRejectedValue(new Error('x') as never);
     await user.click(within(kart('NMAX Fırsat')).getByTestId('EditIcon'));
     expect(await screen.findByText('Ürün yüklenemedi')).toBeInTheDocument();
   });

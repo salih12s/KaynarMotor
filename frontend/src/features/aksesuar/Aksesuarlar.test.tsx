@@ -18,7 +18,7 @@ vi.mock('./aksesuarApi', () => ({
 vi.mock('../musteriler/musteriApi', () => ({ musteriService: { search: vi.fn(), searchByPhone: vi.fn() } }));
 vi.mock('../auth/AuthContext', () => ({ useKarGor: vi.fn() }));
 // Yönlendirme kancaları sahte (Jest 27 zamanında react-router-dom v7'nin "exports" alanı okunamadığı için eklendi; sözleşme aynı kalsın diye korundu)
-let mockLocation = { pathname: '/aksesuar', state: null };
+let mockLocation: { pathname: string; state: unknown } = { pathname: '/aksesuar', state: null };
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', () => ({ useNavigate: () => mockNavigate, useLocation: () => mockLocation }));
 
@@ -69,48 +69,54 @@ const DETAY1 = {
 // Detay: brüt 2000 + 1000 = 3000, maliyet 1600 + 600 = 2200, indirim 200 -> net 2800, kâr 600
 
 // ---- Yardımcılar -------------------------------------------------------------------------------------------------
-const kur = ({ karGor = true, liste = LISTE } = {}) => {
-  useKarGor.mockReturnValue(karGor);
-  aksesuarService.getAll.mockResolvedValue({ data: liste });
-  aksesuarService.getStats.mockResolvedValue({ data: STATS });
-  aksesuarService.getById.mockImplementation(async (id) => ({ data: id === 1 ? DETAY1 : liste.find((x) => x.id === id) }));
-  aksesuarService.create.mockResolvedValue({ data: {} });
-  aksesuarService.update.mockResolvedValue({ data: {} });
-  aksesuarService.delete.mockResolvedValue({ data: {} });
-  aksesuarStokService.getAll.mockResolvedValue({ data: STOK });
-  aksesuarStokService.getByBarkod.mockRejectedValue(new Error('yok'));
-  musteriService.search.mockResolvedValue({ data: [{ id: 5, ad_soyad: 'Mehmet Aksoy', telefon: '0555' }] });
-  musteriService.searchByPhone.mockResolvedValue({ data: null });
+type Kullanim = ReturnType<typeof userEvent.setup>;
+interface KurSecenegi {
+  karGor?: boolean;
+  liste?: typeof LISTE;
+  bekleme?: boolean;
+}
+const kur = ({ karGor = true, liste = LISTE }: KurSecenegi = {}) => {
+  vi.mocked(useKarGor).mockReturnValue(karGor as never);
+  vi.mocked(aksesuarService.getAll).mockResolvedValue({ data: liste } as never);
+  vi.mocked(aksesuarService.getStats).mockResolvedValue({ data: STATS } as never);
+  vi.mocked(aksesuarService.getById).mockImplementation(async (id) => ({ data: id === 1 ? DETAY1 : liste.find((x) => x.id === id) }) as never);
+  vi.mocked(aksesuarService.create).mockResolvedValue({ data: {} } as never);
+  vi.mocked(aksesuarService.update).mockResolvedValue({ data: {} } as never);
+  vi.mocked(aksesuarService.delete).mockResolvedValue({ data: {} } as never);
+  vi.mocked(aksesuarStokService.getAll).mockResolvedValue({ data: STOK } as never);
+  vi.mocked(aksesuarStokService.getByBarkod).mockRejectedValue(new Error('yok') as never);
+  vi.mocked(musteriService.search).mockResolvedValue({ data: [{ id: 5, ad_soyad: 'Mehmet Aksoy', telefon: '0555' }] } as never);
+  vi.mocked(musteriService.searchByPhone).mockResolvedValue({ data: null } as never);
 };
-const ekranAc = async (secenek = {}) => {
+const ekranAc = async (secenek: KurSecenegi = {}) => {
   kur(secenek);
   const user = userEvent.setup();
   render(<Aksesuarlar />);
   if (!secenek.bekleme) await screen.findByText('Zeynep Kaya');
   return user;
 };
-const satir = (ad) => screen.getByRole('row', { name: new RegExp(ad) });
-const hucreler = (row) =>
+const satir = (ad: string) => screen.getByRole('row', { name: new RegExp(ad) });
+const hucreler = (row: HTMLElement) =>
   within(row)
     .getAllByRole('cell')
     .map((c) => c.textContent);
 const basliklar = () => screen.getAllByRole('columnheader').map((h) => h.textContent);
-const ikon = (kapsam, ad) => within(kapsam).getByTestId(ad);
-const ozet = (etiket) => within(screen.getByLabelText('Özet')).getByText(etiket).previousSibling.textContent;
-const ozetYok = (etiket) => within(screen.getByLabelText('Özet')).queryByText(etiket);
-const alan = (etiket) => screen.getByLabelText(etiket);
+const ikon = (kapsam: HTMLElement, ad: string) => within(kapsam).getByTestId(ad);
+const ozet = (etiket: string) => within(screen.getByLabelText('Özet')).getByText(etiket).previousSibling?.textContent;
+const ozetYok = (etiket: string) => within(screen.getByLabelText('Özet')).queryByText(etiket);
+const alan = (etiket: string) => screen.getByLabelText(etiket);
 const adlar = () =>
   screen
     .getAllByRole('row')
     .slice(1)
     .map((r) => within(r).getAllByRole('cell')[0].textContent);
-const yazi = (metin) => screen.getByText((_, el) => (el.tagName === 'P' || el.tagName === 'SPAN') && el.textContent === metin);
+const yazi = (metin: string) => screen.getByText((_, el) => (el?.tagName === 'P' || el?.tagName === 'SPAN') && el.textContent === metin);
 const bekleDialogKapanana = () => waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-const yeniAc = async (user) => {
+const yeniAc = async (user: Kullanim) => {
   await user.click(screen.getByRole('button', { name: 'Yeni Satış' }));
   return screen.findByRole('dialog');
 };
-const stokSec = async (user, kapsam, satirNo, ad) => {
+const stokSec = async (user: Kullanim, kapsam: HTMLElement, satirNo: number, ad: string) => {
   const kutu = within(kapsam).getAllByPlaceholderText('Ürün ara...')[satirNo];
   await user.click(kutu);
   await user.click(await screen.findByRole('option', { name: ad }));
@@ -179,25 +185,25 @@ describe('Aksesuarlar: liste', () => {
 
   test('silme: onay, iptal ve hata; silince stok da yenilenir', async () => {
     const user = await ekranAc();
-    window.confirm.mockReturnValueOnce(false);
+    vi.mocked(window.confirm).mockReturnValueOnce(false as never);
     await user.click(ikon(satir('Veli Demir'), 'DeleteIcon'));
     expect(aksesuarService.delete).not.toHaveBeenCalled();
-    const stokCagri = aksesuarStokService.getAll.mock.calls.length;
+    const stokCagri = vi.mocked(aksesuarStokService.getAll).mock.calls.length;
     await user.click(ikon(satir('Veli Demir'), 'DeleteIcon'));
     expect(window.confirm).toHaveBeenLastCalledWith('Silmek istediğinizden emin misiniz?');
     await waitFor(() => expect(aksesuarService.delete).toHaveBeenCalledWith(2));
-    await waitFor(() => expect(aksesuarStokService.getAll.mock.calls.length).toBe(stokCagri + 1));
-    aksesuarService.delete.mockRejectedValue({ response: { data: { message: 'Silinemez' } } });
+    await waitFor(() => expect(vi.mocked(aksesuarStokService.getAll).mock.calls.length).toBe(stokCagri + 1));
+    vi.mocked(aksesuarService.delete).mockRejectedValue({ response: { data: { message: 'Silinemez' } } } as never);
     await user.click(ikon(satir('Veli Demir'), 'DeleteIcon'));
     await waitFor(() => expect(window.alert).toHaveBeenCalledWith('Silinemez'));
   });
 });
 
 // Detay penceresindeki sayı kutusu: etiket yazısının hemen altındaki değer
-const kutu = (pencere, etiket) =>
+const kutu = (pencere: HTMLElement, etiket: string) =>
   within(pencere)
     .getAllByText(etiket)
-    .find((e) => e.tagName === 'P' && e.nextElementSibling).nextElementSibling.textContent;
+    .find((e) => e.tagName === 'P' && e.nextElementSibling)?.nextElementSibling?.textContent;
 
 // ---- Detay -------------------------------------------------------------------------------------------------------
 describe('Aksesuarlar: detay penceresi', () => {
@@ -241,7 +247,7 @@ describe('Aksesuarlar: detay penceresi', () => {
 
   test('ödeme tamamlanmışsa "Ödeme Tamamlandı ✓" yazar; Düzenle detayı kapatıp formu açar', async () => {
     const user = await ekranAc();
-    aksesuarService.getById.mockResolvedValue({ data: { ...DETAY1, kalan_odeme: 0 } });
+    vi.mocked(aksesuarService.getById).mockResolvedValue({ data: { ...DETAY1, kalan_odeme: 0 } } as never);
     await user.click(ikon(satir('Ayşe Yılmaz'), 'VisibilityIcon'));
     const p = await screen.findByRole('dialog');
     expect(within(p).getByText('Ödeme Tamamlandı ✓')).toBeInTheDocument();
@@ -268,7 +274,7 @@ describe('Aksesuarlar: satış formu', () => {
     await user.type(alan('Ad Soyad *'), 'Test');
     await user.click(within(p).getByRole('button', { name: 'Kaydet' }));
     await waitFor(() => expect(aksesuarService.create).toHaveBeenCalled());
-    const yuk = aksesuarService.create.mock.calls[0][0];
+    const yuk = vi.mocked(aksesuarService.create).mock.calls[0][0];
     expect(yuk).toMatchObject({ ad_soyad: 'Test', durum: 'beklemede', kalan_odeme: 0, parcalar: [], indirim: '' });
     expect(yuk).not.toHaveProperty('odeme_tamamlandi');
     await bekleDialogKapanana();
@@ -320,7 +326,9 @@ describe('Aksesuarlar: satış formu', () => {
     await user.type(alan('Ad Soyad *'), 'Test');
     await user.click(within(p).getByRole('button', { name: 'Kaydet' }));
     await waitFor(() => expect(aksesuarService.create).toHaveBeenCalled());
-    expect(aksesuarService.create.mock.calls[0][0].parcalar).toEqual([{ stok_id: 10, urun_adi: 'Kask LS2', adet: 1, maliyet: 1600, satis_fiyati: 2000 }]);
+    expect((vi.mocked(aksesuarService.create).mock.calls[0][0] as Record<string, unknown>).parcalar).toEqual([
+      { stok_id: 10, urun_adi: 'Kask LS2', adet: 1, maliyet: 1600, satis_fiyati: 2000 },
+    ]);
   });
 
   test('barkod/stok kodu + Enter: stokta varsa satır eklenir, aynı kod tekrar okutulunca adet artar', async () => {
@@ -340,7 +348,7 @@ describe('Aksesuarlar: satış formu', () => {
     const user = await ekranAc();
     const p = await yeniAc(user);
     const barkod = within(p).getByPlaceholderText(/Barkod okutun/);
-    aksesuarStokService.getByBarkod.mockResolvedValueOnce({ data: { id: 12, stok_adi: 'Bot', alis_fiyati: 700, satis_fiyati: 1100 } });
+    vi.mocked(aksesuarStokService.getByBarkod).mockResolvedValueOnce({ data: { id: 12, stok_adi: 'Bot', alis_fiyati: 700, satis_fiyati: 1100 } } as never);
     await user.type(barkod, '8690001{Enter}');
     await waitFor(() => expect(aksesuarStokService.getByBarkod).toHaveBeenCalledWith('8690001'));
     await waitFor(() => expect(within(p).getAllByRole('row')).toHaveLength(2));
@@ -355,18 +363,18 @@ describe('Aksesuarlar: satış formu', () => {
     await user.click(within(p).getByRole('checkbox', { name: 'Ödeme Tamamlandı' }));
     await user.type(alan('Kalan Ödeme (₺)'), '750');
     await user.type(alan('Ad Soyad *'), 'Test');
-    aksesuarService.create.mockRejectedValueOnce({ response: { data: { message: 'Stok yetersiz' } } });
+    vi.mocked(aksesuarService.create).mockRejectedValueOnce({ response: { data: { message: 'Stok yetersiz' } } } as never);
     await user.click(within(p).getByRole('button', { name: 'Kaydet' }));
     expect(await within(p).findByText('Stok yetersiz')).toBeInTheDocument();
     await user.click(within(p).getByRole('button', { name: 'Kaydet' }));
     await waitFor(() => expect(aksesuarService.create).toHaveBeenCalledTimes(2));
-    expect(aksesuarService.create.mock.calls[1][0].kalan_odeme).toBe('750');
+    expect((vi.mocked(aksesuarService.create).mock.calls[1][0] as Record<string, unknown>).kalan_odeme).toBe('750');
   });
 
   test('telefon 10+ hane yazılınca kayıtlı müşterinin adı boş alana dolar; dolu ad ezilmez', async () => {
     const user = await ekranAc();
     const p = await yeniAc(user);
-    musteriService.searchByPhone.mockResolvedValue({ data: { ad_soyad: 'Kayıtlı Kişi' } });
+    vi.mocked(musteriService.searchByPhone).mockResolvedValue({ data: { ad_soyad: 'Kayıtlı Kişi' } } as never);
     await user.type(within(p).getByLabelText('Telefon'), '05551112233');
     await waitFor(() => expect(alan('Ad Soyad *')).toHaveValue('Kayıtlı Kişi'));
     expect(musteriService.searchByPhone).toHaveBeenCalledWith('05551112233');
@@ -375,7 +383,7 @@ describe('Aksesuarlar: satış formu', () => {
     const p2 = await yeniAc(user);
     await user.type(alan('Ad Soyad *'), 'Elle Yazılan');
     await user.type(within(p2).getByLabelText('Telefon'), '05551112233');
-    await waitFor(() => expect(musteriService.searchByPhone.mock.calls.length).toBeGreaterThan(2));
+    await waitFor(() => expect(vi.mocked(musteriService.searchByPhone).mock.calls.length).toBeGreaterThan(2));
     expect(alan('Ad Soyad *')).toHaveValue('Elle Yazılan');
   });
 
@@ -401,11 +409,11 @@ describe('Aksesuarlar: satış formu', () => {
     expect(within(p).getAllByRole('row')).toHaveLength(3);
     await user.click(within(p).getByRole('button', { name: 'Güncelle' }));
     await waitFor(() => expect(aksesuarService.update).toHaveBeenCalled());
-    expect(aksesuarService.update.mock.calls[0][0]).toBe(1);
-    expect(aksesuarService.update.mock.calls[0][1]).toMatchObject({ ad_soyad: 'Ayşe Yılmaz', kalan_odeme: 500, indirim: 200 });
+    expect(vi.mocked(aksesuarService.update).mock.calls[0][0]).toBe(1);
+    expect(vi.mocked(aksesuarService.update).mock.calls[0][1]).toMatchObject({ ad_soyad: 'Ayşe Yılmaz', kalan_odeme: 500, indirim: 200 });
     await bekleDialogKapanana();
 
-    aksesuarService.getById.mockRejectedValue(new Error('x'));
+    vi.mocked(aksesuarService.getById).mockRejectedValue(new Error('x') as never);
     await user.click(ikon(satir('Veli Demir'), 'EditIcon'));
     expect(await screen.findByText('Yükleme hatası')).toBeInTheDocument();
   });
@@ -414,13 +422,13 @@ describe('Aksesuarlar: satış formu', () => {
 describe('Aksesuarlar: kalan ödeme dönüşümü', () => {
   test('veritabanından "0.00" (metin) gelen kalan ödeme ödendi sayılır ve 0 (sayı) olarak gönderilir', async () => {
     const user = await ekranAc();
-    aksesuarService.getById.mockResolvedValue({ data: { ...DETAY1, kalan_odeme: '0.00' } });
+    vi.mocked(aksesuarService.getById).mockResolvedValue({ data: { ...DETAY1, kalan_odeme: '0.00' } } as never);
     await user.click(ikon(satir('Ayşe Yılmaz'), 'EditIcon'));
     const p = await screen.findByRole('dialog');
     expect(within(p).getByRole('checkbox', { name: 'Ödeme Tamamlandı' })).toBeChecked();
     await user.click(within(p).getByRole('button', { name: 'Güncelle' }));
     await waitFor(() => expect(aksesuarService.update).toHaveBeenCalled());
-    expect(aksesuarService.update.mock.calls[0][1].kalan_odeme).toBe(0);
+    expect((vi.mocked(aksesuarService.update).mock.calls[0][1] as Record<string, unknown>).kalan_odeme).toBe(0);
   });
 });
 
@@ -438,7 +446,7 @@ describe('Aksesuarlar: mobil görünüm', () => {
     });
   });
   afterEach(() => {
-    delete window.matchMedia;
+    delete (window as Partial<Window>).matchMedia;
   });
 
   test('kart listesi: kâr yetkiye göre; süzgeç sonucu boşsa bilgi kutusu; karta dokunmak detayı açar', async () => {

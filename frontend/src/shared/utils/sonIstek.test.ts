@@ -2,8 +2,9 @@ import { sonIstek } from './sonIstek';
 
 // Elle çözülebilen söz: yanıtların geliş sırasını biz belirleriz
 const ertelenmis = () => {
-  let coz, reddet;
-  const vaat = new Promise((c, r) => {
+  let coz: (deger: string) => void = () => {};
+  let reddet: (hata: Error) => void = () => {};
+  const vaat = new Promise<string>((c, r) => {
     coz = c;
     reddet = r;
   });

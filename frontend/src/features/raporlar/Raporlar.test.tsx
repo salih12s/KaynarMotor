@@ -171,20 +171,26 @@ const FIS_KAR = [
 const YATIRIMCI_OZET = [{ id: 7, ad_soyad: 'Yatırımcı Veli', stok_adet: 3, stok_degeri: 90000 }];
 const STOK = [{ stok_adi: 'Kask', marka: 'LS2', platform: 'Trendyol', beden: 'L', renk: 'Siyah' }];
 
-const tl = (v) => Number(v).toLocaleString('tr-TR', { minimumFractionDigits: 2 });
+const tl = (v: number | string) => Number(v).toLocaleString('tr-TR', { minimumFractionDigits: 2 });
 
 // ---- Yardımcılar -------------------------------------------------------------------------------------------------
-const kur = ({ rol = 'admin', rapor = RAPOR, fisKar = FIS_KAR } = {}) => {
-  useAuth.mockReturnValue({ user: { rol } });
-  raporService.getAralik.mockResolvedValue({ data: rapor });
-  raporService.getFisKar.mockResolvedValue({ data: fisKar });
-  raporService.getPersoneller.mockResolvedValue({ data: ['Usta Mehmet', 'Usta Ali'] });
-  raporService.getYatirimciOzet.mockResolvedValue({ data: YATIRIMCI_OZET });
-  aksesuarStokService.getAll.mockResolvedValue({ data: STOK });
+type Kullanim = ReturnType<typeof userEvent.setup>;
+interface KurSecenegi {
+  rol?: string;
+  rapor?: object;
+  fisKar?: typeof FIS_KAR;
+}
+const kur = ({ rol = 'admin', rapor = RAPOR, fisKar = FIS_KAR }: KurSecenegi = {}) => {
+  vi.mocked(useAuth).mockReturnValue({ user: { rol } } as never);
+  vi.mocked(raporService.getAralik).mockResolvedValue({ data: rapor } as never);
+  vi.mocked(raporService.getFisKar).mockResolvedValue({ data: fisKar } as never);
+  vi.mocked(raporService.getPersoneller).mockResolvedValue({ data: ['Usta Mehmet', 'Usta Ali'] } as never);
+  vi.mocked(raporService.getYatirimciOzet).mockResolvedValue({ data: YATIRIMCI_OZET } as never);
+  vi.mocked(aksesuarStokService.getAll).mockResolvedValue({ data: STOK } as never);
 };
 
-let sonEkran; // son render sonucu (istemci ve unmount, yeniden açılış testi için)
-const ekranAc = async (secenek) => {
+let sonEkran: ReturnType<typeof sorguluRender>; // son render sonucu (istemci ve unmount, yeniden açılış testi için)
+const ekranAc = async (secenek?: KurSecenegi) => {
   kur(secenek);
   const user = userEvent.setup();
   sonEkran = sorguluRender(<Raporlar />);
@@ -192,26 +198,27 @@ const ekranAc = async (secenek) => {
   return user;
 };
 
-const sekme = (user, ad) => user.click(screen.getByRole('tab', { name: ad }));
+const sekme = (user: Kullanim, ad: string) => user.click(screen.getByRole('tab', { name: ad }));
 // Kart: etiket yazısının hemen altındaki değer yazısı
 // (tablo başlıklarında aynı yazı olabilir; kartın etiketi <p> ve altında değer yazısı vardır)
-const kart = (etiket, kap = screen) => kap.getAllByText(etiket).find((e) => e.tagName === 'P' && e.nextElementSibling).nextElementSibling.textContent;
+const kart = (etiket: string, kap: Pick<typeof screen, 'getAllByText'> = screen) =>
+  kap.getAllByText(etiket).find((e) => e.tagName === 'P' && e.nextElementSibling)?.nextElementSibling?.textContent;
 // Genel Özet tablosunda 4. hücre "Gelir payı" çubuğudur; sayı kontrollerinde atlanır
-const payHaric = (hucre) => hucre.filter((_, i) => i !== 3);
-const satir = (ad) => screen.getByRole('row', { name: ad });
-const hucreler = (row) =>
+const payHaric = (hucre: (string | null)[]) => hucre.filter((_, i) => i !== 3);
+const satir = (ad: string | RegExp) => screen.getByRole('row', { name: ad });
+const hucreler = (row: HTMLElement) =>
   within(row)
     .getAllByRole('cell')
     .map((c) => c.textContent);
 // "Toplam: ₺600" gibi, içinde <strong> bulunan tek satırlık yazı
-const yaziSecici = (metin) => (_, el) => el.tagName === 'P' && el.textContent === metin;
-const yazi = (metin) => screen.getByText(yaziSecici(metin));
+const yaziSecici = (metin: string) => (_: string, el: Element | null) => el?.tagName === 'P' && el.textContent === metin;
+const yazi = (metin: string) => screen.getByText(yaziSecici(metin));
 
 beforeEach(() => {
   vi.spyOn(console, 'error').mockImplementation(() => {}); // hata testleri bilerek console.error üretir
 });
 afterEach(() => {
-  console.error.mockRestore();
+  vi.mocked(console.error).mockRestore();
 });
 
 // ---- Testler -----------------------------------------------------------------------------------------------------
@@ -239,14 +246,14 @@ describe('Raporlar: roller ve sekmeler', () => {
   });
 
   test('yatırımcı kendi raporunu görür; genel rapor uçları hiç çağrılmaz', async () => {
-    useAuth.mockReturnValue({ user: { rol: 'yatirimci' } });
-    raporService.getYatirimciRapor.mockResolvedValue({
+    vi.mocked(useAuth).mockReturnValue({ user: { rol: 'yatirimci' } } as never);
+    vi.mocked(raporService.getYatirimciRapor).mockResolvedValue({
       data: {
         ozet: { stok_adet: 2, satilan_adet: 1, stok_degeri: 80000, toplam_yatirimci_kar: 1000 },
         stoktakiler: [{ plaka: '34STK001', marka: 'Yamaha', model: 'NMAX', yil: 2022, tarih: '2026-09-01T12:00:00', alis_fiyati: 40000, liste_fiyati: 50000 }],
         satilanlar: [{ plaka: '06SAT002', marka: 'Honda', model: 'PCX', satis_tarihi: '2026-10-05T12:00:00', satis_fiyati: 60000, yatirimci_kar: 1000 }],
       },
-    });
+    } as never);
     const user = userEvent.setup();
     sorguluRender(<Raporlar />);
 
@@ -278,7 +285,7 @@ describe('Raporlar: tarih aralığı ve yükleme', () => {
   test('açılışta bu ayın ilk-son gününü ister; "Geçen Yıl" ön ayarı aralığı değiştirir', async () => {
     const user = await ekranAc();
     const simdi = new Date();
-    const gg = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const gg = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     const ilk = gg(new Date(simdi.getFullYear(), simdi.getMonth(), 1));
     const son = gg(new Date(simdi.getFullYear(), simdi.getMonth() + 1, 0));
     expect(raporService.getAralik).toHaveBeenCalledWith(ilk, son);
@@ -293,7 +300,7 @@ describe('Raporlar: tarih aralığı ve yükleme', () => {
 
   test('rapor isteği hata verirse hata mesajı görünür, kartlar görünmez', async () => {
     kur();
-    raporService.getAralik.mockRejectedValue(new Error('ağ'));
+    vi.mocked(raporService.getAralik).mockRejectedValue(new Error('ağ') as never);
     sorguluRender(<Raporlar />);
     expect(await screen.findByText('Rapor yüklenirken hata oluştu')).toBeInTheDocument();
     expect(screen.queryByText('Toplam gelir')).not.toBeInTheDocument();
@@ -301,14 +308,14 @@ describe('Raporlar: tarih aralığı ve yükleme', () => {
 
   test('eski isteğin geç gelen yanıtı yenisinin üzerine yazmaz (her aralık ayrı önbellek anahtarı; eskiden sonIstek)', async () => {
     kur();
-    let eskiyiBitir;
+    let eskiyiBitir: (yanit: unknown) => void = () => {};
     const eski = new Promise((coz) => {
       eskiyiBitir = coz;
     });
     const yeni = { ...RAPOR, toplam: { gelir: 5000, maliyet: 1000 }, yedekParcaToplamDeger: 0, yedekParcaToplamMaliyet: 0 };
-    raporService.getAralik
-      .mockImplementationOnce(() => eski) // açılıştaki istek: yavaş
-      .mockImplementationOnce(() => Promise.resolve({ data: yeni })); // "Geçen Yıl" tıklaması: hızlı
+    vi.mocked(raporService.getAralik)
+      .mockImplementationOnce(() => eski as never) // açılıştaki istek: yavaş
+      .mockImplementationOnce(() => Promise.resolve({ data: yeni }) as never); // "Geçen Yıl" tıklaması: hızlı
     const user = userEvent.setup();
     sorguluRender(<Raporlar />);
     await user.click(screen.getByRole('button', { name: 'Geçen Yıl' }));
@@ -629,7 +636,7 @@ describe('Raporlar: mobil görünüm', () => {
     });
   });
   afterEach(() => {
-    delete window.matchMedia;
+    delete (window as Partial<Window>).matchMedia;
   });
 
   test('dar ekranda tablo yerine kart listesi çizilir (Genel Özet ve Motor Satışları)', async () => {

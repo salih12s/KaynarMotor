@@ -3,8 +3,18 @@
  * Ekran düzeyindeki karşılıkları yonetim/Vitrin.test.js içinde.
  */
 import { ilanAramaUygunMu } from './ilanArama';
+import { kayit } from '../../shared/test/kayit';
+import type { VitrinIlan } from '../../shared/tipler';
 
-const ilan = { baslik: 'Küçük Chopper', marka: 'Yamaha', model: 'XVS', yil: 2021, segment: 'Chopper', aciklama: 'Çok temiz, bakımlı', ilan_no: 7 };
+const ilan = kayit<VitrinIlan>({
+  baslik: 'Küçük Chopper',
+  marka: 'Yamaha',
+  model: 'XVS',
+  yil: 2021,
+  segment: 'Chopper',
+  aciklama: 'Çok temiz, bakımlı',
+  ilan_no: 7,
+});
 
 describe('ilanAramaUygunMu', () => {
   test('boş arama her ilanı kabul eder', () => {
@@ -21,7 +31,7 @@ describe('ilanAramaUygunMu', () => {
   test('büyük/küçük harf ve Türkçe karakter/aksan farkı yoktur ("Küçük" = "kucuk" = "KÜÇÜK")', () => {
     expect(ilanAramaUygunMu(ilan, 'kucuk')).toBe(true);
     expect(ilanAramaUygunMu(ilan, 'KÜÇÜK')).toBe(true);
-    expect(ilanAramaUygunMu({ baslik: 'ISPARTA Işık' }, 'isik')).toBe(true); // I / ı -> i
+    expect(ilanAramaUygunMu(kayit<VitrinIlan>({ baslik: 'ISPARTA Işık' }), 'isik')).toBe(true); // I / ı -> i
   });
 
   test('aramadaki HER kelime aynı ilanda bulunmalı (VE mantığı)', () => {
@@ -33,6 +43,6 @@ describe('ilanAramaUygunMu', () => {
   test('ilan numarası "ILN-0007" biçiminde de aranır; numarası olmayan ilan hata vermez', () => {
     expect(ilanAramaUygunMu(ilan, 'iln-0007')).toBe(true);
     expect(ilanAramaUygunMu(ilan, 'ILN-0008')).toBe(false);
-    expect(ilanAramaUygunMu({ baslik: 'X' }, 'iln')).toBe(false);
+    expect(ilanAramaUygunMu(kayit<VitrinIlan>({ baslik: 'X' }), 'iln')).toBe(false);
   });
 });
