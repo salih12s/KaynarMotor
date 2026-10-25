@@ -13,8 +13,6 @@ import { CustomThemeProvider, useCustomTheme } from './ThemeContext';
 const Layout = lazy(() => import('./Layout'));
 const Login = lazy(() => import('../features/auth/Login'));
 const IsEmirleri = lazy(() => import('../features/servis/IsEmirleri'));
-const IsEmriForm = lazy(() => import('../features/servis/IsEmriForm'));
-const IsEmriDetay = lazy(() => import('../features/servis/IsEmriDetay'));
 const Aksesuarlar = lazy(() => import('../features/aksesuar/Aksesuarlar'));
 const AksesuarStok = lazy(() => import('../features/aksesuar/AksesuarStok'));
 const IkinciElMotor = lazy(() => import('../features/motor/IkinciElMotor'));
@@ -27,7 +25,6 @@ const Raporlar = lazy(() => import('../features/raporlar/Raporlar'));
 const Kullanicilar = lazy(() => import('../features/auth/Kullanicilar'));
 const Yetkilendirme = lazy(() => import('../features/auth/Yetkilendirme'));
 const Musteriler = lazy(() => import('../features/musteriler/Musteriler'));
-const MotorDetay = lazy(() => import('../features/motor/MotorDetay'));
 const Veresiye = lazy(() => import('../features/raporlar/Veresiye'));
 const Vitrin = lazy(() => import('../features/vitrin/yonetim/Vitrin'));
 const Storefront = lazy(() => import('../features/vitrin/magaza/Storefront'));
@@ -294,30 +291,8 @@ const ThemedApp = () => {
                     </VitrinRoute>
                   }
                 />
-                <Route
-                  path="/is-emri/yeni"
-                  element={
-                    <ServisRoute>
-                      <IsEmriForm />
-                    </ServisRoute>
-                  }
-                />
-                <Route
-                  path="/is-emri/:id"
-                  element={
-                    <ServisRoute>
-                      <IsEmriDetay />
-                    </ServisRoute>
-                  }
-                />
-                <Route
-                  path="/is-emri/:id/duzenle"
-                  element={
-                    <ServisRoute>
-                      <IsEmriForm />
-                    </ServisRoute>
-                  }
-                />
+                {/* Eski adresler (sayfaları kaldırıldı; işi listedeki pencereler görüyor): yer imi olan kullanıcı listeye düşer */}
+                <Route path="/is-emri/*" element={<Navigate to="/servis" replace />} />
                 <Route
                   path="/aksesuarlar"
                   element={
@@ -350,14 +325,7 @@ const ThemedApp = () => {
                     </MotorStokRoute>
                   }
                 />
-                <Route
-                  path="/motor/:id"
-                  element={
-                    <MotorSatisRoute>
-                      <MotorDetay />
-                    </MotorSatisRoute>
-                  }
-                />
+                <Route path="/motor/:id" element={<Navigate to="/ikinci-el-motor" replace />} />
                 <Route
                   path="/belge-arsivi"
                   element={

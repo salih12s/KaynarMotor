@@ -121,9 +121,6 @@ const Layout = () => {
     if (pathname === '/musteriler') return 'Müşteriler';
     if (pathname === '/kullanicilar') return 'Kullanıcılar';
     if (pathname === '/yetkilendirme') return 'Yetkilendirme';
-    if (pathname.startsWith('/is-emri/') && pathname.includes('duzenle')) return 'İş Emri Düzenle';
-    if (pathname === '/is-emri/yeni') return 'Yeni İş Emri';
-    if (pathname.startsWith('/is-emri/')) return 'İş Emri Detay';
     return '';
   };
 
