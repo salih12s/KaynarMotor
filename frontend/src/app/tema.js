@@ -65,7 +65,7 @@ export const temaOlustur = ({ primary = RENK.kirmizi, secondary = RENK.murekkep 
       MuiTableContainer: { styleOverrides: { root: { borderRadius: 6 } } },
       MuiTableCell: {
         styleOverrides: {
-          root: { borderBottom: `1px dashed ${RENK.cizgiKesik}` },
+          root: { borderBottom: `1px dashed ${RENK.cizgiKesik}`, padding: '9px 14px' },
           head: {
             backgroundColor: RENK.yuzeyKoyu,
             color: RENK.soluk,

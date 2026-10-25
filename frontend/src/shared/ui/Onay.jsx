@@ -40,9 +40,7 @@ export const OnayProvider = ({ children }) => {
               <Typography sx={{ color: RENK.murekkep, fontSize: 16, lineHeight: 1.5 }}>{istek.mesaj}</Typography>
             </DialogContent>
             <DialogActions sx={{ px: 3, py: 2 }}>
-              <Button variant="outlined" color="inherit" onClick={() => kapat(false)}>
-                Vazgeç
-              </Button>
+              <Button onClick={() => kapat(false)}>Vazgeç</Button>
               <Button variant="contained" startIcon={<DeleteIcon />} onClick={() => kapat(true)} autoFocus>
                 {istek.onayEtiket}
               </Button>

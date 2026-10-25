@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import KisiIkon from '@mui/icons-material/PersonOutlined';
-import { IslemDugmesi } from '../../shared/ui';
-import { useOnay } from '../../shared/ui';
-import { DialogBasligi } from '../../shared/ui';
+import { BilgiKarti, BolumBasligi, Damga, DialogBasligi, IslemDugmesi, Plaka, sagaSutunlar, useOnay } from '../../shared/ui';
+import MotorIkon from '@mui/icons-material/TwoWheelerOutlined';
+import SepetIkon from '@mui/icons-material/ShoppingCartOutlined';
+import ServisIkon from '@mui/icons-material/BuildOutlined';
 import { sonIstek } from '../../shared/utils/sonIstek';
 import {
   Box,
@@ -22,8 +23,6 @@ import {
   Alert,
   InputAdornment,
   Grid,
-  Chip,
-  Divider,
   useTheme,
   useMediaQuery,
 } from '@mui/material';
@@ -34,7 +33,7 @@ import SearchIcon from '@mui/icons-material/Search';
 
 import { musteriService } from './musteriApi';
 import { sayiYaz, tarihYaz } from '../../shared/utils/bicim';
-import { TON } from '../../app/tokenlar';
+import { MENU_RENK, RENK, TON } from '../../app/tokenlar';
 
 // Hızlı yazarken eski aramanın yanıtı yeniyi ezmesin
 const sonAra = sonIstek();
@@ -106,7 +105,15 @@ const Musteriler = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!(await onay('Bu müşteriyi silmek istediğinizden emin misiniz?'))) return;
+    const musteri = musteriler.find((m) => m.id === id);
+    const mesaj = musteri ? (
+      <>
+        <strong>{musteri.ad_soyad}</strong> kaydı silinecek. Bu işlem geri alınamaz. Müşterinin geçmiş satış ve servis kayıtları silinmez.
+      </>
+    ) : (
+      'Bu müşteriyi silmek istediğinizden emin misiniz?'
+    );
+    if (!(await onay(mesaj, { baslik: 'Müşteriyi sil' }))) return;
     try {
       await musteriService.delete(id);
       loadData();
@@ -270,74 +277,77 @@ const Musteriler = () => {
         {detayDialog.data &&
           (() => {
             const d = detayDialog.data;
-            const formatTL = (v) => sayiYaz(v);
+            const motorlar = d.motorlar || [];
+            const aksesuarlar = d.aksesuarlar || [];
+            const isEmirleri = d.isEmirleri || [];
+            const kapat = () => setDetayDialog({ open: false, data: null });
+            const durumDamgasi = (durum) => {
+              const harita = {
+                tamamlandi: ['yesil', 'Tamamlandı'],
+                stokta: ['gri', 'Stokta'],
+                beklemede: ['bekle', 'Beklemede'],
+                devir_bekliyor: ['mor', 'Devir Bekliyor'],
+                iptal: ['kirmizi', 'İptal'],
+              };
+              const [ton, yazi] = harita[durum] || ['gri', durum];
+              return <Damga ton={ton}>{yazi}</Damga>;
+            };
             return (
               <>
-                <DialogBasligi baslik={<>{d.ad_soyad}</>} onKapat={() => setDetayDialog({ open: false, data: null })} />
-                <DialogContent dividers>
-                  <Grid container spacing={2} sx={{ mb: 3 }}>
-                    <Grid size={{ xs: 12, md: 4 }}>
-                      <Paper sx={{ p: 1.5, bgcolor: '#DCE6F4', borderLeft: '4px solid #1E4A86' }}>
-                        <Typography variant="subtitle2" fontWeight="bold" color="#1E4A86">
-                          İletişim
-                        </Typography>
-                        <Typography variant="body2">
-                          <strong>Telefon:</strong> {d.telefon || '-'}
-                        </Typography>
-                        <Typography variant="body2">
-                          <strong>Adres:</strong> {d.adres || '-'}
-                        </Typography>
-                      </Paper>
-                    </Grid>
-                    <Grid size={{ xs: 12, md: 8 }}>
-                      <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                        <Chip label={`Motor: ${(d.motorlar || []).length}`} sx={{ bgcolor: '#F6DAD7', color: '#C62828', fontWeight: 'bold' }} />
-                        <Chip label={`Aksesuar: ${(d.aksesuarlar || []).length}`} sx={{ bgcolor: '#D8EBDD', color: '#1D6A3B', fontWeight: 'bold' }} />
-                        <Chip label={`Servis: ${(d.isEmirleri || []).length}`} sx={{ bgcolor: '#F7E7C4', color: '#A5530F', fontWeight: 'bold' }} />
-                      </Box>
-                    </Grid>
-                  </Grid>
+                <DialogBasligi ikon={<KisiIkon />} baslik={d.ad_soyad} onKapat={kapat} />
+                <DialogContent>
+                  <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'flex-start', mb: 2 }}>
+                    <BilgiKarti
+                      baslik="İletişim"
+                      sx={{ flex: '1 1 340px', maxWidth: 520 }}
+                      satirlar={[
+                        ['Telefon', d.telefon || '-'],
+                        ['Adres', d.adres || '-'],
+                      ]}
+                    />
+                    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                      <Damga ton="kirmizi" sx={{ fontSize: 13, px: 1.25, py: 0.5 }}>{`Motor: ${motorlar.length}`}</Damga>
+                      <Damga ton="yesil" sx={{ fontSize: 13, px: 1.25, py: 0.5 }}>{`Aksesuar: ${aksesuarlar.length}`}</Damga>
+                      <Damga ton="turuncu" sx={{ fontSize: 13, px: 1.25, py: 0.5 }}>{`Servis: ${isEmirleri.length}`}</Damga>
+                    </Box>
+                  </Box>
 
-                  {/* Motor İşlemleri */}
-                  {(d.motorlar || []).length > 0 && (
+                  {motorlar.length > 0 && (
                     <Box sx={{ mb: 3 }}>
-                      <Typography variant="subtitle1" fontWeight="bold" color="#C62828" gutterBottom>
+                      <BolumBasligi ikon={<MotorIkon />} renk={MENU_RENK.motor}>
                         Motor İşlemleri
-                      </Typography>
-                      <Divider sx={{ mb: 1 }} />
-                      <TableContainer component={Paper} variant="outlined" sx={{ overflowX: 'auto' }}>
-                        <Table size="small">
+                      </BolumBasligi>
+                      <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
+                        <Table sx={sagaSutunlar(4)}>
                           <TableHead>
-                            <TableRow sx={{ bgcolor: '#F6DAD7' }}>
+                            <TableRow>
                               {['Plaka', 'Marka/Model', 'Rol', 'Fiyat', 'Durum', 'Tarih'].map((h) => (
-                                <TableCell key={h} sx={{ fontWeight: 'bold', color: '#C62828' }}>
-                                  {h}
-                                </TableCell>
+                                <TableCell key={h}>{h}</TableCell>
                               ))}
                             </TableRow>
                           </TableHead>
                           <TableBody>
-                            {d.motorlar.map((m) => {
+                            {motorlar.map((m) => {
                               const isSatici = m.satici_adi && m.satici_adi.toLowerCase() === d.ad_soyad.toLowerCase();
                               const isAlici = m.alici_adi && m.alici_adi.toLowerCase() === d.ad_soyad.toLowerCase();
                               return (
                                 <TableRow key={m.id} hover>
                                   <TableCell>
-                                    <strong>{m.plaka}</strong>
+                                    <Plaka plaka={m.plaka} />
                                   </TableCell>
                                   <TableCell>
                                     {m.marka} {m.model} {m.yil ? `(${m.yil})` : ''}
                                   </TableCell>
                                   <TableCell>
-                                    {isSatici && <Chip label="Satıcı" size="small" sx={{ bgcolor: '#F7E7C4', color: '#A5530F', mr: 0.5 }} />}
-                                    {isAlici && <Chip label="Alıcı" size="small" sx={{ bgcolor: '#D8EBDD', color: '#1D6A3B' }} />}
+                                    {isSatici && <Damga ton="turuncu">Satıcı</Damga>}
+                                    {isAlici && <Damga ton="yesil">Alıcı</Damga>}
                                   </TableCell>
-                                  <TableCell>
-                                    {isSatici && `₺${formatTL(m.alis_fiyati)}`}
-                                    {isAlici && `₺${formatTL(m.satis_fiyati)}`}
+                                  <TableCell sx={{ fontWeight: 700 }}>
+                                    {isSatici && `₺${sayiYaz(m.alis_fiyati)}`}
+                                    {isAlici && `₺${sayiYaz(m.satis_fiyati)}`}
                                   </TableCell>
-                                  <TableCell>{m.durum === 'tamamlandi' ? 'Tamamlandı' : m.durum === 'stokta' ? 'Stokta' : m.durum}</TableCell>
-                                  <TableCell>{tarihYaz(m.satis_tarihi || m.tarih)}</TableCell>
+                                  <TableCell>{durumDamgasi(m.durum)}</TableCell>
+                                  <TableCell sx={{ color: RENK.soluk }}>{tarihYaz(m.satis_tarihi || m.tarih)}</TableCell>
                                 </TableRow>
                               );
                             })}
@@ -347,31 +357,29 @@ const Musteriler = () => {
                     </Box>
                   )}
 
-                  {/* Aksesuar İşlemleri */}
-                  {(d.aksesuarlar || []).length > 0 && (
+                  {aksesuarlar.length > 0 && (
                     <Box sx={{ mb: 3 }}>
-                      <Typography variant="subtitle1" fontWeight="bold" color="#1D6A3B" gutterBottom>
+                      <BolumBasligi ikon={<SepetIkon />} renk={MENU_RENK.aksesuar}>
                         Aksesuar Satışları
-                      </Typography>
-                      <Divider sx={{ mb: 1 }} />
-                      <TableContainer component={Paper} variant="outlined" sx={{ overflowX: 'auto' }}>
-                        <Table size="small">
+                      </BolumBasligi>
+                      <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
+                        <Table sx={sagaSutunlar(1, 2)}>
                           <TableHead>
-                            <TableRow sx={{ bgcolor: '#D8EBDD' }}>
+                            <TableRow>
                               {['Toplam Satış', 'Kâr', 'Durum', 'Tarih'].map((h) => (
-                                <TableCell key={h} sx={{ fontWeight: 'bold', color: '#1D6A3B' }}>
-                                  {h}
-                                </TableCell>
+                                <TableCell key={h}>{h}</TableCell>
                               ))}
                             </TableRow>
                           </TableHead>
                           <TableBody>
-                            {d.aksesuarlar.map((a) => (
+                            {aksesuarlar.map((a) => (
                               <TableRow key={a.id} hover>
-                                <TableCell>₺{formatTL(a.toplam_satis)}</TableCell>
-                                <TableCell sx={{ color: parseFloat(a.kar || 0) >= 0 ? 'green' : 'red' }}>₺{formatTL(a.kar)}</TableCell>
-                                <TableCell>{a.durum === 'tamamlandi' ? 'Tamamlandı' : 'Beklemede'}</TableCell>
-                                <TableCell>{tarihYaz(a.satis_tarihi)}</TableCell>
+                                <TableCell sx={{ fontWeight: 700 }}>₺{sayiYaz(a.toplam_satis)}</TableCell>
+                                <TableCell sx={{ color: parseFloat(a.kar || 0) >= 0 ? RENK.yesil : RENK.kirmizi, fontWeight: 600 }}>
+                                  ₺{sayiYaz(a.kar)}
+                                </TableCell>
+                                <TableCell>{durumDamgasi(a.durum)}</TableCell>
+                                <TableCell sx={{ color: RENK.soluk }}>{tarihYaz(a.satis_tarihi)}</TableCell>
                               </TableRow>
                             ))}
                           </TableBody>
@@ -380,34 +388,30 @@ const Musteriler = () => {
                     </Box>
                   )}
 
-                  {/* İş Emirleri */}
-                  {(d.isEmirleri || []).length > 0 && (
+                  {isEmirleri.length > 0 && (
                     <Box sx={{ mb: 3 }}>
-                      <Typography variant="subtitle1" fontWeight="bold" color="#A5530F" gutterBottom>
+                      <BolumBasligi ikon={<ServisIkon />} renk={MENU_RENK.servis}>
                         Servis İşlemleri
-                      </Typography>
-                      <Divider sx={{ mb: 1 }} />
-                      <TableContainer component={Paper} variant="outlined" sx={{ overflowX: 'auto' }}>
-                        <Table size="small">
+                      </BolumBasligi>
+                      <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
+                        <Table sx={sagaSutunlar(3)}>
                           <TableHead>
-                            <TableRow sx={{ bgcolor: '#F7E7C4' }}>
+                            <TableRow>
                               {['Fiş No', 'Model', 'Tutar', 'Durum', 'Tarih'].map((h) => (
-                                <TableCell key={h} sx={{ fontWeight: 'bold', color: '#A5530F' }}>
-                                  {h}
-                                </TableCell>
+                                <TableCell key={h}>{h}</TableCell>
                               ))}
                             </TableRow>
                           </TableHead>
                           <TableBody>
-                            {d.isEmirleri.map((ie) => (
+                            {isEmirleri.map((ie) => (
                               <TableRow key={ie.id} hover>
-                                <TableCell>#{ie.fis_no}</TableCell>
+                                <TableCell sx={{ fontWeight: 700 }}>#{ie.fis_no}</TableCell>
                                 <TableCell>
                                   {ie.marka} {ie.model_tip}
                                 </TableCell>
-                                <TableCell>₺{formatTL(ie.gercek_toplam_ucret)}</TableCell>
-                                <TableCell>{ie.durum === 'tamamlandi' ? 'Tamamlandı' : ie.durum === 'beklemede' ? 'Beklemede' : ie.durum}</TableCell>
-                                <TableCell>{tarihYaz(ie.created_at)}</TableCell>
+                                <TableCell sx={{ fontWeight: 700 }}>₺{sayiYaz(ie.gercek_toplam_ucret)}</TableCell>
+                                <TableCell>{durumDamgasi(ie.durum)}</TableCell>
+                                <TableCell sx={{ color: RENK.soluk }}>{tarihYaz(ie.created_at)}</TableCell>
                               </TableRow>
                             ))}
                           </TableBody>
@@ -416,14 +420,14 @@ const Musteriler = () => {
                     </Box>
                   )}
 
-                  {(d.motorlar || []).length === 0 && (d.aksesuarlar || []).length === 0 && (d.isEmirleri || []).length === 0 && (
+                  {motorlar.length === 0 && aksesuarlar.length === 0 && isEmirleri.length === 0 && (
                     <Alert severity="info">Bu müşteriye ait işlem kaydı bulunamadı.</Alert>
                   )}
                 </DialogContent>
                 <DialogActions>
                   <Button
                     onClick={() => {
-                      setDetayDialog({ open: false, data: null });
+                      kapat();
                       openDialog(d);
                     }}
                     variant="outlined"
@@ -431,7 +435,9 @@ const Musteriler = () => {
                   >
                     Düzenle
                   </Button>
-                  <Button onClick={() => setDetayDialog({ open: false, data: null })}>Kapat</Button>
+                  <Button variant="contained" onClick={kapat}>
+                    Kapat
+                  </Button>
                 </DialogActions>
               </>
             );

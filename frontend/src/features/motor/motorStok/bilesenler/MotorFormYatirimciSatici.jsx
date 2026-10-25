@@ -1,5 +1,9 @@
 import React from 'react';
-import { Typography, TextField, Alert, Grid, MenuItem, Autocomplete, Checkbox, FormControlLabel } from '@mui/material';
+import GroupIcon from '@mui/icons-material/GroupOutlined';
+import PersonIcon from '@mui/icons-material/PersonOutline';
+import { BolumBasligi } from '../../../../shared/ui';
+import { RENK } from '../../../../app/tokenlar';
+import { TextField, Alert, Grid, MenuItem, Autocomplete, Checkbox, FormControlLabel } from '@mui/material';
 
 // Form: yatırımcı (yalnızca admin) ve satıcı bilgileri (müşteri araması).
 const MotorFormYatirimciSatici = ({ f, setFormData, isAdmin, canMusteri, yatirimcilar, musteriOptions, searchMusteri }) => {
@@ -7,9 +11,9 @@ const MotorFormYatirimciSatici = ({ f, setFormData, isAdmin, canMusteri, yatirim
     <>
       {isAdmin && (
         <>
-          <Typography variant="subtitle1" fontWeight="bold" sx={{ mt: 3, mb: 1 }}>
+          <BolumBasligi ikon={<GroupIcon />} renk={RENK.mavi} sx={{ mt: 3 }}>
             Yatırımcı
-          </Typography>
+          </BolumBasligi>
           <FormControlLabel
             control={
               <Checkbox
@@ -46,9 +50,9 @@ const MotorFormYatirimciSatici = ({ f, setFormData, isAdmin, canMusteri, yatirim
         </>
       )}
 
-      <Typography variant="subtitle1" fontWeight="bold" sx={{ mt: 3, mb: 1 }}>
+      <BolumBasligi ikon={<PersonIcon />} renk={RENK.mavi} sx={{ mt: 3 }}>
         Satıcı Bilgileri
-      </Typography>
+      </BolumBasligi>
       {canMusteri ? (
         <Grid container spacing={2}>
           <Grid size={{ xs: 12, md: 6 }}>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { stokEtiketiYazdir } from '../../shared/utils/stokEtiketi';
 import InventoryIcon from '@mui/icons-material/Inventory2Outlined';
-import { IslemDugmesi, OzetSeridi, DialogBasligi } from '../../shared/ui';
+import { IslemDugmesi, OzetSeridi, DialogBasligi, MevcutStok } from '../../shared/ui';
 import { useOnay } from '../../shared/ui';
 import { sonIstek } from '../../shared/utils/sonIstek';
 import {
@@ -144,7 +144,7 @@ const AksesuarStok = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!(await onay('Bu stok kaydını silmek istediğinizden emin misiniz?'))) return;
+    if (!(await onay('Bu stok kaydını silmek istediğinizden emin misiniz?', { baslik: 'Stok kaydını sil' }))) return;
     try {
       await aksesuarStokService.delete(id);
       loadData();
@@ -184,21 +184,22 @@ const AksesuarStok = () => {
 
   return (
     <Box>
-      <Box sx={{ mb: 2 }}>
+      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5, mb: 2, alignItems: 'center', justifyContent: 'space-between' }}>
         <OzetSeridi
+          cip
           ogeler={[
-            { etiket: 'Toplam ürün', deger: totalUrun },
-            { etiket: 'Envanter', deger: `₺${sayiYaz(envanter)}` },
+            { etiket: 'Toplam', deger: `${totalUrun} ürün` },
+            { etiket: 'Envanter', deger: `₺${sayiYaz(envanter)}`, ton: 'yesil' },
           ]}
         />
-      </Box>
-      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2, alignItems: 'center', justifyContent: 'flex-end' }}>
-        <Button variant="outlined" startIcon={<UploadIcon />} onClick={() => setImportDialog(true)}>
-          İçe Aktar
-        </Button>
-        <Button variant="contained" size="large" startIcon={<AddIcon />} onClick={() => openDialog()}>
-          Yeni Stok
-        </Button>
+        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+          <Button variant="outlined" startIcon={<UploadIcon />} onClick={() => setImportDialog(true)}>
+            İçe Aktar
+          </Button>
+          <Button variant="contained" size="large" startIcon={<AddIcon />} onClick={() => openDialog()}>
+            Yeni Stok
+          </Button>
+        </Box>
       </Box>
 
       <Paper sx={{ p: 2, mb: 2 }}>
@@ -288,7 +289,9 @@ const AksesuarStok = () => {
                   <TableCell>{s.renk || '-'}</TableCell>
                   <TableCell>{sayiYaz(s.alis_fiyati)}</TableCell>
                   <TableCell>{sayiYaz(s.satis_fiyati)}</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold', color: (s.mevcut || 0) <= 0 ? 'red' : 'green' }}>{s.mevcut || 0}</TableCell>
+                  <TableCell>
+                    <MevcutStok adet={s.mevcut} />
+                  </TableCell>
                   <TableCell>
                     <IslemDugmesi tur="yaz" onClick={() => stokEtiketiYazdir(s)} title="Etiket Yazdır" />
                     <IslemDugmesi tur="duz" onClick={() => openDialog(s)} />

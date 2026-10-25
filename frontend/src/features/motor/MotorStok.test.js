@@ -350,8 +350,8 @@ describe('Motor Stok: detay penceresi', () => {
     expect(within(p).getByText('Alım').nextElementSibling).toHaveTextContent('₺30.000');
     expect(within(p).getByText('Yatırımcı Kârı').nextElementSibling).toHaveTextContent('₺1.000');
     expect(within(p).getByText('İşletme Kârı').nextElementSibling).toHaveTextContent('₺4.000'); // kâr 5000 - yatırımcı 1000
-    expect(within(p).getByText('Toplam Satış:').nextElementSibling).toHaveTextContent('₺35.000');
-    expect(within(p).getByText('Nakit:').nextElementSibling).toHaveTextContent('₺20.000');
+    expect(within(p).getByText('Toplam Satış').nextElementSibling).toHaveTextContent('₺35.000');
+    expect(within(p).getByText('Nakit').nextElementSibling).toHaveTextContent('₺20.000');
     expect(within(p).getByText('Toplam Ödeme').nextElementSibling).toHaveTextContent('₺30.000');
     expect(within(p).getByText('Kalan').nextElementSibling).toHaveTextContent('₺5.000');
     expect(within(p).getByText('Not')).toBeInTheDocument();
@@ -362,11 +362,11 @@ describe('Motor Stok: detay penceresi', () => {
     const user = await ekranAc({ user: YETKISIZ });
     await user.click(ikon(satir('34AAA111'), 'VisibilityIcon'));
     const p = await screen.findByRole('dialog');
-    expect(within(p).getByText('Plaka:')).toBeInTheDocument();
+    expect(within(p).getByText('Plaka')).toBeInTheDocument();
     expect(within(p).queryByText(/Fiyat Bilgileri/)).not.toBeInTheDocument();
     expect(within(p).queryByText(/Satıcı Bilgileri/)).not.toBeInTheDocument();
     expect(within(p).queryByText(/BELGE-BOLUMU/)).not.toBeInTheDocument();
-    expect(within(p).queryByText('İlan Fiyatı:')).not.toBeInTheDocument();
+    expect(within(p).queryByText('İlan Fiyatı')).not.toBeInTheDocument();
   });
 
   test('yatırımcı (sahip): satılan motorda "Kazancım" kutusu görünür', async () => {

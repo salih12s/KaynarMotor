@@ -1,5 +1,5 @@
 import React from 'react';
-import { DialogBasligi } from '../../../../shared/ui';
+import { BilgiKarti, BolumBasligi, DialogBasligi, Damga, Not, SayiKutusu } from '../../../../shared/ui';
 import {
   Box,
   Paper,
@@ -11,16 +11,16 @@ import {
   TableHead,
   TableRow,
   Button,
-  Chip,
   Dialog,
   DialogContent,
   DialogActions,
-  Grid,
-  Divider,
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 
 import { sayiYaz, tarihYaz } from '../../../../shared/utils/bicim';
+import { RENK } from '../../../../app/tokenlar';
+
+const SUTUN_3 = { display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' }, gap: 2, mb: 2 };
 
 // Satış detay penceresi: müşteri/satış/kayıt bilgisi, ürünler (stoktan marka/beden/renk), indirimli toplamlar ve kalan ödeme.
 const SatisDetayModal = ({ open, data, onClose, onDuzenle, stokOptions, karGor, isMobile }) => {
@@ -38,85 +38,50 @@ const SatisDetayModal = ({ open, data, onClose, onDuzenle, stokOptions, karGor, 
   const dIndirim = Math.min(Number(d.indirim) || 0, dBrutSatis);
   const dNetSatis = dBrutSatis - dIndirim;
   const dKar = dNetSatis - dToplamMaliyet;
+  const kalan = parseFloat(d.kalan_odeme || 0);
+  const kayitSatirlari = [
+    ['Oluşturan', d.olusturan_kisi || '-'],
+    ['Oluşturma', tarihYaz(d.created_at)],
+  ];
+  if (d.tamamlama_tarihi) kayitSatirlari.push(['Tamamlanma', tarihYaz(d.tamamlama_tarihi)]);
+  const para = (v) => `₺${sayiYaz(v)}`;
+  const karRengi = (v) => (v >= 0 ? RENK.yesil : RENK.kirmizi);
   return (
     <Dialog {...dialogProps}>
       <DialogBasligi baslik="Aksesuar Satış Detayı" onKapat={onClose} />
-      <DialogContent dividers>
-        <Grid container spacing={2} sx={{ mb: 2, mt: 0.5 }}>
-          <Grid size={{ xs: 12, md: 4 }}>
-            <Paper sx={{ p: 1.5, bgcolor: '#FBFBF8' }}>
-              <Typography variant="subtitle2" color="#C62828" fontWeight="bold" gutterBottom>
-                Müşteri Bilgileri
-              </Typography>
-              <Divider sx={{ mb: 1 }} />
-              <Typography variant="body2">
-                <strong>Ad Soyad:</strong> {d.ad_soyad || '-'}
-              </Typography>
-              <Typography variant="body2">
-                <strong>Telefon:</strong> {d.telefon || '-'}
-              </Typography>
-            </Paper>
-          </Grid>
-          <Grid size={{ xs: 12, md: 4 }}>
-            <Paper sx={{ p: 1.5, bgcolor: '#FBFBF8' }}>
-              <Typography variant="subtitle2" color="#C62828" fontWeight="bold" gutterBottom>
-                Satış Bilgileri
-              </Typography>
-              <Divider sx={{ mb: 1 }} />
-              <Typography variant="body2">
-                <strong>Ödeme Şekli:</strong> {d.odeme_sekli || '-'}
-              </Typography>
-              <Typography variant="body2">
-                <strong>Satış Tarihi:</strong> {tarihYaz(d.satis_tarihi)}
-              </Typography>
-              <Typography variant="body2">
-                <strong>Durum:</strong>{' '}
-                <Chip label={d.durum === 'tamamlandi' ? 'Tamamlandı' : 'Beklemede'} size="small" color={d.durum === 'tamamlandi' ? 'success' : 'warning'} />
-              </Typography>
-            </Paper>
-          </Grid>
-          <Grid size={{ xs: 12, md: 4 }}>
-            <Paper sx={{ p: 1.5, bgcolor: '#FBFBF8' }}>
-              <Typography variant="subtitle2" color="#C62828" fontWeight="bold" gutterBottom>
-                Kayıt Bilgileri
-              </Typography>
-              <Divider sx={{ mb: 1 }} />
-              <Typography variant="body2">
-                <strong>Oluşturan:</strong> {d.olusturan_kisi || '-'}
-              </Typography>
-              <Typography variant="body2">
-                <strong>Oluşturma:</strong> {tarihYaz(d.created_at)}
-              </Typography>
-              {d.tamamlama_tarihi && (
-                <Typography variant="body2">
-                  <strong>Tamamlanma:</strong> {tarihYaz(d.tamamlama_tarihi)}
-                </Typography>
-              )}
-            </Paper>
-          </Grid>
-        </Grid>
+      <DialogContent>
+        <Box sx={SUTUN_3}>
+          <BilgiKarti
+            baslik="Müşteri Bilgileri"
+            satirlar={[
+              ['Ad Soyad', d.ad_soyad || '-'],
+              ['Telefon', d.telefon || '-'],
+            ]}
+          />
+          <BilgiKarti
+            baslik="Satış Bilgileri"
+            satirlar={[
+              ['Ödeme Şekli', d.odeme_sekli || '-'],
+              ['Satış Tarihi', tarihYaz(d.satis_tarihi)],
+              ['Durum', <Damga ton={d.durum === 'tamamlandi' ? 'yesil' : 'bekle'}>{d.durum === 'tamamlandi' ? 'Tamamlandı' : 'Beklemede'}</Damga>],
+            ]}
+          />
+          <BilgiKarti baslik="Kayıt Bilgileri" satirlar={kayitSatirlari} />
+        </Box>
 
         {d.aciklama && (
-          <Paper sx={{ p: 1.5, mb: 2, bgcolor: '#DCE6F4', borderLeft: '3px solid #1E4A86' }}>
-            <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#1E4A86' }}>
-              Açıklama
-            </Typography>
-            <Typography variant="body2">{d.aciklama}</Typography>
-          </Paper>
+          <Not baslik="Açıklama" ton="mavi" sx={{ mb: 2 }}>
+            {d.aciklama}
+          </Not>
         )}
 
         {d.odeme_detaylari && (
-          <Paper sx={{ p: 1.5, mb: 2, bgcolor: '#E7DFF3', borderLeft: '3px solid #5B3A8C' }}>
-            <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#5B3A8C' }}>
-              Ödeme Detayları
-            </Typography>
-            <Typography variant="body2">{d.odeme_detaylari}</Typography>
-          </Paper>
+          <Not baslik="Ödeme Detayları" ton="mor" sx={{ mb: 2 }}>
+            {d.odeme_detaylari}
+          </Not>
         )}
 
-        <Typography variant="subtitle2" color="#C62828" fontWeight="bold" gutterBottom>
-          Ürünler
-        </Typography>
+        <BolumBasligi>Ürünler</BolumBasligi>
         {dp.length > 0 ? (
           isMobile ? (
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
@@ -137,7 +102,7 @@ const SatisDetayModal = ({ open, data, onClose, onDuzenle, stokOptions, karGor, 
                       {p.renk ? ` • ${p.renk}` : ''}
                     </Typography>
                     {karGor && (
-                      <Typography variant="caption" sx={{ display: 'block', color: pKar >= 0 ? '#1D6A3B' : '#c62828', fontWeight: 'bold' }}>
+                      <Typography variant="caption" sx={{ display: 'block', color: karRengi(pKar), fontWeight: 'bold' }}>
                         Kâr: ₺{sayiYaz(pKar)}
                       </Typography>
                     )}
@@ -146,14 +111,12 @@ const SatisDetayModal = ({ open, data, onClose, onDuzenle, stokOptions, karGor, 
               })}
             </Box>
           ) : (
-            <TableContainer component={Paper} variant="outlined" sx={{ overflowX: 'auto' }}>
-              <Table size="small">
+            <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
+              <Table sx={{ '& th:nth-of-type(n+6), & td:nth-of-type(n+6)': { textAlign: 'right', whiteSpace: 'nowrap' } }}>
                 <TableHead>
-                  <TableRow sx={{ bgcolor: '#F3F3EE' }}>
+                  <TableRow>
                     {['Ürün Adı', 'Marka', 'Platform', 'Beden', 'Renk', 'Adet', 'Maliyet', 'Satış Fiyatı', 'Toplam', ...(karGor ? ['Kâr'] : [])].map((h) => (
-                      <TableCell key={h} sx={{ fontWeight: 'bold' }}>
-                        {h}
-                      </TableCell>
+                      <TableCell key={h}>{h}</TableCell>
                     ))}
                   </TableRow>
                 </TableHead>
@@ -164,16 +127,16 @@ const SatisDetayModal = ({ open, data, onClose, onDuzenle, stokOptions, karGor, 
                     const pKar = pSatis - pMaliyet;
                     return (
                       <TableRow key={i}>
-                        <TableCell>{p.urun_adi}</TableCell>
+                        <TableCell sx={{ fontWeight: 700 }}>{p.urun_adi}</TableCell>
                         <TableCell>{p.marka || '-'}</TableCell>
                         <TableCell>{p.platform || '-'}</TableCell>
                         <TableCell>{p.beden || '-'}</TableCell>
                         <TableCell>{p.renk || '-'}</TableCell>
                         <TableCell>{p.adet}</TableCell>
-                        <TableCell>₺{sayiYaz(pMaliyet)}</TableCell>
+                        <TableCell sx={{ color: 'text.secondary' }}>₺{sayiYaz(pMaliyet)}</TableCell>
                         <TableCell>₺{sayiYaz(pSatis)}</TableCell>
                         <TableCell sx={{ fontWeight: 'bold' }}>₺{sayiYaz(pSatis)}</TableCell>
-                        {karGor && <TableCell sx={{ color: pKar >= 0 ? '#1D6A3B' : '#c62828', fontWeight: 'bold' }}>₺{sayiYaz(pKar)}</TableCell>}
+                        {karGor && <TableCell sx={{ color: karRengi(pKar), fontWeight: 'bold' }}>₺{sayiYaz(pKar)}</TableCell>}
                       </TableRow>
                     );
                   })}
@@ -187,52 +150,16 @@ const SatisDetayModal = ({ open, data, onClose, onDuzenle, stokOptions, karGor, 
           </Typography>
         )}
 
-        <Box sx={{ mt: 2, display: 'flex', gap: 2, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
-          {dIndirim > 0 && (
-            <Paper sx={{ px: 2, py: 1, bgcolor: '#F3F3EE' }}>
-              <Typography variant="body2">
-                Ara Toplam: <strong>₺{sayiYaz(dBrutSatis)}</strong>
-              </Typography>
-            </Paper>
-          )}
-          {dIndirim > 0 && (
-            <Paper sx={{ px: 2, py: 1, bgcolor: '#F6DAD7' }}>
-              <Typography variant="body2" sx={{ color: '#c62828' }}>
-                İndirim: <strong>−₺{sayiYaz(dIndirim)}</strong>
-              </Typography>
-            </Paper>
-          )}
-          <Paper sx={{ px: 2, py: 1, bgcolor: '#F6DAD7' }}>
-            <Typography variant="body2">
-              Toplam Satış: <strong>₺{sayiYaz(dNetSatis)}</strong>
-            </Typography>
-          </Paper>
-          <Paper sx={{ px: 2, py: 1, bgcolor: '#F7E7C4' }}>
-            <Typography variant="body2">
-              Maliyet: <strong>₺{sayiYaz(dToplamMaliyet)}</strong>
-            </Typography>
-          </Paper>
-          {karGor && (
-            <Paper sx={{ px: 2, py: 1, bgcolor: '#D8EBDD' }}>
-              <Typography variant="body2">
-                Kâr: <strong style={{ color: dKar >= 0 ? '#1D6A3B' : '#c62828' }}>₺{sayiYaz(dKar)}</strong>
-              </Typography>
-            </Paper>
-          )}
+        <Box sx={{ mt: 2, display: 'flex', gap: 1.5, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+          {dIndirim > 0 && <SayiKutusu etiket="Ara Toplam" deger={para(dBrutSatis)} ton="gri" sx={{ minWidth: 120 }} />}
+          {dIndirim > 0 && <SayiKutusu etiket="İndirim" deger={`−${para(dIndirim)}`} ton="kirmizi" sx={{ minWidth: 120 }} />}
+          <SayiKutusu etiket="Toplam Satış" deger={para(dNetSatis)} ton="kirmizi" sx={{ minWidth: 120 }} />
+          <SayiKutusu etiket="Maliyet" deger={para(dToplamMaliyet)} ton="turuncu" sx={{ minWidth: 120 }} />
+          {karGor && <SayiKutusu etiket="Kâr" deger={para(dKar)} ton={dKar >= 0 ? 'yesil' : 'kirmizi'} sx={{ minWidth: 120 }} />}
         </Box>
-        <Paper
-          sx={{
-            mt: 2,
-            p: 1.5,
-            bgcolor: parseFloat(d.kalan_odeme || 0) > 0 ? '#F7E7C4' : '#D8EBDD',
-            borderLeft: '4px solid',
-            borderColor: parseFloat(d.kalan_odeme || 0) > 0 ? '#A5530F' : '#1D6A3B',
-          }}
-        >
-          <Typography variant="subtitle2" fontWeight="bold" sx={{ color: parseFloat(d.kalan_odeme || 0) > 0 ? '#A5530F' : '#1D6A3B' }}>
-            {parseFloat(d.kalan_odeme || 0) > 0 ? `Kalan Ödeme: ₺${sayiYaz(d.kalan_odeme)}` : 'Ödeme Tamamlandı ✓'}
-          </Typography>
-        </Paper>
+        <Not ton={kalan > 0 ? 'bekle' : 'yesil'} sx={{ mt: 2 }}>
+          <Typography sx={{ fontWeight: 700 }}>{kalan > 0 ? `Kalan Ödeme: ₺${sayiYaz(d.kalan_odeme)}` : 'Ödeme Tamamlandı ✓'}</Typography>
+        </Not>
       </DialogContent>
       <DialogActions>
         <Button
@@ -245,7 +172,9 @@ const SatisDetayModal = ({ open, data, onClose, onDuzenle, stokOptions, karGor, 
         >
           Düzenle
         </Button>
-        <Button onClick={onClose}>Kapat</Button>
+        <Button variant="contained" onClick={onClose}>
+          Kapat
+        </Button>
       </DialogActions>
     </Dialog>
   );

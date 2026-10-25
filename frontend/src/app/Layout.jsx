@@ -2,25 +2,25 @@ import React, { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { Typography, Drawer, IconButton, Box, Collapse, useMediaQuery, useTheme, Avatar, ButtonBase } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
-import BuildIcon from '@mui/icons-material/Build';
-import PeopleIcon from '@mui/icons-material/People';
-import MotorIcon from '@mui/icons-material/TwoWheeler';
-import ShopIcon from '@mui/icons-material/ShoppingCart';
-import StokIcon from '@mui/icons-material/Inventory';
-import StoreIcon from '@mui/icons-material/Store';
-import SellIcon from '@mui/icons-material/Sell';
-import ReportIcon from '@mui/icons-material/Assessment';
-import AdminIcon from '@mui/icons-material/SupervisorAccount';
+import BuildIcon from '@mui/icons-material/BuildOutlined';
+import PeopleIcon from '@mui/icons-material/PeopleOutline';
+import MotorIcon from '@mui/icons-material/TwoWheelerOutlined';
+import ShopIcon from '@mui/icons-material/ShoppingCartOutlined';
+import StokIcon from '@mui/icons-material/Inventory2Outlined';
+import StoreIcon from '@mui/icons-material/StorefrontOutlined';
+import SellIcon from '@mui/icons-material/SellOutlined';
+import ReportIcon from '@mui/icons-material/BarChartOutlined';
+import AdminIcon from '@mui/icons-material/PersonOutline';
 import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import LogoutIcon from '@mui/icons-material/Logout';
-import SettingsIcon from '@mui/icons-material/Settings';
-import VeresiyeIcon from '@mui/icons-material/AccountBalanceWallet';
-import HomeIcon from '@mui/icons-material/Home';
-import CalculateIcon from '@mui/icons-material/Calculate';
-import FolderIcon from '@mui/icons-material/FolderCopy';
-import PublicIcon from '@mui/icons-material/Public';
-import GppGoodIcon from '@mui/icons-material/GppGood';
+import SettingsIcon from '@mui/icons-material/WbSunnyOutlined';
+import VeresiyeIcon from '@mui/icons-material/AccountBalanceWalletOutlined';
+import HomeIcon from '@mui/icons-material/HomeOutlined';
+import CalculateIcon from '@mui/icons-material/ReceiptLongOutlined';
+import FolderIcon from '@mui/icons-material/FolderOpenOutlined';
+import PublicIcon from '@mui/icons-material/PublicOutlined';
+import GppGoodIcon from '@mui/icons-material/GppGoodOutlined';
 import { useAuth } from '../features/auth/AuthContext';
 import { useCustomTheme } from './ThemeContext';
 import { authService } from '../features/auth/authApi';
@@ -41,7 +41,7 @@ const Layout = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   // Alt menü açık/kapalı durumu grup başlığına göre ayrı ayrı tutulur
   const [openMenus, setOpenMenus] = useState({});
-  const toggleMenu = (key) => setOpenMenus((prev) => ({ ...prev, [key]: !prev[key] }));
+  const toggleMenu = (key, varsayilanAcik) => setOpenMenus((prev) => ({ ...prev, [key]: !(prev[key] ?? varsayilanAcik) }));
   const { setDefaultTheme, setAksesuarTheme, setMotorTheme, setEticaretTheme, setYedekParcaTheme } = useCustomTheme();
 
   const pathname = location.pathname;
@@ -160,6 +160,8 @@ const Layout = () => {
 
   const isActive = (path) => pathname === path;
   const isSubActive = (item) => item.subItems?.some((s) => pathname === s.path);
+  // Grup, kullanıcı elle açıp kapatmadıkça içinde bulunulan bölümde kendiliğinden açıktır
+  const grupAcik = (item) => openMenus[item.key || item.title] ?? !!isSubActive(item);
   const hedefYol = (item) => item.path || item.subItems?.[0]?.path;
 
   // Ortak satır görünümü: renkli simge + ad; seçili satır açık yüzey rengi ve ince çerçeve alır.
@@ -208,7 +210,7 @@ const Layout = () => {
         {gorunenler.map((item) =>
           item.subItems ? (
             <React.Fragment key={item.kod}>
-              <ButtonBase onClick={() => toggleMenu(item.key || item.title)} sx={satirStili(false)} aria-expanded={!!openMenus[item.key || item.title]}>
+              <ButtonBase onClick={() => toggleMenu(item.key || item.title, isSubActive(item))} sx={satirStili(false)} aria-expanded={grupAcik(item)}>
                 <Box component="span" sx={ikonKutusu(item.kod)}>
                   {item.icon}
                 </Box>
@@ -216,10 +218,10 @@ const Layout = () => {
                   {item.title}
                 </Box>
                 <Box component="span" sx={{ display: 'inline-flex', opacity: 0.6 }}>
-                  {openMenus[item.key || item.title] ? <ExpandLess /> : <ExpandMore />}
+                  {grupAcik(item) ? <ExpandLess /> : <ExpandMore />}
                 </Box>
               </ButtonBase>
-              <Collapse in={!!openMenus[item.key || item.title]} timeout="auto" unmountOnExit>
+              <Collapse in={grupAcik(item)} timeout="auto" unmountOnExit>
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: '2px', pb: 0.5 }}>
                   {item.subItems.map((sub) => (
                     <ButtonBase key={sub.path} onClick={() => handleNavigate(sub.path)} sx={satirStili(isActive(sub.path), true)}>

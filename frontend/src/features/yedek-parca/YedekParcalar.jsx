@@ -217,7 +217,7 @@ const YedekParcalar = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!(await onay('Bu kaydı silmek istediğinizden emin misiniz?'))) return;
+    if (!(await onay('Bu kaydı silmek istediğinizden emin misiniz?', { baslik: 'Kaydı sil' }))) return;
     try {
       await yedekParcaService.delete(id);
       loadData();
@@ -230,10 +230,8 @@ const YedekParcalar = () => {
 
   return (
     <Box>
-      <Box sx={{ mb: 2 }}>
-        <OzetSeridi ogeler={[{ etiket: 'Toplam', deger: parcalar.length }]} />
-      </Box>
-      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2, alignItems: 'center', justifyContent: 'flex-end' }}>
+      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5, mb: 2, alignItems: 'center', justifyContent: 'space-between' }}>
+        <OzetSeridi cip ogeler={[{ etiket: 'Toplam', deger: parcalar.length }]} />
         <Button variant="contained" size="large" startIcon={<AddIcon />} onClick={() => openDialog()}>
           Yeni Parça
         </Button>

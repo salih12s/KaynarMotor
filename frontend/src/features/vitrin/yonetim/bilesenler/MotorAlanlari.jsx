@@ -1,4 +1,5 @@
 import React from 'react';
+import { RENK } from '../../../../app/tokenlar';
 import { Box, Typography, TextField, Chip, Stack, Autocomplete, ToggleButton, ToggleButtonGroup } from '@mui/material';
 import { BelgeBolumu } from '../../../motor/SatisBelgeleri';
 import { MOTOR_DURUMLARI } from '../../vitrinSabitleri';
@@ -16,8 +17,12 @@ const MotorAlanlari = ({ f, stokMotorlar, segmentler }) => {
         <ToggleButtonGroup
           exclusive
           fullWidth
-          color="error"
           value={form.motor_durumu}
+          sx={{
+            bgcolor: RENK.yuzey,
+            '& .MuiToggleButton-root': { textTransform: 'none', color: RENK.soluk, borderColor: RENK.alanCizgi },
+            '& .Mui-selected, & .Mui-selected:hover': { bgcolor: RENK.murekkep, color: '#fff' },
+          }}
           onChange={(e, val) => {
             if (!val) return;
             setForm((f) => ({ ...f, motor_durumu: val }));

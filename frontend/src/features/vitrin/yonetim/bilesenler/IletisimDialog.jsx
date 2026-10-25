@@ -1,5 +1,7 @@
 import React from 'react';
-import { Box, Button, Typography, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Stack } from '@mui/material';
+import TelefonIkon from '@mui/icons-material/PhoneOutlined';
+import { DialogBasligi } from '../../../../shared/ui';
+import { Box, Button, Typography, Dialog, DialogContent, DialogActions, TextField, Stack } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PhotoIcon from '@mui/icons-material/PhotoCamera';
 import { vitrinService } from '../../vitrinApi';
@@ -9,10 +11,8 @@ const IletisimDialog = ({ ilet, aktifKategori, isHizmet, kategori, iletisim }) =
   const { iletDlg, kapat, iletForm, setIletForm, iletGorsel, iletGorselVar, iletGorselSil, removeIletGorsel, handleIletGorsel, handleSaveIletisim } = ilet;
   return (
     <Dialog open={iletDlg} onClose={kapat} maxWidth="xs" fullWidth>
-      <DialogTitle>
-        {aktifKategori.label} — {isHizmet ? 'Hizmet Sayfası' : 'İletişim'}
-      </DialogTitle>
-      <DialogContent dividers>
+      <DialogBasligi ikon={<TelefonIkon />} baslik={`${aktifKategori.label}: ${isHizmet ? 'Hizmet Sayfası' : 'İletişim'}`} onKapat={kapat} />
+      <DialogContent>
         <Stack spacing={2} sx={{ mt: 0.5 }}>
           {isHizmet && (
             <>

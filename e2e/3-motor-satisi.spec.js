@@ -12,7 +12,7 @@ const gorunen = (plaka) => plaka.replace(/^(\d{2})([A-Z]+)(\d+)$/, '$1 $2 $3');
 
 // Satış penceresini açar ve plakayı öneri listesinden seçer. `yazilan`: plakadan klavyeyle girilen kısım.
 const plakayiSec = async (page, plaka, yazilan) => {
-  await page.getByRole('button', { name: 'Motor Satış' }).click();
+  await page.getByRole('main').getByRole('button', { name: 'Motor Satış' }).click();
   const pencere = page.getByRole('dialog');
   await expect(pencere).toBeVisible();
   await pencere.getByLabel('Plaka').fill(yazilan);
@@ -28,7 +28,7 @@ test('stoktaki motor satılır: satış listesinde görünür ve veritabanında 
 
   await adminGirisi(page);
   await page.goto('/ikinci-el-motor');
-  await expect(page.getByRole('button', { name: 'Motor Satış' })).toBeVisible(); // sayfa yüklendi
+  await expect(page.getByRole('main').getByRole('button', { name: 'Motor Satış' })).toBeVisible(); // sayfa yüklendi
 
   // --- Satış penceresi: stoktaki plakayı seç, form kendiliğinden dolsun ---
   const pencere = await plakayiSec(page, plaka, plaka.slice(0, 5));

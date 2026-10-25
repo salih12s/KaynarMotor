@@ -1,5 +1,7 @@
 import React from 'react';
-import { IslemDugmesi } from '../../../../shared/ui';
+import PaymentsIcon from '@mui/icons-material/PaymentsOutlined';
+import { RENK } from '../../../../app/tokenlar';
+import { IslemDugmesi, BolumBasligi } from '../../../../shared/ui';
 import { Box, Typography, Button, TextField, Alert, Grid, MenuItem } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 
@@ -10,9 +12,9 @@ const OdemeDagilimi = ({ hs }) => {
   const { hizliForm, odemeKalemleri, odemeToplam, ODEME_TIPLERI, addOdemeKalemi, updateOdemeKalemi, removeOdemeKalemi } = hs;
   return (
     <>
-      <Typography variant="subtitle1" fontWeight="bold" sx={{ mt: 3, mb: 1 }}>
+      <BolumBasligi ikon={<PaymentsIcon />} renk={RENK.mavi} sx={{ mt: 3 }}>
         Ödeme Dağılımı
-      </Typography>
+      </BolumBasligi>
       {odemeKalemleri.map((o, i) => (
         <Grid container spacing={1} key={i} sx={{ mb: 1 }} alignItems="center">
           <Grid size={{ xs: 5 }}>

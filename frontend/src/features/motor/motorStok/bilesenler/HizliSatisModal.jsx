@@ -1,6 +1,10 @@
 import React from 'react';
-import { Typography, Button, TextField, Dialog, DialogContent, DialogActions, Alert, Grid, InputAdornment, Autocomplete } from '@mui/material';
-import { DialogBasligi } from '../../../../shared/ui';
+import GroupIcon from '@mui/icons-material/GroupOutlined';
+import PersonIcon from '@mui/icons-material/PersonOutline';
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCartOutlined';
+import { MENU_RENK, RENK } from '../../../../app/tokenlar';
+import { Button, TextField, Dialog, DialogContent, DialogActions, Alert, Grid, InputAdornment, Autocomplete } from '@mui/material';
+import { DialogBasligi, BolumBasligi } from '../../../../shared/ui';
 import { BelgeBolumu } from '../../SatisBelgeleri';
 import OdemeDagilimi from './OdemeDagilimi';
 import KarOnizleme from './KarOnizleme';
@@ -22,9 +26,9 @@ const HizliSatisModal = ({ hs, perms, musteri, isMobile }) => {
             Bu motor bir yatırımcıya ait. Aşağıdan yatırımcı kârını tutar olarak girin; kalan işletme kârıdır.
           </Alert>
         )}
-        <Typography variant="subtitle1" fontWeight="bold" sx={{ mt: 2, mb: 1 }}>
+        <BolumBasligi ikon={<ShoppingCartIcon />} renk={MENU_RENK.aksesuar} sx={{ mt: 2 }}>
           Satış Bilgileri
-        </Typography>
+        </BolumBasligi>
         <Grid container spacing={2}>
           <Grid size={{ xs: 12, md: 4 }}>
             <TextField
@@ -67,9 +71,9 @@ const HizliSatisModal = ({ hs, perms, musteri, isMobile }) => {
             />
           </Grid>
         </Grid>
-        <Typography variant="subtitle1" fontWeight="bold" sx={{ mt: 3, mb: 1 }}>
+        <BolumBasligi ikon={<PersonIcon />} renk={RENK.mavi} sx={{ mt: 3 }}>
           Alıcı Bilgileri
-        </Typography>
+        </BolumBasligi>
         <Grid container spacing={2}>
           <Grid size={{ xs: 12, md: 6 }}>
             <Autocomplete
@@ -114,9 +118,9 @@ const HizliSatisModal = ({ hs, perms, musteri, isMobile }) => {
 
         {hizliSatis.motor?.yatirimci_id && canKar && (
           <>
-            <Typography variant="subtitle1" fontWeight="bold" sx={{ mt: 3, mb: 1 }}>
+            <BolumBasligi ikon={<GroupIcon />} renk={RENK.mavi} sx={{ mt: 3 }}>
               Yatırımcı
-            </Typography>
+            </BolumBasligi>
             <Grid container spacing={2}>
               <Grid size={{ xs: 12, md: 6 }}>
                 <TextField

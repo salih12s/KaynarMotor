@@ -193,6 +193,12 @@ describe('Aksesuarlar: liste', () => {
   });
 });
 
+// Detay penceresindeki sayı kutusu: etiket yazısının hemen altındaki değer
+const kutu = (pencere, etiket) =>
+  within(pencere)
+    .getAllByText(etiket)
+    .find((e) => e.tagName === 'P' && e.nextElementSibling).nextElementSibling.textContent;
+
 // ---- Detay -------------------------------------------------------------------------------------------------------
 describe('Aksesuarlar: detay penceresi', () => {
   test('ürünler stoktan marka/beden/renk ile zenginleşir; indirimli toplamlar; kalan ödeme', async () => {
@@ -214,11 +220,11 @@ describe('Aksesuarlar: detay penceresi', () => {
       '₺400',
     ]);
     expect(hucreler(within(p).getByRole('row', { name: /Eldiven/ }))).toEqual(['Eldiven', '-', '-', '-', '-', '2', '₺600', '₺1.000', '₺1.000', '₺400']);
-    expect(yazi('Ara Toplam: ₺3.000')).toBeInTheDocument();
-    expect(yazi('İndirim: −₺200')).toBeInTheDocument();
-    expect(yazi('Toplam Satış: ₺2.800')).toBeInTheDocument();
-    expect(yazi('Maliyet: ₺2.200')).toBeInTheDocument();
-    expect(yazi('Kâr: ₺600')).toBeInTheDocument();
+    expect(kutu(p, 'Ara Toplam')).toBe('₺3.000');
+    expect(kutu(p, 'İndirim')).toBe('−₺200');
+    expect(kutu(p, 'Toplam Satış')).toBe('₺2.800');
+    expect(kutu(p, 'Maliyet')).toBe('₺2.200');
+    expect(kutu(p, 'Kâr')).toBe('₺600');
     expect(within(p).getByText('Kalan Ödeme: ₺500')).toBeInTheDocument();
     expect(within(p).getByText('Acil')).toBeInTheDocument();
     expect(within(p).getByText('Nakit')).toBeInTheDocument();
@@ -229,8 +235,8 @@ describe('Aksesuarlar: detay penceresi', () => {
     await user.click(ikon(satir('Ayşe Yılmaz'), 'VisibilityIcon'));
     const p = await screen.findByRole('dialog');
     expect(within(p).queryByRole('columnheader', { name: 'Kâr' })).not.toBeInTheDocument();
-    expect(screen.queryByText(/^Kâr: ₺600$/)).not.toBeInTheDocument();
-    expect(yazi('Toplam Satış: ₺2.800')).toBeInTheDocument();
+    expect(within(p).queryByText('Kâr', { selector: 'p' })).not.toBeInTheDocument();
+    expect(kutu(p, 'Toplam Satış')).toBe('₺2.800');
   });
 
   test('ödeme tamamlanmışsa "Ödeme Tamamlandı ✓" yazar; Düzenle detayı kapatıp formu açar', async () => {

@@ -1,19 +1,7 @@
 import React from 'react';
-import {
-  Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  IconButton,
-  Switch,
-  FormControlLabel,
-  Stack,
-  CircularProgress,
-  Autocomplete,
-} from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
+import DunyaIkon from '@mui/icons-material/LanguageOutlined';
+import { DialogBasligi } from '../../../../shared/ui';
+import { Button, Dialog, DialogContent, DialogActions, TextField, Switch, FormControlLabel, Stack, CircularProgress, Autocomplete } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import MotorAlanlari from './MotorAlanlari';
 import VideoAlani from './VideoAlani';
@@ -25,13 +13,8 @@ const IlanDialog = ({ f, aktifKategori, isMotor, isAksesuar, isAdmin, stokMotorl
   const { dlgOpen, kapat, form, setForm, editId, saving, secStokAksesuar, handleSave } = f;
   return (
     <Dialog open={dlgOpen} onClose={kapat} maxWidth="sm" fullWidth>
-      <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        {editId ? 'İlanı Düzenle' : 'Yeni İlan'} — {aktifKategori.label}
-        <IconButton onClick={kapat}>
-          <CloseIcon />
-        </IconButton>
-      </DialogTitle>
-      <DialogContent dividers>
+      <DialogBasligi ikon={<DunyaIkon />} baslik={`${editId ? 'İlanı Düzenle' : 'Yeni İlan'}: ${aktifKategori.label}`} onKapat={kapat} />
+      <DialogContent>
         <Stack spacing={2} sx={{ mt: 0.5 }}>
           {/* Aksesuar: stoktan seçip bilgileri otomatik doldur */}
           {isAksesuar && (

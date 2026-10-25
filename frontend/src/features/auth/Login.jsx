@@ -73,20 +73,30 @@ const Login = () => {
           },
         }}
       >
-        <Box sx={{ textAlign: 'center' }}>
+        <Box sx={{ textAlign: 'left' }}>
           <img
             src="/kaynar-logo.png"
             alt="Kaynar Motor"
             width="190"
             height="102"
-            style={{ width: 190, maxWidth: '70%', height: 'auto', display: 'block', margin: '0 auto' }}
+            style={{ width: 190, maxWidth: '70%', height: 'auto', display: 'block', margin: 0 }}
           />
         </Box>
         <Typography
           component="h1"
-          sx={{ fontFamily: FONT.baslik, fontWeight: 700, fontSize: { xs: 34, sm: 40 }, lineHeight: 1.1, color: RENK.murekkep, mt: 1.5, mb: 2.5 }}
+          sx={{
+            fontFamily: FONT.baslik,
+            fontWeight: 700,
+            fontSize: { xs: 34, sm: 40 },
+            lineHeight: 1.1,
+            color: RENK.murekkep,
+            mt: 1.5,
+            pb: 2.5,
+            mb: 2.5,
+            borderBottom: `1.5px dashed ${RENK.cizgiKesik}`,
+          }}
         >
-          Servis yönetim sistemi
+          Servis Yönetim Sistemi
         </Typography>
 
         <Tabs

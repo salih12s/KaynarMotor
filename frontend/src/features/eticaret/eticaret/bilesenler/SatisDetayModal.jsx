@@ -1,6 +1,6 @@
 import React from 'react';
-import { Paper, Typography, Button, Dialog, DialogContent, DialogActions, Grid, Divider } from '@mui/material';
-import { DialogBasligi } from '../../../../shared/ui';
+import { Box, Button, Dialog, DialogContent, DialogActions } from '@mui/material';
+import { BilgiKarti, BolumBasligi, DialogBasligi, SayiKutusu } from '../../../../shared/ui';
 import EditIcon from '@mui/icons-material/Edit';
 
 import { hesaplaKomisyon, detectPlatform } from '../../komisyon';
@@ -17,162 +17,101 @@ const SatisDetayModal = ({ open, data, onClose, onDuzenle, isMobile, karGor }) =
   return (
     <Dialog {...dialogProps}>
       <DialogBasligi baslik="E-Ticaret Satış Detayı" onKapat={onClose} />
-      <DialogContent dividers>
-        {/* Ürün Bilgileri */}
-        <Grid container spacing={2} sx={{ mb: 3, mt: 0.5 }}>
-          <Grid size={{ xs: 12, md: 4 }}>
-            <Paper sx={{ p: 1.5, bgcolor: '#FBFBF8' }}>
-              <Typography variant="subtitle2" color="#C62828" fontWeight="bold" gutterBottom>
-                Ürün Bilgileri
-              </Typography>
-              <Divider sx={{ mb: 1 }} />
-              <Typography variant="body2">
-                <strong>Ürün:</strong> {s.urun_adi}
-              </Typography>
-              <Typography variant="body2">
-                <strong>Platform:</strong> {s.platform_adi || '-'}
-              </Typography>
-              <Typography variant="body2">
-                <strong>Adet:</strong> {s.adet}
-              </Typography>
-              <Typography variant="body2">
-                <strong>Tarih:</strong> {tarihYaz(s.tarih)}
-              </Typography>
-            </Paper>
-          </Grid>
-          <Grid size={{ xs: 12, md: 4 }}>
-            <Paper sx={{ p: 1.5, bgcolor: '#FBFBF8' }}>
-              <Typography variant="subtitle2" color="#C62828" fontWeight="bold" gutterBottom>
-                Fiyat Bilgileri
-              </Typography>
-              <Divider sx={{ mb: 1 }} />
-              <Typography variant="body2">
-                <strong>Satış Fiyatı:</strong> {formatTL(s.satis_fiyati)} ₺
-              </Typography>
-              <Typography variant="body2">
-                <strong>Alış Fiyatı:</strong> {formatTL(s.alis_fiyati)} ₺
-              </Typography>
-              <Typography variant="body2">
-                <strong>Komisyon:</strong> %{parseFloat(s.komisyon_orani || 0).toFixed(2)}
-              </Typography>
-              <Typography variant="body2">
-                <strong>KDV:</strong> %{parseFloat(s.kdv_orani || 20).toFixed(2)}
-              </Typography>
-              <Typography variant="body2">
-                <strong>Kargo:</strong> {formatTL(s.kargo_ucreti)} ₺
-              </Typography>
-            </Paper>
-          </Grid>
+      <DialogContent>
+        {/* Ürün ve fiyat bilgileri + net kâr */}
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: karGor ? '1fr 1fr 1fr' : '1fr 1fr' }, gap: 2, mb: 3 }}>
+          <BilgiKarti
+            baslik="Ürün Bilgileri"
+            satirlar={[
+              ['Ürün', s.urun_adi],
+              ['Platform', s.platform_adi || '-'],
+              ['Adet', s.adet],
+              ['Tarih', tarihYaz(s.tarih)],
+            ]}
+          />
+          <BilgiKarti
+            baslik="Fiyat Bilgileri"
+            satirlar={[
+              ['Satış Fiyatı', `${formatTL(s.satis_fiyati)} ₺`],
+              ['Alış Fiyatı', `${formatTL(s.alis_fiyati)} ₺`],
+              ['Komisyon', `%${parseFloat(s.komisyon_orani || 0).toFixed(2)}`],
+              ['KDV', `%${parseFloat(s.kdv_orani || 20).toFixed(2)}`],
+              ['Kargo', `${formatTL(s.kargo_ucreti)} ₺`],
+            ]}
+          />
           {karGor && (
-            <Grid size={{ xs: 12, md: 4 }}>
-              <Paper
-                sx={{
-                  p: 2,
-                  bgcolor: h.netKar >= 0 ? '#D8EBDD' : '#F6DAD7',
-                  textAlign: 'center',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'center',
-                }}
-              >
-                <Typography variant="body2" color="text.secondary">
-                  Net Kâr
-                </Typography>
-                <Typography variant="h4" fontWeight="bold" sx={{ color: h.netKar >= 0 ? '#1D6A3B' : '#c62828' }}>
-                  {formatTL(h.netKar)} ₺
-                </Typography>
-              </Paper>
-            </Grid>
+            <SayiKutusu
+              etiket="Net Kâr"
+              deger={`${formatTL(h.netKar)} ₺`}
+              ton={h.netKar >= 0 ? 'yesil' : 'kirmizi'}
+              sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}
+            />
           )}
-        </Grid>
+        </Box>
 
         {/* Komisyon Detayları - Platform bazlı */}
-        <Typography variant="subtitle1" fontWeight="bold" color="#C62828" gutterBottom>
+        <BolumBasligi>
           Komisyon Hesaplama Detayları {detayPlatformTipi === 'hepsiburada' ? '(HepsiBurada)' : detayPlatformTipi === 'n11' ? '(N11)' : '(Trendyol)'}
-        </Typography>
-        <Paper sx={{ p: 2, bgcolor: '#F7E7C4', mb: 2, borderTop: '3px solid #8A5300' }}>
-          <Grid container spacing={2} textAlign="center">
-            {(() => {
-              let items = [];
-              if (detayPlatformTipi === 'hepsiburada') {
-                items = [
-                  { label: 'Komisyon', value: `${formatTL(h.komisyonTutari)} ₺` },
-                  { label: 'Yat. Geri Dönüş', value: `%${h.yatirimGeriDonus}` },
-                  { label: 'Ödeme Bedeli', value: `${formatTL(h.odemeBedeli)} ₺` },
-                  { label: 'İşlem Bedeli', value: `${formatTL(h.islemBedeli)} ₺` },
-                  { label: 'Stopaj', value: `${formatTL(h.stopaj)} ₺` },
-                  { label: 'Kâr Oranı', value: `%${h.karOrani}` },
-                  { label: 'KDV', value: `${formatTL(h.odenecekKDV)} ₺` },
-                ];
-              } else if (detayPlatformTipi === 'n11') {
-                items = [
-                  { label: 'Komisyon', value: `${formatTL(h.komisyonTutari)} ₺` },
-                  { label: 'Yat. Geri Dönüş', value: `%${h.yatirimGeriDonus}` },
-                  { label: 'S. Pazarlama ve Hizmet', value: `${formatTL(h.pazarlamaHizmet)} ₺` },
-                  { label: 'Stopaj', value: `${formatTL(h.stopaj)} ₺` },
-                  { label: 'Kâr Oranı', value: `%${h.karOrani}` },
-                  { label: 'KDV', value: `${formatTL(h.odenecekKDV)} ₺` },
-                ];
-              } else {
-                items = [
-                  { label: 'Komisyon (Toplam)', value: `${formatTL(h.toplamKomisyon)} ₺` },
-                  { label: 'Komisyon', value: `${formatTL(h.komisyonTutari)} ₺` },
-                  { label: 'Hizmet Bedeli', value: `${formatTL(h.hizmetBedeli)} ₺` },
-                  { label: 'Stopaj', value: `${formatTL(h.stopaj)} ₺` },
-                  { label: 'Kâr Oranı', value: `%${h.karOrani}` },
-                  { label: 'KDV', value: `${formatTL(h.odenecekKDV)} ₺` },
-                ];
-              }
-              return items
-                .filter((item) => karGor || !karEtiketi(item.label))
-                .map((item, i) => (
-                  <Grid size={{ xs: 4, md: 2 }} key={i}>
-                    <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
-                      {item.label}
-                    </Typography>
-                    <Typography variant="body1" fontWeight="bold">
-                      {item.value}
-                    </Typography>
-                  </Grid>
-                ));
-            })()}
-          </Grid>
-        </Paper>
+        </BolumBasligi>
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(6, 1fr)' }, gap: 1.5, mb: 3 }}>
+          {(() => {
+            let items = [];
+            if (detayPlatformTipi === 'hepsiburada') {
+              items = [
+                { label: 'Komisyon', value: `${formatTL(h.komisyonTutari)} ₺` },
+                { label: 'Yat. Geri Dönüş', value: `%${h.yatirimGeriDonus}` },
+                { label: 'Ödeme Bedeli', value: `${formatTL(h.odemeBedeli)} ₺` },
+                { label: 'İşlem Bedeli', value: `${formatTL(h.islemBedeli)} ₺` },
+                { label: 'Stopaj', value: `${formatTL(h.stopaj)} ₺` },
+                { label: 'Kâr Oranı', value: `%${h.karOrani}` },
+                { label: 'KDV', value: `${formatTL(h.odenecekKDV)} ₺` },
+              ];
+            } else if (detayPlatformTipi === 'n11') {
+              items = [
+                { label: 'Komisyon', value: `${formatTL(h.komisyonTutari)} ₺` },
+                { label: 'Yat. Geri Dönüş', value: `%${h.yatirimGeriDonus}` },
+                { label: 'S. Pazarlama ve Hizmet', value: `${formatTL(h.pazarlamaHizmet)} ₺` },
+                { label: 'Stopaj', value: `${formatTL(h.stopaj)} ₺` },
+                { label: 'Kâr Oranı', value: `%${h.karOrani}` },
+                { label: 'KDV', value: `${formatTL(h.odenecekKDV)} ₺` },
+              ];
+            } else {
+              items = [
+                { label: 'Komisyon (Toplam)', value: `${formatTL(h.toplamKomisyon)} ₺` },
+                { label: 'Komisyon', value: `${formatTL(h.komisyonTutari)} ₺` },
+                { label: 'Hizmet Bedeli', value: `${formatTL(h.hizmetBedeli)} ₺` },
+                { label: 'Stopaj', value: `${formatTL(h.stopaj)} ₺` },
+                { label: 'Kâr Oranı', value: `%${h.karOrani}` },
+                { label: 'KDV', value: `${formatTL(h.odenecekKDV)} ₺` },
+              ];
+            }
+            return items
+              .filter((item) => karGor || !karEtiketi(item.label))
+              .map((item, i) => <SayiKutusu key={i} etiket={item.label} deger={item.value} ton="turuncu" />);
+          })()}
+        </Box>
 
         {/* KDV Detayları - Platform bazlı */}
-        <Typography variant="subtitle1" fontWeight="bold" color="#C62828" gutterBottom>
-          KDV Detayları
-        </Typography>
-        <Paper sx={{ p: 2, bgcolor: '#FBFBF8', borderTop: '3px solid #C62828' }}>
-          <Grid container spacing={2} textAlign="center">
-            {(() => {
-              let kdvItems = [
-                { label: 'Satıştan Oluşan KDV', value: `${formatTL(h.satistanKDV)} ₺` },
-                { label: 'Alıştan Oluşan KDV', value: `${formatTL(h.alisKDV)} ₺` },
-                { label: 'Kargodan Oluşan KDV', value: `${formatTL(h.kargoKDV)} ₺` },
-                { label: 'Komisyondan Oluşan KDV', value: `${formatTL(h.komisyonKDV)} ₺` },
-              ];
-              if (detayPlatformTipi === 'hepsiburada') {
-                kdvItems.push({ label: 'Ödeme ve İşlem Bedeli KDV', value: `${formatTL(h.odemIslemKDV)} ₺` });
-              } else if (detayPlatformTipi === 'n11') {
-                kdvItems.push({ label: 'Pazarlama ve Hizmet KDV', value: `${formatTL(h.pazarlamaHizmetKDV)} ₺` });
-              } else {
-                kdvItems.push({ label: 'Hizmet Bedeli KDV', value: `${formatTL(h.hizmetKDV)} ₺` });
-              }
-              kdvItems.push({ label: 'Ödenecek KDV', value: `${formatTL(h.odenecekKDV)} ₺` });
-              return kdvItems.map((item, i) => (
-                <Grid size={{ xs: 4, md: 2 }} key={i}>
-                  <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
-                    {item.label}
-                  </Typography>
-                  <Typography variant="body1" fontWeight="bold">
-                    {item.value}
-                  </Typography>
-                </Grid>
-              ));
-            })()}
-          </Grid>
-        </Paper>
+        <BolumBasligi>KDV Detayları</BolumBasligi>
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(6, 1fr)' }, gap: 1.5 }}>
+          {(() => {
+            let kdvItems = [
+              { label: 'Satıştan Oluşan KDV', value: `${formatTL(h.satistanKDV)} ₺` },
+              { label: 'Alıştan Oluşan KDV', value: `${formatTL(h.alisKDV)} ₺` },
+              { label: 'Kargodan Oluşan KDV', value: `${formatTL(h.kargoKDV)} ₺` },
+              { label: 'Komisyondan Oluşan KDV', value: `${formatTL(h.komisyonKDV)} ₺` },
+            ];
+            if (detayPlatformTipi === 'hepsiburada') {
+              kdvItems.push({ label: 'Ödeme ve İşlem Bedeli KDV', value: `${formatTL(h.odemIslemKDV)} ₺` });
+            } else if (detayPlatformTipi === 'n11') {
+              kdvItems.push({ label: 'Pazarlama ve Hizmet KDV', value: `${formatTL(h.pazarlamaHizmetKDV)} ₺` });
+            } else {
+              kdvItems.push({ label: 'Hizmet Bedeli KDV', value: `${formatTL(h.hizmetKDV)} ₺` });
+            }
+            kdvItems.push({ label: 'Ödenecek KDV', value: `${formatTL(h.odenecekKDV)} ₺` });
+            return kdvItems.map((item, i) => <SayiKutusu key={i} etiket={item.label} deger={item.value} />);
+          })()}
+        </Box>
       </DialogContent>
       <DialogActions>
         <Button
@@ -185,7 +124,9 @@ const SatisDetayModal = ({ open, data, onClose, onDuzenle, isMobile, karGor }) =
         >
           Düzenle
         </Button>
-        <Button onClick={onClose}>Kapat</Button>
+        <Button variant="contained" onClick={onClose}>
+          Kapat
+        </Button>
       </DialogActions>
     </Dialog>
   );

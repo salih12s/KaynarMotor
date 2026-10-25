@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Button, Typography, Grid, Paper, CircularProgress } from '@mui/material';
+import { Alert, Box, Button, Typography, Grid, Paper, CircularProgress } from '@mui/material';
 import DragIcon from '@mui/icons-material/DragIndicator';
 import IlanKarti from './IlanKarti';
 
@@ -33,19 +33,20 @@ const IlanListesi = ({ liste, isAdmin, isMotor, onDuzenle }) => {
     </Paper>
   ) : (
     <>
-      <Paper variant="outlined" sx={{ p: 1.5, mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-        {!isAdmin && siraDegistirilebilir && <DragIcon color="action" />}
-        <Typography variant="body2" color="text.secondary" sx={{ flex: 1 }}>
-          {arsivGorunumu
-            ? 'Arşivdeki ilanlar sitede görünmez. Geri getirmek için "Yayına Al"a basın; ilan yayındaki listenin sonuna eklenir.'
-            : aramaVar
-              ? `${filtrelenmis.length} ilan bulundu. Yukarı/aşağı okları ve sürükleme, aramayı temizleyince açılır.`
-              : isAdmin
-                ? 'Kartın üstündeki sıra numarasını yazıp Değiştir düğmesine basın.'
-                : 'Kartları sürükleyerek anasayfadaki sırayı belirleyin. Telefonda ok tuşlarını kullanabilirsiniz.'}
-        </Typography>
-        {orderSaving && <CircularProgress size={18} />}
-      </Paper>
+      <Alert severity="info" icon={!isAdmin && siraDegistirilebilir ? <DragIcon /> : undefined} sx={{ mb: 2, alignItems: 'center' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Typography variant="body2" sx={{ flex: 1 }}>
+            {arsivGorunumu
+              ? 'Arşivdeki ilanlar sitede görünmez. Geri getirmek için "Yayına Al"a basın; ilan yayındaki listenin sonuna eklenir.'
+              : aramaVar
+                ? `${filtrelenmis.length} ilan bulundu. Yukarı/aşağı okları ve sürükleme, aramayı temizleyince açılır.`
+                : isAdmin
+                  ? 'Kartın üstündeki sıra numarasını yazıp Değiştir düğmesine basın.'
+                  : 'Kartları sürükleyerek anasayfadaki sırayı belirleyin. Telefonda ok tuşlarını kullanabilirsiniz.'}
+          </Typography>
+          {orderSaving && <CircularProgress size={18} />}
+        </Box>
+      </Alert>
       <Grid container spacing={2}>
         {filtrelenmis.map((u) => (
           <IlanKarti key={u.id} u={u} index={siraMap.get(u.id)} liste={liste} isAdmin={isAdmin} isMotor={isMotor} onDuzenle={onDuzenle} />

@@ -1,13 +1,17 @@
 import React from 'react';
-import { Typography, TextField, Grid, MenuItem } from '@mui/material';
+import PaymentsIcon from '@mui/icons-material/PaymentsOutlined';
+import TwoWheelerIcon from '@mui/icons-material/TwoWheelerOutlined';
+import { BolumBasligi } from '../../../../shared/ui';
+import { MENU_RENK, RENK } from '../../../../app/tokenlar';
+import { TextField, Grid, MenuItem } from '@mui/material';
 
 // Form: motor bilgileri (plaka, durum, tarih, fatura) ve fiyat bilgileri.
 const MotorFormBilgi = ({ f, setFormData, dialog, canAlis, canListe }) => {
   return (
     <>
-      <Typography variant="subtitle1" fontWeight="bold" sx={{ mt: 2, mb: 1 }}>
+      <BolumBasligi ikon={<TwoWheelerIcon />} renk={MENU_RENK.motor} sx={{ mt: 2 }}>
         Motor Bilgileri
-      </Typography>
+      </BolumBasligi>
       <Grid container spacing={2}>
         <Grid size={{ xs: 12, md: 4 }}>
           <TextField fullWidth label="Plaka" value={f.plaka} onChange={(e) => setFormData({ ...f, plaka: e.target.value.toUpperCase() })} required />
@@ -94,9 +98,9 @@ const MotorFormBilgi = ({ f, setFormData, dialog, canAlis, canListe }) => {
         </Grid>
       </Grid>
 
-      <Typography variant="subtitle1" fontWeight="bold" sx={{ mt: 3, mb: 1 }}>
+      <BolumBasligi ikon={<PaymentsIcon />} renk={RENK.mavi} sx={{ mt: 3 }}>
         Fiyat Bilgileri
-      </Typography>
+      </BolumBasligi>
       <Grid container spacing={2}>
         {canAlis && (
           <Grid size={{ xs: 12, md: 3 }}>

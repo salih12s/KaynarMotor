@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { IslemDugmesi } from '../../shared/ui';
+import { DialogBasligi, IslemDugmesi } from '../../shared/ui';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -19,10 +19,8 @@ import {
   MenuItem,
   useTheme,
   useMediaQuery,
-  IconButton,
   Tooltip,
   Dialog,
-  DialogTitle,
   DialogContent,
   DialogActions,
   Button,
@@ -35,7 +33,6 @@ import ShopIcon from '@mui/icons-material/ShoppingCartOutlined';
 import SettingsIcon from '@mui/icons-material/SettingsOutlined';
 import OpenIcon from '@mui/icons-material/OpenInNew';
 
-import CloseIcon from '@mui/icons-material/Close';
 import { veresiyeService } from './raporApi';
 import { sayiYaz, tarihYaz } from '../../shared/utils/bicim';
 import { FONT, RENK, TON } from '../../app/tokenlar';
@@ -267,18 +264,8 @@ const Veresiye = () => {
             const odenen = (parseFloat(b.toplam_tutar) || 0) - (parseFloat(b.kalan_odeme) || 0);
             return (
               <>
-                <DialogTitle sx={{ bgcolor: info.bg, color: info.color, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    {info.icon}
-                    <Typography variant="h6" fontWeight="bold">
-                      {info.label} Detayı
-                    </Typography>
-                  </Box>
-                  <IconButton size="small" onClick={() => setDetayModal({ open: false, borc: null })} sx={{ color: info.color }}>
-                    <CloseIcon />
-                  </IconButton>
-                </DialogTitle>
-                <DialogContent dividers>
+                <DialogBasligi ikon={info.icon} baslik={`${info.label} Detayı`} onKapat={() => setDetayModal({ open: false, borc: null })} />
+                <DialogContent>
                   {/* Müşteri ve genel */}
                   <Grid container spacing={1.5} sx={{ mb: 2 }}>
                     <Grid size={{ xs: 6, sm: 4 }}>

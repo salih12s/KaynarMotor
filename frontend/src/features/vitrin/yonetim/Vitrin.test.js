@@ -366,7 +366,7 @@ describe('Vitrin: yeni ilan formu', () => {
   test('doğrulamalar: başlık, motor için segment, geçersiz Rubik linki', async () => {
     const user = await ekranAc();
     const p = await yeniAc(user);
-    expect(within(p).getByText('Yeni İlan — Motor Satışı')).toBeInTheDocument();
+    expect(within(p).getByText('Yeni İlan: Motor Satışı')).toBeInTheDocument();
     await user.click(within(p).getByRole('button', { name: 'Kaydet' }));
     expect(await screen.findByText('Başlık zorunlu')).toBeInTheDocument();
     await user.type(alan('Başlık *'), 'Deneme');
@@ -499,7 +499,7 @@ describe('Vitrin: ilan düzenleme, görseller ve video', () => {
     const user = await ekranAc();
     const p = await duzenleAc(user);
     expect(vitrinService.getById).toHaveBeenCalledWith(1);
-    expect(within(p).getByText('İlanı Düzenle — Motor Satışı')).toBeInTheDocument();
+    expect(within(p).getByText('İlanı Düzenle: Motor Satışı')).toBeInTheDocument();
     expect(alan('Başlık *')).toHaveValue('NMAX Fırsat');
     expect(alan('Hasar Kaydı')).toHaveValue('Yok');
     expect(global.fetch.mock.calls.map((c) => c[0])).toEqual(['/g/11', '/g/12', '/g/13']);
@@ -582,7 +582,7 @@ describe('Vitrin: iletişim ve hizmet sayfası', () => {
     expect(screen.getByText(/Satış Ahmet/).textContent).toContain('Ayşe');
     await user.click(screen.getByRole('button', { name: 'Personel / Telefon' }));
     const p = await screen.findByRole('dialog');
-    expect(within(p).getByText('Motor Satışı — İletişim')).toBeInTheDocument();
+    expect(within(p).getByText('Motor Satışı: İletişim')).toBeInTheDocument();
     expect(within(p).getByLabelText('Personel Adı')).toHaveValue('Satış Ahmet');
     expect(within(p).getByLabelText('Not (opsiyonel)')).toHaveValue('Not 1');
     expect(within(p).queryByLabelText('Başlık')).not.toBeInTheDocument(); // başlık yalnız hizmet sayfalarında
@@ -612,7 +612,7 @@ describe('Vitrin: iletişim ve hizmet sayfası', () => {
     expect(screen.queryByRole('button', { name: 'İlan Ekle' })).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Hizmet Sayfasını Düzenle' }));
     const p = await screen.findByRole('dialog');
-    expect(within(p).getByText('Bakım / Servis — Hizmet Sayfası')).toBeInTheDocument();
+    expect(within(p).getByText('Bakım / Servis: Hizmet Sayfası')).toBeInTheDocument();
     expect(within(p).getByLabelText('Başlık')).toHaveValue('Bakım Atölyesi');
     expect(within(p).getByRole('button', { name: 'Görsel Yükle' })).toBeInTheDocument();
     await user.click(within(p).getByRole('button', { name: 'Kaydet' }));
