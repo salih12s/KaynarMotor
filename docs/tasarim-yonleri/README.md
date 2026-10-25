@@ -1,7 +1,8 @@
 # Tasarım yönleri (2026-10-25)
 
-Arayüzü yenilemek için hazırlanan iki yön. **Karar verilmedi, projenin koduna henüz hiçbir şey uygulanmadı.** C yönü elendi.
-Bu klasör git'e eklenmedi (yaklaşık 30 MB resim içerir). İstenirse ayrı bir dalda ya da Git LFS ile eklenebilir.
+Arayüzü yenilemek için hazırlanan iki yön. **Karar verildi: A "Servis Defteri" uygulandı ve canlıda (2026-10-25).** B ve C yönleri elendi;
+B'nin resimleri (`uretici/gorsel/b-*`) depo boyutunu küçültmek için kaldırıldı (git geçmişinde duruyor; B'yi yeniden çizmek için betikler `uretici/` altında hâlâ var).
+Aşağıdaki B bölümü ve "İleride birini uygulamak için" yalnızca tarihsel kayıttır.
 
 ## Nerede
 
