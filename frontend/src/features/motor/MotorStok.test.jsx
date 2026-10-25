@@ -16,17 +16,17 @@ import { bekleyenBelgeleriYukle } from './SatisBelgeleri';
 import { useAuth } from '../auth/AuthContext';
 import { useReactToPrint } from 'react-to-print';
 
-jest.mock('./motorApi', () => ({
-  ikinciElMotorService: { getAll: jest.fn(), getById: jest.fn(), create: jest.fn(), update: jest.fn(), delete: jest.fn() },
+vi.mock('./motorApi', () => ({
+  ikinciElMotorService: { getAll: vi.fn(), getById: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn() },
 }));
-jest.mock('../musteriler/musteriApi', () => ({ musteriService: { search: jest.fn() } }));
-jest.mock('../auth/authApi', () => ({ authService: { getYatirimcilar: jest.fn() } }));
-jest.mock('../auth/AuthContext', () => ({ useAuth: jest.fn() }));
-jest.mock('react-to-print', () => ({ useReactToPrint: jest.fn() }));
-jest.mock('./SatisBelgeleri', () => ({
+vi.mock('../musteriler/musteriApi', () => ({ musteriService: { search: vi.fn() } }));
+vi.mock('../auth/authApi', () => ({ authService: { getYatirimcilar: vi.fn() } }));
+vi.mock('../auth/AuthContext', () => ({ useAuth: vi.fn() }));
+vi.mock('react-to-print', () => ({ useReactToPrint: vi.fn() }));
+vi.mock('./SatisBelgeleri', () => ({
   BelgeBolumu: ({ motorId }) => <div>BELGE-BOLUMU-{motorId}</div>,
   BekleyenBelgeler: ({ dosyalar, setDosyalar }) => <button onClick={() => setDosyalar([{ name: 'ruhsat.pdf' }])}>BELGE-EKLE ({dosyalar.length})</button>,
-  bekleyenBelgeleriYukle: jest.fn(),
+  bekleyenBelgeleriYukle: vi.fn(),
 }));
 
 // ---- Sabit test verisi -------------------------------------------------------------------------------------------
@@ -127,7 +127,7 @@ const kur = ({ user = ADMIN, liste = HEPSI } = {}) => {
   musteriService.search.mockResolvedValue({ data: [{ id: 5, ad_soyad: 'Mehmet Aksoy', telefon: '0555', adres: 'Üsküdar' }] });
   authService.getYatirimcilar.mockResolvedValue({ data: [{ id: 9, ad_soyad: 'Yatırımcı Veli' }] });
   bekleyenBelgeleriYukle.mockResolvedValue([]);
-  yazdir = jest.fn();
+  yazdir = vi.fn();
   useReactToPrint.mockReturnValue(yazdir);
 };
 
@@ -155,12 +155,12 @@ const plakalar = () =>
     .map((r) => within(r).getAllByRole('cell')[0].textContent.replace(/\s/g, ''));
 
 beforeEach(() => {
-  jest.spyOn(window, 'alert').mockImplementation(() => {});
-  jest.spyOn(window, 'confirm').mockImplementation(() => true);
-  jest.spyOn(console, 'error').mockImplementation(() => {});
+  vi.spyOn(window, 'alert').mockImplementation(() => {});
+  vi.spyOn(window, 'confirm').mockImplementation(() => true);
+  vi.spyOn(console, 'error').mockImplementation(() => {});
 });
 afterEach(() => {
-  jest.restoreAllMocks();
+  vi.restoreAllMocks();
 });
 
 // ---- Rol matrisi -------------------------------------------------------------------------------------------------

@@ -1,13 +1,13 @@
 /*
  * Yetkilendirme sayfası testleri: reddedilen kullanıcılar listede görünmez (personel ve muhasebeci), sayfa kendi başlığını
- * tekrarlamaz (başlık üst çubukta, Layout'ta). Sunucu çağrısı sahtedir (jest.mock); süzme kuralı ekrandaki sonuçla sınanır.
+ * tekrarlamaz (başlık üst çubukta, Layout'ta). Sunucu çağrısı sahtedir (vi.mock); süzme kuralı ekrandaki sonuçla sınanır.
  */
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import Yetkilendirme from './Yetkilendirme';
 import { authService } from './authApi';
 
-jest.mock('./authApi', () => ({ authService: { getUsers: jest.fn(), setYetkiler: jest.fn() } }));
+vi.mock('./authApi', () => ({ authService: { getUsers: vi.fn(), setYetkiler: vi.fn() } }));
 
 const kisi = (id, ad, rol, onay) => ({ id, ad_soyad: ad, kullanici_adi: `k${id}`, rol, onay_durumu: onay });
 const KULLANICILAR = [

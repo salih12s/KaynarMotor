@@ -182,7 +182,7 @@ kim tarafından ne zaman yapıldığını kaydeden aktivite logu.
 
 | Katman | Teknolojiler |
 |---|---|
-| **Frontend** | React 19, React Router 7, Material UI 7, **TanStack Query 5** (sunucu verisi önbelleği), Axios, jsbarcode, qrcode, react-to-print; testler: Jest + Testing Library |
+| **Frontend** | React 19, React Router 7, Material UI 7, **TanStack Query 5** (sunucu verisi önbelleği), Axios, jsbarcode, qrcode, react-to-print; testler: Vitest + Testing Library |
 | **Backend** | Node.js (>=20), Express 4, **TypeScript (strict)**, **zod** (girdi doğrulama), JSON Web Token, bcryptjs, helmet, express-rate-limit; `tsx` ile çalışır, `esbuild` ile tek dosyaya paketlenir |
 | **Veritabanı** | MariaDB 11 — ORM kullanılmadan, `mysql2` ile doğrudan parametreli SQL (`$1` tarzı parametreleri MariaDB'ye çeviren ince katman: `backend/core/veritabani/`) |
 | **Test** | Birim (sahte veritabanıyla), API (gerçek MariaDB'ye karşı, kaynak ve paket), paket duman testi, frontend bileşen testleri, **Playwright E2E** (gerçek Chrome + gerçek backend + tek kullanımlık veritabanı) |
@@ -434,9 +434,9 @@ Her şey tek komutla yeniden üretilir (yerel MariaDB açık olmalı):
 cd backend
 set -a; . ./.env.mariadb.test; set +a     # test veritabanı: adı "_test" ile biten yerel bir veritabanı
 bash scripts/hepsiniDogrula.sh            # tsc (strict) + birim + API (kaynak) + API (paket)
-cd ../frontend && CI=true npx react-scripts test --watchAll=false --maxWorkers=2   # ~4-8 dk: bileşen testleri ağır (MUI + jsdom)
-npm run test:hizli                                                                  # ~26 sn: ağır bileşen testleri atlanır
-npm run lint                                                                        # ESLint
+cd ../frontend && npx vitest run --maxWorkers=2    # ~3 dk: bileşen testleri ağır (MUI + jsdom)
+npm run test:hizli                                  # ağır bileşen testleri atlanır
+npm run lint                                        # ESLint 9
 cd .. && npm run test:e2e                 # Playwright: sunucuları ve test veritabanını kendisi açar (~1,5 dk)
 npm run format:check                      # Prettier
 ```

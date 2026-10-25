@@ -169,6 +169,31 @@ Aşamada çıkan notlar (bir sonrakine taşınanlar):
 - Playwright web portu `E2E_WEB_PORT` ile değiştirilebilir (varsayılan 3100); `1-giris.spec.js` içinde sabit `3100` yazan bir URL denetimi porttan bağımsız yapıldı.
 - Vite `PORT` ortam değişkenini okumaz: port `vite.config.mjs` içinde (3100, `strictPort`).
 
+## Aşama 2 sonuçları (2026-10-25)
+
+| Ölçü | Jest (önce) | Vitest 5 (sonra) |
+|---|---|---|
+| Tam frontend testi (`--maxWorkers=2`) | 415 test, 344 sn | **415 test, 171 sn** (~2 kat hızlı) |
+| `npm run test:hizli` (ağır bileşen testleri hariç) | ~26 sn | **~12 sn** (176 test) |
+| Test adı listesi | 415 ad | **aynı 415 ad** (dosya + tam ad + durum, sıralanıp `diff` ile karşılaştırıldı) |
+| `react-scripts` | bağımlılık | **kaldırıldı** (CRA zinciri: Webpack, Babel, Jest 27, ESLint 8 de gitti) |
+| ESLint | CRA `react-app` (ESLint 8) | ESLint 9 düz yapılandırma (`eslint.config.mjs`), **0 hata, 11 uyarı** (aynı) |
+| E2E, paket duman testi | yeşil | yeşil (11/11; paket 6,64 MB) |
+
+Kanıt ve mutasyon (testler gerçekten bir şey denetliyor mu):
+- `tanimsizDegisken.test.js` yeni ESLint ayarına göre yeniden yazıldı; kasıtlı tanımsız değişken eklenince **kırmızı**, silince yeşil.
+- Komisyon: `kdvHaricSatis = satis / (1 + kdv / 10)` (100 yerine 10) -> `komisyon.test.js` 2 test **kırmızı**.
+- Kâr gizleme: `IstatistikSatiri` içinde `karGor ? ...` yerine `true ? ...` -> Aksesuarlar testlerinden 2 tanesi **kırmızı** ("kâr yetkisi yoksa kâr çipi ve Kâr sütunu görünmez", "personel kartında kâr yok"). Kodlar geri alındı, yeşil.
+- **Taksit: kanıtlanamadı.** Frontend'de taksit hesabı için ayrı birim testi yok (`TaksitHesaplama.jsx`, `TaksitGoruntule.jsx` testsiz). Bu bir boşluk: aşama 4.5'te (para hesabı olan dosyalar) hesap saf fonksiyona çıkarılıp önce testi yazılacak.
+
+Aşamada çıkan notlar:
+- Dönüşüm betikle yapıldı: `jest.fn/spyOn/mock/restoreAllMocks` -> `vi.*` (186 yer), `{ virtual: true }` kaldırıldı (Vitest `react-router-dom` v7'yi çözebilir, ama sahte kancalar sözleşme gereği korundu). `vi.hoisted` **gerekmedi**: fabrikalardaki `mockNavigate` gibi dış değişkenlere yalnızca çağrı anında (`() => mockNavigate`) erişiliyor.
+- JSX içeren 11 test dosyası `.test.jsx` oldu (`satisVeri` ve `isEmriYazdir` yalnızca HTML metni içerdiği için `.test.js` kaldı).
+- CRA'nın örtük `resetMocks: true` ayarı Vitest'te `mockReset: true` olarak açıkça yazıldı; `jest.setTimeout(60000)` -> `testTimeout/hookTimeout: 60000`.
+- `bicim.test.js`: Vitest'in `%p` başlık biçimi çalışmıyor (`%p` olduğu gibi yazılıyor, adlar aynı kalıyordu); girdiyi başlığa yazan küçük yardımcıyla Jest'teki adlar birebir korundu.
+- ESLint: `no-empty` boş `catch {}`'e izin verir (en iyi çaba işlemleri; CRA bu kuralı açmıyordu), `process` global tanımlı (aşama 3'te `import.meta.env`'e geçince kalkacak).
+- `eslint.config.mjs` ve `vite.config.mjs` `.mjs`: paket `"type": "module"` değil.
+
 ## Takvim (tahmini, oturum bazında)
 
 | Aşama | Emek | Canlıya çıkış |
@@ -188,7 +213,7 @@ Her canlıya çıkış ayrıca onaylanır (`CLAUDE.md` deploy kuralı). Geri dö
 |---|---|---|---|
 | 0 | **Bitti** | 2026-10-25 | `vite-ts` dalı, `scripts/tsOrani.cjs`, taban ölçüleri aşağıda |
 | 1 | **Kodda bitti, canlıya çıkmadı** | 2026-10-25 | Vite 8 dev+build, kod bölme, paket+duman yeşil, E2E 11/11; Jest sonucu ve ölçüler "Aşama 1 sonuçları" bölümünde |
-| 2 | Bekliyor | | |
+| 2 | **Kodda bitti, canlıya çıkmadı** | 2026-10-25 | Vitest 5, 415/415 aynı adlar, react-scripts yok, ESLint 9; mutasyon: komisyon ve kâr gizleme kırmızıya döndü, taksit testsiz (boşluk) |
 | 3 | Bekliyor | | |
 | 4 | Bekliyor | | |
 | 5 | Bekliyor | | |

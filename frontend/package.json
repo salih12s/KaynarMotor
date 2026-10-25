@@ -14,51 +14,30 @@
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "react-router-dom": "^7.11.0",
-    "react-scripts": "5.0.1",
     "react-to-print": "^3.2.0"
   },
   "scripts": {
     "start": "vite",
     "build": "vite build",
-    "test": "react-scripts test",
-    "test:hizli": "react-scripts test --watchAll=false --testPathIgnorePatterns Raporlar.test IsEmirleri.test Vitrin.test MotorStok.test IkinciElMotor.test Storefront.test ETicaret.test Aksesuarlar.test",
-    "lint": "eslint src --ext .js,.jsx",
-    "preview": "vite preview --port 3100"
-  },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
+    "test": "vitest run",
+    "test:hizli": "vitest run --exclude \"**/{Raporlar,IsEmirleri,Vitrin,MotorStok,IkinciElMotor,Storefront,ETicaret,Aksesuarlar}.test.jsx\"",
+    "lint": "eslint src",
+    "preview": "vite preview --port 3100",
+    "test:izle": "vitest"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.5",
     "@testing-library/dom": "^10.4.2",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.3",
     "@testing-library/user-event": "^14.6.8",
     "@vitejs/plugin-react": "^6.1.2",
-    "vite": "^8.3.5"
-  },
-  "eslintConfig": {
-    "extends": [
-      "react-app"
-    ],
-    "overrides": [
-      {
-        "files": [
-          "**/*.test.js",
-          "src/setupTests.js"
-        ],
-        "env": {
-          "jest": true
-        }
-      }
-    ]
+    "eslint": "^9.39.5",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.13.0",
+    "jsdom": "^29.1.1",
+    "vite": "^8.3.5",
+    "vitest": "^5.0.5"
   }
 }

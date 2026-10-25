@@ -16,22 +16,22 @@ import { useAuth } from '../auth/AuthContext';
 import { useReactToPrint } from 'react-to-print';
 import { plakaBicim } from '../../shared/ui';
 
-jest.mock('./motorApi', () => ({
-  ikinciElMotorService: { getAll: jest.fn(), getStats: jest.fn(), getById: jest.fn(), create: jest.fn(), update: jest.fn(), delete: jest.fn() },
+vi.mock('./motorApi', () => ({
+  ikinciElMotorService: { getAll: vi.fn(), getStats: vi.fn(), getById: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn() },
 }));
-jest.mock('../musteriler/musteriApi', () => ({ musteriService: { search: jest.fn(), searchByPhone: jest.fn() } }));
-jest.mock('../auth/authApi', () => ({ authService: { getYatirimcilar: jest.fn() } }));
-jest.mock('../auth/AuthContext', () => ({ useAuth: jest.fn() }));
-jest.mock('react-to-print', () => ({ useReactToPrint: jest.fn() }));
-jest.mock('./SatisBelgeleri', () => ({
+vi.mock('../musteriler/musteriApi', () => ({ musteriService: { search: vi.fn(), searchByPhone: vi.fn() } }));
+vi.mock('../auth/authApi', () => ({ authService: { getYatirimcilar: vi.fn() } }));
+vi.mock('../auth/AuthContext', () => ({ useAuth: vi.fn() }));
+vi.mock('react-to-print', () => ({ useReactToPrint: vi.fn() }));
+vi.mock('./SatisBelgeleri', () => ({
   BelgeBolumu: ({ motorId }) => <div>BELGE-BOLUMU-{motorId}</div>,
   BekleyenBelgeler: ({ dosyalar, setDosyalar }) => <button onClick={() => setDosyalar([{ name: 'ruhsat.pdf' }])}>BELGE-EKLE ({dosyalar.length})</button>,
-  bekleyenBelgeleriYukle: jest.fn(),
+  bekleyenBelgeleriYukle: vi.fn(),
 }));
-// react-router-dom v7'nin "exports" alanını CRA'nın Jest 27'si okuyamaz: yönlendirme kancaları sahte
+// Yönlendirme kancaları sahte (Jest 27 zamanında react-router-dom v7'nin "exports" alanı okunamadığı için eklendi; sözleşme aynı kalsın diye korundu)
 let mockLocation = { pathname: '/ikinci-el-motor', state: null };
-const mockNavigate = jest.fn();
-jest.mock('react-router-dom', () => ({ useNavigate: () => mockNavigate, useLocation: () => mockLocation }), { virtual: true });
+const mockNavigate = vi.fn();
+vi.mock('react-router-dom', () => ({ useNavigate: () => mockNavigate, useLocation: () => mockLocation }));
 
 // ---- Sabit test verisi -------------------------------------------------------------------------------------------
 const S1 = {
@@ -122,7 +122,7 @@ const kur = ({ user = ADMIN, liste = HEPSI } = {}) => {
   musteriService.searchByPhone.mockResolvedValue({ data: null });
   authService.getYatirimcilar.mockResolvedValue({ data: [{ id: 9, ad_soyad: 'Yatırımcı Veli' }] });
   bekleyenBelgeleriYukle.mockResolvedValue([]);
-  yazdir = jest.fn();
+  yazdir = vi.fn();
   useReactToPrint.mockReturnValue(yazdir);
 };
 
@@ -153,12 +153,12 @@ const bekleDialogKapanana = () => waitFor(() => expect(screen.queryByRole('dialo
 
 beforeEach(() => {
   mockLocation = { pathname: '/ikinci-el-motor', state: null };
-  jest.spyOn(window, 'alert').mockImplementation(() => {});
-  jest.spyOn(window, 'confirm').mockImplementation(() => true);
-  jest.spyOn(console, 'error').mockImplementation(() => {});
+  vi.spyOn(window, 'alert').mockImplementation(() => {});
+  vi.spyOn(window, 'confirm').mockImplementation(() => true);
+  vi.spyOn(console, 'error').mockImplementation(() => {});
 });
 afterEach(() => {
-  jest.restoreAllMocks();
+  vi.restoreAllMocks();
 });
 
 // ---- Rol matrisi ve liste ----------------------------------------------------------------------------------------
@@ -286,12 +286,12 @@ describe('İkinci El Motor: Excel dışa aktarma', () => {
   const aktar = async (user) => {
     let blob;
     let dosyaAdi;
-    global.URL.createObjectURL = jest.fn((b) => {
+    global.URL.createObjectURL = vi.fn((b) => {
       blob = b;
       return 'blob:x';
     });
-    global.URL.revokeObjectURL = jest.fn();
-    jest.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function () {
+    global.URL.revokeObjectURL = vi.fn();
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function () {
       dosyaAdi = this.download;
     });
     await user.click(screen.getByRole('button', { name: "Excel'e Aktar" }));

@@ -12,21 +12,21 @@ import { aksesuarStokService } from '../aksesuar/aksesuarApi';
 import { useAuth } from '../auth/AuthContext';
 import { hesaplaKomisyon, detectPlatform } from './komisyon';
 
-jest.mock('./eticaretApi', () => ({
+vi.mock('./eticaretApi', () => ({
   eticaretService: {
-    getSales: jest.fn(),
-    getPlatforms: jest.fn(),
-    getStats: jest.fn(),
-    createSale: jest.fn(),
-    updateSale: jest.fn(),
-    deleteSale: jest.fn(),
-    createPlatform: jest.fn(),
-    updatePlatform: jest.fn(),
-    deletePlatform: jest.fn(),
+    getSales: vi.fn(),
+    getPlatforms: vi.fn(),
+    getStats: vi.fn(),
+    createSale: vi.fn(),
+    updateSale: vi.fn(),
+    deleteSale: vi.fn(),
+    createPlatform: vi.fn(),
+    updatePlatform: vi.fn(),
+    deletePlatform: vi.fn(),
   },
 }));
-jest.mock('../aksesuar/aksesuarApi', () => ({ aksesuarStokService: { getAll: jest.fn() } }));
-jest.mock('../auth/AuthContext', () => ({ useAuth: jest.fn() }));
+vi.mock('../aksesuar/aksesuarApi', () => ({ aksesuarStokService: { getAll: vi.fn() } }));
+vi.mock('../auth/AuthContext', () => ({ useAuth: vi.fn() }));
 
 // ---- Sabit test verisi -------------------------------------------------------------------------------------------
 const P1 = { id: 1, platform_adi: 'Trendyol', komisyon_orani: 15, kdv_orani: 20, kargo_ucreti: 50 };
@@ -126,12 +126,12 @@ const sec = async (user, kapsam, etiket, secenek) => {
 };
 
 beforeEach(() => {
-  jest.spyOn(window, 'alert').mockImplementation(() => {});
-  jest.spyOn(window, 'confirm').mockImplementation(() => true);
-  jest.spyOn(console, 'error').mockImplementation(() => {});
+  vi.spyOn(window, 'alert').mockImplementation(() => {});
+  vi.spyOn(window, 'confirm').mockImplementation(() => true);
+  vi.spyOn(console, 'error').mockImplementation(() => {});
 });
 afterEach(() => {
-  jest.restoreAllMocks();
+  vi.restoreAllMocks();
 });
 
 // ---- Liste ve roller ---------------------------------------------------------------------------------------------

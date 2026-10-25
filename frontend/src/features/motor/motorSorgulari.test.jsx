@@ -11,9 +11,9 @@ import { useSatisListesi } from './ikinciElMotor/useSatisListesi';
 import { ikinciElMotorService } from './motorApi';
 import { authService } from '../auth/authApi';
 
-jest.mock('./motorApi', () => ({ ikinciElMotorService: { getAll: jest.fn(), getStats: jest.fn(), getById: jest.fn(), delete: jest.fn() } }));
-jest.mock('../auth/authApi', () => ({ authService: { getYatirimcilar: jest.fn() } }));
-jest.mock('react-router-dom', () => ({ useLocation: () => ({ pathname: '/ikinci-el-motor', state: null }), useNavigate: () => jest.fn() }), { virtual: true });
+vi.mock('./motorApi', () => ({ ikinciElMotorService: { getAll: vi.fn(), getStats: vi.fn(), getById: vi.fn(), delete: vi.fn() } }));
+vi.mock('../auth/authApi', () => ({ authService: { getYatirimcilar: vi.fn() } }));
+vi.mock('react-router-dom', () => ({ useLocation: () => ({ pathname: '/ikinci-el-motor', state: null }), useNavigate: () => vi.fn() }));
 
 const STOKTA = { id: 1, plaka: '34AAA111', durum: 'stokta' };
 const SATILDI = { id: 2, plaka: '06BBB222', durum: 'tamamlandi', yatirimci_id: 9 };
@@ -27,7 +27,7 @@ beforeEach(() => {
   ikinciElMotorService.getStats.mockResolvedValue({ data: { toplam_satis: 1 } });
   ikinciElMotorService.delete.mockResolvedValue({ data: {} });
   authService.getYatirimcilar.mockResolvedValue({ data: [{ id: 9, ad_soyad: 'Yatırımcı Veli' }] });
-  window.confirm = jest.fn(() => true);
+  window.confirm = vi.fn(() => true);
 });
 
 test('Motor Stok açıldıktan sonra satış ekranı listeyi ve yatırımcı adlarını beklemeden önbellekten gösterir', async () => {

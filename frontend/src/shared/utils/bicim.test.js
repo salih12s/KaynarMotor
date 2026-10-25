@@ -7,9 +7,14 @@ import { sayiYaz, paraYaz, tarihYaz } from './bicim';
 const SAYI_GIRDILERI = [0, 5, 1234, 1234.5, 1234.5678, 0.1, -1500.25, '1234.5', '99', '', null, undefined, NaN, 'abc', 1e9, 0.0004];
 const TARIH_GIRDILERI = ['2026-10-16', '2026-10-16T21:30:00.000Z', '2026-01-05T00:00:00', new Date(2026, 11, 31, 23, 59), '', null, undefined, 'bozuk-tarih'];
 
+// Test başlığında girdiyi gösterir (metin tırnaklı, tarih ISO): "99" ile 99 ayrı görünür. Vitest'in %p biçimi bunu yapmıyor.
+const girdiAdi = (v) => (typeof v === 'string' ? JSON.stringify(v) : v instanceof Date ? v.toISOString() : String(v));
+
 describe('sayiYaz (eski: parseFloat(v || 0).toLocaleString("tr-TR"))', () => {
-  test.each(SAYI_GIRDILERI)('%p eski ifadeyle aynı', (v) => {
-    expect(sayiYaz(v)).toBe(parseFloat(v || 0).toLocaleString('tr-TR'));
+  SAYI_GIRDILERI.forEach((v) => {
+    test(`${girdiAdi(v)} eski ifadeyle aynı`, () => {
+      expect(sayiYaz(v)).toBe(parseFloat(v || 0).toLocaleString('tr-TR'));
+    });
   });
 
   test('binlik ayraç nokta, ondalık virgül; en çok 3 ondalık', () => {
@@ -25,8 +30,10 @@ describe('sayiYaz (eski: parseFloat(v || 0).toLocaleString("tr-TR"))', () => {
 });
 
 describe('paraYaz (eski: minimumFractionDigits: 2)', () => {
-  test.each(SAYI_GIRDILERI)('%p eski ifadeyle aynı', (v) => {
-    expect(paraYaz(v)).toBe(parseFloat(v || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 }));
+  SAYI_GIRDILERI.forEach((v) => {
+    test(`${girdiAdi(v)} eski ifadeyle aynı`, () => {
+      expect(paraYaz(v)).toBe(parseFloat(v || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 }));
+    });
   });
 
   test('her zaman en az iki ondalık', () => {
@@ -36,14 +43,18 @@ describe('paraYaz (eski: minimumFractionDigits: 2)', () => {
 });
 
 describe('sayiYaz, minimumFractionDigits: 0 yazan eski çağrılarla da aynı', () => {
-  test.each(SAYI_GIRDILERI)('%p eski ifadeyle aynı', (v) => {
-    expect(sayiYaz(v)).toBe(parseFloat(v || 0).toLocaleString('tr-TR', { minimumFractionDigits: 0 }));
+  SAYI_GIRDILERI.forEach((v) => {
+    test(`${girdiAdi(v)} eski ifadeyle aynı`, () => {
+      expect(sayiYaz(v)).toBe(parseFloat(v || 0).toLocaleString('tr-TR', { minimumFractionDigits: 0 }));
+    });
   });
 });
 
 describe('tarihYaz (eski: d ? new Date(d).toLocaleDateString("tr-TR") : "-")', () => {
-  test.each(TARIH_GIRDILERI)('%p eski ifadeyle aynı', (d) => {
-    expect(tarihYaz(d)).toBe(d ? new Date(d).toLocaleDateString('tr-TR') : '-');
+  TARIH_GIRDILERI.forEach((d) => {
+    test(`${girdiAdi(d)} eski ifadeyle aynı`, () => {
+      expect(tarihYaz(d)).toBe(d ? new Date(d).toLocaleDateString('tr-TR') : '-');
+    });
   });
 
   test('boşken ikinci parametre görünecek metni belirler (Excel için boş metin)', () => {

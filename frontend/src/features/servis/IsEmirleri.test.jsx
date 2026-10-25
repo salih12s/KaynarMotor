@@ -16,20 +16,20 @@ import { yedekParcaStokService } from '../yedek-parca/yedekParcaApi';
 import { useAuth, useKarGor } from '../auth/AuthContext';
 import QRCode from 'qrcode';
 
-jest.mock('./servisApi', () => ({
-  isEmriService: { getAll: jest.fn(), getById: jest.fn(), create: jest.fn(), update: jest.fn(), delete: jest.fn() },
-  servisGecmisiService: { getQrToken: jest.fn() },
+vi.mock('./servisApi', () => ({
+  isEmriService: { getAll: vi.fn(), getById: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn() },
+  servisGecmisiService: { getQrToken: vi.fn() },
 }));
-jest.mock('../musteriler/musteriApi', () => ({ musteriService: { search: jest.fn(), searchByPhone: jest.fn() } }));
-jest.mock('../auth/authApi', () => ({ authService: { getPersonelListesi: jest.fn() } }));
-jest.mock('../aksesuar/aksesuarApi', () => ({ aksesuarStokService: { search: jest.fn(), getByBarkod: jest.fn() } }));
-jest.mock('../yedek-parca/yedekParcaApi', () => ({ yedekParcaStokService: { search: jest.fn(), getByBarkod: jest.fn() } }));
-jest.mock('../auth/AuthContext', () => ({ useAuth: jest.fn(), useKarGor: jest.fn() }));
-// react-router-dom v7'nin "exports" alanını CRA'nın Jest 27'si okuyamaz: yönlendirme kancaları sahte
+vi.mock('../musteriler/musteriApi', () => ({ musteriService: { search: vi.fn(), searchByPhone: vi.fn() } }));
+vi.mock('../auth/authApi', () => ({ authService: { getPersonelListesi: vi.fn() } }));
+vi.mock('../aksesuar/aksesuarApi', () => ({ aksesuarStokService: { search: vi.fn(), getByBarkod: vi.fn() } }));
+vi.mock('../yedek-parca/yedekParcaApi', () => ({ yedekParcaStokService: { search: vi.fn(), getByBarkod: vi.fn() } }));
+vi.mock('../auth/AuthContext', () => ({ useAuth: vi.fn(), useKarGor: vi.fn() }));
+// Yönlendirme kancaları sahte (Jest 27 zamanında react-router-dom v7'nin "exports" alanı okunamadığı için eklendi; sözleşme aynı kalsın diye korundu)
 let mockLocation = { pathname: '/is-emirleri', state: null };
-const mockNavigate = jest.fn();
-jest.mock('react-router-dom', () => ({ useNavigate: () => mockNavigate, useLocation: () => mockLocation }), { virtual: true });
-jest.mock('qrcode', () => ({ __esModule: true, default: { toDataURL: jest.fn() } }));
+const mockNavigate = vi.fn();
+vi.mock('react-router-dom', () => ({ useNavigate: () => mockNavigate, useLocation: () => mockLocation }));
+vi.mock('qrcode', () => ({ __esModule: true, default: { toDataURL: vi.fn() } }));
 
 // ---- Sabit test verisi -------------------------------------------------------------------------------------------
 const BUGUN = new Date().toISOString();
@@ -147,14 +147,14 @@ const bekleDialogKapanana = () => waitFor(() => expect(screen.queryByRole('dialo
 
 beforeEach(() => {
   mockLocation = { pathname: '/is-emirleri', state: null };
-  win = { document: { write: jest.fn(), close: jest.fn() }, focus: jest.fn(), print: jest.fn() };
-  jest.spyOn(window, 'open').mockImplementation(() => win);
-  jest.spyOn(window, 'alert').mockImplementation(() => {});
-  jest.spyOn(window, 'confirm').mockImplementation(() => true);
-  jest.spyOn(console, 'error').mockImplementation(() => {});
+  win = { document: { write: vi.fn(), close: vi.fn() }, focus: vi.fn(), print: vi.fn() };
+  vi.spyOn(window, 'open').mockImplementation(() => win);
+  vi.spyOn(window, 'alert').mockImplementation(() => {});
+  vi.spyOn(window, 'confirm').mockImplementation(() => true);
+  vi.spyOn(console, 'error').mockImplementation(() => {});
 });
 afterEach(() => {
-  jest.restoreAllMocks();
+  vi.restoreAllMocks();
 });
 
 // ---- Liste ve istatistik -----------------------------------------------------------------------------------------

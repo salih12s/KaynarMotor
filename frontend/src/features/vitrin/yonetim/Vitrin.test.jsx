@@ -12,28 +12,28 @@ import { ikinciElMotorService } from '../../motor/motorApi';
 import { aksesuarStokService } from '../../aksesuar/aksesuarApi';
 import { useAuth } from '../../auth/AuthContext';
 
-jest.mock('../vitrinApi', () => ({
+vi.mock('../vitrinApi', () => ({
   vitrinService: {
-    getAllAdmin: jest.fn(),
-    getIletisim: jest.fn(),
-    getSegmentler: jest.fn(),
-    getYuklemeSiniri: jest.fn(),
-    getById: jest.fn(),
-    create: jest.fn(),
-    update: jest.fn(),
-    delete: jest.fn(),
-    reorder: jest.fn(),
-    setPublished: jest.fn(),
-    moveToPosition: jest.fn(),
-    updateIletisim: jest.fn(),
-    gorselUrl: jest.fn(),
-    iletisimGorselUrl: jest.fn(),
+    getAllAdmin: vi.fn(),
+    getIletisim: vi.fn(),
+    getSegmentler: vi.fn(),
+    getYuklemeSiniri: vi.fn(),
+    getById: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
+    reorder: vi.fn(),
+    setPublished: vi.fn(),
+    moveToPosition: vi.fn(),
+    updateIletisim: vi.fn(),
+    gorselUrl: vi.fn(),
+    iletisimGorselUrl: vi.fn(),
   },
 }));
-jest.mock('../../motor/motorApi', () => ({ ikinciElMotorService: { getAll: jest.fn() } }));
-jest.mock('../../aksesuar/aksesuarApi', () => ({ aksesuarStokService: { getAll: jest.fn() } }));
-jest.mock('../../auth/AuthContext', () => ({ useAuth: jest.fn() }));
-jest.mock('../../motor/SatisBelgeleri', () => ({ BelgeBolumu: ({ motorId }) => <div>BELGE-BOLUMU-{motorId}</div> }));
+vi.mock('../../motor/motorApi', () => ({ ikinciElMotorService: { getAll: vi.fn() } }));
+vi.mock('../../aksesuar/aksesuarApi', () => ({ aksesuarStokService: { getAll: vi.fn() } }));
+vi.mock('../../auth/AuthContext', () => ({ useAuth: vi.fn() }));
+vi.mock('../../motor/SatisBelgeleri', () => ({ BelgeBolumu: ({ motorId }) => <div>BELGE-BOLUMU-{motorId}</div> }));
 
 // ---- Sabit test verisi -------------------------------------------------------------------------------------------
 const U1 = {
@@ -112,7 +112,7 @@ const kur = ({ rol = 'admin', user = {}, liste = {} } = {}) => {
   vitrinService.iletisimGorselUrl.mockImplementation((k) => `/ig/${k}`);
   ikinciElMotorService.getAll.mockResolvedValue({ data: STOK_MOTORLAR });
   aksesuarStokService.getAll.mockResolvedValue({ data: STOK_AKSESUAR });
-  global.fetch = jest.fn(async () => ({ blob: async () => new Blob(['x'], { type: 'image/jpeg' }) }));
+  global.fetch = vi.fn(async () => ({ blob: async () => new Blob(['x'], { type: 'image/jpeg' }) }));
 };
 
 const ekranAc = async (secenek = {}) => {
@@ -130,11 +130,11 @@ const bekleDialogKapanana = () => waitFor(() => expect(screen.queryByRole('dialo
 const yaziVar = (metin) => expect(screen.getByText(metin)).toBeInTheDocument();
 
 beforeEach(() => {
-  jest.spyOn(window, 'confirm').mockImplementation(() => true);
-  jest.spyOn(console, 'error').mockImplementation(() => {});
+  vi.spyOn(window, 'confirm').mockImplementation(() => true);
+  vi.spyOn(console, 'error').mockImplementation(() => {});
 });
 afterEach(() => {
-  jest.restoreAllMocks();
+  vi.restoreAllMocks();
 });
 
 // ---- Sekmeler ve roller ------------------------------------------------------------------------------------------

@@ -10,7 +10,7 @@ açıktır: gerçek müşteri verisi, parola, token ve kullanıcı adı **commit
   service express bilmez (hata `IstemciHatasi` sınıflarıyla), denetim günlüğü controller'da, saf kurallar `*.gorunum.ts` / `*.hesap.ts`.
   Klasörler: `core/{veritabani,dogrulama,http,gunluk,onbellek,middleware}`, `shared/`, `modules/<alan>/<özellik>/`.
   **Ayrıntı ve "yeni özellik ekleme" adımları: `docs/TS-GECISI.md`.**
-- `frontend/`: **Vite 8** (derleme + `npm start`, port 3100, `vite.config.mjs`; testler hâlâ Jest/`react-scripts test`, Vitest'e geçiş aşama 2) + React + MUI (JS), rota bazlı `React.lazy` kod bölme; geçiş planı `docs/VITE-TS-YOL-HARITASI.md`. `src/features/<alan>/`. Bölme sürüyor (bkz. `docs/FRONTEND-BOLME-RAPORU.md`): **büyük dosyaların hepsi bölündü** (Raporlar, IsEmirleri, Vitrin, MotorStok, IkinciElMotor, Storefront, ETicaret, Aksesuarlar)
+- `frontend/`: **Vite 8** (derleme + `npm start`, port 3100, `vite.config.mjs`; testler **Vitest** + jsdom, `npm test`; ESLint 9 düz yapılandırma `eslint.config.mjs`; TypeScript'e geçiş aşama 3-4) + React + MUI (JS), rota bazlı `React.lazy` kod bölme; geçiş planı `docs/VITE-TS-YOL-HARITASI.md`. `src/features/<alan>/`. Bölme sürüyor (bkz. `docs/FRONTEND-BOLME-RAPORU.md`): **büyük dosyaların hepsi bölündü** (Raporlar, IsEmirleri, Vitrin, MotorStok, IkinciElMotor, Storefront, ETicaret, Aksesuarlar)
 - Roller: admin, personel (modül yetkileri), yatırımcı, muhasebeci. **Kâr yalnızca admin görür.** Alan düzeyinde görünürlük:
   `backend/modules/motor/ikinciElMotor/ikinciElMotor.gorunum.ts` + `core/middleware/yetki.ts` (`kariGizle`).
   **İstisna (2026-10-22): e-ticaret kârı, `eticaret_yetkisi` olan herkese açıktır** (`/api/eticaret` `kariGizle` dışında; arayüzde `karGor`).
@@ -46,7 +46,7 @@ Doğrulama: 415 frontend testi, backend tsc + 248 birim + 203 API (kaynak/paket)
 ode_modules\@hostinger\mcp\src\servers\<ad>.js` ile çalışmalı (npx @latest "Connection closed" verir); uzantı geri yazarsa yeniden düzelt (yedek: `~/.claude.json.yedek-hostinger`). Deploy: `hosting_deploy` + `hosting_get-deployment` (execute ile).
 `typescript` dalı (= `main`, GitHub'da) **canlıda**: kaynarmotor.com.tr 2026-10-25'te bu daldan yayına alındı (Hostinger build 01a17083; önceki yayın 21 Ekim).
 Doğrulama: tsc temiz, 248 birim, 203 API (kaynak ve paket), 406 frontend, 13 E2E (Playwright, `npm run test:e2e`). Tam frontend koşusu için
-`--maxWorkers=2` kullan (yavaş makinede 60 sn zaman aşımı flaky üretir); geliştirirken `cd frontend && npm run test:hizli` (~26 sn).
+`--maxWorkers=2` kullan (yavaş makinede 60 sn zaman aşımı flaky üretir); geliştirirken `cd frontend && npm run test:hizli` (~12 sn).
 **Deploy (her seferinde kullanıcı onayı):** `npm run package:hostinger` → `cd backend && node --test tests/smoke/paket.smoke.test.js` → Hostinger MCP
 `hosting_deploy` (domain kaynarmotor.com.tr, path = deploy/hostinger/kaynarmotor-hostinger.zip, type nodejs, appType nest, nodeVersion 24,
 outputDirectory dist, buildScript build, entryFile main.cjs) → `hosting_get-deployment` ile bekle → `/api/health`, `/api/health/database`, anonim

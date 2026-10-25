@@ -10,20 +10,20 @@ import Storefront from './Storefront';
 import { vitrinService } from '../vitrinApi';
 import { hesaplaTaksit, fmtTL } from '../../taksit/TaksitHesaplama';
 
-jest.mock('../vitrinApi', () => ({
+vi.mock('../vitrinApi', () => ({
   vitrinService: {
-    getAll: jest.fn(),
-    getIletisim: jest.fn(),
-    getSegmentler: jest.fn(),
-    getMarkalar: jest.fn(),
-    gorselUrl: jest.fn(),
-    iletisimGorselUrl: jest.fn(),
+    getAll: vi.fn(),
+    getIletisim: vi.fn(),
+    getSegmentler: vi.fn(),
+    getMarkalar: vi.fn(),
+    gorselUrl: vi.fn(),
+    iletisimGorselUrl: vi.fn(),
   },
 }));
-// react-router-dom v7'nin "exports" alanını CRA'nın Jest 27'si okuyamaz: yönlendirme kancaları sahte
+// Yönlendirme kancaları sahte (Jest 27 zamanında react-router-dom v7'nin "exports" alanı okunamadığı için eklendi; sözleşme aynı kalsın diye korundu)
 let mockLocation = { pathname: '/', state: null };
-const mockNavigate = jest.fn();
-jest.mock('react-router-dom', () => ({ useNavigate: () => mockNavigate, useLocation: () => mockLocation }), { virtual: true });
+const mockNavigate = vi.fn();
+vi.mock('react-router-dom', () => ({ useNavigate: () => mockNavigate, useLocation: () => mockLocation }));
 
 // ---- Sabit test verisi -------------------------------------------------------------------------------------------
 const V1 = {
@@ -110,7 +110,7 @@ const motorListesineGir = async (user, durum = 'İkinci el motorlar') => {
 const sonCagri = () => vitrinService.getAll.mock.calls[vitrinService.getAll.mock.calls.length - 1][0];
 
 beforeEach(() => {
-  window.scrollTo = jest.fn();
+  window.scrollTo = vi.fn();
   window.matchMedia = (q) => ({
     matches: false,
     media: q,
@@ -121,11 +121,11 @@ beforeEach(() => {
     removeListener() {},
     dispatchEvent: () => false,
   });
-  jest.spyOn(console, 'error').mockImplementation(() => {});
+  vi.spyOn(console, 'error').mockImplementation(() => {});
 });
 afterEach(() => {
   delete window.matchMedia;
-  jest.restoreAllMocks();
+  vi.restoreAllMocks();
 });
 
 // ---- Giriş ekranı ------------------------------------------------------------------------------------------------
@@ -336,7 +336,7 @@ describe('Storefront: mobil görünüm', () => {
       removeListener() {},
       dispatchEvent: () => false,
     });
-    HTMLMediaElement.prototype.pause = jest.fn();
+    HTMLMediaElement.prototype.pause = vi.fn();
   });
 
   test('hamburger menü kategorileri ve taksit hesaplamayı listeler; seçim menüyü kapatır', async () => {

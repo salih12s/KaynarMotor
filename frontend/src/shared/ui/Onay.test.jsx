@@ -72,7 +72,7 @@ describe('Onay penceresi (silme onayı)', () => {
 
   it('sağlayıcı yoksa tarayıcının window.confirm kutusuna düşer', async () => {
     const user = userEvent.setup();
-    const confirm = jest.spyOn(window, 'confirm').mockReturnValue(true);
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true);
     render(<Deneme mesaj="Emin misin?" />);
     await user.click(screen.getByRole('button', { name: 'Sil dene' }));
     await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('silindi'));

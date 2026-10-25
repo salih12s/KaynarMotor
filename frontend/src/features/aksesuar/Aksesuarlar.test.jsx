@@ -11,16 +11,16 @@ import { aksesuarService, aksesuarStokService } from './aksesuarApi';
 import { musteriService } from '../musteriler/musteriApi';
 import { useKarGor } from '../auth/AuthContext';
 
-jest.mock('./aksesuarApi', () => ({
-  aksesuarService: { getAll: jest.fn(), getStats: jest.fn(), getById: jest.fn(), create: jest.fn(), update: jest.fn(), delete: jest.fn() },
-  aksesuarStokService: { getAll: jest.fn(), getByBarkod: jest.fn() },
+vi.mock('./aksesuarApi', () => ({
+  aksesuarService: { getAll: vi.fn(), getStats: vi.fn(), getById: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn() },
+  aksesuarStokService: { getAll: vi.fn(), getByBarkod: vi.fn() },
 }));
-jest.mock('../musteriler/musteriApi', () => ({ musteriService: { search: jest.fn(), searchByPhone: jest.fn() } }));
-jest.mock('../auth/AuthContext', () => ({ useKarGor: jest.fn() }));
-// react-router-dom v7'nin "exports" alanını CRA'nın Jest 27'si okuyamaz: yönlendirme kancaları sahte
+vi.mock('../musteriler/musteriApi', () => ({ musteriService: { search: vi.fn(), searchByPhone: vi.fn() } }));
+vi.mock('../auth/AuthContext', () => ({ useKarGor: vi.fn() }));
+// Yönlendirme kancaları sahte (Jest 27 zamanında react-router-dom v7'nin "exports" alanı okunamadığı için eklendi; sözleşme aynı kalsın diye korundu)
 let mockLocation = { pathname: '/aksesuar', state: null };
-const mockNavigate = jest.fn();
-jest.mock('react-router-dom', () => ({ useNavigate: () => mockNavigate, useLocation: () => mockLocation }), { virtual: true });
+const mockNavigate = vi.fn();
+vi.mock('react-router-dom', () => ({ useNavigate: () => mockNavigate, useLocation: () => mockLocation }));
 
 // ---- Sabit test verisi -------------------------------------------------------------------------------------------
 const BUGUN = new Date().toISOString();
@@ -118,12 +118,12 @@ const stokSec = async (user, kapsam, satirNo, ad) => {
 
 beforeEach(() => {
   mockLocation = { pathname: '/aksesuar', state: null };
-  jest.spyOn(window, 'alert').mockImplementation(() => {});
-  jest.spyOn(window, 'confirm').mockImplementation(() => true);
-  jest.spyOn(console, 'error').mockImplementation(() => {});
+  vi.spyOn(window, 'alert').mockImplementation(() => {});
+  vi.spyOn(window, 'confirm').mockImplementation(() => true);
+  vi.spyOn(console, 'error').mockImplementation(() => {});
 });
 afterEach(() => {
-  jest.restoreAllMocks();
+  vi.restoreAllMocks();
 });
 
 // ---- Liste -------------------------------------------------------------------------------------------------------

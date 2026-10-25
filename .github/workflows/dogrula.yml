@@ -1,5 +1,5 @@
 # Tip kontrolü, birim testler, gerçek MariaDB'ye karşı API testleri (kaynak ve paket), frontend testleri ve yayın paketinin
-# üretilip açılması. Yerelde aynısı: backend/scripts/hepsiniDogrula.sh (+ frontend: npx react-scripts test; arayüz derlemesi Vite).
+# üretilip açılması. Yerelde aynısı: backend/scripts/hepsiniDogrula.sh (+ frontend: npm test = Vitest, npm run lint, arayüz derlemesi Vite).
 # Bu iş akışı yalnızca ELLE tetiklenir (Actions sekmesi > Run workflow): sahibinin GitHub hesabında faturalandırma kilidi olduğu için
 # otomatik tetikleme her push'ta başarısız koşu üretirdi. Kilit kalkarsa `on:` altına push/pull_request geri eklenebilir.
 # Adımlar GitHub'da henüz doğrulanmadı; asıl güvenlik ağı yerel doğrulamadır.
@@ -81,7 +81,7 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci
       - name: Testler
-        run: npx react-scripts test --watchAll=false
+        run: npx vitest run
         env:
           CI: 'true'
       - name: Derleme

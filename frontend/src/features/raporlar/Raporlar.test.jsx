@@ -13,17 +13,17 @@ import { aksesuarStokService } from '../aksesuar/aksesuarApi';
 import { useAuth } from '../auth/AuthContext';
 import { hesaplaKomisyon, detectPlatform } from '../eticaret/komisyon';
 
-jest.mock('./raporApi', () => ({
+vi.mock('./raporApi', () => ({
   raporService: {
-    getAralik: jest.fn(),
-    getFisKar: jest.fn(),
-    getPersoneller: jest.fn(),
-    getYatirimciRapor: jest.fn(),
-    getYatirimciOzet: jest.fn(),
+    getAralik: vi.fn(),
+    getFisKar: vi.fn(),
+    getPersoneller: vi.fn(),
+    getYatirimciRapor: vi.fn(),
+    getYatirimciOzet: vi.fn(),
   },
 }));
-jest.mock('../aksesuar/aksesuarApi', () => ({ aksesuarStokService: { getAll: jest.fn() } }));
-jest.mock('../auth/AuthContext', () => ({ useAuth: jest.fn() }));
+vi.mock('../aksesuar/aksesuarApi', () => ({ aksesuarStokService: { getAll: vi.fn() } }));
+vi.mock('../auth/AuthContext', () => ({ useAuth: vi.fn() }));
 
 // ---- Sabit test verisi -------------------------------------------------------------------------------------------
 // 3 motor: m1 normal, m2 komisyonlu + yatırımcılı (id 7), m3 komisyonlu + faturasız.
@@ -208,7 +208,7 @@ const yaziSecici = (metin) => (_, el) => el.tagName === 'P' && el.textContent ==
 const yazi = (metin) => screen.getByText(yaziSecici(metin));
 
 beforeEach(() => {
-  jest.spyOn(console, 'error').mockImplementation(() => {}); // hata testleri bilerek console.error üretir
+  vi.spyOn(console, 'error').mockImplementation(() => {}); // hata testleri bilerek console.error üretir
 });
 afterEach(() => {
   console.error.mockRestore();
