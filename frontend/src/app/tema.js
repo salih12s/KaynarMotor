@@ -2,6 +2,10 @@ import { createTheme } from '@mui/material/styles';
 import { RENK, TON, FONT } from './tokenlar';
 
 // Chip renkleri damga (çerçeveli etiket) görünümüne çevrilir; durum etiketleri için ortak bileşen: shared/ui/Damga.
+// Onay (tik) simgesi: düğme rengiyle boyanan maske
+const ONAY_SIMGESI =
+  "center / contain no-repeat url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z'/></svg>\")";
+
 const chipRenk = (renk, ton) => ({
   props: { color: renk, variant: 'filled' },
   style: { backgroundColor: ton.bg, color: ton.fg, border: `1.5px solid ${ton.fg}` },
@@ -174,6 +178,16 @@ export const temaOlustur = ({ primary = RENK.kirmizi, secondary = RENK.murekkep 
             padding: '12px 24px',
             gap: 8,
             '& .MuiButton-text': { border: `1px solid ${RENK.kirmizi}`, backgroundColor: RENK.yuzey, '&:hover': { backgroundColor: '#FBEAE7' } },
+            // Kaydet / Güncelle gibi ana eylem düğmelerine onay simgesi (kendi simgesi olanlara ve Sil'e eklenmez)
+            '& .MuiButton-containedPrimary:not(:has(.MuiButton-startIcon))::before': {
+              content: '""',
+              width: 18,
+              height: 18,
+              marginRight: 8,
+              backgroundColor: 'currentColor',
+              WebkitMask: ONAY_SIMGESI,
+              mask: ONAY_SIMGESI,
+            },
           },
         },
       },
