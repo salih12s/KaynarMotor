@@ -37,7 +37,7 @@ Her dosya: önce karakterizasyon testi, testi bozarak sına, betikle taşı, esk
 - ~~`shared/utils/bicim.js`~~ **YAPILDI (2026-10-24):** `sayiYaz`/`paraYaz`/`tarihYaz` (61 karakterizasyon testi); ~340 çağrı taşındı, `toLocale…` 169 -> 5 (bilerek kalanlar: Layout uzun tarih, `en-CA` ISO giriş, e-ticaret `formatTL` tam 2 ondalık, raporlar/bicim.js sarmalayıcıları).
 - ~~**ESLint + Prettier**~~ **YAPILDI (2026-10-24):** ESLint `react-app` (react-hooks dahil; kaynakta 0 hata, 13 `exhaustive-deps` uyarısı bilerek açık: her biri davranış analizi ister), `.gitattributes`/`.editorconfig` (LF), Prettier (tek tırnak, 160 genişlik; 257 dosya, +17k/-6k satır, `.git-blame-ignore-revs`). NOT: bu belgedeki satır sayıları (95, 53...) Prettier ÖNCESİDİR.
 - **TanStack Query**: veri çekme/önbellek; `useRaporVerisi` gibi hook'ların yerini alır.
-- Frontend **TypeScript** (`.tsx`; önce `shared/`, sonra özellikler) ve **CRA -> Vite** (react-scripts bakımsız).
+- Frontend **CRA -> Vite** ve **TypeScript** (kademeli, 6 aşama): ayrıntılı plan, ölçülmüş başlangıç ve durum tablosu `docs/VITE-TS-YOL-HARITASI.md`.
 - ~~**E2E (Playwright)**~~ **YAPILDI (2026-10-25):** `npm run test:e2e`, 3 akış (giriş+rol, iş emri oluştur/tamamla, motor satışı), 13 test, 3 tur üst üste 27/27, mutasyonla doğrulandı. Her koşuda sıfırdan kurulan `test_kaynar_e2e` veritabanı. E2E ile bulunan hata (plaka tam yazılıp öneri seçilince satış formu dolmuyordu) düzeltildi: bileşen + E2E regression testi.
 - Backend: `scripts/` ve `tests/` hâlâ JS (tsx ile çalışır).
 
