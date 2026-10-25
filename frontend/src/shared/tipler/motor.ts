@@ -65,6 +65,21 @@ export interface Motor {
 /** `/ikinci-el-motor/stats/ozet` yanıtı: satış sayaçları (BIGINT/DECIMAL toplamlar metin gelir). */
 export type MotorIstatistik = Record<string, Sayi>;
 
+/** Belge arşivindeki bir dosya satırı. */
+export type ArsivBelgesi = Pick<SatisBelgesi, 'id' | 'dosya_adi' | 'mime' | 'boyut' | 'created_at'>;
+
+/** `/satis-belgeleri/arsiv`: belgesi olan motor ve belgeleri (fiyat/kişi bilgisi yok). */
+export interface BelgeArsivGrubu {
+  motor_id: number;
+  plaka: string | null;
+  marka: string | null;
+  model: string | null;
+  durum: string;
+  alis_tarihi: string | null;
+  satis_tarihi: string | null;
+  belgeler: ArsivBelgesi[];
+}
+
 /** `satis_belgeleri` listesi (içerik dahil değil). */
 export interface SatisBelgesi {
   id: number;

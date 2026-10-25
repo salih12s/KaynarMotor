@@ -6,7 +6,7 @@ import { FONT, RENK, TON, type TonAdi } from '../../app/tokenlar';
 
 // Başlıklı etiket/değer kartı. satirlar: [[etiket, değer], ...]
 interface BilgiKartiProps {
-  baslik: ReactNode;
+  baslik?: ReactNode;
   satirlar?: Array<[string, ReactNode]>;
   sx?: SxProps<Theme>;
   children?: ReactNode;
