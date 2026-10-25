@@ -53,3 +53,25 @@ Kalan cilalar (isteğe bağlı): telefonda iş emri formunun tek sütun olması 
 
 ## E. Canlıya çıkış (YAPILDI 2026-10-25)
 Yeni TS sürümü paketlendi (`npm run package:hostinger`), yedek ve tarif `docs/HOSTINGER.md`'de. **Sahibi açıkça "canlıya al" demeden çıkılmaz.**
+
+## F. Genel inceleme bulguları (2026-10-25, sonra düzeltilecek)
+Backend, frontend, veritabanı, bağımlılık, test ve depo düzeni incelemesi. Güvenlik ayrıntıları depoya girmez: kökteki yerel `GUVENLIK-BULGULARI.md`
+(git dışı; G1-G8). Her madde: önce test (varsa regression), sonra düzeltme, tam doğrulama zinciri, canlıya çıkış onayı.
+
+| # | Öncelik | Bulgu | Yer | Öneri |
+|---|---|---|---|---|
+| F1 | Yüksek | Müşteri geçmişi isimle eşleşiyor (`LOWER(ad_soyad) = LOWER(alici_adi)`); `musteri_id` yok. Aynı isimli müşteriler karışır, isim düzeltilince geçmiş kopar | `backend/modules/musteriler/musteriler.repository.ts`; motor ve aksesuar tabloları | `musteri_id` kolonu + mevcut kayıtlar için eşleştirme betiği (çakışanlar elle) + FK. Canlı veriye dokunur: önce yedek ve prova |
+| F2 | Yüksek | Vitrin görsel/videoları veritabanında base64 `LONGTEXT` (yaklaşık %33 şişme, büyük yedek, 120 MB JSON gövdesi). Satış belgeleri ise doğru yöntemle (ham gövde + `LONGBLOB`) | `vitrin_gorseller`, `vitrin_videolar`, `vitrin_kategori_iletisim.gorsel`; `backend/server.ts` 120 MB limit | Satış belgeleri yöntemine (ya da diske) taşı; geçiş betiği + eski verinin dönüştürülmesi |
+| F3 | Orta | Şema geçişlerinin sürüm kaydı yok; veri düzeltme `UPDATE`'leri her açılışta çalışıyor | `backend/core/veritabani/initDb.ts` | `sema_surumu` tablosu, numaralı ve bir kez çalışan geçişler |
+| F4 | Orta | Ölü kod (~1.100 satır): `IsEmriForm`, `IsEmriDetay`, `MotorDetay` sayfalarına bağlantı yok (işi pencereler görüyor), yeni tasarıma geçmedi | `frontend/src/features/servis/IsEmriForm.jsx`, `IsEmriDetay.jsx`, `features/motor/MotorDetay.jsx`; `app/App.jsx` rotaları | Dışarıdan bağlantı olmadığı doğrulanınca rotalarla birlikte sil (rota eski adrese gelen olursa `/servis`'e yönlendir) |
+| F5 | Orta | Tekrarlanan kod: aksesuar ve yedek parça stok sayfaları (442 ve 371 satır) ve backend toplu içe aktarma neredeyse aynı | `features/aksesuar/AksesuarStok.jsx`, `features/yedek-parca/YedekParcaStok.jsx`; `*Stok.service.ts` | Ortak stok bileşeni ve servis yardımcısı |
+| F6 | Orta | Panel kodunda 279 sabit renk kodu (belirteç yerine); 20 yerde tarayıcı `alert()` | `frontend/src/features/**` | Renkler `app/tokenlar.js`'e; `alert` yerine uygulamanın bildirim/onay penceresi |
+| F7 | Orta | Frontend test boşlukları: Müşteriler, Kullanıcılar, Veresiye, stok sayfaları, Belge Arşivi, Taksit (`hesaplaTaksit` para hesabı) | `frontend/src/features/...` | Önce `hesaplaTaksit` birim testleri (para), sonra ekran testleri |
+| F8 | Orta | API testleri göç aşamasına göre adlandırılmış (`faz1`...`faz12`), özelliğe göre değil | `backend/tests/api/` | Özellik adlarıyla yeniden adlandır (ör. `musteriler.api.test.js`) |
+| F9 | Düşük | Güncel olmayan bağımlılıklar: küçükler (axios, React 19.3, Router 7.18, mysql2) hemen; büyükler ayrı iş (Express 5, MUI 9, dotenv 18, bcryptjs 3, @types/node) | `package.json` dosyaları | Küçükleri toplu güncelle + zincir; MUI 9'u tasarım kontrolüyle ayrı yap |
+| F10 | Düşük | README karışık dilde (giriş İngilizce, gövde Türkçe), ekran görüntüleri/GIF'ler eski tasarım, test sayıları eski (406) | `README.md`, `docs/screenshots`, `docs/demo` | Tek dil, yeni görseller (`readme-media`), güncel sayılar (415 / 248 / 203 / 11 E2E) |
+| F11 | Düşük | Depo kalabalığı: `docs` altında ~50 MB görsel; yaklaşık yarısı reddedilen B tasarımının (`docs/tasarim-yonleri` içindeki `b-*`); `docs` için içindekiler yok | `docs/` | B görsellerini depodan çıkar (git geçmişinde kalır), `docs/README.md` içindekiler |
+| F12 | Düşük | Push öncesi kanca var ama etkin değil; backend'de 24 `any`; 11 `exhaustive-deps` uyarısı | `.githooks/pre-push`, `backend/**` | `git config core.hooksPath .githooks`; `any`'leri tiple; uyarılar TS geçişinde (aşama 4) |
+| F13 | Doğrulanmadı | Türkçe aramada büyük/küçük harf (İ/ı) eşleşmesi: tablolar `utf8mb4_nopad_bin`, aramalar `LOWER(...) LIKE LOWER(...)` | Arama repository'leri | "IŞIK" / "ışık" ile dene; gerekirse Türkçe duyarlı karşılaştırma |
+
+Önerilen sıra: G1-G2 (güvenlik yamaları) → F4 + G8 (ölü kod, `plain_sifre`) → Vite geçişi (G3, G4'ün yolu) → F1-F2 (veri modeli, ayrı plan ve onay) → F10 (README).
