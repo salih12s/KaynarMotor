@@ -2,7 +2,7 @@ import React from 'react';
 import PaymentsIcon from '@mui/icons-material/PaymentsOutlined';
 import TwoWheelerIcon from '@mui/icons-material/TwoWheelerOutlined';
 import { BolumBasligi } from '../../../../shared/ui';
-import { MENU_RENK, RENK } from '../../../../app/tokenlar';
+import { MENU_RENK, RENK, TON } from '../../../../app/tokenlar';
 import { TextField, Grid, MenuItem } from '@mui/material';
 import type { MotorFormuDurumu } from '../useMotorFormu';
 
@@ -48,11 +48,11 @@ const MotorFormBilgi = ({ f, setFormData, dialog, canAlis, canListe }: MotorForm
               '& .MuiInputBase-root': {
                 bgcolor:
                   f.durum === 'kapora'
-                    ? '#F7E7C4'
+                    ? TON.bekle.bg
                     : f.durum === 'devir_bekliyor'
-                      ? '#E7DFF3'
+                      ? TON.mor.bg
                       : f.durum === 'depo_serviste'
-                        ? '#F7E7C4'
+                        ? TON.bekle.bg
                         : f.durum === 'tamamlandi'
                           ? '#D5EAE6'
                           : 'inherit',
@@ -75,7 +75,7 @@ const MotorFormBilgi = ({ f, setFormData, dialog, canAlis, canListe }: MotorForm
               label="Stok Tipi"
               value={f.stok_tipi}
               onChange={(e) => setFormData({ ...f, stok_tipi: e.target.value })}
-              sx={{ '& .MuiInputBase-root': { bgcolor: f.stok_tipi === 'konsinye' ? '#DCE6F4' : '#F7E7C4' } }}
+              sx={{ '& .MuiInputBase-root': { bgcolor: f.stok_tipi === 'konsinye' ? TON.mavi.bg : TON.bekle.bg } }}
             >
               <MenuItem value="sahip">Benim Olanlar</MenuItem>
               <MenuItem value="konsinye">Konsinye</MenuItem>
@@ -99,7 +99,7 @@ const MotorFormBilgi = ({ f, setFormData, dialog, canAlis, canListe }: MotorForm
             label="Fatura Durumu"
             value={f.fatura_kesildi ? 'true' : 'false'}
             onChange={(e) => setFormData({ ...f, fatura_kesildi: e.target.value === 'true' })}
-            sx={{ '& .MuiInputBase-root': { bgcolor: f.fatura_kesildi ? '#D8EBDD' : '#F6DAD7' } }}
+            sx={{ '& .MuiInputBase-root': { bgcolor: f.fatura_kesildi ? TON.yesil.bg : TON.kirmizi.bg } }}
           >
             <MenuItem value="false">Fatura Kesilmedi</MenuItem>
             <MenuItem value="true">Fatura Kesildi</MenuItem>
@@ -146,7 +146,7 @@ const MotorFormBilgi = ({ f, setFormData, dialog, canAlis, canListe }: MotorForm
               type="number"
               value={f.liste_fiyati}
               onChange={(e) => setFormData({ ...f, liste_fiyati: e.target.value })}
-              sx={{ '& .MuiInputBase-root': { bgcolor: '#DCE6F4' } }}
+              sx={{ '& .MuiInputBase-root': { bgcolor: TON.mavi.bg } }}
             />
           </Grid>
         )}

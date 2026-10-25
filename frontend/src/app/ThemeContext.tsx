@@ -1,6 +1,7 @@
 import React, { createContext, useState, useContext, useMemo, type ReactNode } from 'react';
 import { createTheme, type Theme } from '@mui/material/styles';
 import { temaOlustur } from './tema';
+import { RENK } from './tokenlar';
 
 export type TemaAdi = 'default' | 'aksesuar' | 'motor' | 'eticaret' | 'yedekParca';
 
@@ -27,11 +28,11 @@ interface TemaDegeri {
 const ThemeContext = createContext<TemaDegeri | null>(null);
 
 const themeConfigs: Record<TemaAdi, TemaAyari> = {
-  default: { primary: '#C62828', secondary: '#1a1a1a', name: 'Servis' },
-  aksesuar: { primary: '#C62828', secondary: '#1a1a1a', name: 'Aksesuar' },
-  motor: { primary: '#C62828', secondary: '#1a1a1a', name: '2. El Motor' },
-  eticaret: { primary: '#C62828', secondary: '#1a1a1a', name: 'E-Ticaret' },
-  yedekParca: { primary: '#C62828', secondary: '#1a1a1a', name: 'Yedek Parça' },
+  default: { primary: RENK.kirmizi, secondary: '#1a1a1a', name: 'Servis' },
+  aksesuar: { primary: RENK.kirmizi, secondary: '#1a1a1a', name: 'Aksesuar' },
+  motor: { primary: RENK.kirmizi, secondary: '#1a1a1a', name: '2. El Motor' },
+  eticaret: { primary: RENK.kirmizi, secondary: '#1a1a1a', name: 'E-Ticaret' },
+  yedekParca: { primary: RENK.kirmizi, secondary: '#1a1a1a', name: 'Yedek Parça' },
 };
 
 export const CustomThemeProvider = ({ children }: { children?: ReactNode }) => {

@@ -19,10 +19,11 @@ import {
 } from '@mui/material';
 import { formatDate, parcaListesi } from '../bicim';
 import { sayiYaz, sayiDegeri } from '../../../shared/utils/bicim';
+import { RENK } from '../../../app/tokenlar';
 
 const SUTUN_3 = { display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' }, gap: 2, mb: 2 };
 const sagaSx = { textAlign: 'right' };
-const karRengi = (v: number) => (v >= 0 ? '#1D6A3B' : '#c62828');
+const karRengi = (v: number) => (v >= 0 ? RENK.yesil : RENK.kirmizi);
 
 // İş emri detay penceresi (parça listesi JSON metin olarak gelebilir).
 interface Props {

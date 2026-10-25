@@ -18,6 +18,7 @@ import {
 import { formatTL, formatDate, headerSx } from '../bicim';
 import { raporService } from '../raporApi';
 import type { YatirimciRaporu } from '../../../shared/tipler';
+import { RENK, TON } from '../../../app/tokenlar';
 
 // Yatırımcının kendi raporu: yalnızca kendi stoğu ve satılan motorlarındaki payı.
 const YatirimciRapor = ({ isMobile }: { isMobile: boolean }) => {
@@ -101,7 +102,7 @@ const YatirimciRapor = ({ isMobile }: { isMobile: boolean }) => {
 
       {loading ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-          <CircularProgress sx={{ color: '#C62828' }} />
+          <CircularProgress sx={{ color: RENK.kirmizi }} />
         </Box>
       ) : error ? (
         <Alert severity="error">{error}</Alert>
@@ -109,12 +110,17 @@ const YatirimciRapor = ({ isMobile }: { isMobile: boolean }) => {
         <>
           <Grid container spacing={2} sx={{ mb: 3 }}>
             {[
-              { label: 'Stoktaki Motor', value: o.stok_adet || 0, color: '#C62828' },
-              { label: 'Satılan Motor', value: o.satilan_adet || 0, color: '#1E4A86' },
-              { label: 'Stok Değeri', value: `₺${formatTL(o.stok_degeri)}`, color: '#A5530F' },
-              { label: 'Toplam Kazancım', value: `₺${formatTL(o.toplam_yatirimci_kar)}`, color: '#1D6A3B' },
+              { label: 'Stoktaki Motor', value: o.stok_adet || 0, color: RENK.kirmizi },
+              { label: 'Satılan Motor', value: o.satilan_adet || 0, color: RENK.mavi },
+              { label: 'Stok Değeri', value: `₺${formatTL(o.stok_degeri)}`, color: TON.turuncu.fg },
+              { label: 'Toplam Kazancım', value: `₺${formatTL(o.toplam_yatirimci_kar)}`, color: RENK.yesil },
             ].map((k, i) => {
-              const bgMap: Record<string, string> = { '#C62828': '#F6DAD7', '#1E4A86': '#DCE6F4', '#A5530F': '#F7E7C4', '#1D6A3B': '#D8EBDD' };
+              const bgMap: Record<string, string> = {
+                [RENK.kirmizi]: TON.kirmizi.bg,
+                [RENK.mavi]: TON.mavi.bg,
+                [TON.turuncu.fg]: TON.bekle.bg,
+                [RENK.yesil]: TON.yesil.bg,
+              };
               return (
                 <Grid size={{ xs: 6, md: 3 }} key={i}>
                   <Paper sx={{ p: 2, textAlign: 'center', bgcolor: bgMap[k.color], borderLeft: `4px solid ${k.color}` }}>
@@ -207,7 +213,7 @@ const YatirimciRapor = ({ isMobile }: { isMobile: boolean }) => {
                     <Typography variant="body2">
                       Satış: <strong>{formatTL(m.satis_fiyati)} ₺</strong>
                     </Typography>
-                    <Typography variant="body2" sx={{ color: '#1D6A3B' }}>
+                    <Typography variant="body2" sx={{ color: RENK.yesil }}>
                       Kazancım: <strong>{formatTL(m.yatirimci_kar)} ₺</strong>
                     </Typography>
                   </Box>
@@ -235,7 +241,7 @@ const YatirimciRapor = ({ isMobile }: { isMobile: boolean }) => {
                         {m.marka} {m.model}
                       </TableCell>
                       <TableCell>{formatTL(m.satis_fiyati)} ₺</TableCell>
-                      <TableCell sx={{ color: '#1D6A3B', fontWeight: 'bold' }}>{formatTL(m.yatirimci_kar)} ₺</TableCell>
+                      <TableCell sx={{ color: RENK.yesil, fontWeight: 'bold' }}>{formatTL(m.yatirimci_kar)} ₺</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

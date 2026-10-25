@@ -8,6 +8,7 @@ import { sorguIstemcisiOlustur } from '../shared/sorgu/sorguIstemcisi';
 import { AuthProvider, useAuth } from '../features/auth/AuthContext';
 import type { Kullanici } from '../shared/tipler';
 import { CustomThemeProvider, useCustomTheme } from './ThemeContext';
+import { RENK } from './tokenlar';
 
 // Rota bazlı kod bölme: vitrin ziyaretçisi yönetim panelinin kodunu indirmez. Her sayfa kendi parçasıdır; ortak kütüphaneler (MUI vb.) paylaşılan parçada kalır.
 const Layout = lazy(() => import('./Layout'));
@@ -202,7 +203,7 @@ const YetkisizEkran = () => {
         onClick={() => logout()}
         style={{
           padding: '10px 26px',
-          background: '#C62828',
+          background: RENK.kirmizi,
           color: '#fff',
           border: 'none',
           borderRadius: 8,

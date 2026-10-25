@@ -5,6 +5,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import PhotoIcon from '@mui/icons-material/PhotoCamera';
 import BackIcon from '@mui/icons-material/ArrowBack';
 import ForwardIcon from '@mui/icons-material/ArrowForward';
+import { RENK } from '../../../../app/tokenlar';
 
 // İlan görselleri: ekleme, vitrin fotoğrafı seçme, oklarla ve sürükleyerek sıralama, silme.
 const GorselYonetimi = ({ f }: { f: IlanFormuDurumu }) => {
@@ -32,7 +33,7 @@ const GorselYonetimi = ({ f }: { f: IlanFormuDurumu }) => {
               onDrop={() => handleGorselDrop(i)}
               sx={{
                 position: 'relative',
-                border: i === 0 ? '2px solid #C62828' : '1px solid #D2D3CA',
+                border: i === 0 ? `2px solid ${RENK.kirmizi}` : `1px solid ${RENK.cizgi}`,
                 borderRadius: 1,
                 overflow: 'hidden',
                 cursor: 'grab',

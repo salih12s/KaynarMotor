@@ -38,6 +38,7 @@ import { musteriService } from '../musteriler/musteriApi';
 import { useKarGor } from '../auth/AuthContext';
 import { sayiYaz, sayiDegeri, type Sayi } from '../../shared/utils/bicim';
 import type { YedekParcaSatis, YedekParcaStok } from '../../shared/tipler';
+import { RENK, TON } from '../../app/tokenlar';
 
 // Hızlı yazarken eski aramanın yanıtı yeniyi ezmesin
 const sonAra = sonIstek();
@@ -312,9 +313,9 @@ const YedekParcalar = () => {
                 </Box>
                 <Box sx={{ mt: 0.5 }}>
                   {kalan > 0 ? (
-                    <Chip size="small" label={`Kalan: ₺${sayiYaz(kalan)}`} sx={{ bgcolor: '#F7E7C4', color: '#A5530F', fontWeight: 'bold' }} />
+                    <Chip size="small" label={`Kalan: ₺${sayiYaz(kalan)}`} sx={{ bgcolor: TON.bekle.bg, color: TON.turuncu.fg, fontWeight: 'bold' }} />
                   ) : (
-                    <Chip size="small" label="Ödeme Tamamlandı" sx={{ bgcolor: '#D8EBDD', color: '#1D6A3B', fontWeight: 'bold' }} />
+                    <Chip size="small" label="Ödeme Tamamlandı" sx={{ bgcolor: TON.yesil.bg, color: RENK.yesil, fontWeight: 'bold' }} />
                   )}
                 </Box>
                 {(p.musteri_adi || p.musteri_telefon) && (
@@ -360,13 +361,13 @@ const YedekParcalar = () => {
                         <Chip
                           size="small"
                           label={`Kalan: ₺${sayiYaz(kalan)}`}
-                          sx={{ bgcolor: '#F7E7C4', color: '#A5530F', fontWeight: 'bold', borderLeft: '3px solid #A5530F' }}
+                          sx={{ bgcolor: TON.bekle.bg, color: TON.turuncu.fg, fontWeight: 'bold', borderLeft: `3px solid ${TON.turuncu.fg}` }}
                         />
                       ) : (
                         <Chip
                           size="small"
                           label="Tamamlandı"
-                          sx={{ bgcolor: '#D8EBDD', color: '#1D6A3B', fontWeight: 'bold', borderLeft: '3px solid #1D6A3B' }}
+                          sx={{ bgcolor: TON.yesil.bg, color: RENK.yesil, fontWeight: 'bold', borderLeft: `3px solid ${RENK.yesil}` }}
                         />
                       )}
                     </TableCell>
@@ -425,7 +426,7 @@ const YedekParcalar = () => {
               {formData.stok_id && (
                 <Chip
                   size="small"
-                  sx={{ mt: 1, bgcolor: '#D8EBDD', color: '#1D6A3B', fontWeight: 'bold' }}
+                  sx={{ mt: 1, bgcolor: TON.yesil.bg, color: RENK.yesil, fontWeight: 'bold' }}
                   label={
                     seciliStok
                       ? `Stoğa bağlı: ${seciliStok.stok_adi}${seciliStok.mevcut !== undefined ? ` (Mevcut: ${seciliStok.mevcut || 0})` : ''} — kaydedilince stoktan düşer`
@@ -502,13 +503,13 @@ const YedekParcalar = () => {
             </Grid>
           </Grid>
           {karGor && (
-            <Paper sx={{ p: 1, mt: 2, textAlign: 'center', bgcolor: kar >= 0 ? '#D8EBDD' : '#F6DAD7' }}>
+            <Paper sx={{ p: 1, mt: 2, textAlign: 'center', bgcolor: kar >= 0 ? TON.yesil.bg : TON.kirmizi.bg }}>
               <Typography sx={{ color: kar >= 0 ? 'green' : 'red' }}>
                 Kâr: <strong>{sayiYaz(kar)} ₺</strong>
               </Typography>
             </Paper>
           )}
-          <Box sx={{ mt: 2, p: 1.5, border: '1px solid #D2D3CA', borderRadius: 1 }}>
+          <Box sx={{ mt: 2, p: 1.5, border: `1px solid ${RENK.cizgi}`, borderRadius: 1 }}>
             <Typography variant="subtitle2" fontWeight="bold" sx={{ mb: 1 }}>
               Kalan Ödeme
             </Typography>

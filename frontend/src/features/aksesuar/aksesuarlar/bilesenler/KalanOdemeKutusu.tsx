@@ -1,12 +1,13 @@
 import React from 'react';
 import { Box, Typography, TextField, Grid, Checkbox, FormControlLabel } from '@mui/material';
 import type { AksesuarlarDurumu } from '../useAksesuarlar';
+import { RENK } from '../../../../app/tokenlar';
 
 // Satış formu: kalan ödeme (veresiye) işareti ve tutarı.
 const KalanOdemeKutusu = ({ formData, setFormData }: Pick<AksesuarlarDurumu, 'formData' | 'setFormData'>) => {
   return (
     <>
-      <Box sx={{ mt: 3, p: 2, border: '1px solid #D2D3CA', borderRadius: 1 }}>
+      <Box sx={{ mt: 3, p: 2, border: `1px solid ${RENK.cizgi}`, borderRadius: 1 }}>
         <Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 1 }}>
           Kalan Ödeme
         </Typography>

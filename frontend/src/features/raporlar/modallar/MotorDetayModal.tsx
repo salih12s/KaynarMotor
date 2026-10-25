@@ -6,6 +6,7 @@ import { Box, Dialog, DialogContent, DialogActions, Button } from '@mui/material
 import { BilgiKarti, Damga, DialogBasligi, Not, plakaBicim } from '../../../shared/ui';
 import { formatTL, formatDate, karColor } from '../bicim';
 import { sayiYaz, sayiDegeri } from '../../../shared/utils/bicim';
+import { RENK } from '../../../app/tokenlar';
 
 // Üç sütun (araç/satıcı/alıcı), iki sütun (fiyat/noter, tarih/not) düzeni
 const SUTUN_3 = { display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' }, gap: 2, mb: 2 };
@@ -39,7 +40,7 @@ const MotorDetayModal = ({ open, data, onClose, isMobile }: Props) => {
   ];
   if (yatirimciPayi > 0) {
     fiyatSatirlari.push(['Toplam Kâr', para(toplamKar)]);
-    fiyatSatirlari.push(['Yatırımcı Payı', <span style={{ color: '#1E4A86' }}>- {para(yatirimciPayi)}</span>]);
+    fiyatSatirlari.push(['Yatırımcı Payı', <span style={{ color: RENK.mavi }}>- {para(yatirimciPayi)}</span>]);
   }
   fiyatSatirlari.push(['Net Kâr (Payınız)', <span style={{ color: karColor(kar) }}>{para(kar)}</span>]);
   const noterSatirlari: Array<[string, ReactNode]> = [

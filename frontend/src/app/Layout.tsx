@@ -24,7 +24,7 @@ import GppGoodIcon from '@mui/icons-material/GppGoodOutlined';
 import { useAuth } from '../features/auth/AuthContext';
 import { useCustomTheme } from './ThemeContext';
 import { authService } from '../features/auth/authApi';
-import { FONT, MENU_RENK, RENK } from './tokenlar';
+import { FONT, MENU_RENK, RENK, ISLEM } from './tokenlar';
 
 const KENAR_GENISLIK = 216;
 const MOBIL_GENISLIK = 300;
@@ -191,7 +191,7 @@ const Layout = () => {
     borderRadius: '6px',
     justifyContent: 'flex-start',
     textAlign: 'left',
-    color: aktif ? RENK.murekkep : '#3C4046',
+    color: aktif ? RENK.murekkep : ISLEM.yaz.fg,
     fontFamily: FONT.metin,
     fontSize: ic ? 14 : 15,
     fontWeight: aktif ? 700 : 500,
@@ -272,7 +272,7 @@ const Layout = () => {
         )}
         {isMobile && (
           <ButtonBase onClick={handleLogout} sx={satirStili(false)}>
-            <Box component="span" sx={{ display: 'inline-flex', color: '#B3261E' }}>
+            <Box component="span" sx={{ display: 'inline-flex', color: ISLEM.sil.fg }}>
               <LogoutIcon />
             </Box>
             Çıkış Yap

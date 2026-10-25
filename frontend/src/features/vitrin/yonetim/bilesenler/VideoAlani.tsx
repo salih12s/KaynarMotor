@@ -4,12 +4,13 @@ import { Box, Button, Typography, CircularProgress } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import MovieIcon from '@mui/icons-material/Movie';
 import PlayCircleIcon from '@mui/icons-material/PlayCircle';
+import { RENK } from '../../../../app/tokenlar';
 
 // Tanıtım videosu: dosya yükleme (veritabanında tutulur), değiştirme ve kaldırma.
 const VideoAlani = ({ f, videoLimitMb }: { f: IlanFormuDurumu; videoLimitMb: number }) => {
   const { videoFile, videoAdi, videoVar, videoSil, videoYukleniyor, removeVideo, handleVideoFile } = f;
   return (
-    <Box sx={{ border: '1px solid #D2D3CA', borderRadius: 2, p: 1.5 }}>
+    <Box sx={{ border: `1px solid ${RENK.cizgi}`, borderRadius: 2, p: 1.5 }}>
       <Typography variant="subtitle2" sx={{ mb: 1 }}>
         Tanıtım Videosu
       </Typography>

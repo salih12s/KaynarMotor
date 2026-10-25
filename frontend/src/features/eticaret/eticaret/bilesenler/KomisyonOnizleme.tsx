@@ -2,6 +2,7 @@ import React from 'react';
 import type { ETicaretDurumu } from '../useETicaret';
 import { Box, Paper, Typography, Divider } from '@mui/material';
 import { karEtiketi, formatTL } from '../eticaretVeri';
+import { RENK, TON } from '../../../../app/tokenlar';
 
 // Satış formu: platforma göre canlı komisyon, KDV ve (yalnızca e-ticaret yetkisi olanlar) net kâr önizlemesi; satış fiyatı girilince görünür.
 type KomisyonOnizlemeProps = Pick<ETicaretDurumu, 'sf' | 'canliPlatformTipi' | 'canliHesap'> & { karGor: boolean };
@@ -11,7 +12,7 @@ const KomisyonOnizleme = ({ sf, canliPlatformTipi, canliHesap, karGor }: Komisyo
   return (
     <Box sx={{ mt: 3 }}>
       <Divider sx={{ mb: 2 }} />
-      <Typography variant="subtitle1" fontWeight="bold" color="#C62828" gutterBottom>
+      <Typography variant="subtitle1" fontWeight="bold" color={RENK.kirmizi} gutterBottom>
         Komisyon Hesaplama {canliPlatformTipi === 'hepsiburada' ? '(HepsiBurada)' : canliPlatformTipi === 'n11' ? '(N11)' : '(Trendyol)'}
       </Typography>
 
@@ -21,35 +22,35 @@ const KomisyonOnizleme = ({ sf, canliPlatformTipi, canliHesap, karGor }: Komisyo
           let cards = [];
           if (canliPlatformTipi === 'hepsiburada') {
             cards = [
-              { label: 'Komisyon', value: `${formatTL(canliHesap.komisyonTutari)} ₺`, color: '#A5530F', bg: '#F7E7C4' },
-              { label: 'Yat. Geri Dönüş Oranı', value: `%${canliHesap.yatirimGeriDonus}`, color: '#1E4A86', bg: '#DCE6F4' },
-              { label: 'Ödeme Bedeli', value: `${formatTL(canliHesap.odemeBedeli)} ₺`, color: '#555', bg: '#F3F3EE' },
-              { label: 'İşlem Bedeli', value: `${formatTL(canliHesap.islemBedeli)} ₺`, color: '#555', bg: '#F3F3EE' },
-              { label: 'Stopaj Bedeli', value: `${formatTL(canliHesap.stopaj)} ₺`, color: '#555', bg: '#F3F3EE' },
-              { label: 'Kâr Oranı', value: `%${canliHesap.karOrani}`, color: '#1D6A3B', bg: '#D8EBDD' },
-              { label: 'KDV', value: `${formatTL(canliHesap.odenecekKDV)} ₺`, color: '#8A5300', bg: '#F7E7C4' },
+              { label: 'Komisyon', value: `${formatTL(canliHesap.komisyonTutari)} ₺`, color: TON.turuncu.fg, bg: TON.bekle.bg },
+              { label: 'Yat. Geri Dönüş Oranı', value: `%${canliHesap.yatirimGeriDonus}`, color: RENK.mavi, bg: TON.mavi.bg },
+              { label: 'Ödeme Bedeli', value: `${formatTL(canliHesap.odemeBedeli)} ₺`, color: '#555', bg: RENK.yuzeyKoyu },
+              { label: 'İşlem Bedeli', value: `${formatTL(canliHesap.islemBedeli)} ₺`, color: '#555', bg: RENK.yuzeyKoyu },
+              { label: 'Stopaj Bedeli', value: `${formatTL(canliHesap.stopaj)} ₺`, color: '#555', bg: RENK.yuzeyKoyu },
+              { label: 'Kâr Oranı', value: `%${canliHesap.karOrani}`, color: RENK.yesil, bg: TON.yesil.bg },
+              { label: 'KDV', value: `${formatTL(canliHesap.odenecekKDV)} ₺`, color: TON.bekle.fg, bg: TON.bekle.bg },
             ];
           } else if (canliPlatformTipi === 'n11') {
             cards = [
-              { label: 'Komisyon', value: `${formatTL(canliHesap.komisyonTutari)} ₺`, color: '#A5530F', bg: '#F7E7C4' },
-              { label: 'Yat. Geri Dönüş Oranı', value: `%${canliHesap.yatirimGeriDonus}`, color: '#1E4A86', bg: '#DCE6F4' },
-              { label: 'S. Pazarlama ve Hizmet', value: `${formatTL(canliHesap.pazarlamaHizmet)} ₺`, color: '#555', bg: '#F3F3EE' },
-              { label: 'Stopaj Bedeli', value: `${formatTL(canliHesap.stopaj)} ₺`, color: '#555', bg: '#F3F3EE' },
-              { label: 'Kâr Oranı', value: `%${canliHesap.karOrani}`, color: '#1D6A3B', bg: '#D8EBDD' },
-              { label: 'KDV', value: `${formatTL(canliHesap.odenecekKDV)} ₺`, color: '#8A5300', bg: '#F7E7C4' },
+              { label: 'Komisyon', value: `${formatTL(canliHesap.komisyonTutari)} ₺`, color: TON.turuncu.fg, bg: TON.bekle.bg },
+              { label: 'Yat. Geri Dönüş Oranı', value: `%${canliHesap.yatirimGeriDonus}`, color: RENK.mavi, bg: TON.mavi.bg },
+              { label: 'S. Pazarlama ve Hizmet', value: `${formatTL(canliHesap.pazarlamaHizmet)} ₺`, color: '#555', bg: RENK.yuzeyKoyu },
+              { label: 'Stopaj Bedeli', value: `${formatTL(canliHesap.stopaj)} ₺`, color: '#555', bg: RENK.yuzeyKoyu },
+              { label: 'Kâr Oranı', value: `%${canliHesap.karOrani}`, color: RENK.yesil, bg: TON.yesil.bg },
+              { label: 'KDV', value: `${formatTL(canliHesap.odenecekKDV)} ₺`, color: TON.bekle.fg, bg: TON.bekle.bg },
             ];
           } else {
             cards = [
               {
                 label: 'Komisyon (Toplam)',
                 value: `${formatTL(canliHesap.toplamKomisyon)} ₺`,
-                color: '#A5530F',
-                bg: '#F7E7C4',
+                color: TON.turuncu.fg,
+                bg: TON.bekle.bg,
                 sub: `Komisyon: ${formatTL(canliHesap.komisyonTutari)}₺ + Hizmet: ${formatTL(canliHesap.hizmetBedeli)}₺ + Stopaj: ${formatTL(canliHesap.stopaj)}₺`,
               },
-              { label: 'Yat. Geri Dönüş Oranı', value: `%${canliHesap.yatirimGeriDonus}`, color: '#1E4A86', bg: '#DCE6F4' },
-              { label: 'Kâr Oranı', value: `%${canliHesap.karOrani}`, color: '#1D6A3B', bg: '#D8EBDD' },
-              { label: 'KDV', value: `${formatTL(canliHesap.odenecekKDV)} ₺`, color: '#8A5300', bg: '#F7E7C4' },
+              { label: 'Yat. Geri Dönüş Oranı', value: `%${canliHesap.yatirimGeriDonus}`, color: RENK.mavi, bg: TON.mavi.bg },
+              { label: 'Kâr Oranı', value: `%${canliHesap.karOrani}`, color: RENK.yesil, bg: TON.yesil.bg },
+              { label: 'KDV', value: `${formatTL(canliHesap.odenecekKDV)} ₺`, color: TON.bekle.fg, bg: TON.bekle.bg },
             ];
           }
           return cards
@@ -73,7 +74,7 @@ const KomisyonOnizleme = ({ sf, canliPlatformTipi, canliHesap, karGor }: Komisyo
       </Box>
 
       {/* KDV detayları - Platform bazlı */}
-      <Paper sx={{ p: 1.5, bgcolor: '#FBFBF8', mb: 2 }}>
+      <Paper sx={{ p: 1.5, bgcolor: RENK.yuzey, mb: 2 }}>
         <Typography variant="caption" fontWeight="bold" color="text.secondary" gutterBottom>
           KDV Detayları
         </Typography>
@@ -113,15 +114,15 @@ const KomisyonOnizleme = ({ sf, canliPlatformTipi, canliHesap, karGor }: Komisyo
           sx={{
             p: 2,
             textAlign: 'center',
-            bgcolor: canliHesap.netKar >= 0 ? '#D8EBDD' : '#F6DAD7',
+            bgcolor: canliHesap.netKar >= 0 ? TON.yesil.bg : TON.kirmizi.bg,
             borderRadius: 2,
-            border: `2px solid ${canliHesap.netKar >= 0 ? '#1D6A3B' : '#c62828'}`,
+            border: `2px solid ${canliHesap.netKar >= 0 ? RENK.yesil : RENK.kirmizi}`,
           }}
         >
           <Typography variant="body2" color="text.secondary">
             Net Kâr ({canliHesap.miktar} adet)
           </Typography>
-          <Typography variant="h4" fontWeight="bold" sx={{ color: canliHesap.netKar >= 0 ? '#1D6A3B' : '#c62828' }}>
+          <Typography variant="h4" fontWeight="bold" sx={{ color: canliHesap.netKar >= 0 ? RENK.yesil : RENK.kirmizi }}>
             {formatTL(canliHesap.netKar)} ₺
           </Typography>
         </Paper>

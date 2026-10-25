@@ -8,6 +8,7 @@ import { Box, Button, Typography, Dialog, DialogContent, DialogActions, TextFiel
 import DeleteIcon from '@mui/icons-material/Delete';
 import PhotoIcon from '@mui/icons-material/PhotoCamera';
 import { vitrinService } from '../../vitrinApi';
+import { RENK } from '../../../../app/tokenlar';
 
 // Kategori iletişim penceresi; hizmet sayfalarında başlık ve görsel de düzenlenir.
 interface IletisimDialogProps {
@@ -35,7 +36,7 @@ const IletisimDialog = ({ ilet, aktifKategori, isHizmet, kategori, iletisim }: I
                 placeholder={aktifKategori.label}
               />
               {/* Hizmet görseli */}
-              <Box sx={{ border: '1px solid #D2D3CA', borderRadius: 2, p: 1.5 }}>
+              <Box sx={{ border: `1px solid ${RENK.cizgi}`, borderRadius: 2, p: 1.5 }}>
                 <Typography variant="subtitle2" sx={{ mb: 1 }}>
                   Sayfa Görseli
                 </Typography>

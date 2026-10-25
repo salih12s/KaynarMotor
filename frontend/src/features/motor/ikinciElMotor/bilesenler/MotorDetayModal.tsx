@@ -6,6 +6,7 @@ import { BelgeBolumu } from '../../SatisBelgeleri';
 import { useReactToPrint } from 'react-to-print';
 import { sayiYaz, tarihYaz, sayiDegeri, type Sayi } from '../../../../shared/utils/bicim';
 import type { Motor } from '../../../../shared/tipler';
+import { RENK, TON } from '../../../../app/tokenlar';
 
 // Satış detay penceresi: yetkiye göre finansal kutular ve net kâr (admin), yazdırma, belgeler (muhasebeci için yok).
 const InfoRow = ({ label, value }: { label: string; value?: ReactNode }) => (
@@ -54,7 +55,7 @@ const MotorDetayModal = ({ open, data, onClose, printRef, isMobile, canAlis, can
           variant="contained"
           size="small"
           onClick={handlePrint}
-          sx={{ bgcolor: '#C62828', '&:hover': { bgcolor: '#A61F1F' }, mr: 1 }}
+          sx={{ bgcolor: RENK.kirmizi, '&:hover': { bgcolor: RENK.kirmiziKoyu }, mr: 1 }}
         >
           Yazdır
         </Button>
@@ -163,61 +164,61 @@ const MotorDetayModal = ({ open, data, onClose, printRef, isMobile, canAlis, can
               <Divider sx={{ mb: 2 }} />
               <Grid container spacing={2} sx={{ mb: 2 }}>
                 <Grid size={{ xs: 6, md: 3 }}>
-                  <Paper sx={{ p: 1.5, textAlign: 'center', bgcolor: '#F6DAD7', borderLeft: '4px solid #C62828' }}>
+                  <Paper sx={{ p: 1.5, textAlign: 'center', bgcolor: TON.kirmizi.bg, borderLeft: `4px solid ${RENK.kirmizi}` }}>
                     <Typography variant="caption" color="text.secondary">
                       Alış
                     </Typography>
-                    <Typography fontWeight="bold" sx={{ color: '#C62828' }}>
+                    <Typography fontWeight="bold" sx={{ color: RENK.kirmizi }}>
                       ₺{formatTL(alis)}
                     </Typography>
                   </Paper>
                 </Grid>
                 <Grid size={{ xs: 6, md: 3 }}>
-                  <Paper sx={{ p: 1.5, textAlign: 'center', bgcolor: '#F6DAD7', borderLeft: '4px solid #C62828' }}>
+                  <Paper sx={{ p: 1.5, textAlign: 'center', bgcolor: TON.kirmizi.bg, borderLeft: `4px solid ${RENK.kirmizi}` }}>
                     <Typography variant="caption" color="text.secondary">
                       Satış
                     </Typography>
-                    <Typography fontWeight="bold" sx={{ color: '#C62828' }}>
+                    <Typography fontWeight="bold" sx={{ color: RENK.kirmizi }}>
                       ₺{formatTL(satis)}
                     </Typography>
                   </Paper>
                 </Grid>
                 <Grid size={{ xs: 6, md: 3 }}>
-                  <Paper sx={{ p: 1.5, textAlign: 'center', bgcolor: '#F6DAD7', borderLeft: '4px solid #c62828' }}>
+                  <Paper sx={{ p: 1.5, textAlign: 'center', bgcolor: TON.kirmizi.bg, borderLeft: `4px solid ${RENK.kirmizi}` }}>
                     <Typography variant="caption" color="text.secondary">
                       Noter Alış
                     </Typography>
-                    <Typography fontWeight="bold" sx={{ color: '#c62828' }}>
+                    <Typography fontWeight="bold" sx={{ color: RENK.kirmizi }}>
                       ₺{formatTL(noterAlis)}
                     </Typography>
                   </Paper>
                 </Grid>
                 <Grid size={{ xs: 6, md: 3 }}>
-                  <Paper sx={{ p: 1.5, textAlign: 'center', bgcolor: '#F6DAD7', borderLeft: '4px solid #c62828' }}>
+                  <Paper sx={{ p: 1.5, textAlign: 'center', bgcolor: TON.kirmizi.bg, borderLeft: `4px solid ${RENK.kirmizi}` }}>
                     <Typography variant="caption" color="text.secondary">
                       Noter Satış
                     </Typography>
-                    <Typography fontWeight="bold" sx={{ color: '#c62828' }}>
+                    <Typography fontWeight="bold" sx={{ color: RENK.kirmizi }}>
                       ₺{formatTL(noterSatis)}
                     </Typography>
                   </Paper>
                 </Grid>
                 <Grid size={{ xs: 6, md: canKar ? 4 : 6 }}>
-                  <Paper sx={{ p: 1.5, textAlign: 'center', bgcolor: '#F6DAD7', borderLeft: '4px solid #C62828' }}>
+                  <Paper sx={{ p: 1.5, textAlign: 'center', bgcolor: TON.kirmizi.bg, borderLeft: `4px solid ${RENK.kirmizi}` }}>
                     <Typography variant="caption" color="text.secondary">
                       Masraflar
                     </Typography>
-                    <Typography fontWeight="bold" sx={{ color: '#C62828' }}>
+                    <Typography fontWeight="bold" sx={{ color: RENK.kirmizi }}>
                       ₺{formatTL(masraflar)}
                     </Typography>
                   </Paper>
                 </Grid>
                 <Grid size={{ xs: 6, md: canKar ? 4 : 6 }}>
-                  <Paper sx={{ p: 1.5, textAlign: 'center', bgcolor: '#F6DAD7', borderLeft: '4px solid #C62828' }}>
+                  <Paper sx={{ p: 1.5, textAlign: 'center', bgcolor: TON.kirmizi.bg, borderLeft: `4px solid ${RENK.kirmizi}` }}>
                     <Typography variant="caption" color="text.secondary">
                       Toplam Maliyet
                     </Typography>
-                    <Typography fontWeight="bold" sx={{ color: '#C62828' }}>
+                    <Typography fontWeight="bold" sx={{ color: RENK.kirmizi }}>
                       ₺{formatTL(toplamMaliyet)}
                     </Typography>
                   </Paper>
@@ -228,14 +229,14 @@ const MotorDetayModal = ({ open, data, onClose, printRef, isMobile, canAlis, can
                       sx={{
                         p: 1.5,
                         textAlign: 'center',
-                        bgcolor: kar >= 0 ? '#D8EBDD' : '#F6DAD7',
-                        borderLeft: `4px solid ${kar >= 0 ? '#1D6A3B' : '#C62828'}`,
+                        bgcolor: kar >= 0 ? TON.yesil.bg : TON.kirmizi.bg,
+                        borderLeft: `4px solid ${kar >= 0 ? RENK.yesil : RENK.kirmizi}`,
                       }}
                     >
                       <Typography variant="caption" color="text.secondary">
                         NET KÂR
                       </Typography>
-                      <Typography variant="h6" fontWeight="bold" sx={{ color: kar >= 0 ? '#1D6A3B' : '#C62828' }}>
+                      <Typography variant="h6" fontWeight="bold" sx={{ color: kar >= 0 ? RENK.yesil : RENK.kirmizi }}>
                         ₺{formatTL(kar)}
                       </Typography>
                     </Paper>

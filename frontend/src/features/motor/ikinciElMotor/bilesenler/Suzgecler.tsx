@@ -3,7 +3,7 @@ import { Box, Button, TextField, InputAdornment } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import AddIcon from '@mui/icons-material/Add';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
-import { RENK } from '../../../../app/tokenlar';
+import { RENK, TON } from '../../../../app/tokenlar';
 
 // Arama kutusu, satış/alım tarihi aralığı; sağda "Excel'e Aktar" ve "Motor Satış" düğmeleri.
 interface SuzgeclerProps {
@@ -59,7 +59,7 @@ const Suzgecler = ({ search, setSearch, tarihBaslangic, setTarihBaslangic, tarih
         size="large"
         startIcon={<FileDownloadIcon />}
         onClick={onExcel}
-        sx={{ color: RENK.yesil, borderColor: RENK.yesil, '&:hover': { borderColor: RENK.yesil, bgcolor: '#D8EBDD' }, flex: { xs: 1, md: 'none' } }}
+        sx={{ color: RENK.yesil, borderColor: RENK.yesil, '&:hover': { borderColor: RENK.yesil, bgcolor: TON.yesil.bg }, flex: { xs: 1, md: 'none' } }}
       >
         Excel'e Aktar
       </Button>

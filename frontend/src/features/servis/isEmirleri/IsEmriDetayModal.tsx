@@ -25,7 +25,7 @@ import { useKarGor } from '../../auth/AuthContext';
 import { printServisQr, printIsEmri } from './servisYazdir';
 import { sayiYaz, tarihYaz, sayiDegeri } from '../../../shared/utils/bicim';
 import { DialogBasligi, Plaka } from '../../../shared/ui';
-import { FONT, RENK, TON } from '../../../app/tokenlar';
+import { FONT, RENK, TON, ISLEM } from '../../../app/tokenlar';
 import { durumLabel, durumTon } from './isEmriVeri';
 import type { IsEmriDetayi } from '../../../shared/tipler';
 
@@ -218,7 +218,7 @@ const IsEmriDetayModal = ({ open, data, onClose, onEdit, isMobile }: IsEmriDetay
                             {karGor && (
                               <>
                                 {' '}
-                                • <span style={{ color: pKar >= 0 ? RENK.yesil : '#B3261E', fontWeight: 'bold' }}>Kâr: ₺{sayiYaz(pKar)}</span>
+                                • <span style={{ color: pKar >= 0 ? RENK.yesil : ISLEM.sil.fg, fontWeight: 'bold' }}>Kâr: ₺{sayiYaz(pKar)}</span>
                               </>
                             )}
                           </Typography>

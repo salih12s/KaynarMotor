@@ -4,6 +4,7 @@ import type { KategoriBilgisi } from '../../vitrinSabitleri';
 import { Box, Button, Typography, Paper } from '@mui/material';
 import PhoneIcon from '@mui/icons-material/Phone';
 import { vitrinService } from '../../vitrinApi';
+import { RENK } from '../../../../app/tokenlar';
 
 // Hizmet kategorilerinde (bakım, nakliye, sigorta) ilan yerine gösterilen ayar paneli.
 interface HizmetPaneliProps {
@@ -16,7 +17,7 @@ interface HizmetPaneliProps {
 const HizmetPaneli = ({ curIletisim, kategori, aktifKategori, onDuzenle }: HizmetPaneliProps) => {
   return (
     <Paper sx={{ mb: 2, overflow: 'hidden' }}>
-      <Box sx={{ bgcolor: '#F3F3EE' }}>
+      <Box sx={{ bgcolor: RENK.yuzeyKoyu }}>
         {curIletisim?.gorsel_var ? (
           <Box
             component="img"

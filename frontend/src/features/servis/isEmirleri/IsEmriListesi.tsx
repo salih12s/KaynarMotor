@@ -4,7 +4,7 @@ import { printServisQr } from './servisYazdir';
 import { durumTon, durumLabel, formatTarih, type ListeSatiri } from './isEmriVeri';
 import { sayiYaz, sayiDegeri } from '../../../shared/utils/bicim';
 import { Damga, IslemDugmesi, Plaka } from '../../../shared/ui';
-import { FONT, RENK } from '../../../app/tokenlar';
+import { FONT, RENK, ISLEM } from '../../../app/tokenlar';
 
 const personelAdi = (ie: ListeSatiri) => ie.teslim_eden_teknisyen || ie.teslim_alan_ad_soyad || ie.olusturan_kisi || '-';
 
@@ -109,7 +109,7 @@ const IsEmriListesi = ({ filtered, isMobile, karGor, isAdmin, onDetay, onYazdir,
                 </TableCell>
                 <TableCell sx={{ fontSize: '0.82rem !important' }}>{personelAdi(ie)}</TableCell>
                 <TableCell
-                  sx={{ maxWidth: 190, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#3C4046' }}
+                  sx={{ maxWidth: 190, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: ISLEM.yaz.fg }}
                   title={ie.ariza_sikayetler || ''}
                 >
                   {ie.ariza_sikayetler || '-'}

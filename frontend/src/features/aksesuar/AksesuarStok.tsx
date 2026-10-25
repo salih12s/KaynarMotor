@@ -34,6 +34,7 @@ import PrintIcon from '@mui/icons-material/Print';
 import { aksesuarStokService } from './aksesuarApi';
 import { sayiYaz } from '../../shared/utils/bicim';
 import type { AksesuarStok as AksesuarStokKaydi } from '../../shared/tipler';
+import { TON } from '../../app/tokenlar';
 
 const BEDEN_OPTIONS = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
 const KATEGORI_OPTIONS = ['Aksesuar', 'Demir', 'Tank Ped', 'Yedek Parça', 'Ekipman', 'Sticker'];
@@ -167,7 +168,7 @@ const AksesuarStok = () => {
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
           {filteredStoklar.length === 0 && <Alert severity="info">Kayıt yok</Alert>}
           {filteredStoklar.map((s) => (
-            <Paper key={s.id} sx={{ p: 1.5, bgcolor: (s.mevcut || 0) <= 0 ? '#F6DAD7' : '#fff' }}>
+            <Paper key={s.id} sx={{ p: 1.5, bgcolor: (s.mevcut || 0) <= 0 ? TON.kirmizi.bg : '#fff' }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
                 <Typography variant="subtitle2" fontWeight="bold">
                   {s.stok_adi}
@@ -209,7 +210,7 @@ const AksesuarStok = () => {
             </TableHead>
             <TableBody>
               {filteredStoklar.map((s) => (
-                <TableRow key={s.id} hover sx={{ bgcolor: (s.mevcut || 0) <= 0 ? '#F6DAD7' : 'inherit' }}>
+                <TableRow key={s.id} hover sx={{ bgcolor: (s.mevcut || 0) <= 0 ? TON.kirmizi.bg : 'inherit' }}>
                   <TableCell>{s.stok_kodu || '-'}</TableCell>
                   <TableCell>{s.stok_adi}</TableCell>
                   <TableCell>{s.marka || '-'}</TableCell>

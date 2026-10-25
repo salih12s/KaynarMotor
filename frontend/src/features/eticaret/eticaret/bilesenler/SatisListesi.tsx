@@ -1,7 +1,7 @@
 import React from 'react';
 import type { EticaretSatis } from '../../../../shared/tipler';
 import { IslemDugmesi, sagaSutunlar } from '../../../../shared/ui';
-import { RENK } from '../../../../app/tokenlar';
+import { RENK, TON } from '../../../../app/tokenlar';
 import { Box, Paper, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Alert, Chip } from '@mui/material';
 
 import { hesaplaKomisyon, detectPlatform } from '../../komisyon';
@@ -33,7 +33,7 @@ const SatisListesi = ({ satislar, platformFiltre, isMobile, karGor, onDetay, onD
               <Typography variant="subtitle2" fontWeight="bold">
                 {s.urun_adi}
               </Typography>
-              <Chip label={s.platform_adi || '-'} size="small" sx={{ bgcolor: '#F6DAD7', color: '#C62828', fontWeight: 'bold', fontSize: '0.7rem' }} />
+              <Chip label={s.platform_adi || '-'} size="small" sx={{ bgcolor: TON.kirmizi.bg, color: RENK.kirmizi, fontWeight: 'bold', fontSize: '0.7rem' }} />
             </Box>
             <Typography variant="body2" color="text.secondary">
               Adet: {s.adet} • {tarihYaz(s.tarih)}

@@ -7,6 +7,7 @@ import { Box, Paper, Typography, Table, TableBody, TableCell, TableContainer, Ta
 import { formatTL, formatDate, karColor, headerSx, sagaSutunlar } from '../bicim';
 import KartItem, { KART_RENKLERI, kartlar } from '../bilesenler/KartItem';
 import { hesaplaKomisyon, detectPlatform } from '../../eticaret/komisyon';
+import { RENK, TON } from '../../../app/tokenlar';
 
 // E-Ticaret sekmesi. Net kâr sunucudan değil hesaplaKomisyon ile satır satır hesaplanır.
 interface ETicaretProps {
@@ -48,7 +49,7 @@ const ETicaret = ({ rapor, hesaplananEticaretKar, isMobile, onDetay }: ETicaretP
                     <Chip
                       label={e.platform_adi || '-'}
                       size="small"
-                      sx={{ bgcolor: '#F6DAD7', color: '#C62828', fontWeight: 'bold', fontSize: '0.65rem', height: 20 }}
+                      sx={{ bgcolor: TON.kirmizi.bg, color: RENK.kirmizi, fontWeight: 'bold', fontSize: '0.65rem', height: 20 }}
                     />
                   </Box>
                   <Typography variant="body2" color="text.secondary">

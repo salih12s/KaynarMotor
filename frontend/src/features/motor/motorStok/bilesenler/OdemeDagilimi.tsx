@@ -1,6 +1,6 @@
 import React from 'react';
 import PaymentsIcon from '@mui/icons-material/PaymentsOutlined';
-import { RENK } from '../../../../app/tokenlar';
+import { RENK, TON } from '../../../../app/tokenlar';
 import { IslemDugmesi, BolumBasligi } from '../../../../shared/ui';
 import { Box, Typography, Button, TextField, Alert, Grid, MenuItem } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
@@ -44,7 +44,7 @@ const OdemeDagilimi = ({ hs }: { hs: HizliSatisDurumuVeIslemleri }) => {
           const kalan = satis - odemeToplam;
           const fmt = (v: number) => `₺${sayiYaz(v)}`;
           return (
-            <Box sx={{ mt: 1.5, p: 1.5, borderRadius: 1, bgcolor: '#F3F3EE', border: '1px solid #D2D3CA' }}>
+            <Box sx={{ mt: 1.5, p: 1.5, borderRadius: 1, bgcolor: RENK.yuzeyKoyu, border: `1px solid ${RENK.cizgi}` }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                 <Typography variant="body2">Toplam Satış:</Typography>
                 <Typography variant="body2" fontWeight="bold">
@@ -59,7 +59,7 @@ const OdemeDagilimi = ({ hs }: { hs: HizliSatisDurumuVeIslemleri }) => {
               </Box>
               <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                 <Typography variant="body2">{kalan < 0 ? 'Fazla Ödeme:' : 'Kalan:'}</Typography>
-                <Typography variant="body2" fontWeight="bold" sx={{ color: kalan === 0 ? '#1D6A3B' : kalan < 0 ? '#A61F1F' : '#A5530F' }}>
+                <Typography variant="body2" fontWeight="bold" sx={{ color: kalan === 0 ? RENK.yesil : kalan < 0 ? RENK.kirmiziKoyu : TON.turuncu.fg }}>
                   {fmt(Math.abs(kalan))}
                 </Typography>
               </Box>

@@ -2,6 +2,7 @@ import React from 'react';
 import { Box, Typography, TextField, InputAdornment } from '@mui/material';
 import { sayiYaz } from '../../../../shared/utils/bicim';
 import type { AksesuarlarDurumu } from '../useAksesuarlar';
+import { RENK } from '../../../../app/tokenlar';
 
 // Satış formu: ara toplam, indirim girişi, toplam ve (kâr yetkisi olana) kâr.
 const ToplamOzeti = ({ a, karGor }: { a: AksesuarlarDurumu; karGor: boolean }) => {
@@ -24,7 +25,7 @@ const ToplamOzeti = ({ a, karGor }: { a: AksesuarlarDurumu; karGor: boolean }) =
           />
         </Box>
         {indirim > 0 && (
-          <Typography variant="body2" sx={{ color: '#c62828' }}>
+          <Typography variant="body2" sx={{ color: RENK.kirmizi }}>
             İndirim: −{sayiYaz(indirim)} ₺
           </Typography>
         )}

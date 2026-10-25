@@ -55,7 +55,7 @@ export const TaksitTablo = ({ sonuc, isMobile }: { sonuc: TaksitSatiri[] | null;
     return (
       <Stack spacing={1.5}>
         {sonuc.map((r) => (
-          <Paper key={r.ay} sx={{ p: 2, borderRadius: 2, borderLeft: '4px solid #C62828' }}>
+          <Paper key={r.ay} sx={{ p: 2, borderRadius: 2, borderLeft: `4px solid ${RENK.kirmizi}` }}>
             <Typography fontWeight="bold" sx={{ mb: 0.5 }}>
               {r.ay} Ay
             </Typography>
@@ -69,7 +69,7 @@ export const TaksitTablo = ({ sonuc, isMobile }: { sonuc: TaksitSatiri[] | null;
               <Typography variant="body2" color="text.secondary">
                 Aylık Ödeme
               </Typography>
-              <Typography fontWeight="bold" sx={{ color: '#C62828' }}>
+              <Typography fontWeight="bold" sx={{ color: RENK.kirmizi }}>
                 {fmtTL(r.aylik)}
               </Typography>
             </Box>
@@ -93,7 +93,7 @@ export const TaksitTablo = ({ sonuc, isMobile }: { sonuc: TaksitSatiri[] | null;
             <TableRow key={r.ay} hover>
               <TableCell sx={{ fontWeight: 600 }}>{r.ay} Ay</TableCell>
               <TableCell>{fmtTL(r.toplam)}</TableCell>
-              <TableCell sx={{ fontWeight: 'bold', color: '#C62828' }}>{fmtTL(r.aylik)}</TableCell>
+              <TableCell sx={{ fontWeight: 'bold', color: RENK.kirmizi }}>{fmtTL(r.aylik)}</TableCell>
             </TableRow>
           ))}
         </TableBody>
@@ -195,7 +195,7 @@ const TaksitHesaplama = () => {
               size="large"
               startIcon={<CalculateIcon />}
               onClick={hesapla}
-              sx={{ bgcolor: '#C62828', '&:hover': { bgcolor: '#A61F1F' }, whiteSpace: 'nowrap', px: 3 }}
+              sx={{ bgcolor: RENK.kirmizi, '&:hover': { bgcolor: RENK.kirmiziKoyu }, whiteSpace: 'nowrap', px: 3 }}
             >
               Hesapla
             </Button>

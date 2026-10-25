@@ -2,7 +2,7 @@ import React from 'react';
 import GroupIcon from '@mui/icons-material/GroupOutlined';
 import PersonIcon from '@mui/icons-material/PersonOutline';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCartOutlined';
-import { MENU_RENK, RENK } from '../../../../app/tokenlar';
+import { MENU_RENK, RENK, TON } from '../../../../app/tokenlar';
 import { Button, TextField, Dialog, DialogContent, DialogActions, Alert, Grid, InputAdornment, Autocomplete } from '@mui/material';
 import { DialogBasligi, BolumBasligi } from '../../../../shared/ui';
 import { BelgeBolumu } from '../../SatisBelgeleri';
@@ -140,7 +140,7 @@ const HizliSatisModal = ({ hs, perms, musteri, isMobile }: HizliSatisModalProps)
                   value={hizliForm.yatirimci_kar}
                   onChange={(e) => setHizliForm({ ...hizliForm, yatirimci_kar: e.target.value })}
                   helperText="Yatırımcıya verilecek tutar. Kalanı işletme (sizin) kârınızdır."
-                  sx={{ '& .MuiInputBase-root': { bgcolor: '#DCE6F4' } }}
+                  sx={{ '& .MuiInputBase-root': { bgcolor: TON.mavi.bg } }}
                   InputProps={{ startAdornment: <InputAdornment position="start">₺</InputAdornment> }}
                 />
               </Grid>
@@ -157,7 +157,7 @@ const HizliSatisModal = ({ hs, perms, musteri, isMobile }: HizliSatisModalProps)
         <Button onClick={kapat} disabled={satisKaydediliyor}>
           İptal
         </Button>
-        <Button variant="contained" onClick={handleHizliSatis} disabled={satisKaydediliyor} sx={{ bgcolor: '#1D6A3B', '&:hover': { bgcolor: '#1D6A3B' } }}>
+        <Button variant="contained" onClick={handleHizliSatis} disabled={satisKaydediliyor} sx={{ bgcolor: RENK.yesil, '&:hover': { bgcolor: RENK.yesil } }}>
           {satisKaydediliyor ? 'Kaydediliyor…' : 'Satışı Tamamla'}
         </Button>
       </DialogActions>

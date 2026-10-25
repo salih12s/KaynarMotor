@@ -39,10 +39,10 @@ import type { Borc, BorcKaynagi, VeresiyeOzeti } from '../../shared/tipler';
 import { FONT, RENK, TON } from '../../app/tokenlar';
 
 const KAYNAK_INFO: Record<BorcKaynagi, { label: string; color: string; bg: string; icon: ReactElement; path: string }> = {
-  motor: { label: 'Motor Satış', color: '#C62828', bg: '#F6DAD7', icon: <MotorIcon fontSize="small" />, path: '/ikinci-el-motor' },
-  servis: { label: 'Servis', color: '#1E4A86', bg: '#DCE6F4', icon: <BuildIcon fontSize="small" />, path: '/' },
-  aksesuar: { label: 'Aksesuar', color: '#1D6A3B', bg: '#D8EBDD', icon: <ShopIcon fontSize="small" />, path: '/aksesuarlar' },
-  yedek_parca: { label: 'Yedek Parça', color: '#5B3A8C', bg: '#E7DFF3', icon: <SettingsIcon fontSize="small" />, path: '/yedek-parcalar' },
+  motor: { label: 'Motor Satış', color: RENK.kirmizi, bg: TON.kirmizi.bg, icon: <MotorIcon fontSize="small" />, path: '/ikinci-el-motor' },
+  servis: { label: 'Servis', color: RENK.mavi, bg: TON.mavi.bg, icon: <BuildIcon fontSize="small" />, path: '/' },
+  aksesuar: { label: 'Aksesuar', color: RENK.yesil, bg: TON.yesil.bg, icon: <ShopIcon fontSize="small" />, path: '/aksesuarlar' },
+  yedek_parca: { label: 'Yedek Parça', color: TON.mor.fg, bg: TON.mor.bg, icon: <SettingsIcon fontSize="small" />, path: '/yedek-parcalar' },
 };
 
 const Veresiye = () => {
@@ -81,7 +81,7 @@ const Veresiye = () => {
   const fmtTL = (v: Sayi) => `₺${sayiYaz(v)}`;
 
   const ozetCards = [
-    { key: 'toplam', label: 'Toplam Borç', value: ozet.toplam, color: '#C62828', bg: '#F6DAD7' },
+    { key: 'toplam', label: 'Toplam Borç', value: ozet.toplam, color: RENK.kirmizi, bg: TON.kirmizi.bg },
     { key: 'motor', label: 'Motor Satış', value: ozet.motor, color: KAYNAK_INFO.motor.color, bg: KAYNAK_INFO.motor.bg },
     { key: 'servis', label: 'Servis', value: ozet.servis, color: KAYNAK_INFO.servis.color, bg: KAYNAK_INFO.servis.bg },
     { key: 'aksesuar', label: 'Aksesuar', value: ozet.aksesuar, color: KAYNAK_INFO.aksesuar.color, bg: KAYNAK_INFO.aksesuar.bg },
@@ -189,7 +189,7 @@ const Veresiye = () => {
                     <Typography variant="body2" color="text.secondary">
                       Toplam: {fmtTL(b.toplam_tutar)}
                     </Typography>
-                    <Typography variant="h6" sx={{ color: '#C62828' }} fontWeight="bold">
+                    <Typography variant="h6" sx={{ color: RENK.kirmizi }} fontWeight="bold">
                       {fmtTL(b.kalan_odeme)}
                     </Typography>
                   </Box>
@@ -293,8 +293,8 @@ const Veresiye = () => {
                   </Grid>
 
                   {/* Ödeme özeti */}
-                  <Paper variant="outlined" sx={{ p: 1.5, mb: 2, bgcolor: '#F7E7C4', borderLeft: '4px solid #A5530F' }}>
-                    <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#A5530F', mb: 1 }}>
+                  <Paper variant="outlined" sx={{ p: 1.5, mb: 2, bgcolor: TON.bekle.bg, borderLeft: `4px solid ${TON.turuncu.fg}` }}>
+                    <Typography variant="subtitle2" fontWeight="bold" sx={{ color: TON.turuncu.fg, mb: 1 }}>
                       Ödeme Durumu
                     </Typography>
                     <Grid container spacing={2}>
@@ -308,7 +308,7 @@ const Veresiye = () => {
                         <Typography variant="caption" color="text.secondary">
                           Ödenen
                         </Typography>
-                        <Typography fontWeight="bold" sx={{ color: '#1D6A3B' }}>
+                        <Typography fontWeight="bold" sx={{ color: RENK.yesil }}>
                           {fmtTL(odenen)}
                         </Typography>
                       </Grid>
@@ -316,7 +316,7 @@ const Veresiye = () => {
                         <Typography variant="caption" color="text.secondary">
                           Kalan Borç
                         </Typography>
-                        <Typography fontWeight="bold" sx={{ color: '#C62828' }}>
+                        <Typography fontWeight="bold" sx={{ color: RENK.kirmizi }}>
                           {fmtTL(b.kalan_odeme)}
                         </Typography>
                       </Grid>
@@ -474,7 +474,7 @@ const Veresiye = () => {
                           <TableContainer component={Paper} variant="outlined">
                             <Table size="small">
                               <TableHead>
-                                <TableRow sx={{ bgcolor: '#F3F3EE' }}>
+                                <TableRow sx={{ bgcolor: RENK.yuzeyKoyu }}>
                                   <TableCell sx={{ fontWeight: 'bold' }}>Parça</TableCell>
                                   <TableCell align="center" sx={{ fontWeight: 'bold' }}>
                                     Adet
@@ -553,7 +553,7 @@ const Veresiye = () => {
                           <TableContainer component={Paper} variant="outlined">
                             <Table size="small">
                               <TableHead>
-                                <TableRow sx={{ bgcolor: '#F3F3EE' }}>
+                                <TableRow sx={{ bgcolor: RENK.yuzeyKoyu }}>
                                   <TableCell sx={{ fontWeight: 'bold' }}>Ürün</TableCell>
                                   <TableCell align="center" sx={{ fontWeight: 'bold' }}>
                                     Adet

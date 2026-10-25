@@ -13,6 +13,7 @@ import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import ArchiveIcon from '@mui/icons-material/Archive';
 import { vitrinService } from '../../vitrinApi';
 import { sayiYaz } from '../../../../shared/utils/bicim';
+import { RENK } from '../../../../app/tokenlar';
 
 // Tek bir ilan kartı: sıra kutusu / sürükleme tutacağı, görsel, rozetler, fiyat, yayın düğmesi ve işlemler.
 interface IlanKartiProps {
@@ -109,7 +110,7 @@ const IlanKarti = ({ u, index, liste, isAdmin, isMotor, onDuzenle }: IlanKartiPr
             </Typography>
           </Box>
         )}
-        <Box sx={{ position: 'relative', width: '100%', aspectRatio: '4 / 3', overflow: 'hidden', bgcolor: '#F3F3EE', flexShrink: 0 }}>
+        <Box sx={{ position: 'relative', width: '100%', aspectRatio: '4 / 3', overflow: 'hidden', bgcolor: RENK.yuzeyKoyu, flexShrink: 0 }}>
           {u.kapak_gorsel_id ? (
             <CardMedia
               component="img"

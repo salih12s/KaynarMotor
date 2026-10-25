@@ -89,7 +89,7 @@ const Raporlar = () => {
 
       {loading && (
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-          <CircularProgress sx={{ color: '#C62828' }} />
+          <CircularProgress sx={{ color: RENK.kirmizi }} />
         </Box>
       )}
       {error && (

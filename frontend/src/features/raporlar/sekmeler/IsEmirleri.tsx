@@ -4,7 +4,7 @@ import { IslemDugmesi } from '../../../shared/ui';
 import { Box, Paper, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
 
 import { formatTL, formatDate, karColor, headerSx } from '../bicim';
-import { RENK } from '../../../app/tokenlar';
+import { RENK, TON } from '../../../app/tokenlar';
 import KartItem from '../bilesenler/KartItem';
 import { sayiYaz, sayiDegeri } from '../../../shared/utils/bicim';
 
@@ -32,10 +32,10 @@ const IsEmirleri = ({ rapor, isMobile, seciliPersonel, onDetay }: IsEmirleriProp
     <>
       <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 2, mb: 2 }}>
         {[
-          { label: 'Toplam İş Emri', value: filtered.length, color: '#C62828' },
-          { label: 'Servis Gelir', value: `₺${formatTL(fGelir)}`, color: '#1E4A86' },
-          { label: 'Servis Maliyet', value: `₺${formatTL(fMaliyet)}`, color: '#A5530F' },
-          { label: 'Servis Kâr', value: `₺${formatTL(fKar)}`, color: '#1D6A3B' },
+          { label: 'Toplam İş Emri', value: filtered.length, color: RENK.kirmizi },
+          { label: 'Servis Gelir', value: `₺${formatTL(fGelir)}`, color: RENK.mavi },
+          { label: 'Servis Maliyet', value: `₺${formatTL(fMaliyet)}`, color: TON.turuncu.fg },
+          { label: 'Servis Kâr', value: `₺${formatTL(fKar)}`, color: RENK.yesil },
         ].map((k, i) => (
           <KartItem key={i} label={k.label} value={k.value} color={k.color} />
         ))}

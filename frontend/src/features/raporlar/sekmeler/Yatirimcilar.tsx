@@ -3,6 +3,7 @@ import type { YatirimciOzeti } from '../../../shared/tipler';
 import { Box, Paper, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Alert } from '@mui/material';
 import { formatTL, headerSx, sagaSutunlar } from '../bicim';
 import KartItem, { KART_RENKLERI } from '../bilesenler/KartItem';
+import { RENK, TON } from '../../../app/tokenlar';
 
 // Yatırımcılar sekmesi (yalnızca admin): stok + motor satışlarından türetilen özet.
 const Yatirimcilar = ({ yatirimciOzetGosterim, isMobile }: { yatirimciOzetGosterim: YatirimciOzeti[]; isMobile: boolean }) => {
@@ -14,13 +15,13 @@ const Yatirimcilar = ({ yatirimciOzetGosterim, isMobile }: { yatirimciOzetGoster
         <>
           <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 2, mb: 2 }}>
             {[
-              { label: 'Yatırımcı Sayısı', value: yatirimciOzetGosterim.length, color: '#C62828' },
-              { label: 'Toplam Stok', value: yatirimciOzetGosterim.reduce((t, y) => t + Number(y.stok_adet || 0), 0), color: '#1E4A86' },
-              { label: 'Toplam Satılan', value: yatirimciOzetGosterim.reduce((t, y) => t + Number(y.satilan_adet || 0), 0), color: '#A5530F' },
+              { label: 'Yatırımcı Sayısı', value: yatirimciOzetGosterim.length, color: RENK.kirmizi },
+              { label: 'Toplam Stok', value: yatirimciOzetGosterim.reduce((t, y) => t + Number(y.stok_adet || 0), 0), color: RENK.mavi },
+              { label: 'Toplam Satılan', value: yatirimciOzetGosterim.reduce((t, y) => t + Number(y.satilan_adet || 0), 0), color: TON.turuncu.fg },
               {
                 label: 'Toplam Yatırımcı Kârı',
                 value: `₺${formatTL(yatirimciOzetGosterim.reduce((t, y) => t + Number(y.yatirimci_kar || 0), 0))}`,
-                color: '#1D6A3B',
+                color: RENK.yesil,
               },
             ].map((k, i) => (
               <KartItem key={i} label={k.label} value={k.value} color={k.color || KART_RENKLERI[i % KART_RENKLERI.length]} />
@@ -45,10 +46,10 @@ const Yatirimcilar = ({ yatirimciOzetGosterim, isMobile }: { yatirimciOzetGoster
                     </Typography>
                   </Box>
                   <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mt: 0.5 }}>
-                    <Typography variant="body2" sx={{ color: '#1E4A86' }}>
+                    <Typography variant="body2" sx={{ color: RENK.mavi }}>
                       Yatırımcı Kârı: <strong>{formatTL(y.yatirimci_kar)} ₺</strong>
                     </Typography>
-                    <Typography variant="body2" sx={{ color: '#1D6A3B' }}>
+                    <Typography variant="body2" sx={{ color: RENK.yesil }}>
                       İşletme Kârı: <strong>{formatTL(y.isletme_kar)} ₺</strong>
                     </Typography>
                   </Box>
@@ -75,8 +76,8 @@ const Yatirimcilar = ({ yatirimciOzetGosterim, isMobile }: { yatirimciOzetGoster
                       <TableCell>{y.satilan_adet}</TableCell>
                       <TableCell>{formatTL(y.stok_degeri)} ₺</TableCell>
                       <TableCell>{formatTL(y.toplam_satis)} ₺</TableCell>
-                      <TableCell sx={{ color: '#1E4A86', fontWeight: 'bold' }}>{formatTL(y.yatirimci_kar)} ₺</TableCell>
-                      <TableCell sx={{ color: '#1D6A3B', fontWeight: 'bold' }}>{formatTL(y.isletme_kar)} ₺</TableCell>
+                      <TableCell sx={{ color: RENK.mavi, fontWeight: 'bold' }}>{formatTL(y.yatirimci_kar)} ₺</TableCell>
+                      <TableCell sx={{ color: RENK.yesil, fontWeight: 'bold' }}>{formatTL(y.isletme_kar)} ₺</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

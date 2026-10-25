@@ -5,6 +5,7 @@ import StoreIcon from '@mui/icons-material/StorefrontOutlined';
 import { DialogBasligi } from '../../../../shared/ui';
 import { Button, TextField, Dialog, DialogContent, DialogActions, Alert, Grid, MenuItem } from '@mui/material';
 import KomisyonOnizleme from './KomisyonOnizleme';
+import { RENK } from '../../../../app/tokenlar';
 
 // Satış ekleme / düzenleme penceresi: stok ve platform seçimiyle otomatik doldurma + canlı komisyon önizlemesi.
 interface SatisFormModalProps {
@@ -110,7 +111,7 @@ const SatisFormModal = ({ e, stokOptions, platformlar, karGor, isMobile }: Satis
       </DialogContent>
       <DialogActions>
         <Button onClick={kapat}>İptal</Button>
-        <Button variant="contained" onClick={handleSatisSave} sx={{ bgcolor: '#C62828', '&:hover': { bgcolor: '#A61F1F' } }}>
+        <Button variant="contained" onClick={handleSatisSave} sx={{ bgcolor: RENK.kirmizi, '&:hover': { bgcolor: RENK.kirmiziKoyu } }}>
           {satisDialog.data ? 'Güncelle' : 'Kaydet'}
         </Button>
       </DialogActions>

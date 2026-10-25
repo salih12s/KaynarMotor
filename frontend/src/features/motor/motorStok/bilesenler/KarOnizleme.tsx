@@ -2,6 +2,7 @@ import React from 'react';
 import { Box, Typography } from '@mui/material';
 import { sayiYaz, sayiDegeri } from '../../../../shared/utils/bicim';
 import type { HizliSatisDurumuVeIslemleri } from '../useHizliSatis';
+import { RENK, TON } from '../../../../app/tokenlar';
 
 // Hızlı satış: kâr önizlemesi (yalnızca admin görür): satış - alış - masraf - komisyon, yatırımcı payı düşülmüş işletme kârı.
 const KarOnizleme = ({ hs, canKar }: { hs: HizliSatisDurumuVeIslemleri; canKar: boolean }) => {
@@ -19,7 +20,7 @@ const KarOnizleme = ({ hs, canKar }: { hs: HizliSatisDurumuVeIslemleri; canKar: 
       const benimKar = kar - yatirimciKar;
       const fmt = (v: number) => `₺${sayiYaz(v)}`;
       return (
-        <Box sx={{ mt: 2, p: 1.5, borderRadius: 1, bgcolor: '#D8EBDD', border: '1px solid #c5e1a5' }}>
+        <Box sx={{ mt: 2, p: 1.5, borderRadius: 1, bgcolor: TON.yesil.bg, border: '1px solid #c5e1a5' }}>
           <Typography variant="subtitle2" fontWeight="bold" sx={{ mb: 0.5 }}>
             Kâr Önizleme
           </Typography>
@@ -33,13 +34,13 @@ const KarOnizleme = ({ hs, canKar }: { hs: HizliSatisDurumuVeIslemleri; canKar: 
             <>
               <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                 <Typography variant="body2">Yatırımcı Kârı:</Typography>
-                <Typography variant="body2" fontWeight="bold" sx={{ color: '#1E4A86' }}>
+                <Typography variant="body2" fontWeight="bold" sx={{ color: RENK.mavi }}>
                   {fmt(yatirimciKar)}
                 </Typography>
               </Box>
               <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                 <Typography variant="body2">İşletme Kârı (Sizin):</Typography>
-                <Typography variant="body2" fontWeight="bold" sx={{ color: '#1D6A3B' }}>
+                <Typography variant="body2" fontWeight="bold" sx={{ color: RENK.yesil }}>
                   {fmt(benimKar)}
                 </Typography>
               </Box>

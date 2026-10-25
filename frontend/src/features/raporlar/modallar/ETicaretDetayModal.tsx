@@ -7,6 +7,7 @@ import { BilgiKarti, BolumBasligi, DialogBasligi, SayiKutusu } from '../../../sh
 import { Box, Paper, Table, TableBody, TableCell, TableContainer, TableRow, Dialog, DialogContent, DialogActions, Button } from '@mui/material';
 import { formatTL, formatDate } from '../bicim';
 import { hesaplaKomisyon, detectPlatform } from '../../eticaret/komisyon';
+import { RENK } from '../../../app/tokenlar';
 
 const SUTUN_3 = { display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' }, gap: 2, mb: 2 };
 
@@ -86,7 +87,7 @@ const ETicaretDetayModal = ({ open, data, onClose, isMobile }: Props) => {
                   {tl(kargoUcreti)}
                 </TableCell>
               </TableRow>
-              <TableRow sx={{ bgcolor: '#F3F3EE' }}>
+              <TableRow sx={{ bgcolor: RENK.yuzeyKoyu }}>
                 <TableCell sx={{ fontWeight: 'bold' }}>Toplam Kesinti ({miktar} adet)</TableCell>
                 <TableCell align="right" sx={{ fontWeight: 'bold' }}>
                   {tl(toplamKesinti)}

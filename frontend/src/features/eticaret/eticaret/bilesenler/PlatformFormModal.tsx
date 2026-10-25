@@ -3,6 +3,7 @@ import type { ETicaretDurumu } from '../useETicaret';
 import StoreIcon from '@mui/icons-material/StorefrontOutlined';
 import { DialogBasligi } from '../../../../shared/ui';
 import { Button, TextField, Dialog, DialogContent, DialogActions, Alert, Grid } from '@mui/material';
+import { RENK } from '../../../../app/tokenlar';
 
 // Platform ekleme / düzenleme penceresi (yalnızca admin).
 const PlatformFormModal = ({ e, isMobile }: { e: ETicaretDurumu; isMobile: boolean }) => {
@@ -59,7 +60,7 @@ const PlatformFormModal = ({ e, isMobile }: { e: ETicaretDurumu; isMobile: boole
       </DialogContent>
       <DialogActions>
         <Button onClick={kapat}>İptal</Button>
-        <Button variant="contained" onClick={handlePlatformSave} sx={{ bgcolor: '#C62828', '&:hover': { bgcolor: '#A61F1F' } }}>
+        <Button variant="contained" onClick={handlePlatformSave} sx={{ bgcolor: RENK.kirmizi, '&:hover': { bgcolor: RENK.kirmiziKoyu } }}>
           {platformDialog.data ? 'Güncelle' : 'Kaydet'}
         </Button>
       </DialogActions>

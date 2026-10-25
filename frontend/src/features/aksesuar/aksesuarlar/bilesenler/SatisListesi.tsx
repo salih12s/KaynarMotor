@@ -5,6 +5,7 @@ import { Box, Paper, Typography, Table, TableBody, TableCell, TableContainer, Ta
 import { filtrele } from '../aksesuarVeri';
 import { sayiYaz, tarihYaz, sayiDegeri } from '../../../../shared/utils/bicim';
 import type { AksesuarSatis } from '../../../../shared/tipler';
+import { RENK } from '../../../../app/tokenlar';
 
 // Satış listesi: dar ekranda kartlar (süzgeç sonucu boşsa bilgi kutusu), geniş ekranda tablo; kâr yalnızca kâr yetkisi olana.
 interface SatisListesiProps {
@@ -79,12 +80,12 @@ const SatisListesi = ({ satislar, aksSearch, aksStart, aksEnd, isMobile, karGor,
           {filtrele(satislar, { aksSearch, aksStart, aksEnd }).map((s) => (
             <TableRow key={s.id} hover>
               <TableCell sx={{ fontWeight: 700 }}>{s.ad_soyad}</TableCell>
-              <TableCell sx={{ color: '#5B5F66' }}>{s.telefon || '-'}</TableCell>
+              <TableCell sx={{ color: RENK.soluk }}>{s.telefon || '-'}</TableCell>
               <TableCell align="right" sx={{ fontWeight: 700 }}>
                 {sayiYaz(s.toplam_satis)} ₺
               </TableCell>
               {karGor && (
-                <TableCell align="right" sx={{ color: sayiDegeri(s.kar) >= 0 ? '#1D6A3B' : '#C62828', fontWeight: 700 }}>
+                <TableCell align="right" sx={{ color: sayiDegeri(s.kar) >= 0 ? RENK.yesil : RENK.kirmizi, fontWeight: 700 }}>
                   {sayiYaz(s.kar)} ₺
                 </TableCell>
               )}
@@ -92,7 +93,7 @@ const SatisListesi = ({ satislar, aksSearch, aksStart, aksEnd, isMobile, karGor,
               <TableCell>
                 <Chip label={s.durum === 'tamamlandi' ? 'Tamamlandı' : 'Beklemede'} size="small" color={durumRenk(s.durum)} />
               </TableCell>
-              <TableCell sx={{ color: '#5B5F66' }}>{tarihYaz(s.satis_tarihi)}</TableCell>
+              <TableCell sx={{ color: RENK.soluk }}>{tarihYaz(s.satis_tarihi)}</TableCell>
               <TableCell>
                 <IslemDugmesi tur="goz" onClick={() => onDetay(s.id)} />
                 <IslemDugmesi tur="duz" onClick={() => onDuzenle(s)} />

@@ -2,7 +2,7 @@ import React from 'react';
 import type { AralikRaporu, Motor } from '../../../shared/tipler';
 import { sayiDegeri } from '../../../shared/utils/bicim';
 import { Damga, IslemDugmesi, Plaka } from '../../../shared/ui';
-import { RENK } from '../../../app/tokenlar';
+import { RENK, TON } from '../../../app/tokenlar';
 import {
   Box,
   Paper,
@@ -92,7 +92,7 @@ const MotorSatislari = ({ rapor, isMobile, motorSubTab, setMotorSubTab, komisyon
               })}
             </TextField>
             {komisyoncuFilter && (
-              <Button size="small" onClick={() => setKomisyoncuFilter('')} sx={{ color: '#C62828' }}>
+              <Button size="small" onClick={() => setKomisyoncuFilter('')} sx={{ color: RENK.kirmizi }}>
                 Filtreyi Temizle
               </Button>
             )}
@@ -102,24 +102,24 @@ const MotorSatislari = ({ rapor, isMobile, motorSubTab, setMotorSubTab, komisyon
       <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(5, 1fr)' }, gap: 2, mb: 2 }}>
         {(motorSubTab === 1
           ? [
-              { label: 'Komisyonlu Satış', value: komisyonluMotorlar.length, color: '#C62828' },
-              { label: 'Motor Gelir', value: `₺${formatTL(shownGelir)}`, color: '#1E4A86' },
-              { label: 'Motor Maliyet', value: `₺${formatTL(shownMaliyet)}`, color: '#A5530F' },
-              { label: 'Motor Kâr', value: `₺${formatTL(shownKar)}`, color: '#1D6A3B' },
-              { label: 'Noter Satış Cirosu', value: `₺${formatTL(shownNoterSatis)}`, color: '#5B3A8C' },
-              { label: 'Toplam Komisyon', value: `₺${formatTL(komisyonToplamTutar)}`, color: '#8A5300' },
+              { label: 'Komisyonlu Satış', value: komisyonluMotorlar.length, color: RENK.kirmizi },
+              { label: 'Motor Gelir', value: `₺${formatTL(shownGelir)}`, color: RENK.mavi },
+              { label: 'Motor Maliyet', value: `₺${formatTL(shownMaliyet)}`, color: TON.turuncu.fg },
+              { label: 'Motor Kâr', value: `₺${formatTL(shownKar)}`, color: RENK.yesil },
+              { label: 'Noter Satış Cirosu', value: `₺${formatTL(shownNoterSatis)}`, color: TON.mor.fg },
+              { label: 'Toplam Komisyon', value: `₺${formatTL(komisyonToplamTutar)}`, color: TON.bekle.fg },
               { label: 'Faturalı', value: komisyonluMotorlar.filter((m) => m.fatura_kesildi).length, color: '#0F7B6C' },
             ]
           : [
-              { label: 'Toplam Satış', value: allMotorlar.length, color: '#C62828' },
-              { label: 'Motor Gelir', value: `₺${formatTL(rapor.motorGelir)}`, color: '#1E4A86' },
-              { label: 'Motor Maliyet', value: `₺${formatTL(rapor.motorMaliyet)}`, color: '#A5530F' },
-              { label: 'Motor Kârı (Payınız)', value: `₺${formatTL(rapor.motorKar)}`, color: '#1D6A3B' },
-              { label: 'Yatırımcı Payı', value: `₺${formatTL(rapor.motorYatirimciKar)}`, color: '#1E4A86' },
-              { label: 'Komisyoncu Payı', value: `₺${formatTL(rapor.motorKomisyon)}`, color: '#8A5300' },
-              { label: 'Noter Satış Cirosu', value: `₺${formatTL(rapor.motorNoterSatisCiro)}`, color: '#5B3A8C' },
+              { label: 'Toplam Satış', value: allMotorlar.length, color: RENK.kirmizi },
+              { label: 'Motor Gelir', value: `₺${formatTL(rapor.motorGelir)}`, color: RENK.mavi },
+              { label: 'Motor Maliyet', value: `₺${formatTL(rapor.motorMaliyet)}`, color: TON.turuncu.fg },
+              { label: 'Motor Kârı (Payınız)', value: `₺${formatTL(rapor.motorKar)}`, color: RENK.yesil },
+              { label: 'Yatırımcı Payı', value: `₺${formatTL(rapor.motorYatirimciKar)}`, color: RENK.mavi },
+              { label: 'Komisyoncu Payı', value: `₺${formatTL(rapor.motorKomisyon)}`, color: TON.bekle.fg },
+              { label: 'Noter Satış Cirosu', value: `₺${formatTL(rapor.motorNoterSatisCiro)}`, color: TON.mor.fg },
               { label: 'Faturalı', value: allMotorlar.filter((m) => m.fatura_kesildi).length, color: '#0F7B6C' },
-              { label: 'Motor Stok Değeri', value: `₺${formatTL(shownStokDegeri)}`, color: '#5B3A8C' },
+              { label: 'Motor Stok Değeri', value: `₺${formatTL(shownStokDegeri)}`, color: TON.mor.fg },
             ]
         ).map((k, i) => (
           <KartItem key={i} label={k.label} value={k.value} color={k.color} />
@@ -151,7 +151,7 @@ const MotorSatislari = ({ rapor, isMobile, motorSubTab, setMotorSubTab, komisyon
                   </Typography>
                 </Box>
                 {m.komisyoncu_adi && (
-                  <Typography variant="body2" sx={{ color: '#8A5300', mt: 0.5 }}>
+                  <Typography variant="body2" sx={{ color: TON.bekle.fg, mt: 0.5 }}>
                     Komisyoncu: <strong>{m.komisyoncu_adi}</strong> • ₺{formatTL(m.komisyoncu_tutari)}
                   </Typography>
                 )}
@@ -201,7 +201,7 @@ const MotorSatislari = ({ rapor, isMobile, motorSubTab, setMotorSubTab, komisyon
                     {motorSubTab === 1 ? (
                       <>
                         <TableCell sx={sagaSx}>{formatTL(m.satis_fiyati)} ₺</TableCell>
-                        <TableCell sx={{ fontWeight: 'bold', color: '#8A5300' }}>{m.komisyoncu_adi || '-'}</TableCell>
+                        <TableCell sx={{ fontWeight: 'bold', color: TON.bekle.fg }}>{m.komisyoncu_adi || '-'}</TableCell>
                         <TableCell>{m.komisyoncu_telefon || '-'}</TableCell>
                         <TableCell sx={{ ...sagaSx, fontWeight: 'bold' }}>{formatTL(m.komisyoncu_tutari)} ₺</TableCell>
                         <TableCell sx={{ ...sagaSx, color: karColor(motorIsletmeKari(m)), fontWeight: 'bold' }}>{formatTL(motorIsletmeKari(m))} ₺</TableCell>

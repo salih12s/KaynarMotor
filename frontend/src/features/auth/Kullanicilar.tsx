@@ -3,7 +3,7 @@ import { hataMesaji } from '../../shared/api/istemci';
 import LockIcon from '@mui/icons-material/LockOutlined';
 import PersonAddIcon2 from '@mui/icons-material/PersonAddAltOutlined';
 import { Damga, IslemDugmesi, DialogBasligi } from '../../shared/ui';
-import { FONT, TON, type TonAdi } from '../../app/tokenlar';
+import { FONT, TON, type TonAdi, RENK } from '../../app/tokenlar';
 import type { Kullanici } from '../../shared/tipler';
 import {
   Box,
@@ -166,7 +166,7 @@ const Kullanicilar = () => {
             setError('');
             setCreateDialog(true);
           }}
-          sx={{ bgcolor: '#C62828', '&:hover': { bgcolor: '#A61F1F' } }}
+          sx={{ bgcolor: RENK.kirmizi, '&:hover': { bgcolor: RENK.kirmiziKoyu } }}
         >
           Kullanıcı / Yatırımcı Ekle
         </Button>

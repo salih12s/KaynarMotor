@@ -1,7 +1,7 @@
 import React from 'react';
 import TwoWheelerIcon from '@mui/icons-material/TwoWheelerOutlined';
 import { BolumBasligi } from '../../../../shared/ui';
-import { MENU_RENK } from '../../../../app/tokenlar';
+import { MENU_RENK, TON } from '../../../../app/tokenlar';
 import { TextField, Grid, MenuItem, Checkbox, FormControlLabel, Autocomplete } from '@mui/material';
 import type { Motor } from '../../../../shared/tipler';
 import type { SatisFormuDurumu } from '../useSatisFormu';
@@ -83,13 +83,13 @@ const MotorBilgileriBolumu = ({ f, setFormData, stokMotorlar, setSelectedStokId 
               '& .MuiInputBase-root': {
                 bgcolor:
                   f.durum === 'tamamlandi'
-                    ? '#D8EBDD'
+                    ? TON.yesil.bg
                     : f.durum === 'kapora'
-                      ? '#F7E7C4'
+                      ? TON.bekle.bg
                       : f.durum === 'devir_bekliyor'
-                        ? '#E7DFF3'
+                        ? TON.mor.bg
                         : f.durum === 'perte'
-                          ? '#F6DAD7'
+                          ? TON.kirmizi.bg
                           : 'inherit',
               },
             }}
