@@ -442,7 +442,7 @@ const AksesuarStok = () => {
               {error}
             </Alert>
           )}
-          <TextField fullWidth multiline rows={10} value={importText} onChange={(e) => setImportText(e.target.value)} placeholder="AKS001	Ayna	Aksesuar	50	100	20" />
+          <TextField fullWidth multiline rows={10} value={importText} onChange={(e) => setImportText(e.target.value)} placeholder="AKS001	Ayna	50	100	20" />
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setImportDialog(false)}>İptal</Button>
