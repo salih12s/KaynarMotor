@@ -1,4 +1,4 @@
-import { QueryClient } from '@tanstack/react-query';
+import { QueryClient, type DefaultOptions } from '@tanstack/react-query';
 
 /*
  * Sunucu verisinin önbelleği (TanStack Query).
@@ -7,7 +7,7 @@ import { QueryClient } from '@tanstack/react-query';
  * bir kez yeniden denenir. Aynı veriyi 30 sn içinde isteyen ikinci ekran sunucuya gitmez, önbellekten okur.
  * `ek`: testlerin üzerine yazdığı ayarlar (aynı varsayılanlarla, gerçek davranışı ölçsünler diye).
  */
-export const sorguIstemcisiOlustur = (ek = {}) =>
+export const sorguIstemcisiOlustur = (ek: NonNullable<DefaultOptions['queries']> = {}) =>
   new QueryClient({
     defaultOptions: {
       queries: { staleTime: 30 * 1000, retry: 1, refetchOnWindowFocus: false, ...ek },

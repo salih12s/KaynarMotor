@@ -1,11 +1,18 @@
 import JsBarcode from 'jsbarcode';
-import { paraYaz } from './bicim';
+import { paraYaz, type Sayi } from './bicim';
+import { escapeHtml as kacis } from './htmlKacis';
 
-const kacis = (str) => String(str ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+/** Etiketin ihtiyaç duyduğu stok alanları (aksesuar ve yedek parça stoğu ortak). */
+export interface EtiketStogu {
+  stok_kodu?: string | null;
+  stok_adi?: string | null;
+  marka?: string | null;
+  satis_fiyati?: Sayi;
+}
 
 // Stok etiketi (58x40 mm): üstte "Stok etiketi", ürün adı, marka · stok kodu, barkod, büyük fiyat.
 // Aksesuar ve yedek parça stoğu aynı etiketi basar. Barkod yoksa ya da oluşturulamazsa uyarı verir.
-export const stokEtiketiYazdir = (stok) => {
+export const stokEtiketiYazdir = (stok: EtiketStogu): void => {
   const kod = String(stok.stok_kodu || '').trim();
   if (!kod) {
     alert('Bu ürünün stok kodu (barkod) yok. Lütfen önce stok kodu girin.');
@@ -15,7 +22,7 @@ export const stokEtiketiYazdir = (stok) => {
   try {
     JsBarcode(svg, kod, { format: 'CODE128', displayValue: true, fontSize: 16, height: 55, margin: 4, width: 2, font: 'monospace', fontOptions: 'bold' });
   } catch (e) {
-    alert('Barkod oluşturulamadı: ' + e.message);
+    alert('Barkod oluşturulamadı: ' + (e instanceof Error ? e.message : String(e)));
     return;
   }
   const svgStr = new XMLSerializer().serializeToString(svg);

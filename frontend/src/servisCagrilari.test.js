@@ -11,7 +11,7 @@ const dosyalar = [];
   for (const ad of fs.readdirSync(klasor)) {
     const yol = path.join(klasor, ad);
     if (fs.statSync(yol).isDirectory()) gez(yol);
-    else if (/\.(js|jsx)$/.test(ad) && !/\.test\.js$/.test(ad)) dosyalar.push(yol);
+    else if (/\.(js|jsx|ts|tsx)$/.test(ad) && !/\.test\.(js|jsx|ts|tsx)$/.test(ad)) dosyalar.push(yol);
   }
 })(KOK);
 

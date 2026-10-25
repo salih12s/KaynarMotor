@@ -9,20 +9,26 @@
  *
  * Eski isteğin hatası sessizce yutulur; yalnızca güncel isteğin hatası çağırana ulaşır.
  */
-export const sonIstek = () => {
+export interface SonIstek {
+  <T>(vaat: Promise<T>): Promise<T | null>;
+  iptal: () => void;
+}
+
+export const sonIstek = (): SonIstek => {
   let sayac = 0;
-  const koru = (vaat) => {
+  const koru = <T>(vaat: Promise<T>): Promise<T | null> => {
     const kimlik = ++sayac;
     return vaat.then(
       (deger) => (kimlik === sayac ? deger : null),
-      (hata) => {
+      (hata: unknown) => {
         if (kimlik === sayac) throw hata;
         return null;
       },
     );
   };
-  koru.iptal = () => {
-    sayac++;
-  };
-  return koru;
+  return Object.assign(koru, {
+    iptal: () => {
+      sayac++;
+    },
+  });
 };

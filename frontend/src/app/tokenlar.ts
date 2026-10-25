@@ -74,3 +74,8 @@ export const FONT = {
   metin: '"Barlow", "Segoe UI", sans-serif',
   mono: '"IBM Plex Mono", "Consolas", monospace',
 };
+
+/** Durum tonu adı (TON anahtarı): damga ve özet şeridi bu adlarla renk seçer. */
+export type TonAdi = keyof typeof TON;
+/** İşlem düğmesi türü (ISLEM anahtarı). */
+export type IslemTuru = keyof typeof ISLEM;

@@ -1,5 +1,5 @@
 // "34ABC123" -> "34 ABC 123". Boşluklu ya da tanınmayan biçimler aynen (büyük harfle) döner.
-export const plakaBicim = (p) => {
+export const plakaBicim = (p: unknown): string => {
   const s = String(p ?? '')
     .trim()
     .toUpperCase();

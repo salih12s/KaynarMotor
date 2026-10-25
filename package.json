@@ -11,8 +11,8 @@
     "seed:gorseller": "cd backend && npm run seed:gorseller",
     "package:hostinger": "node scripts/package-hostinger.cjs",
     "test": "cd backend && npm test",
-    "format": "prettier --write \"frontend/src/**/*.{js,jsx}\" \"frontend/*.mjs\" \"backend/**/*.{ts,js,cjs}\" \"e2e/**/*.{js,cjs}\" playwright.config.js",
-    "format:check": "prettier --check \"frontend/src/**/*.{js,jsx}\" \"frontend/*.mjs\" \"backend/**/*.{ts,js,cjs}\" \"e2e/**/*.{js,cjs}\" playwright.config.js",
+    "format": "prettier --write \"frontend/src/**/*.{js,jsx,ts,tsx}\" \"frontend/*.mjs\" \"backend/**/*.{ts,js,cjs}\" \"e2e/**/*.{js,cjs}\" playwright.config.js",
+    "format:check": "prettier --check \"frontend/src/**/*.{js,jsx,ts,tsx}\" \"frontend/*.mjs\" \"backend/**/*.{ts,js,cjs}\" \"e2e/**/*.{js,cjs}\" playwright.config.js",
     "test:e2e": "playwright test"
   },
   "devDependencies": {
