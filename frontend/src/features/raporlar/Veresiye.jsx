@@ -90,11 +90,13 @@ const Veresiye = () => {
   return (
     <Box>
       {/* Özet kartları */}
-      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(5, 1fr)' }, gap: 2, mb: 2 }}>
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(5, minmax(0, 1fr))' }, gap: 2, mb: 2 }}>
         {ozetCards.map((c) => (
           <Paper key={c.key} sx={{ px: 2.25, py: 1.5, bgcolor: c.bg }}>
             <Typography sx={{ fontSize: 14, color: RENK.soluk }}>{c.label}</Typography>
-            <Typography sx={{ fontFamily: FONT.baslik, fontWeight: 700, fontSize: { xs: 28, md: 34 }, lineHeight: 1.2, color: c.color, whiteSpace: 'nowrap' }}>
+            <Typography
+              sx={{ fontFamily: FONT.baslik, fontWeight: 700, fontSize: { xs: 28, md: 28, lg: 34 }, lineHeight: 1.2, color: c.color, whiteSpace: 'nowrap' }}
+            >
               {fmtTL(c.value)}
             </Typography>
           </Paper>

@@ -203,6 +203,8 @@ const Layout = () => {
           display: 'flex',
           flexDirection: 'column',
           gap: '3px',
+          // Kısa ekranda satırlar ve açılır gruplar ezilmesin (MUI Collapse min-height: 0 olduğundan taşıp üst üste biniyordu); menü kaydırılır
+          '& > *': { flexShrink: 0 },
           '&::-webkit-scrollbar': { width: 6 },
           '&::-webkit-scrollbar-thumb': { bgcolor: 'rgba(22,24,28,.2)', borderRadius: 3 },
         }}
