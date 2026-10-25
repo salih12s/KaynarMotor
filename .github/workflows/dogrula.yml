@@ -1,5 +1,5 @@
 # Tip kontrolü, birim testler, gerçek MariaDB'ye karşı API testleri (kaynak ve paket), frontend testleri ve yayın paketinin
-# üretilip açılması. Yerelde aynısı: backend/scripts/hepsiniDogrula.sh (+ frontend: npx react-scripts test).
+# üretilip açılması. Yerelde aynısı: backend/scripts/hepsiniDogrula.sh (+ frontend: npx react-scripts test; arayüz derlemesi Vite).
 # Bu iş akışı yalnızca ELLE tetiklenir (Actions sekmesi > Run workflow): sahibinin GitHub hesabında faturalandırma kilidi olduğu için
 # otomatik tetikleme her push'ta başarısız koşu üretirdi. Kilit kalkarsa `on:` altına push/pull_request geri eklenebilir.
 # Adımlar GitHub'da henüz doğrulanmadı; asıl güvenlik ağı yerel doğrulamadır.
@@ -85,10 +85,7 @@ jobs:
         env:
           CI: 'true'
       - name: Derleme
-        run: npx react-scripts build
-        env:
-          CI: 'false' # CRA CI=true iken uyarıları hata sayar (React Hook bağımlılık uyarıları var)
-          GENERATE_SOURCEMAP: 'false'
+        run: npx vite build
 
   paket:
     name: Yayın paketi (üret + canlıdaki gibi aç)

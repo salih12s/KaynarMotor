@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -8,31 +8,32 @@ import { sorguIstemcisiOlustur } from '../shared/sorgu/sorguIstemcisi';
 import { AuthProvider, useAuth } from '../features/auth/AuthContext';
 import { CustomThemeProvider, useCustomTheme } from './ThemeContext';
 
-import Layout from './Layout';
-import Login from '../features/auth/Login';
-import IsEmirleri from '../features/servis/IsEmirleri';
-import IsEmriForm from '../features/servis/IsEmriForm';
-import IsEmriDetay from '../features/servis/IsEmriDetay';
-import Aksesuarlar from '../features/aksesuar/Aksesuarlar';
-import AksesuarStok from '../features/aksesuar/AksesuarStok';
-import IkinciElMotor from '../features/motor/IkinciElMotor';
-import MotorStok from '../features/motor/MotorStok';
-import ETicaret from '../features/eticaret/ETicaret';
-import YedekParcalar from '../features/yedek-parca/YedekParcalar';
-import YedekParcaStok from '../features/yedek-parca/YedekParcaStok';
-import ServisGecmisi from '../features/servis/ServisGecmisi';
-import Raporlar from '../features/raporlar/Raporlar';
-import Kullanicilar from '../features/auth/Kullanicilar';
-import Yetkilendirme from '../features/auth/Yetkilendirme';
-import Musteriler from '../features/musteriler/Musteriler';
-import MotorDetay from '../features/motor/MotorDetay';
-import Veresiye from '../features/raporlar/Veresiye';
-import Vitrin from '../features/vitrin/yonetim/Vitrin';
-import Storefront from '../features/vitrin/magaza/Storefront';
-import StorefrontDetay from '../features/vitrin/magaza/StorefrontDetay';
-import TaksitHesaplama from '../features/taksit/TaksitHesaplama';
-import TaksitGoruntule from '../features/taksit/TaksitGoruntule';
-import BelgeArsivi from '../features/motor/BelgeArsivi';
+// Rota bazlı kod bölme: vitrin ziyaretçisi yönetim panelinin kodunu indirmez. Her sayfa kendi parçasıdır; ortak kütüphaneler (MUI vb.) paylaşılan parçada kalır.
+const Layout = lazy(() => import('./Layout'));
+const Login = lazy(() => import('../features/auth/Login'));
+const IsEmirleri = lazy(() => import('../features/servis/IsEmirleri'));
+const IsEmriForm = lazy(() => import('../features/servis/IsEmriForm'));
+const IsEmriDetay = lazy(() => import('../features/servis/IsEmriDetay'));
+const Aksesuarlar = lazy(() => import('../features/aksesuar/Aksesuarlar'));
+const AksesuarStok = lazy(() => import('../features/aksesuar/AksesuarStok'));
+const IkinciElMotor = lazy(() => import('../features/motor/IkinciElMotor'));
+const MotorStok = lazy(() => import('../features/motor/MotorStok'));
+const ETicaret = lazy(() => import('../features/eticaret/ETicaret'));
+const YedekParcalar = lazy(() => import('../features/yedek-parca/YedekParcalar'));
+const YedekParcaStok = lazy(() => import('../features/yedek-parca/YedekParcaStok'));
+const ServisGecmisi = lazy(() => import('../features/servis/ServisGecmisi'));
+const Raporlar = lazy(() => import('../features/raporlar/Raporlar'));
+const Kullanicilar = lazy(() => import('../features/auth/Kullanicilar'));
+const Yetkilendirme = lazy(() => import('../features/auth/Yetkilendirme'));
+const Musteriler = lazy(() => import('../features/musteriler/Musteriler'));
+const MotorDetay = lazy(() => import('../features/motor/MotorDetay'));
+const Veresiye = lazy(() => import('../features/raporlar/Veresiye'));
+const Vitrin = lazy(() => import('../features/vitrin/yonetim/Vitrin'));
+const Storefront = lazy(() => import('../features/vitrin/magaza/Storefront'));
+const StorefrontDetay = lazy(() => import('../features/vitrin/magaza/StorefrontDetay'));
+const TaksitHesaplama = lazy(() => import('../features/taksit/TaksitHesaplama'));
+const TaksitGoruntule = lazy(() => import('../features/taksit/TaksitGoruntule'));
+const BelgeArsivi = lazy(() => import('../features/motor/BelgeArsivi'));
 
 // Route Guards
 const ProtectedRoute = ({ children }) => {
@@ -245,190 +246,192 @@ const ThemedApp = () => {
       <CssBaseline />
       <BrowserRouter>
         <AuthProvider>
-          <Routes>
-            <Route
-              path="/login"
-              element={
-                <PublicRoute>
-                  <PanelTema>
-                    <Login />
-                  </PanelTema>
-                </PublicRoute>
-              }
-            />
-            <Route path="/" element={<RootRoute />} />
-            {/* Giriş yapmış kullanıcıların da panelden dönebilmesi için herkese açık vitrin */}
-            <Route path="/site" element={<Storefront />} />
-            <Route path="/ilan/:id" element={<StorefrontDetay />} />
-            {/* Müşteriye gönderilen taksit linki — herkese açık */}
-            <Route path="/taksit/:fiyat" element={<TaksitGoruntule />} />
-            {/* Motor üzerindeki QR koddan açılan servis geçmişi — herkese açık, sadece o plakanın geçmişi */}
-            <Route path="/s/:token" element={<ServisGecmisi />} />
-            <Route
-              element={
-                <ProtectedRoute>
-                  <PanelTema>
-                    <Layout />
-                  </PanelTema>
-                </ProtectedRoute>
-              }
-            >
+          <Suspense fallback={null}>
+            <Routes>
               <Route
-                path="/servis"
+                path="/login"
                 element={
-                  <ServisRoute>
-                    <IsEmirleri />
-                  </ServisRoute>
+                  <PublicRoute>
+                    <PanelTema>
+                      <Login />
+                    </PanelTema>
+                  </PublicRoute>
                 }
               />
+              <Route path="/" element={<RootRoute />} />
+              {/* Giriş yapmış kullanıcıların da panelden dönebilmesi için herkese açık vitrin */}
+              <Route path="/site" element={<Storefront />} />
+              <Route path="/ilan/:id" element={<StorefrontDetay />} />
+              {/* Müşteriye gönderilen taksit linki — herkese açık */}
+              <Route path="/taksit/:fiyat" element={<TaksitGoruntule />} />
+              {/* Motor üzerindeki QR koddan açılan servis geçmişi — herkese açık, sadece o plakanın geçmişi */}
+              <Route path="/s/:token" element={<ServisGecmisi />} />
               <Route
-                path="/vitrin"
                 element={
-                  <VitrinRoute>
-                    <Vitrin />
-                  </VitrinRoute>
+                  <ProtectedRoute>
+                    <PanelTema>
+                      <Layout />
+                    </PanelTema>
+                  </ProtectedRoute>
                 }
-              />
-              <Route
-                path="/is-emri/yeni"
-                element={
-                  <ServisRoute>
-                    <IsEmriForm />
-                  </ServisRoute>
-                }
-              />
-              <Route
-                path="/is-emri/:id"
-                element={
-                  <ServisRoute>
-                    <IsEmriDetay />
-                  </ServisRoute>
-                }
-              />
-              <Route
-                path="/is-emri/:id/duzenle"
-                element={
-                  <ServisRoute>
-                    <IsEmriForm />
-                  </ServisRoute>
-                }
-              />
-              <Route
-                path="/aksesuarlar"
-                element={
-                  <AksesuarRoute>
-                    <Aksesuarlar />
-                  </AksesuarRoute>
-                }
-              />
-              <Route
-                path="/aksesuar-stok"
-                element={
-                  <AksesuarStokRoute>
-                    <AksesuarStok />
-                  </AksesuarStokRoute>
-                }
-              />
-              <Route
-                path="/ikinci-el-motor"
-                element={
-                  <MotorSatisRoute>
-                    <IkinciElMotor />
-                  </MotorSatisRoute>
-                }
-              />
-              <Route
-                path="/motor-stok"
-                element={
-                  <MotorStokRoute>
-                    <MotorStok />
-                  </MotorStokRoute>
-                }
-              />
-              <Route
-                path="/motor/:id"
-                element={
-                  <MotorSatisRoute>
-                    <MotorDetay />
-                  </MotorSatisRoute>
-                }
-              />
-              <Route
-                path="/belge-arsivi"
-                element={
-                  <BelgeArsivRoute>
-                    <BelgeArsivi />
-                  </BelgeArsivRoute>
-                }
-              />
-              <Route
-                path="/eticaret"
-                element={
-                  <EticaretRoute>
-                    <ETicaret />
-                  </EticaretRoute>
-                }
-              />
-              <Route
-                path="/yedek-parcalar"
-                element={
-                  <YedekParcaRoute>
-                    <YedekParcalar />
-                  </YedekParcaRoute>
-                }
-              />
-              <Route
-                path="/yedek-parca-stok"
-                element={
-                  <YedekParcaRoute>
-                    <YedekParcaStok />
-                  </YedekParcaRoute>
-                }
-              />
-              <Route path="/taksit-hesaplama" element={<TaksitHesaplama />} />
-              <Route
-                path="/veresiye"
-                element={
-                  <AdminRoute>
-                    <Veresiye />
-                  </AdminRoute>
-                }
-              />
-              <Route
-                path="/raporlar"
-                element={
-                  <RaporRoute>
-                    <Raporlar />
-                  </RaporRoute>
-                }
-              />
-              <Route
-                path="/kullanicilar"
-                element={
-                  <AdminRoute>
-                    <Kullanicilar />
-                  </AdminRoute>
-                }
-              />
-              <Route
-                path="/yetkilendirme"
-                element={
-                  <AdminRoute>
-                    <Yetkilendirme />
-                  </AdminRoute>
-                }
-              />
-              <Route
-                path="/musteriler"
-                element={
-                  <AdminRoute>
-                    <Musteriler />
-                  </AdminRoute>
-                }
-              />
-            </Route>
-            <Route path="*" element={<Navigate to="/" />} />
-          </Routes>
+              >
+                <Route
+                  path="/servis"
+                  element={
+                    <ServisRoute>
+                      <IsEmirleri />
+                    </ServisRoute>
+                  }
+                />
+                <Route
+                  path="/vitrin"
+                  element={
+                    <VitrinRoute>
+                      <Vitrin />
+                    </VitrinRoute>
+                  }
+                />
+                <Route
+                  path="/is-emri/yeni"
+                  element={
+                    <ServisRoute>
+                      <IsEmriForm />
+                    </ServisRoute>
+                  }
+                />
+                <Route
+                  path="/is-emri/:id"
+                  element={
+                    <ServisRoute>
+                      <IsEmriDetay />
+                    </ServisRoute>
+                  }
+                />
+                <Route
+                  path="/is-emri/:id/duzenle"
+                  element={
+                    <ServisRoute>
+                      <IsEmriForm />
+                    </ServisRoute>
+                  }
+                />
+                <Route
+                  path="/aksesuarlar"
+                  element={
+                    <AksesuarRoute>
+                      <Aksesuarlar />
+                    </AksesuarRoute>
+                  }
+                />
+                <Route
+                  path="/aksesuar-stok"
+                  element={
+                    <AksesuarStokRoute>
+                      <AksesuarStok />
+                    </AksesuarStokRoute>
+                  }
+                />
+                <Route
+                  path="/ikinci-el-motor"
+                  element={
+                    <MotorSatisRoute>
+                      <IkinciElMotor />
+                    </MotorSatisRoute>
+                  }
+                />
+                <Route
+                  path="/motor-stok"
+                  element={
+                    <MotorStokRoute>
+                      <MotorStok />
+                    </MotorStokRoute>
+                  }
+                />
+                <Route
+                  path="/motor/:id"
+                  element={
+                    <MotorSatisRoute>
+                      <MotorDetay />
+                    </MotorSatisRoute>
+                  }
+                />
+                <Route
+                  path="/belge-arsivi"
+                  element={
+                    <BelgeArsivRoute>
+                      <BelgeArsivi />
+                    </BelgeArsivRoute>
+                  }
+                />
+                <Route
+                  path="/eticaret"
+                  element={
+                    <EticaretRoute>
+                      <ETicaret />
+                    </EticaretRoute>
+                  }
+                />
+                <Route
+                  path="/yedek-parcalar"
+                  element={
+                    <YedekParcaRoute>
+                      <YedekParcalar />
+                    </YedekParcaRoute>
+                  }
+                />
+                <Route
+                  path="/yedek-parca-stok"
+                  element={
+                    <YedekParcaRoute>
+                      <YedekParcaStok />
+                    </YedekParcaRoute>
+                  }
+                />
+                <Route path="/taksit-hesaplama" element={<TaksitHesaplama />} />
+                <Route
+                  path="/veresiye"
+                  element={
+                    <AdminRoute>
+                      <Veresiye />
+                    </AdminRoute>
+                  }
+                />
+                <Route
+                  path="/raporlar"
+                  element={
+                    <RaporRoute>
+                      <Raporlar />
+                    </RaporRoute>
+                  }
+                />
+                <Route
+                  path="/kullanicilar"
+                  element={
+                    <AdminRoute>
+                      <Kullanicilar />
+                    </AdminRoute>
+                  }
+                />
+                <Route
+                  path="/yetkilendirme"
+                  element={
+                    <AdminRoute>
+                      <Yetkilendirme />
+                    </AdminRoute>
+                  }
+                />
+                <Route
+                  path="/musteriler"
+                  element={
+                    <AdminRoute>
+                      <Musteriler />
+                    </AdminRoute>
+                  }
+                />
+              </Route>
+              <Route path="*" element={<Navigate to="/" />} />
+            </Routes>
+          </Suspense>
         </AuthProvider>
       </BrowserRouter>
     </ThemeProvider>

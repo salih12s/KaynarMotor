@@ -56,9 +56,9 @@ run('sunucu tip kontrolü (tsc)', 'npx', ['tsc', '-p', 'tsconfig.json'], { cwd: 
 // 2) Arayüz. Adres göreceli: arayüz ve API aynı sunucudadır. Kabuk değişkeni .env dosyasını ezer.
 // Önceki derlemelerden kalan içerik özetli dosyalar (main.*.js, kaynak haritaları) pakete girmesin.
 temizle(path.join(frontend, 'build'));
-run('arayüz derlemesi', 'npx', ['react-scripts', 'build'], {
+run('arayüz derlemesi (Vite)', 'npx', ['vite', 'build'], {
   cwd: frontend,
-  env: { ...process.env, REACT_APP_API_URL: '/api', GENERATE_SOURCEMAP: 'false', CI: 'false' },
+  env: { ...process.env, REACT_APP_API_URL: '/api' },
 });
 const build = path.join(frontend, 'build');
 const kopyala = (kaynak, hedef) => {

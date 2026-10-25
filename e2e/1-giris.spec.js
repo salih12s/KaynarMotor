@@ -31,7 +31,7 @@ test('yetkisiz personel: yetki bekleme ekranını görür, Raporlar ve Servis sa
 
   for (const yol of ['/raporlar', '/servis']) {
     await page.goto(yol);
-    await expect(page).toHaveURL(/localhost:3100\/$/); // ana sayfaya geri yönlendirilir
+    await expect(page).toHaveURL(/localhost:\d+\/$/); // ana sayfaya geri yönlendirilir
     await expect(page.getByText('Hesabınıza henüz bir yetki tanımlanmamış')).toBeVisible();
     await expect(page.getByText('Toplam Gelir')).toHaveCount(0);
   }

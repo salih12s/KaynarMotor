@@ -141,6 +141,34 @@ Dönüştürme sırasında bulunan her gerçek hata önce bir testle yakalanır,
 
 ---
 
+## Aşama 0 taban ölçüleri (2026-10-25)
+
+| Ölçü | Değer |
+|---|---|
+| Frontend kaynak (testler dahil) | 204 dosya, 26.567 satır, %0 TypeScript (`node scripts/tsOrani.cjs`) |
+| Tam frontend testi (Jest, `--maxWorkers=2`) | 415 test, 26 dosya, **5 dk 44 sn** |
+| E2E (Playwright) | 11 test, ~1,5 dk |
+
+## Aşama 1 sonuçları (2026-10-25)
+
+| Ölçü | CRA (önce) | Vite 8 (sonra) |
+|---|---|---|
+| Üretim derlemesi | 145 sn | **~1 sn** (`vite build`) |
+| Paketleme (`npm run package:hostinger`: tsc + arayüz + esbuild + zip) | ~3 dk | **15 sn** |
+| Geliştirme sunucusu açılışı | 19 sn | **0,24 sn** |
+| `/site` ilk yükleme (JS, gzip, tarayıcıda ölçüldü) | 351 KB tek dosya | **206 KB** (31 dosya, ham 620 KB). Hedef <150 KB tutmadı: kalan yük React + MUI çekirdeği (main 93 KB + Box 37 KB + TextField 15 KB gzip) |
+| `/login` ilk yükleme | 351 KB | 179 KB |
+| E2E | 11/11 | **11/11** (Vite dev sunucusunda, ~54 sn) |
+| Paket duman testi | yeşil | yeşil |
+| ESLint | 0 hata, 11 uyarı | 0 hata, 11 uyarı (aynı) |
+
+Aşamada çıkan notlar (bir sonrakine taşınanlar):
+- Vite 8 **Rolldown** kullanıyor: `rollupOptions` hâlâ çalışıyor, `hashCharacters: 'hex'` dahil; çıktı `static/js/main.<hex>.js` düzeni backend ve duman testiyle uyumlu. Çıktı deterministik (aynı kaynak, aynı özet).
+- `.js` içinde gerçek JSX yalnızca `shared/sorgu/sorguluRender` idi (`.jsx` yapıldı); tüm `.js` dosyaları dev sunucudan geçirilerek tarandı.
+- `emptyOutDir` yolda ASCII dışı karakter (`GüncelProjelerim`) varsa temizlemiyor (Node 24.4 hatası; paket betiği kendi `temizle`'siyle çözüyor). Elle `vite build` koşarken önce `build/` silinmeli.
+- Playwright web portu `E2E_WEB_PORT` ile değiştirilebilir (varsayılan 3100); `1-giris.spec.js` içinde sabit `3100` yazan bir URL denetimi porttan bağımsız yapıldı.
+- Vite `PORT` ortam değişkenini okumaz: port `vite.config.mjs` içinde (3100, `strictPort`).
+
 ## Takvim (tahmini, oturum bazında)
 
 | Aşama | Emek | Canlıya çıkış |
@@ -158,8 +186,8 @@ Her canlıya çıkış ayrıca onaylanır (`CLAUDE.md` deploy kuralı). Geri dö
 
 | Aşama | Durum | Tarih | Not |
 |---|---|---|---|
-| 0 | Bekliyor | | |
-| 1 | Bekliyor | | |
+| 0 | **Bitti** | 2026-10-25 | `vite-ts` dalı, `scripts/tsOrani.cjs`, taban ölçüleri aşağıda |
+| 1 | **Kodda bitti, canlıya çıkmadı** | 2026-10-25 | Vite 8 dev+build, kod bölme, paket+duman yeşil, E2E 11/11; Jest sonucu ve ölçüler "Aşama 1 sonuçları" bölümünde |
 | 2 | Bekliyor | | |
 | 3 | Bekliyor | | |
 | 4 | Bekliyor | | |

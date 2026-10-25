@@ -31,7 +31,7 @@ if (!['127.0.0.1', 'localhost'].includes(ortam.DB_HOST)) {
 }
 
 const API_PORT = ortam.PORT || '5100';
-const WEB_PORT = '3100';
+const WEB_PORT = process.env.E2E_WEB_PORT || '3100';
 
 // Testlerin (işçi süreçlerin) okuyacağı değerler
 process.env.E2E_API = `http://localhost:${API_PORT}/api`;
@@ -66,12 +66,12 @@ module.exports = defineConfig({
       timeout: 60_000,
     },
     {
-      command: 'npm start',
+      command: `npm start -- --port ${WEB_PORT}`,
       cwd: path.join(KOK, 'frontend'),
       url: `http://localhost:${WEB_PORT}`,
-      env: { BROWSER: 'none', PORT: WEB_PORT, REACT_APP_API_URL: `http://localhost:${API_PORT}/api` },
+      env: { REACT_APP_API_URL: `http://localhost:${API_PORT}/api` },
       reuseExistingServer: false,
-      timeout: 240_000,
+      timeout: 60_000,
     },
   ],
 });

@@ -18,12 +18,12 @@
     "react-to-print": "^3.2.0"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
+    "start": "vite",
+    "build": "vite build",
     "test": "react-scripts test",
     "test:hizli": "react-scripts test --watchAll=false --testPathIgnorePatterns Raporlar.test IsEmirleri.test Vitrin.test MotorStok.test IkinciElMotor.test Storefront.test ETicaret.test Aksesuarlar.test",
-    "eject": "react-scripts eject",
-    "lint": "eslint src --ext .js,.jsx"
+    "lint": "eslint src --ext .js,.jsx",
+    "preview": "vite preview --port 3100"
   },
   "browserslist": {
     "production": [
@@ -41,7 +41,9 @@
     "@testing-library/dom": "^10.4.2",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.3",
-    "@testing-library/user-event": "^14.6.8"
+    "@testing-library/user-event": "^14.6.8",
+    "@vitejs/plugin-react": "^6.1.2",
+    "vite": "^8.3.5"
   },
   "eslintConfig": {
     "extends": [
