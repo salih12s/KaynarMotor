@@ -1,5 +1,5 @@
 /*
- * Faz 7 regression testleri (gerçek sunucu + gerçek MariaDB): denetim izi ve rapor tutarlılığı.
+ * gunluk-ve-rapor-kurallari: regression testleri (gerçek sunucu + gerçek MariaDB): denetim izi ve rapor tutarlılığı.
  *
  *   #41 aksesuar satışı düzenleme/silme aktivite günlüğüne düşer
  *   #42 e-ticaret satışı ve platform değişiklikleri aktivite günlüğüne düşer

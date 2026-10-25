@@ -1,5 +1,5 @@
 /*
- * Faz 12 testleri (gerçek sunucu + gerçek MariaDB): vitrin (site ilanları) modülünün HTTP SÖZLEŞMESİ. Taşıma davranışı
+ * Gerçek sunucu + gerçek MariaDB: vitrin (site ilanları) modülünün HTTP SÖZLEŞMESİ. Taşıma davranışı
  * değiştirmemeli: durum kodları, mesajlar, medya başlıkları (önbellek, ETag, nosniff, Range) sabit kalır.
  *
  *   #54 vitrin: ilan akışı, gizlilik, medya sunumu, yayın/sıra yönetimi, iletişim ve segmentler

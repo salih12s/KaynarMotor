@@ -1,5 +1,5 @@
 /*
- * Faz 9 testleri (gerçek sunucu + gerçek MariaDB): muhasebeci için "Motor Satış'ı görebilir" anahtarı ve
+ * Gerçek sunucu + gerçek MariaDB: muhasebeci için "Motor Satış'ı görebilir" anahtarı ve
  * Belge Arşivi tarih alanları.
  *
  *   #41 anahtar KAPALIYKEN muhasebeci motor satış verisine erişemez (regression: eskiden uçlar her girişliye açıktı)

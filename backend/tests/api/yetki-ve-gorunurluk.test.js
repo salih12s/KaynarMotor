@@ -1,5 +1,5 @@
 /*
- * Faz 6 regression testleri (gerçek sunucu + gerçek MariaDB): dış roller (yatırımcı, muhasebeci) ve yetkisiz
+ * yetki-ve-gorunurluk: regression testleri (gerçek sunucu + gerçek MariaDB): dış roller (yatırımcı, muhasebeci) ve yetkisiz
  * hesaplar gereğinden fazla veri görmemeli / yazmamalı. Negative testler: her rol × uç çifti ayrı doğrulanır.
  *
  *   #37 müşteri dizini (arama uçları) yalnız müşteri seçen ekranların yetkililerine açık

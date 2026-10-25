@@ -1,5 +1,5 @@
 /*
- * Faz 8 regression testleri (gerçek sunucu + gerçek MariaDB): kalan rapor maddeleri.
+ * girdi-dogrulama-ve-stok-kodlari: regression testleri (gerçek sunucu + gerçek MariaDB): kalan rapor maddeleri.
  *
  *   #45 medya uçları: hata yanıtları uzun süre önbelleğe girmez; geçerli medya hâlâ sunulur
  *   #46 şifre sıfırlanınca eski token'lar geçersiz olur; JWT_SECRET yoksa sunucu açılmaz

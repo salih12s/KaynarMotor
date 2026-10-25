@@ -1,5 +1,5 @@
 /*
- * Faz 1 regression testleri (gerçek sunucu + gerçek MariaDB). Bkz. yerel-arsiv/notlar-ve-veri/YAPILACAKLAR-INCELEME.md
+ * motor-guncelleme-ve-istek-isleme: regression testleri (gerçek sunucu + gerçek MariaDB). Bkz. yerel-arsiv/notlar-ve-veri/YAPILACAKLAR-INCELEME.md
  *   #26/#27  motor PUT, formda olmayan alanları silmemeli
  *   #2       vitrin görseli/videosu yalnızca güvenli MIME türleri
  *   #4       kimlik doğrulama gövde ayrıştırılmadan ÖNCE
@@ -187,7 +187,7 @@ describe('#26/#27 motor PUT: gönderilmeyen alanlar korunur', () => {
   });
 
   it('yatırımcı kendi motorunda bile yazamaz (403); müşteri ve fiyat alanları değişmez', async () => {
-    // Faz 6: yatırımcı motor ekranında salt okunurdur. Eskiden yazabiliyordu ve bu test yalnızca müşteri/fiyat
+    // yetki-ve-gorunurluk testleri: yatırımcı motor ekranında salt okunurdur. Eskiden yazabiliyordu ve bu test yalnızca müşteri/fiyat
     // alanlarının korunduğunu sınıyordu; şimdi yazma isteği tümden reddedilir.
     const yat = await kullaniciOlustur(api, admin, `f1_yat_${SON}`, 'yatirimci');
     const id = await yeniMotor({ plaka: `34K1${SON}`.slice(0, 12), yatirimci_id: yat.id });

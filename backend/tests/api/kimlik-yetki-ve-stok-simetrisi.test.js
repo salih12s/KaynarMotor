@@ -1,5 +1,5 @@
 /*
- * Faz 3 regression testleri (gerçek sunucu + gerçek MariaDB). Bkz. yerel-arsiv/notlar-ve-veri/YAPILACAKLAR-INCELEME.md
+ * kimlik-yetki-ve-stok-simetrisi: regression testleri (gerçek sunucu + gerçek MariaDB). Bkz. yerel-arsiv/notlar-ve-veri/YAPILACAKLAR-INCELEME.md
  *   #5   yetki/hesap iptali token süresini beklemeden uygulanmalı
  *   #6   düz metin şifre saklanmamalı/gösterilmemeli; admin şifre sıfırlayabilmeli
  *   #21  şifre kuralı; giriş yanıtı kullanıcı adı/onay durumu sızdırmamalı
@@ -106,7 +106,11 @@ describe('#6 düz metin şifre yok; admin şifre sıfırlar', () => {
   });
 
   const plainSifreKolonuVarMi = async () =>
-    (await sql("SELECT COUNT(*) AS n FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'kullanicilar' AND column_name = 'plain_sifre'"))[0].n;
+    (
+      await sql(
+        "SELECT COUNT(*) AS n FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'kullanicilar' AND column_name = 'plain_sifre'",
+      )
+    )[0].n;
 
   it('düz metin şifre kolonu şemada yok', async () => {
     assert.equal(Number(await plainSifreKolonuVarMi()), 0);

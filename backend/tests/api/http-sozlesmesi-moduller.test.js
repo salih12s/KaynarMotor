@@ -1,5 +1,5 @@
 /*
- * Faz 10 testleri (gerçek sunucu + gerçek MariaDB): katmanlı yapıya (routes/controller/service/repository) taşınan
+ * Gerçek sunucu + gerçek MariaDB: katmanlı yapıya (routes/controller/service/repository) taşınan
  * modüllerin HTTP SÖZLEŞMESİ. Taşıma davranışı değiştirmemeli: durum kodları, mesajlar ve yanıt biçimi sabit kalır.
  * Bu dosya modül modül genişler.
  *
@@ -107,7 +107,7 @@ describe('#45 müşteriler: HTTP sözleşmesi', () => {
     assert.equal(bulunan.govde.id, musteriId);
   });
 
-  it('silme 200 "Müşteri silindi"; sonra detay 404 (iş emri bağlantısı faz2 testinde sınanır)', async () => {
+  it('silme 200 "Müşteri silindi"; sonra detay 404 (iş emri bağlantısı stok-butunlugu-ve-silme testinde sınanır)', async () => {
     const sil = await api('DELETE', `/api/musteriler/${musteriId}`, undefined, admin);
     assert.equal(sil.durum, 200);
     assert.equal(sil.govde.message, 'Müşteri silindi');

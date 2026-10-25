@@ -1,5 +1,5 @@
 /*
- * Faz 5 regression testleri (gerçek sunucu + gerçek MariaDB): eşzamanlı istekler stoğu bozmamalı.
+ * eszamanlilik: regression testleri (gerçek sunucu + gerçek MariaDB): eşzamanlı istekler stoğu bozmamalı.
  *
  * Kök neden: PUT/DELETE önceki durumu KİLİTSİZ okuyor (REPEATABLE READ anlık görüntüsü). İki istek aynı anda
  * gelirse ikincisi, birincinin commit'inden ÖNCEKİ satırları görür ve aynı iadeyi ikinci kez yapar.

@@ -1,5 +1,5 @@
 /*
- * Faz 4 regression testleri (gerçek sunucu + gerçek MariaDB). Bkz. YAPILACAKLAR-INCELEME.md
+ * denetim-kaydi: regression testleri (gerçek sunucu + gerçek MariaDB). Bkz. YAPILACAKLAR-INCELEME.md
  *   #24  müşteri / stok / vitrin yazmaları aktivite günlüğüne düşer (kim, neyi); başarısız istek ve gövde yazılmaz
  */
 const { describe, it, before, after } = require('node:test');

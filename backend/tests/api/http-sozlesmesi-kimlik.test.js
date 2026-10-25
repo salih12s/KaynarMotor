@@ -1,5 +1,5 @@
 /*
- * Faz 11 testleri (gerçek sunucu + gerçek MariaDB): katmanlı yapıya taşınan kimlik doğrulama ve vitrin modüllerinin HTTP
+ * Gerçek sunucu + gerçek MariaDB: katmanlı yapıya taşınan kimlik doğrulama ve vitrin modüllerinin HTTP
  * SÖZLEŞMESİ. Taşıma davranışı değiştirmemeli: durum kodları, mesajlar ve yanıt biçimi sabit kalır.
  *
  *   #53 kimlik doğrulama: kayıt-onay-giriş akışı, sızıntısız hata mesajları, yönetim uçları
