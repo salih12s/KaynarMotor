@@ -1,4 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
+import { API_URL } from '../../shared/api/istemci';
 
 const AuthContext = createContext(null);
 
@@ -12,7 +13,7 @@ export const AuthProvider = ({ children }) => {
       const savedToken = localStorage.getItem('token');
       if (savedToken) {
         try {
-          const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5100/api'}/auth/verify`, {
+          const response = await fetch(`${API_URL}/auth/verify`, {
             headers: { Authorization: `Bearer ${savedToken}` },
           });
           if (response.ok) {

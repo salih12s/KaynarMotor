@@ -69,7 +69,7 @@ module.exports = defineConfig({
       command: `npm start -- --port ${WEB_PORT}`,
       cwd: path.join(KOK, 'frontend'),
       url: `http://localhost:${WEB_PORT}`,
-      env: { REACT_APP_API_URL: `http://localhost:${API_PORT}/api` },
+      env: { VITE_API_URL: `http://localhost:${API_PORT}/api` },
       reuseExistingServer: false,
       timeout: 60_000,
     },

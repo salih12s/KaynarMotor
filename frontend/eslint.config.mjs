@@ -15,8 +15,7 @@ export default [
       ecmaVersion: 'latest',
       sourceType: 'module',
       parserOptions: { ecmaFeatures: { jsx: true } },
-      // process.env.REACT_APP_API_URL derleme anında yerine konur (vite.config.mjs > define); aşama 3'te import.meta.env'e geçince kalkar
-      globals: { ...globals.browser, process: 'readonly' },
+      globals: { ...globals.browser },
     },
     settings: { react: { version: 'detect' } },
     rules: {

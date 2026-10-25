@@ -9,7 +9,7 @@
  *
  * Sunucu tek dosyada toplandığı için barındırma tarafında paket kurulumuna bağlı değildir.
  * Arayüz API'ye kendi adresinden (/api) bağlanacak şekilde derlenir: yerel .env içindeki
- * REACT_APP_API_URL (ör. yerel geliştirme adresi) pakete GİRMEZ.
+ * VITE_API_URL (ör. yerel geliştirme adresi) pakete GİRMEZ.
  *
  * Kullanım (depo kökünden):  node scripts/package-hostinger.cjs   (npm run package:hostinger)
  * Hostinger derleme ayarı:   app_type nest, node 24, output_directory dist,
@@ -53,12 +53,15 @@ fs.mkdirSync(dist, { recursive: true });
 // 0) Tip kontrolü: esbuild tipleri kontrol etmez, yalnızca siler; tip hatalı kod pakete girmesin.
 run('sunucu tip kontrolü (tsc)', 'npx', ['tsc', '-p', 'tsconfig.json'], { cwd: backend });
 
+// 1) Arayüz tip kontrolü: Vite tipleri kontrol etmez, yalnızca siler; tip hatalı kod pakete girmesin.
+run('arayüz tip kontrolü (tsc)', 'npx', ['tsc', '--noEmit'], { cwd: frontend });
+
 // 2) Arayüz. Adres göreceli: arayüz ve API aynı sunucudadır. Kabuk değişkeni .env dosyasını ezer.
 // Önceki derlemelerden kalan içerik özetli dosyalar (main.*.js, kaynak haritaları) pakete girmesin.
 temizle(path.join(frontend, 'build'));
 run('arayüz derlemesi (Vite)', 'npx', ['vite', 'build'], {
   cwd: frontend,
-  env: { ...process.env, REACT_APP_API_URL: '/api' },
+  env: { ...process.env, VITE_API_URL: '/api' },
 });
 const build = path.join(frontend, 'build');
 const kopyala = (kaynak, hedef) => {

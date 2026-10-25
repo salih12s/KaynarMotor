@@ -387,7 +387,7 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 
 | Değişken | Açıklama |
 |---|---|
-| `REACT_APP_API_URL` | Backend API adresi (örn. `http://localhost:5100/api`) |
+| `VITE_API_URL` | Backend API adresi (örn. `http://localhost:5100/api`) |
 
 ## Çalıştırma
 
