@@ -1,10 +1,22 @@
 import React from 'react';
-import { Box, Paper, useMediaQuery, useTheme } from '@mui/material';
-import { FONT, RENK, TON } from '../../app/tokenlar';
+import { Box, Paper, useMediaQuery, useTheme, type SxProps, type Theme } from '@mui/material';
+import { FONT, RENK, TON, type TonAdi } from '../../app/tokenlar';
 
 // Sayfa üstündeki özet: geniş ekranda tek şerit (büyük rakam + küçük etiket), dar ekranda yazılı çipler ("Toplam: 46").
 // cip: geniş ekranda da çip görünümü (stok sayfaları). ogeler: [{ etiket, deger, ton? }]. ton verilirse rakam o tonun rengiyle yazılır.
-const OzetSeridi = ({ ogeler, sx, cip = false }) => {
+export interface OzetOgesi {
+  etiket: string;
+  deger: string | number;
+  ton?: TonAdi;
+}
+
+interface OzetSeridiProps {
+  ogeler: OzetOgesi[];
+  sx?: SxProps<Theme>;
+  cip?: boolean;
+}
+
+const OzetSeridi = ({ ogeler, sx, cip = false }: OzetSeridiProps) => {
   const darEkran = useMediaQuery(useTheme().breakpoints.down('md'));
   const dar = cip || darEkran;
   if (dar) {
@@ -13,7 +25,7 @@ const OzetSeridi = ({ ogeler, sx, cip = false }) => {
         {ogeler
           .filter((o) => cip || !['0', '₺0'].includes(String(o.deger)))
           .map((o) => {
-            const { fg, bg } = TON[o.ton] || TON.gri;
+            const { fg, bg } = (o.ton && TON[o.ton]) || TON.gri;
             return (
               <Box
                 key={o.etiket}

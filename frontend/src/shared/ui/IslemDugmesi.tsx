@@ -1,5 +1,5 @@
 import React from 'react';
-import { IconButton } from '@mui/material';
+import { IconButton, type IconButtonProps } from '@mui/material';
 import ViewIcon from '@mui/icons-material/Visibility';
 import PrintIcon from '@mui/icons-material/Print';
 import QrIcon from '@mui/icons-material/QrCode2';
@@ -36,7 +36,16 @@ const TUR = {
   satis: { Ikon: CartIcon, etiket: 'Hızlı satış' },
 };
 
-const IslemDugmesi = ({ tur, etiket, title, sx, ...diger }) => {
+export type IslemTuru = keyof typeof TUR;
+
+type IslemDugmesiProps = Omit<IconButtonProps, 'title' | 'size'> & {
+  tur: IslemTuru;
+  /** Erişilebilir ad; verilmezse türün varsayılanı. */
+  etiket?: string;
+  title?: string;
+};
+
+const IslemDugmesi = ({ tur, etiket, title, sx, ...diger }: IslemDugmesiProps) => {
   const { Ikon, etiket: varsayilan } = TUR[tur];
   const { fg, bg } = ISLEM[tur];
   const ad = etiket || varsayilan;

@@ -1,9 +1,17 @@
-import React from 'react';
-import { Box, Typography } from '@mui/material';
+import React, { type ReactNode } from 'react';
+import { Box, Typography, type SxProps, type Theme } from '@mui/material';
 import { FONT, RENK } from '../../app/tokenlar';
 
 // Form bölümü başlığı: renkli SVG simge kutusu + başlık (emoji yerine). renk: simge rengi; sag: sağa dayalı öğe (ör. sayaç).
-const BolumBasligi = ({ ikon, renk = RENK.mavi, children, sag, sx }) => (
+interface BolumBasligiProps {
+  ikon?: ReactNode;
+  renk?: string;
+  children?: ReactNode;
+  sag?: ReactNode;
+  sx?: SxProps<Theme>;
+}
+
+const BolumBasligi = ({ ikon, renk = RENK.mavi, children, sag, sx }: BolumBasligiProps) => (
   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.25, ...sx }}>
     {ikon && (
       <Box

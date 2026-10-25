@@ -4,7 +4,7 @@ import { FONT, RENK } from '../../app/tokenlar';
 import { plakaBicim } from './plakaBicim';
 
 // Türk plakası rozeti: mavi TR şeridi + çerçeveli rakamlar. Plakası olmayan kayıt (PLAKASIZ) soluk çizilir.
-const Plaka = ({ plaka, buyuk = false }) => {
+const Plaka = ({ plaka, buyuk = false }: { plaka?: string | null; buyuk?: boolean }) => {
   const metin = plakaBicim(plaka);
   if (!metin) return null;
   const plakasiz = metin === 'PLAKASIZ';

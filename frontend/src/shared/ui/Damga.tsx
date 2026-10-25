@@ -1,9 +1,15 @@
-import React from 'react';
-import { Box } from '@mui/material';
-import { TON } from '../../app/tokenlar';
+import React, { type ReactNode } from 'react';
+import { Box, type SxProps, type Theme } from '@mui/material';
+import { TON, type TonAdi } from '../../app/tokenlar';
 
 // Durum damgası: çerçeveli, yumuşak zeminli küçük etiket. ton: bekle | mavi | yesil | kirmizi | mor | gri | turuncu
-const Damga = ({ ton = 'gri', children, sx }) => {
+interface DamgaProps {
+  ton?: TonAdi;
+  children?: ReactNode;
+  sx?: SxProps<Theme>;
+}
+
+const Damga = ({ ton = 'gri', children, sx }: DamgaProps) => {
   const { fg, bg } = TON[ton] || TON.gri;
   return (
     <Box
