@@ -55,7 +55,6 @@ const allowedOrigins = [
   'http://localhost:3100',
   'http://localhost:5000',
   'http://localhost:5100',
-  'https://web-production-ac0ed.up.railway.app',
   // Hostinger prova adresi (kaynarmotor.com.tr'ye geçişten önce denenir)
   'https://yeni.kaynarmotor.com.tr',
   'https://kaynarmotor.com.tr',

@@ -1,135 +1,104 @@
-# Hostinger'a geçiş kılavuzu (Railway/PostgreSQL → Hostinger/MariaDB)
+# Hostinger deploy kılavuzu (Node.js + MariaDB)
 
-Bu belge `hostinger` dalındaki işin durumunu ve canlıya alma adımlarını anlatır. Kod tarafı hazırdır ve
-test edilmiştir; **Hostinger hesabında henüz hiçbir şey oluşturulmadı/değiştirilmedi** (site, veritabanı,
-DNS, ortam değişkeni yok).
+Uygulama Hostinger'da **tek bir Node.js uygulaması** olarak çalışır: Express hem `/api` uçlarını hem de React derlemesini aynı
+adresten sunar. Canlı adres: **kaynarmotor.com.tr** (hesap kullanıcısı `u454177254`, sipariş `1006826886`). Bu belge canlıya
+alma adımlarını, ortam değişkenlerini ve Hostinger'a özgü dikkat noktalarını tutar.
 
-## 1. Nelerin hazır olduğu
+## 1. Deploy adımları
 
-| Parça | Durum | Nerede |
-|---|---|---|
-| MariaDB uyum katmanı (`$1` parametreleri, `RETURNING`, UTC, transaction) | ✅ | `backend/core/db.js`, `sqlParams.js` |
-| MariaDB şeması (canlı PostgreSQL şemasından üretildi) | ✅ | `backend/core/initDb.js` |
-| Tüm route'ların çevirisi (PostgreSQL'e özgü ~60 sorgu) | ✅ | `backend/modules/*` |
-| Canlı veriyi yükleme + doğrulama aracı | ✅ | `backend/scripts/mariadb/yedektenYukle.js` |
-| Tek dosya sunucu + arayüz paketi | ✅ | `npm run package:hostinger` |
-| Örnek veri (`npm run seed`) MariaDB'de | ✅ | `backend/scripts/seedLocal.js` |
-| Testler (unit, entegrasyon, karşılaştırma, paket duman) | ✅ | `backend/tests/` |
+Her canlıya alma için kullanıcının açık onayı gerekir (gerçek işletme verisi).
 
-## 2. Canlıya almadan önce karar gereken şeyler
+1. **Doğrula (yerel):** `bash backend/scripts/hepsiniDogrula.sh` (tsc, birim, API kaynak + paket), frontend testleri, `npm run test:e2e`.
+2. **Paketle:** `npm run package:hostinger` → `deploy/hostinger/kaynarmotor-hostinger.zip` (~6,5 MB).
+3. **Duman testi:** `cd backend && node --test tests/smoke/paket.smoke.test.js` (zip açılır, sunucu ayağa kalkar, sağlık ve giriş uçları denenir).
+4. **Zip'i denetle:** içinde `.env`, anahtar dosyası, yerel geliştirme adresi, parola olmamalı.
+5. **Yükle ve derle:** Hostinger MCP `hosting_deploy`: `domain: kaynarmotor.com.tr`, `path: <zip>`, `type: nodejs`, `appType: nest`,
+   `nodeVersion: 24`, `outputDirectory: dist`, `buildScript: build`, `entryFile: main.cjs`, `packageManager: npm`.
+   (Express olsa da `nest` tipiyle kurulur; `express` tipi `.htaccess` yazmıyor.) Ortam değişkenlerine dokunulmaz.
+6. **Bekle:** `hosting_get-deployment` ile derleme `completed` olana kadar (genelde birkaç saniye). Başarısız olursa günlük ve analiz döner.
+7. **Doğrula (canlı):**
+   - `/api/health` ve `/api/health/database` 200.
+   - Anonim istekle korumalı uçlar (`/api/vitrin?hepsi=1`, `/api/ikinci-el-motor`, `/api/raporlar/aralik`, `/api/is-emirleri`) **401**.
+   - Canlı arayüzün `main.<özet>.js` dosya adı yerel paketteki ile aynı (yeni sürüm yayında).
+   - Tarayıcıda vitrin, ilan detayı ve bir giriş akışı; konsolda hata ve ağda 4xx/5xx olmamalı.
+8. **Yedek:** yüklenen zip'in bir kopyasını `deploy/yedek/` altına koy (git dışı); geri dönüş için önceki paket oradan yeniden yüklenir.
 
-1. **Node.js uygulama sınırı (en önemli risk).** Hostinger Business planı en fazla **5 Node.js web uygulaması**
-   içerir (resmî fiyat sayfasına göre; bölgeye göre değişebilir). Hesapta şu an 5 Node sitesi var:
-   `crm-mefateknik.com`, `kelime.salihsydm.com`, `otoyikama.salihsydm.com`, `fitnessapp.salihsydm.com`,
-   `filo.salihsydm.com`. `kaynarmotor.com.tr` şu an *statik* siteyi (Node değil). Altıncı bir Node uygulaması
-   (hem prova adresi hem asıl alan adı) kota yüzünden reddedilebilir. API'den kota sorgulanamıyor; denemek
-   gerekir. Seçenekler: (a) kullanılmayan bir Node sitesini kaldırmak, (b) planı yükseltmek,
-   (c) prova adresi açmadan doğrudan `kaynarmotor.com.tr`'yi dönüştürmek (önce statik site yedeği alınır).
-2. **Prova adresi:** `yeni.kaynarmotor.com.tr` önerilir. DNS Hostinger'da olduğu için çoğu zaman otomatik çalışır.
-3. **Video yükleme:** vitrin videoları veritabanında base64 saklanıyordu (üretimde 0 kayıt). Yükleme sınırı artık
-   veritabanı sunucusunun `max_allowed_packet` değerinden otomatik türer; aşan dosya anlaşılır bir 413 mesajıyla
-   reddedilir. Hostinger'ın değeri henüz bilinmiyor (ilk bağlantıda `SELECT @@max_allowed_packet` ile okunur).
-4. **MariaDB sürümü:** Atölyeci projesinde Hostinger MariaDB 11.8.9 ölçüldü; yerel test aynı sürümle yapıldı.
+**Geri dönüş:** derleme başarısız olursa Hostinger önceki sürümü yerinde bırakır. Yayın çalışıp bozuk çıkarsa `deploy/yedek/` içindeki önceki zip
+aynı adımlarla yeniden yüklenir. Şema değişikliği içeren bir sürümden eskisine dönmeden önce şemanın geriye uyumlu olduğundan emin olun
+(sütunlar yalnızca eklenir, `initDb.ts` her açılışta `ADD COLUMN IF NOT EXISTS` ile tamamlar).
 
-## 3. Ortam değişkenleri (Hostinger → Node.js uygulaması)
+**Hostinger MCP:** sunucular `~/.hostinger-mcp` içindeki sabit sürümden `node` ile çalışır (bkz. `CLAUDE.md`). Araçlar oturum başında yüklenir;
+yapılandırma değişirse pencere yenilenir. Hesap yanlışsa: `node ~/.hostinger-mcp/node_modules/@hostinger/mcp/src/servers/all.js --logout`, sonra `--login`.
 
-`hosting_nodejs_replace-environment-variables` **tam set** ister ve okumada değerleri maskeler: şifreyi sonradan geri
-okuyamazsınız. Bu yüzden şifre yerelde (git dışı) üretilip tek seferde tam set olarak gönderilir.
+## 2. Ortam değişkenleri (Hostinger → Node.js uygulaması)
+
+`hosting_nodejs_replace-environment-variables` **tam set** ister ve okumada değerleri maskeler: şifre sonradan geri okunamaz. Bu yüzden
+değişkenler tek seferde, tam set olarak gönderilir; **mevcut ayarlara dokunulmaz**, yalnızca gerçekten değişmesi gerekiyorsa güncellenir.
 
 | Değişken | Değer |
 |---|---|
 | `NODE_ENV` | `production` |
 | `DB_HOST` | `127.0.0.1` (uygulama veritabanına bununla bağlanır; `srvNNNN.hstgr.io` yalnızca dışarıdan erişim içindir) |
 | `DB_PORT` | `3306` |
-| `DB_NAME` / `DB_USER` / `DB_PASSWORD` | Hostinger'da oluşturulan veritabanı (şifre güçlü ve rastgele; `$` içermesin) |
-| `JWT_SECRET` | yeni, rastgele 64 hane (Railway'dekini kullanmayın: kullanıcılar yeniden giriş yapar, sorun değil) |
-| `FRONTEND_URL` | uygulamanın adresi, örn. `https://yeni.kaynarmotor.com.tr` (aynı kaynaktan POST/PUT için CORS buna bakar) |
-| `ADMIN_INITIAL_PASSWORD` | yalnızca veritabanı boşsa; canlı veri yüklendiğinde gerekmez |
-| `TRUST_PROXY` | isteğe bağlı; `req.ip` yanlışsa (bkz. §6) vekil sayısı |
+| `DB_NAME` / `DB_USER` / `DB_PASSWORD` | Hostinger'da oluşturulan veritabanı (`u454177254_kaynar`; şifre güçlü ve rastgele, `$` içermesin) |
+| `JWT_SECRET` | rastgele, en az 32 (önerilen 64) karakter; değişirse tüm kullanıcılar yeniden giriş yapar |
+| `FRONTEND_URL` | uygulamanın adresi, `https://kaynarmotor.com.tr` (aynı kaynaktan POST/PUT için CORS buna bakar) |
+| `ADMIN_INITIAL_PASSWORD` | yalnızca veritabanı boşken ilk admin hesabı için |
+| `TRUST_PROXY` | isteğe bağlı; `req.ip` yanlışsa vekil sayısı (bkz. §4) |
 
 `UV_THREADPOOL_SIZE=1` pakete gömülüdür (Hostinger'da hesabın iş parçacığı kotası dar; 4 ile süreç izsiz ölüyor).
+Gizli değerler (parolalar, jetonlar) kaynak koda, istemci JavaScript'ine ya da commit edilen `.env` dosyalarına yazılmaz.
 
-## 4. Adımlar (her biri ayrı onay ister)
-
-1. **Veritabanı oluştur:** `hosting_databases_create` (ad `u454177254_kaynar`, kullanıcı, rastgele şifre) ve
-   `website_domain` ile siteye bağla. Şifreyi yerelde `backend/.env.hostinger.local` (git dışı) dosyasına yaz.
-2. **Prova sitesini aç:** `hosting_websites_create` (`order_id` 1006826886, alan adı `yeni.kaynarmotor.com.tr`);
-   `hosting_websites_list-setups` ile `completed` olana kadar bekle.
-3. **Veriyi taşı** (Railway'e yalnızca **okuma**; kendi IP'ne **geçici** uzak erişim):
-   - `node scripts/mariadb/railwayYedekAl.js` → taze yedek (depo dışına)
-   - `hosting_databases_create-remote-connection` (yalnızca kendi IP'n, `%` asla)
-   - `node scripts/mariadb/yedektenYukle.js --env .env.hostinger.local --uzak-izin`
-     (şemayı kurar, tabloları boşaltır, yükler ve **satır sayısı, sütun toplamları, uzunluklar, min/maks, yabancı
-     anahtar bütünlüğünü** yedekle karşılaştırır; sapma varsa 2 koduyla çıkar)
-   - uzak erişimi **hemen kapat** (`hosting_databases_delete-remote-connection`)
-4. **Paketi yükle:** `npm run package:hostinger` → zip'i `hosting_files_generate-upload-url` + TUS ile yükle →
-   env değişkenlerini gönder → `hosting_nodejs_start-build` (`app_type: nest`, `node_version: 24`,
-   `output_directory: dist`, `build_script: build`, `entry_file: main.cjs`; Express olsa da `nest` ile kurulur,
-   `express` tipi `.htaccess` yazmıyor).
-5. **Doğrula:** `/api/health`, `/api/health/database`; tarayıcıda giriş, motor/servis/rapor/vitrin; Salih telefondan dener.
-6. **Geçiş günü:** yeni bir taze yedek + yükleme (adım 3), Salih'in onayıyla `kaynarmotor.com.tr` yeni uygulamaya
-   alınır (statik sitenin yedeği önceden alınır; aynı alan adıyla ikinci site açılamaz, önce eski site silinir).
-   `FRONTEND_URL` ve CORS yeni adrese göre güncellenir.
-7. **Railway'i 1–2 hafta açık tut**, sonra kapat. Kapatmadan önce son yedeği sakla (kilitli Railway volume yedeği
-   Railway silinince gider).
-
-### Geri dönüş
-Geçişten sonra sorun çıkarsa Railway hâlâ açıktır: DNS/alan adı eski adrese çevrilir. Yeni sistemde girilen kayıtlar
-Railway'e taşınmaz (tersine taşıma aracı yok); bu yüzden geçiş sonrası ilk günlerde Railway yalnızca okunur tutulmalı
-ve geri dönüş ancak çok erken (ilk saatler) yapılmalıdır.
-
-## 5. Testler
+## 3. Testler
 
 ```bash
 cd backend
-npm test                                  # unit (hızlı, veritabanı yok)
-npm run test:integration                  # canlıyla aynı arama sonuçları (yerel MariaDB kopyası gerekir)
-PG_REF_DIR=<eski kodun backend klasörü> npm run test:parity   # eski(PostgreSQL) ↔ yeni(MariaDB) karşılaştırma
-node --test tests/smoke/paket.smoke.test.js                   # paketi açıp Hostinger'daki gibi çalıştırır
+npm test                                          # birim (hızlı, veritabanı yok)
+bash scripts/hepsiniDogrula.sh                    # tsc + birim + API (kaynak) + API (paket); yerel MariaDB açık olmalı
+node --test tests/smoke/paket.smoke.test.js       # paketi açıp Hostinger'daki gibi çalıştırır
+cd .. && npm run test:e2e                         # Playwright: sunucuları ve tek kullanımlık test veritabanını kendisi açar
 ```
 
-Karşılaştırma testi iki sunucuyu aynı canlı-veri kopyasıyla yan yana çalıştırır: **148 GET ucu × 8 rol = 1184 istek
-çifti** + **10 yazma senaryosu** (stok düşümü/geri ekleme, transaction, fiş numarası yarışı, belgeler, vitrin, yetki,
-doğrulama) + senaryo sonunda **iki veritabanının tüm tablolarının karşılaştırılması**. Testin gerçekten hata yakaladığı
-bilerek hata sokularak doğrulandı (stok `SET` sırası, fiş numarası kilidi).
+Yerel MariaDB 11.8 elle başlatılır (`mariadbd.exe --defaults-file=<KaynarMariaDB>\my.ini`, port 3336). API testleri yalnızca yerel ve
+adı `_test` ile biten veritabanında, E2E yalnızca `test_kaynar_e2e` adlı tek kullanımlık veritabanında çalışır. Gizli bilgiler
+(`.env.mariadb.*`, canlı yedekler) git dışındadır.
 
-Gerekli yerel araçlar: MariaDB 11.8 (`C:\Users\salih\KaynarMariaDB`, port 3336, elle başlatılır:
-`mariadbd.exe --defaults-file=C:\Users\salih\KaynarMariaDB\my.ini`), eski kodun temiz bir kopyası
-(`git worktree add --detach <klasör> <eski commit>` + `node_modules` bağlantısı) ve yerel PostgreSQL (`kaynar_ref`).
-Gizli bilgiler (`.env.mariadb.*`, `.env.pg.ref`, canlı yedek) git dışındadır.
+## 4. Hostinger'a özgü dikkat noktaları
 
-## 6. MariaDB'ye geçişte bilinen davranış farkları (ve nedenleri)
-
-- **Geçersiz kayıt numarası:** `/api/.../abc` ya da `5abc` artık **400** döner (`core/middleware/idDogrula.js`). Eskiden
-  PostgreSQL 500 veriyordu; MariaDB `5abc`'yi sessizce `5` yapıp başka kaydı etkileyebilirdi.
-- **Eşit sıralama anahtarlı satırların sırası:** SQL'de garanti değildi. Aynı tarihli kayıtlar arasında PostgreSQL
-  fiziksel sırayı, MariaDB id sırasını izler. Sıralama kuralının kendisi (tarihe göre azalan) testle doğrulanır.
-- **Metin sıralaması:** canlının `en_US.utf8` sırası (boşluk/noktalama yok sayılır, küçük harf önce) `orderByText`
-  ile taklit edildi; canlı veride **78 sütunun 78'inde birebir** doğrulandı (`_sira.json` kehaneti).
-- **Arama (`ILIKE`):** `LOWER(x) LIKE LOWER(?)`; canlıda 331 sözcük × 4 arama için birebir aynı kayıtları buluyor
-  (Türkçe İ/ı/ş/ç, `%`, `_` dahil).
-- **Ondalık ölçek:** hiç kaydı olmayan toplamlar `"0"` yerine `"0.00"` dönebilir (sayısal olarak aynı).
-- **`kayit numaraları`:** `npm run seed` kayıtları silip yeniden yazar (`TRUNCATE` yerine `DELETE`); numaralar 1'den
-  başlamaz, kaldığı yerden devam eder.
-
-## 7. Hostinger'a özgü dikkat noktaları
-
-- **`req.ip` / hız sınırlama:** uygulama LiteSpeed ve CDN arkasında. `trust proxy` 1 olarak ayarlı; ilk dağıtımda
-  giriş denemesinin `aktivite_log.ip_adresi` kaydına bakılmalı. Hep aynı (vekil) IP görünüyorsa `TRUST_PROXY`
-  artırılır. (2026-10-22'den beri giriş sınırı IP + kullanıcı adı başınadır: bir çalışanın yanlış denemeleri yalnızca
-  kendi hesabını 15 dakika bekletir, aynı IP'deki diğer kullanıcıları kilitlemez; IP başına geniş yedek sınır 200.)
-- **HTTP/3 (hcdn) takılması:** aynı hesaptaki diğer sitelerde, bazı ağlardan, tarayıcı HTTP/3'e geçince sayfa geç
-  açılabiliyor (uygulama kaynaklı değil). Kullanıcı şikâyet ederse hPanel'den CDN/HTTP3 ayarına bakılır.
+- **Node.js uygulama sınırı:** Hostinger Business planı en fazla 5 Node.js web uygulaması içerir (bölgeye göre değişebilir); yeni bir Node sitesi açarken kota
+  yüzünden reddedilebilir. API'den kota sorgulanamaz.
+- **`req.ip` / hız sınırlama:** uygulama LiteSpeed ve CDN arkasında. `trust proxy` 1 olarak ayarlı; giriş denemesinin `aktivite_log.ip_adresi`
+  kaydına bakılmalı. Hep aynı (vekil) IP görünüyorsa `TRUST_PROXY` artırılır. Giriş sınırı IP + kullanıcı adı başınadır: bir çalışanın yanlış
+  denemeleri yalnızca kendi hesabını 15 dakika bekletir, aynı IP'deki diğer kullanıcıları kilitlemez (IP başına geniş yedek sınır 200).
+- **HTTP/3 (hcdn) takılması:** aynı hesaptaki diğer sitelerde, bazı ağlardan, tarayıcı HTTP/3'e geçince sayfa geç açılabiliyor (uygulama kaynaklı
+  değil). Şikâyet gelirse hPanel'den CDN/HTTP3 ayarına bakılır.
 - **Süreç kotası:** açıklanamayan 503'te ilk bakılacak yer; paket `UV_THREADPOOL_SIZE=1` ile gelir.
-- **Veritabanı oturumu:** saat dilimi UTC, `sql_mode` katı (PostgreSQL gibi) ve `||` metin birleştirir; Hostinger'ın
-  varsayılanı katı değildir, ayarlar her bağlantıda uygulamadan yapılır.
-- **Büyük dosyalar:** belgeler ikili (hazır ifade) gönderilir; sınır `max_allowed_packet` (bkz. §2).
+- **Veritabanı oturumu:** saat dilimi UTC, `sql_mode` katı ve `||` metin birleştirir; Hostinger'ın varsayılanı katı değildir, ayarlar her
+  bağlantıda uygulamadan yapılır.
+- **Büyük dosyalar:** belgeler ikili gönderilir; yükleme sınırı veritabanı sunucusunun `max_allowed_packet` değerinden otomatik türer,
+  aşan dosya anlaşılır bir 413 ile reddedilir.
+- **Asenkron işlemler:** `hosting_deploy` derlemeyi başlatıp hemen döner; sonuç `hosting_get-deployment` ile beklenir. Başarı yanıtı çoğu zaman
+  "kuyruğa alındı" demektir, yazma işlemi tekrar gönderilmez.
 
-## 8. Kaçınılan/değiştirilmeyenler
+## 5. PostgreSQL'den MariaDB'ye geçişte bilinen davranış farkları
 
-- `plain_sifre` kolonu (kullanıcı şifrelerini **düz metin** saklıyor) olduğu gibi taşındı: bu eski tasarımdır,
-  davranış değişikliği olmasın diye dokunulmadı. Ayrı bir iş olarak kaldırılması önerilir.
-- PostgreSQL döneminden kalma tek seferlik araçlar (`importCsv`, `fix*`, `check*`, `add*`, `importSold`, `updateFatura`) ve
-  Railway ile kıyaslama aracı (`canliKiyasla`) temizlik sırasında silindi (git geçmişinde durur). Sürdürülen araçlar:
-  `seedLocal.js`, `seedGorselIndir.js`, `scripts/mariadb/*`.
+Uygulama başlangıçta PostgreSQL üzerinde çalışıyordu; MariaDB'ye geçişte şu farklar bilinçli olarak yönetildi:
+
+- **Geçersiz kayıt numarası:** `/api/.../abc` ya da `5abc` **400** döner (`core/middleware/idDogrula.ts`). Eskiden PostgreSQL 500 veriyordu;
+  MariaDB `5abc`'yi sessizce `5` yapıp başka kaydı etkileyebilirdi.
+- **Eşit sıralama anahtarlı satırların sırası:** SQL'de garanti değildi; aynı tarihli kayıtlar arasında PostgreSQL fiziksel sırayı, MariaDB id
+  sırasını izler. Sıralama kuralının kendisi (tarihe göre azalan) testle doğrulanır.
+- **Metin sıralaması:** PostgreSQL'in `en_US.utf8` sırası (boşluk/noktalama yok sayılır, küçük harf önce) `orderByText` ile taklit edildi.
+- **Arama (`ILIKE`):** `LOWER(x) LIKE LOWER(?)`; Türkçe İ/ı/ş/ç, `%`, `_` dahil aynı kayıtları bulur.
+- **Ondalık ölçek:** hiç kaydı olmayan toplamlar `"0"` yerine `"0.00"` dönebilir (sayısal olarak aynı).
+- **Kayıt numaraları:** `npm run seed` kayıtları silip yeniden yazar (`TRUNCATE` yerine `DELETE`); numaralar 1'den başlamaz, kaldığı yerden devam eder.
+- **Zaman:** `NOW()` sunucu yerel saatidir, uygulama UTC yazar; karşılaştırmada `UTC_TIMESTAMP()` kullanılır.
+
+Geçiş sırasında kullanılan veri taşıma ve eski-yeni karşılaştırma araçları, iş bitince depodan kaldırıldı (git geçmişinde durur).
+
+## 6. Bilinen açık konular
+
+- `kullanicilar.plain_sifre` kolonu eski tasarımdan kaldı. Düz metin parolalar **artık saklanmıyor ve gösterilmiyor**: `initDb.ts` her açılışta
+  kolonu `NULL`'a çeker ve hiçbir iş kodu ona yazmaz/okumaz. Kolonun `DROP COLUMN` ile kaldırılması geri alınamaz bir şema değişikliğidir ve ayrı karar bekler.
+- Eski kaynaklardan kalma yerel yedekler (düz parola ve müşteri bilgisi içerebilir) depo dışında durur; şifreli arşive alınmalı ya da silinmelidir.
 - `demo` dalı (Postgres/Supabase) bu işten etkilenmez.

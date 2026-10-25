@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs';
 import { pool } from './db';
 
-// MariaDB şeması (Hostinger). Canlı PostgreSQL şemasından (Railway) kolon sırası, tipler,
+// MariaDB şeması (Hostinger). Eski PostgreSQL şemasından kolon sırası, tipler,
 // varsayılanlar, yabancı anahtarlar ve indeksler korunarak üretilmiştir.
 //
 //  - Tüm tablolar utf8mb4_nopad_bin ile açılır: karşılaştırma ve LIKE büyük/küçük harfe

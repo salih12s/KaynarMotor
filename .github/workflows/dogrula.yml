@@ -100,7 +100,7 @@ jobs:
         image: mariadb:11.8
         env:
           MARIADB_ROOT_PASSWORD: ci-root-sifre
-          MARIADB_DATABASE: kaynar_pgkopya
+          MARIADB_DATABASE: kaynar_ci
           MARIADB_USER: kaynar
           MARIADB_PASSWORD: ci-test-sifre
         ports:
@@ -112,7 +112,7 @@ jobs:
           --health-retries=20
     env:
       DB_PORT: 3306
-      DB_NAME: kaynar_pgkopya
+      DB_NAME: kaynar_ci
       DB_USER: kaynar
       DB_PASSWORD: ci-test-sifre
       JWT_SECRET: ci-test-jwt-sirri-en-az-32-karakter-uzunlugunda

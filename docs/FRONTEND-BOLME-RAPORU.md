@@ -161,7 +161,7 @@ ama telefondan müşteri eşleştirme sessizce çalışmaz oldu. Karakterizasyon
 6. **Bilinen tuzak:** projede `react-hooks` ESLint kuralı tanımlı değil (`eslint-disable react-hooks/...` yorumu derlemeyi kırar); `useEffect` bağımlılık
    uyarıları zaten üretilmiyor. İleride ESLint eklenirken ele alınacak.
 7. Doğrulama komutları: `cd frontend; CI=true npx react-scripts test --watchAll=false` ve `CI=false npx react-scripts build` ("Compiled successfully").
-   Yerel sunucu `backend/.env` ile başlatılmamalı: Railway'e işaret ediyor; gerekirse `set -a; . ./.env.mariadb.dev; set +a` ile ortam değişkenleri önce yüklenir (dotenv ezmez).
+   Yerel sunucu için ortam değişkenleri `set -a; . ./.env.mariadb.dev; set +a` ile önce yüklenir (dotenv var olan değişkeni ezmez).
 
 ### Sıradaki işler
 Sekiz büyük dosyanın hepsi bölündü (Raporlar, İş Emirleri, Vitrin, MotorStok, İkinci El, Storefront, E-Ticaret, Aksesuarlar). `shared/bicim.js` tekilleştirmesi ve

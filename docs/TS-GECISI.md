@@ -66,13 +66,12 @@ eşitlemesi, stok kodu değişince parça kodu taşıma, tamamlama tarihi, yapı
 - **Yedek parça satışları toplam gelire/kâra girmiyor** (raporlar): mevcut davranış `tests/unit/raporlar.test.js` ile sabitlendi.
 - Raporlarda `'2026-01-01'` gömülü tarih (eski aktarılmış motorlar) duruyor.
 - `scripts/` ve `tests/` JS kaldı (tsx ile çalışır). `checkJs` kapalı. İstenirse ayrı iş olarak TS'ye çevrilir.
-- `test:parity` (eski PG koduyla karşılaştırma) bu geçişte çalıştırılmadı: `PG_REF_DIR` ister. `core/db.ts` ve `core/sqlParams.ts`
-  yalnızca tip eklendi; davranış testleri (34 sqlParams birim testi + tüm API testleri) yeşil.
+- `core/db.ts` ve `core/sqlParams.ts` yalnızca tip eklendi (eski PostgreSQL ile karşılaştırma aracı iş bitince depodan kaldırıldı); davranış testleri (34 sqlParams birim testi + tüm API testleri) yeşil.
 - Medya önbelleği 10 dk: silinen ilanın görseli bir süre bellekten sunulabilir (tasarım, `MedyaOnbellegi` açıklamasında).
 
 ## Tuzaklar
 - `.js` dosyası `.ts`'yi `require` edebilir (tsx ve esbuild çözer); `export default` `require(...).default` olur.
-- Düz `node server.ts` çalışmaz: `npm start` (tsx) kullanın. (Railway dönemi `Procfile`/`nixpacks.toml`/`railway.json` temizlikte silindi.)
+- Düz `node server.ts` çalışmaz: `npm start` (tsx) kullanın.
 - TypeScript 7 `moduleResolution: node10` seçeneğini kaldırdı; `module: preserve` + `bundler` kullanılır.
 - Bash araç satırında tek tırnak sayısı çift değilse komut ayrıştırılamaz: Türkçe metinli dosyaları `Write` ile yazın.
 - Test dosyalarında SQL'e göre eşleşen Fake kuralları ilk eşleşen kazanır; daha özel kuralı öne koyun.

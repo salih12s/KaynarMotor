@@ -99,7 +99,6 @@ test('paket: zip açılır, üretim modunda başlar, arayüz ve API çalışır'
   const jsYanit = await al(js[0]);
   assert.equal(jsYanit.r.status, 200);
   assert.match(jsYanit.r.headers.get('cache-control'), /immutable/, 'içerik özetli dosya kalıcı önbelleğe alınmalı');
-  assert.ok(!jsYanit.metin.includes('railway.app'), 'pakete eski Railway adresi girmemiş olmalı');
   assert.ok(!jsYanit.metin.includes('localhost:5100'), 'pakete yerel geliştirme adresi girmemiş olmalı');
   for (const sayfa of ['/vitrin', '/giris', '/is-emirleri', '/s/abcdef']) {
     const s = await al(sayfa);

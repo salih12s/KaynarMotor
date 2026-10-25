@@ -9,7 +9,7 @@
  *
  * Sunucu tek dosyada toplandığı için barındırma tarafında paket kurulumuna bağlı değildir.
  * Arayüz API'ye kendi adresinden (/api) bağlanacak şekilde derlenir: yerel .env içindeki
- * REACT_APP_API_URL (ör. eski Railway adresi) pakete GİRMEZ.
+ * REACT_APP_API_URL (ör. yerel geliştirme adresi) pakete GİRMEZ.
  *
  * Kullanım (depo kökünden):  node scripts/package-hostinger.cjs   (npm run package:hostinger)
  * Hostinger derleme ayarı:   app_type nest, node 24, output_directory dist,

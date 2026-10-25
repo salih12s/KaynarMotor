@@ -20,7 +20,7 @@ tutarlı tasarım. Bu belge neyin bittiğini, neyin kaldığını ve hangi sıra
 3. **README** (2026-10-18 güncellendi: teknoloji tablosu, Testler ve Doğrulama bölümü, yollar; kalanlar):
    - "Teknoloji Yığını" tablosu: Node 22 / Express / `backend/core/db.js` eski; TypeScript strict, zod, tsx + esbuild, Testing Library eksik.
    - "Testler" bölümü yok: test piramidi ve sayılar (birim 248, API 201, frontend 61, paket duman testi) + nasıl çalıştırılır.
-   - Railway/PostgreSQL anıları ("eski yapılandırma temizlendi") sadeleştir; mimari diyagramı güncel yapıyla karşılaştır.
+   - Mimari diyagramı güncel yapıyla karşılaştır.
    - Ekran görüntüleri güncel mi kontrol et (`docs/screenshots`); GIF/video için `readme-media` skill'i, "Demo ile dene" için `demo-account` skill'i.
 4. **Yerel temizlik** (git dışı, sahibi yapar): `yerel-arsiv/` içindeki eski ortam betiklerini sil, eski ortamın parolasını değiştir; gerçek müşteri CSV'sini sil.
 
@@ -39,7 +39,7 @@ Her dosya: önce karakterizasyon testi, testi bozarak sına, betikle taşı, esk
 - **TanStack Query**: veri çekme/önbellek; `useRaporVerisi` gibi hook'ların yerini alır.
 - Frontend **TypeScript** (`.tsx`; önce `shared/`, sonra özellikler) ve **CRA -> Vite** (react-scripts bakımsız).
 - ~~**E2E (Playwright)**~~ **YAPILDI (2026-10-25):** `npm run test:e2e`, 3 akış (giriş+rol, iş emri oluştur/tamamla, motor satışı), 13 test, 3 tur üst üste 27/27, mutasyonla doğrulandı. Her koşuda sıfırdan kurulan `test_kaynar_e2e` veritabanı. E2E ile bulunan hata (plaka tam yazılıp öneri seçilince satış formu dolmuyordu) düzeltildi: bileşen + E2E regression testi.
-- Backend: `scripts/` ve `tests/` hâlâ JS (tsx ile çalışır); `test:parity` çalıştırılmadı (eski PostgreSQL yedeği ister).
+- Backend: `scripts/` ve `tests/` hâlâ JS (tsx ile çalışır).
 
 ## D. Tasarım gözden geçirme (arayüz işlerinde tasarım skill'leri kullanılır)
 - Ayrık sol/sağ bölünmüş sayfa düzeni yok; ürünün kendi diline ait dokunuşlar (plaka, fiş, damga); açık tema ana tema, koyu tema kendi kimliğiyle.

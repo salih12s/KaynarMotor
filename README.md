@@ -31,7 +31,7 @@ Kaynar Motor is a production dealership ERP and digital showroom integrating mot
 
 ### My Contribution
 
-I developed the React interface, the layered TypeScript (strict) / Express API with zod validation, MariaDB data model (migrated from PostgreSQL with a verified, test-covered data migration), authentication and permission system, reporting tools, barcode and QR workflows, public showroom integration, and Hostinger deployment.
+I developed the React interface, the layered TypeScript (strict) / Express API with zod validation, MariaDB data model (migrated from PostgreSQL; the one-off migration tooling was retired after cut-over and lives in the git history), authentication and permission system, reporting tools, barcode and QR workflows, public showroom integration, and Hostinger deployment.
 
 ### Engineering Challenges
 
@@ -205,7 +205,7 @@ flowchart TB
     personel(["<b>Personel · Admin</b><br/>modül yetkisine göre"])
     yatirimci(["<b>Yatırımcı</b><br/>yalnızca kendi motorları"])
 
-    subgraph railway["Hostinger · tek Node uygulaması"]
+    subgraph hostingerKutu["Hostinger · tek Node uygulaması"]
         direction TB
 
         subgraph spa["React 19 SPA"]
@@ -260,7 +260,7 @@ flowchart TB
     class db store
     class init aux
 
-    style railway fill:transparent,stroke:#888,stroke-dasharray:6 4
+    style hostingerKutu fill:transparent,stroke:#888,stroke-dasharray:6 4
     style spa fill:transparent,stroke:#c62828
     style api fill:transparent,stroke:#438dd5
     style korumali fill:transparent,stroke:#1d3557,stroke-dasharray:3 3
@@ -481,7 +481,7 @@ KaynarMotorCRM/
 │   │   ├── eticaret/            # pazaryeri satışları + komisyon hesabı
 │   │   ├── vitrin/              # ilanlar/ + medya/ + iletisim/ (+ vitrinOrtak)
 │   │   └── raporlar/            # raporlar/ (+ hesap) + veresiye/
-│   ├── tests/                   # unit (Fake veritabanı) / integration / api / parity / smoke
+│   ├── tests/                   # unit (Fake veritabanı) / api / smoke
 │   └── scripts/                 # seed, paketleme/test yardımcıları, MariaDB araçları (bkz. docs/TS-GECISI.md)
 ├── frontend/
 │   └── src/

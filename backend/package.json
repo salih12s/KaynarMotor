@@ -10,8 +10,6 @@
     "seed": "tsx scripts/seedLocal.js",
     "seed:gorseller": "tsx scripts/seedGorselIndir.js",
     "test": "node --import tsx --test \"tests/unit/*.test.js\"",
-    "test:integration": "node --import tsx --test --test-concurrency=1 \"tests/integration/*.test.js\"",
-    "test:parity": "node --import tsx --test --test-concurrency=1 \"tests/parity/*.parity.test.js\"",
     "test:api": "node --import tsx --test --test-concurrency=1 \"tests/api/*.test.js\"",
     "test:api:paket": "node scripts/testApiPaket.cjs"
   },
