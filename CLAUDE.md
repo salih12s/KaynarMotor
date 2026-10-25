@@ -38,9 +38,12 @@ npm run test:e2e                      # Playwright (gerçek Chrome + sıfırdan 
 - MUI ikonları tek tek içe aktarılır: `import X from '@mui/icons-material/X'`.
 
 ## Durum (2026-10-25)
-**Arayüz: Tasarım A "Servis Defteri"** `tasarim-a` dalında uygulandı (canlıya ÇIKMADI; müşterinin gördüğü sayfalar eski temada kaldı). Panel teması `PanelTema` (App.jsx) ile yalnız panelde;
-ortak parçalar `frontend/src/shared/ui`, belirteçler `frontend/src/app/tokenlar.js`, tema `tema.js`. Tasarım görselleri: `docs/tasarim-yonleri/`. Ayrıntı ve kalan cilalar: `docs/YOL-HARITASI.md` §D.
-Doğrulama bu dalda: 415 frontend testi, backend tsc + 248 birim + 203 API (kaynak/paket), 9 E2E; **E2E'yi dev sunucuları (5100/3100) kapalıyken çalıştır.**
+**Arayüz: Tasarım A "Servis Defteri" CANLIDA (2026-10-25, Hostinger build 01a173d1, arayüz main.95dd23dd.js; önceki yayın 01a17083, yedek `deploy/yedek/kaynarmotor-hostinger-2026-10-25-canli.zip`).**
+Kaynak dal `typescript` (= `tasarim-a`, yerel; GitHub'a push edilmedi). Müşterinin gördüğü sayfalar (`/site`, `/ilan`, `/taksit/:fiyat`, `/s/:token`) eski temada kaldı. Panel teması `PanelTema` (App.jsx);
+ortak parçalar `frontend/src/shared/ui`, belirteçler `frontend/src/app/tokenlar.js`, tema `tema.js`. Tasarım görselleri: `docs/tasarim-yonleri/`. Kalan cilalar: `docs/YOL-HARITASI.md` §D.
+Doğrulama: 415 frontend testi, backend tsc + 248 birim + 203 API (kaynak/paket), 9 E2E; **E2E'yi dev sunucuları (5100/3100) kapalıyken çalıştır.** Paket duman testi için `.env.mariadb.dev` kullan (test DB'de vitrin görseli yok).
+**Hostinger MCP:** `~/.claude.json` içinde sunucular `node ...\.hostinger-mcp
+ode_modules\@hostinger\mcp\src\servers\<ad>.js` ile çalışmalı (npx @latest "Connection closed" verir); uzantı geri yazarsa yeniden düzelt (yedek: `~/.claude.json.yedek-hostinger`). Deploy: `hosting_deploy` + `hosting_get-deployment` (execute ile).
 `typescript` dalı (= `main`, GitHub'da) **canlıda**: kaynarmotor.com.tr 2026-10-25'te bu daldan yayına alındı (Hostinger build 01a17083; önceki yayın 21 Ekim).
 Doğrulama: tsc temiz, 248 birim, 203 API (kaynak ve paket), 406 frontend, 13 E2E (Playwright, `npm run test:e2e`). Tam frontend koşusu için
 `--maxWorkers=2` kullan (yavaş makinede 60 sn zaman aşımı flaky üretir); geliştirirken `cd frontend && npm run test:hizli` (~26 sn).
