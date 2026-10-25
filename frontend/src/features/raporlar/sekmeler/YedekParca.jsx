@@ -1,24 +1,22 @@
 import React from 'react';
-import { Box, Paper, Typography, Grid, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Alert } from '@mui/material';
-import { formatTL, karColor, headerSx } from '../bicim';
-import KartItem from '../bilesenler/KartItem';
+import { Box, Paper, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Alert } from '@mui/material';
+import { formatTL, karColor, headerSx, sagaSutunlar } from '../bicim';
+import KartItem, { KART_RENKLERI } from '../bilesenler/KartItem';
 
 // Yedek Parça (envanter) sekmesi.
 const YedekParca = ({ rapor, isMobile }) => {
   return (
     <>
-      <Grid container spacing={2} sx={{ mb: 2 }}>
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 2, mb: 2 }}>
         {[
           { label: 'Toplam Ürün', value: rapor.yedekParcalar?.length || 0 },
           { label: 'Toplam Satış Değeri', value: `₺${formatTL(rapor.yedekParcaToplamDeger)}` },
           { label: 'Toplam Maliyet', value: `₺${formatTL(rapor.yedekParcaToplamMaliyet)}` },
           { label: 'Potansiyel Kâr', value: `₺${formatTL((rapor.yedekParcaToplamDeger || 0) - (rapor.yedekParcaToplamMaliyet || 0))}` },
         ].map((k, i) => (
-          <Grid size={{ xs: 12, md: 3 }} key={i}>
-            <KartItem label={k.label} value={k.value} />
-          </Grid>
+          <KartItem key={i} label={k.label} value={k.value} color={k.color || KART_RENKLERI[i % KART_RENKLERI.length]} />
         ))}
-      </Grid>
+      </Box>
       {rapor.yedekParcalar && rapor.yedekParcalar.length > 0 ? (
         isMobile ? (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
@@ -52,7 +50,7 @@ const YedekParca = ({ rapor, isMobile }) => {
           </Box>
         ) : (
           <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
-            <Table size="small">
+            <Table sx={sagaSutunlar(2, 3, 4, 5)}>
               <TableHead>
                 <TableRow>
                   {['Ürün Adı', 'Alış Fiyatı', 'Satış Fiyatı', 'Kâr Marjı', 'Kâr Oranı'].map((h) => (

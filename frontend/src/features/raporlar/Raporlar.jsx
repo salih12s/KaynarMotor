@@ -70,10 +70,11 @@ const Raporlar = () => {
           <TextField
             size="small"
             select
-            label="Personel"
             value={seciliPersonel}
             onChange={(e) => setSeciliPersonel(e.target.value)}
-            sx={{ minWidth: { xs: '100%', sm: 180 } }}
+            SelectProps={{ displayEmpty: true, renderValue: (v) => v || 'Personel' }}
+            inputProps={{ 'aria-label': 'Personel' }}
+            sx={{ minWidth: { xs: '100%', sm: 220 } }}
           >
             <MenuItem value="">Tümü</MenuItem>
             {personeller.map((p) => (

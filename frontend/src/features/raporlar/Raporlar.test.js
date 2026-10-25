@@ -195,7 +195,7 @@ const ekranAc = async (secenek) => {
 const sekme = (user, ad) => user.click(screen.getByRole('tab', { name: ad }));
 // Kart: etiket yazısının hemen altındaki değer yazısı
 // (tablo başlıklarında aynı yazı olabilir; kartın etiketi <p> ve altında değer yazısı vardır)
-const kart = (etiket) => screen.getAllByText(etiket).find((e) => e.tagName === 'P' && e.nextElementSibling).nextElementSibling.textContent;
+const kart = (etiket, kap = screen) => kap.getAllByText(etiket).find((e) => e.tagName === 'P' && e.nextElementSibling).nextElementSibling.textContent;
 // Genel Özet tablosunda 4. hücre "Gelir payı" çubuğudur; sayı kontrollerinde atlanır
 const payHaric = (hucre) => hucre.filter((_, i) => i !== 3);
 const satir = (ad) => screen.getByRole('row', { name: ad });
@@ -206,8 +206,6 @@ const hucreler = (row) =>
 // "Toplam: ₺600" gibi, içinde <strong> bulunan tek satırlık yazı
 const yaziSecici = (metin) => (_, el) => el.tagName === 'P' && el.textContent === metin;
 const yazi = (metin) => screen.getByText(yaziSecici(metin));
-// Aynı yazı ekranda birden çok yerde geçebilir (ör. e-ticaret penceresi: fiyat kutusu + alttaki özet)
-const yaziVar = (metin) => expect(screen.getAllByText(yaziSecici(metin)).length).toBeGreaterThanOrEqual(1);
 
 beforeEach(() => {
   jest.spyOn(console, 'error').mockImplementation(() => {}); // hata testleri bilerek console.error üretir
@@ -411,19 +409,19 @@ describe('Raporlar: Motor Satışları', () => {
     expect(screen.getByRole('tab', { name: 'Satışlar (3)' })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'Komisyonlu Satışlar (2)' })).toBeInTheDocument();
     // M2: Payınız = kâr 6000 - yatırımcı payı 1000 = 5.000
-    expect(hucreler(satir(/06XYZ789/)).slice(1)).toEqual([
+    expect(hucreler(satir(/06 XYZ 789/)).slice(1)).toEqual([
       '06.10.2026',
-      '06XYZ789',
+      '06 XYZ 789',
       'Yamaha NMAX',
       '40.000,00 ₺',
       '50.000,00 ₺',
       '500,00 ₺',
       '5.000,00 ₺',
       'nakit',
-      '✓ Kesildi',
+      'Kesildi',
     ]);
-    expect(hucreler(satir(/35KOM001/))[8]).toBe('nakit');
-    expect(hucreler(satir(/35KOM001/))[9]).toBe('✗ Kesilmedi');
+    expect(hucreler(satir(/35 KOM 001/))[8]).toBe('nakit');
+    expect(hucreler(satir(/35 KOM 001/))[9]).toBe('Kesilmedi');
   });
 
   test('Komisyonlu alt sekme yalnızca komisyonlu motorları toplar; komisyoncu süzgeci daraltır', async () => {
@@ -453,14 +451,14 @@ describe('Raporlar: Motor Satışları', () => {
   test('satır ikonu motor detay penceresini açar; Kapat kapatır', async () => {
     const user = await ekranAc();
     await sekme(user, 'Motor Satışları');
-    await user.click(within(await screen.findByRole('row', { name: /06XYZ789/ })).getByRole('button'));
+    await user.click(within(await screen.findByRole('row', { name: /06 XYZ 789/ })).getByRole('button'));
 
     const pencere = await screen.findByRole('dialog');
-    expect(within(pencere).getByText('Motor Satış Detayı - 06XYZ789')).toBeInTheDocument();
+    expect(within(pencere).getByText('Motor Satış Detayı - 06 XYZ 789')).toBeInTheDocument();
     expect(within(pencere).getByText('Ali Komisyoncu', { exact: false })).toBeInTheDocument();
     // yatırımcı payı varsa "Toplam Kâr" ve "Yatırımcı Payı" satırları da görünür; net kâr = 6000 - 1000
-    expect(within(pencere).getByText('Yatırımcı Payı:')).toBeInTheDocument();
-    expect(within(pencere).getByText('Net Kâr (Payınız):').nextElementSibling).toHaveTextContent('5.000,00 ₺');
+    expect(within(pencere).getByText('Yatırımcı Payı')).toBeInTheDocument();
+    expect(within(pencere).getByText('Net Kâr (Payınız)').nextElementSibling).toHaveTextContent('5.000,00 ₺');
 
     await user.click(within(pencere).getByRole('button', { name: 'Kapat' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
@@ -521,9 +519,9 @@ describe('Raporlar: İş Emirleri', () => {
     expect(within(pencere).getByText('Fren balatası')).toBeInTheDocument();
     expect(within(pencere).getByText('Fren sesi')).toBeInTheDocument(); // arıza kutusu
     // fiyat 600, maliyet 2 adet x 150 = 300, kâr 300
-    expect(yazi('Toplam: ₺600')).toBeInTheDocument();
-    expect(yazi('Maliyet: ₺300')).toBeInTheDocument();
-    expect(yazi('Kâr: ₺300')).toBeInTheDocument();
+    expect(kart('Toplam')).toBe('₺600');
+    expect(kart('Maliyet')).toBe('₺300');
+    expect(kart('Kâr')).toBe('₺300');
   });
 });
 
@@ -543,7 +541,7 @@ describe('Raporlar: Aksesuar, E-Ticaret, Yedek Parça', () => {
     expect(within(pencere).getByText('Aksesuar Satış Detayı - Mehmet Kaya')).toBeInTheDocument();
     const urunSatiri = within(pencere).getByRole('row', { name: /^Kask/ });
     expect(hucreler(urunSatiri)).toEqual(['Kask', 'LS2', 'Trendyol', 'L', 'Siyah', '1', '₺1.600', '₺2.000', '₺400']);
-    expect(yazi('Satış: ₺2.000')).toBeInTheDocument();
+    expect(kart('Satış')).toBe('₺2.000');
   });
 
   test('e-ticaret: tablo ve detay penceresi hesaplaKomisyon sonuçlarını kullanır', async () => {
@@ -569,9 +567,10 @@ describe('Raporlar: Aksesuar, E-Ticaret, Yedek Parça', () => {
     await user.click(within(row).getByRole('button'));
     const pencere = await screen.findByRole('dialog');
     expect(within(pencere).getByText('E-Ticaret Satış Detayı - Kask Visor')).toBeInTheDocument();
-    yaziVar('Toplam Satış: ₺2.000,00'); // 1000 x 2 adet
-    yaziVar('Toplam Maliyet: ₺1.200,00'); // 600 x 2 adet
-    yaziVar(`Toplam Kesinti: ₺${tl(h.toplamKomisyon)}`);
+    // sayfadaki "Toplam Satış" kartıyla karışmasın diye yalnızca pencerenin içinde aranır
+    expect(kart('Toplam Satış', within(pencere))).toBe('₺2.000,00'); // 1000 x 2 adet
+    expect(kart('Toplam Maliyet', within(pencere))).toBe('₺1.200,00'); // 600 x 2 adet
+    expect(kart('Toplam Kesinti', within(pencere))).toBe(`₺${tl(h.toplamKomisyon)}`);
   });
 
   test('yedek parça: kartlar ve ürün başına kâr/oran', async () => {

@@ -1,27 +1,25 @@
 import React from 'react';
 import { IslemDugmesi } from '../../../shared/ui';
-import { Box, Paper, Typography, Grid, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Alert, Chip } from '@mui/material';
+import { Box, Paper, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Alert, Chip } from '@mui/material';
 
-import { formatTL, formatDate, karColor, headerSx } from '../bicim';
-import KartItem from '../bilesenler/KartItem';
+import { formatTL, formatDate, karColor, headerSx, sagaSutunlar } from '../bicim';
+import KartItem, { KART_RENKLERI } from '../bilesenler/KartItem';
 import { hesaplaKomisyon, detectPlatform } from '../../eticaret/komisyon';
 
 // E-Ticaret sekmesi. Net kâr sunucudan değil hesaplaKomisyon ile satır satır hesaplanır.
 const ETicaret = ({ rapor, hesaplananEticaretKar, isMobile, onDetay }) => {
   return (
     <>
-      <Grid container spacing={2} sx={{ mb: 2 }}>
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 2, mb: 2 }}>
         {[
           { label: 'Toplam Satış', value: rapor.eticaret?.length || 0 },
           { label: 'E-Ticaret Gelir', value: `₺${formatTL(rapor.eticaretGelir)}` },
           { label: 'E-Ticaret Maliyet', value: `₺${formatTL(rapor.eticaretMaliyet)}` },
           { label: 'E-Ticaret Kâr', value: `₺${formatTL(hesaplananEticaretKar)}` },
         ].map((k, i) => (
-          <Grid size={{ xs: 12, md: 3 }} key={i}>
-            <KartItem label={k.label} value={k.value} />
-          </Grid>
+          <KartItem key={i} label={k.label} value={k.value} color={k.color || KART_RENKLERI[i % KART_RENKLERI.length]} />
         ))}
-      </Grid>
+      </Box>
       {rapor.eticaret && rapor.eticaret.length > 0 ? (
         isMobile ? (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
@@ -64,7 +62,7 @@ const ETicaret = ({ rapor, hesaplananEticaretKar, isMobile, onDetay }) => {
           </Box>
         ) : (
           <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
-            <Table size="small">
+            <Table sx={sagaSutunlar(5, 6, 7, 8, 9, 10, 11)}>
               <TableHead>
                 <TableRow>
                   {['', 'Tarih', 'Platform', 'Ürün', 'Adet', 'Alış', 'Satış', 'Kargo', 'Komisyon', 'Toplam Kesinti', 'Net Kâr'].map((h) => (

@@ -1,7 +1,7 @@
 import React from 'react';
-import { Box, Paper, Typography, Grid, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Alert } from '@mui/material';
-import { formatTL, headerSx } from '../bicim';
-import KartItem from '../bilesenler/KartItem';
+import { Box, Paper, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Alert } from '@mui/material';
+import { formatTL, headerSx, sagaSutunlar } from '../bicim';
+import KartItem, { KART_RENKLERI } from '../bilesenler/KartItem';
 
 // Yatırımcılar sekmesi (yalnızca admin): stok + motor satışlarından türetilen özet.
 const Yatirimcilar = ({ yatirimciOzetGosterim, isMobile }) => {
@@ -11,7 +11,7 @@ const Yatirimcilar = ({ yatirimciOzetGosterim, isMobile }) => {
         <Alert severity="info">Henüz yatırımcı bulunmuyor. Kullanıcı Yönetimi ekranından yatırımcı ekleyebilirsiniz.</Alert>
       ) : (
         <>
-          <Grid container spacing={2} sx={{ mb: 2 }}>
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 2, mb: 2 }}>
             {[
               { label: 'Yatırımcı Sayısı', value: yatirimciOzetGosterim.length, color: '#C62828' },
               { label: 'Toplam Stok', value: yatirimciOzetGosterim.reduce((t, y) => t + Number(y.stok_adet || 0), 0), color: '#1E4A86' },
@@ -22,11 +22,9 @@ const Yatirimcilar = ({ yatirimciOzetGosterim, isMobile }) => {
                 color: '#1D6A3B',
               },
             ].map((k, i) => (
-              <Grid size={{ xs: 12, md: 3 }} key={i}>
-                <KartItem label={k.label} value={k.value} color={k.color} />
-              </Grid>
+              <KartItem key={i} label={k.label} value={k.value} color={k.color || KART_RENKLERI[i % KART_RENKLERI.length]} />
             ))}
-          </Grid>
+          </Box>
           {isMobile ? (
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
               {yatirimciOzetGosterim.map((y, i) => (
@@ -58,7 +56,7 @@ const Yatirimcilar = ({ yatirimciOzetGosterim, isMobile }) => {
             </Box>
           ) : (
             <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
-              <Table size="small">
+              <Table sx={sagaSutunlar(2, 3, 4, 5, 6, 7)}>
                 <TableHead>
                   <TableRow>
                     {['Yatırımcı', 'Stok Adet', 'Satılan', 'Stok Değeri', 'Toplam Satış', 'Yatırımcı Kârı', 'İşletme Kârı'].map((h) => (

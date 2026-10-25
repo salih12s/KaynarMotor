@@ -1,10 +1,9 @@
 import React from 'react';
-import { DialogBasligi } from '../../../shared/ui';
+import { BilgiKarti, BolumBasligi, DialogBasligi, Not, SayiKutusu } from '../../../shared/ui';
 import {
   Box,
   Paper,
   Typography,
-  Grid,
   Table,
   TableBody,
   TableCell,
@@ -18,6 +17,10 @@ import {
 } from '@mui/material';
 import { formatDate } from '../bicim';
 import { sayiYaz } from '../../../shared/utils/bicim';
+
+const SUTUN_3 = { display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' }, gap: 2, mb: 2 };
+const sagaSx = { textAlign: 'right' };
+const karRengi = (v) => (v >= 0 ? '#1D6A3B' : '#c62828');
 
 // İş emri detay penceresi (parça listesi JSON metin olarak gelebilir).
 const IsEmriDetayModal = ({ open, data, onClose, isMobile }) => {
@@ -39,75 +42,43 @@ const IsEmriDetayModal = ({ open, data, onClose, isMobile }) => {
         onKapat={onClose}
       />
       <DialogContent dividers>
-        <Grid container spacing={2} sx={{ mb: 2, mt: 0.5 }}>
-          <Grid size={{ xs: 12, md: 4 }}>
-            <Paper sx={{ p: 1.5, bgcolor: '#FBFBF8' }}>
-              <Typography variant="subtitle2" color="#C62828" fontWeight="bold" gutterBottom>
-                Müşteri Bilgileri
-              </Typography>
-              <Typography variant="body2">
-                <strong>Ad Soyad:</strong> {d.musteri_ad_soyad}
-              </Typography>
-              <Typography variant="body2">
-                <strong>Telefon:</strong> {d.telefon || '-'}
-              </Typography>
-              <Typography variant="body2">
-                <strong>Adres:</strong> {d.adres || '-'}
-              </Typography>
-            </Paper>
-          </Grid>
-          <Grid size={{ xs: 12, md: 4 }}>
-            <Paper sx={{ p: 1.5, bgcolor: '#FBFBF8' }}>
-              <Typography variant="subtitle2" color="#C62828" fontWeight="bold" gutterBottom>
-                Araç Bilgileri
-              </Typography>
-              <Typography variant="body2">
-                <strong>Marka:</strong> {d.marka || '-'}
-              </Typography>
-              <Typography variant="body2">
-                <strong>Model/Tip:</strong> {d.model_tip || '-'}
-              </Typography>
-              <Typography variant="body2">
-                <strong>KM:</strong> {d.km ? `${sayiYaz(parseInt(d.km))} km` : '-'}
-              </Typography>
-            </Paper>
-          </Grid>
-          <Grid size={{ xs: 12, md: 4 }}>
-            <Paper sx={{ p: 1.5, bgcolor: '#FBFBF8' }}>
-              <Typography variant="subtitle2" color="#C62828" fontWeight="bold" gutterBottom>
-                İş Emri Bilgileri
-              </Typography>
-              <Typography variant="body2">
-                <strong>Personel:</strong> {d.teslim_eden_teknisyen || d.olusturan_kisi || '-'}
-              </Typography>
-              <Typography variant="body2">
-                <strong>Tarih:</strong> {formatDate(d.created_at)}
-              </Typography>
-              <Typography variant="body2">
-                <strong>Tamamlanma:</strong> {formatDate(d.tamamlama_tarihi)}
-              </Typography>
-            </Paper>
-          </Grid>
-        </Grid>
+        <Box sx={{ ...SUTUN_3, mt: 0.5 }}>
+          <BilgiKarti
+            baslik="Müşteri Bilgileri"
+            satirlar={[
+              ['Ad Soyad', d.musteri_ad_soyad],
+              ['Telefon', d.telefon || '-'],
+              ['Adres', d.adres || '-'],
+            ]}
+          />
+          <BilgiKarti
+            baslik="Araç Bilgileri"
+            satirlar={[
+              ['Marka', d.marka || '-'],
+              ['Model / Tip', d.model_tip || '-'],
+              ['KM', d.km ? `${sayiYaz(parseInt(d.km))} km` : '-'],
+            ]}
+          />
+          <BilgiKarti
+            baslik="İş Emri Bilgileri"
+            satirlar={[
+              ['Personel', d.teslim_eden_teknisyen || d.olusturan_kisi || '-'],
+              ['Tarih', formatDate(d.created_at)],
+              ['Tamamlanma', formatDate(d.tamamlama_tarihi)],
+            ]}
+          />
+        </Box>
         {d.ariza_sikayetler && (
-          <Paper sx={{ p: 1.5, mb: 2, bgcolor: '#F7E7C4', borderLeft: '3px solid #A5530F' }}>
-            <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#A5530F' }}>
-              Arıza / Şikayetler
-            </Typography>
-            <Typography variant="body2">{d.ariza_sikayetler}</Typography>
-          </Paper>
+          <Not baslik="Arıza / Şikayetler" ton="turuncu" sx={{ mb: 2 }}>
+            {d.ariza_sikayetler}
+          </Not>
         )}
         {d.aciklama && (
-          <Paper sx={{ p: 1.5, mb: 2, bgcolor: '#DCE6F4', borderLeft: '3px solid #1E4A86' }}>
-            <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#1E4A86' }}>
-              Açıklama
-            </Typography>
-            <Typography variant="body2">{d.aciklama}</Typography>
-          </Paper>
+          <Not baslik="Açıklama" ton="mavi" sx={{ mb: 2 }}>
+            {d.aciklama}
+          </Not>
         )}
-        <Typography variant="subtitle2" color="#C62828" fontWeight="bold" gutterBottom>
-          Parçalar ve İşçilik
-        </Typography>
+        <BolumBasligi>Parçalar ve İşçilik</BolumBasligi>
         {parcalar.length > 0 ? (
           isMobile ? (
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
@@ -124,22 +95,23 @@ const IsEmriDetayModal = ({ open, data, onClose, isMobile }) => {
                       Adet: {p.adet} • Birim: ₺{sayiYaz(p.birim_fiyat)} • Toplam: ₺{sayiYaz(pSatis)}
                     </Typography>
                     <Typography variant="caption" sx={{ display: 'block' }}>
-                      Maliyet: ₺{sayiYaz(pMaliyet)} •{' '}
-                      <span style={{ color: pKar >= 0 ? '#1D6A3B' : '#c62828', fontWeight: 'bold' }}>Kâr: ₺{sayiYaz(pKar)}</span>
+                      Maliyet: ₺{sayiYaz(pMaliyet)} • <span style={{ color: karRengi(pKar), fontWeight: 'bold' }}>Kâr: ₺{sayiYaz(pKar)}</span>
                     </Typography>
                   </Paper>
                 );
               })}
             </Box>
           ) : (
-            <TableContainer component={Paper} variant="outlined" sx={{ overflowX: 'auto' }}>
-              <Table size="small">
+            <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
+              <Table
+                sx={{
+                  '& th:nth-of-type(n+2), & td:nth-of-type(n+2)': sagaSx,
+                }}
+              >
                 <TableHead>
-                  <TableRow sx={{ bgcolor: '#F3F3EE' }}>
+                  <TableRow>
                     {['Takılan Parça', 'Adet', 'Birim Fiyat', 'Toplam', 'Maliyet', 'Kâr'].map((h) => (
-                      <TableCell key={h} sx={{ fontWeight: 'bold' }}>
-                        {h}
-                      </TableCell>
+                      <TableCell key={h}>{h}</TableCell>
                     ))}
                   </TableRow>
                 </TableHead>
@@ -152,10 +124,10 @@ const IsEmriDetayModal = ({ open, data, onClose, isMobile }) => {
                       <TableRow key={i}>
                         <TableCell>{p.takilan_parca}</TableCell>
                         <TableCell>{p.adet}</TableCell>
-                        <TableCell>₺{sayiYaz(p.birim_fiyat)}</TableCell>
+                        <TableCell sx={{ color: 'text.secondary' }}>₺{sayiYaz(p.birim_fiyat)}</TableCell>
                         <TableCell sx={{ fontWeight: 'bold' }}>₺{sayiYaz(pSatis)}</TableCell>
-                        <TableCell>₺{sayiYaz(pMaliyet)}</TableCell>
-                        <TableCell sx={{ color: pKar >= 0 ? '#1D6A3B' : '#c62828', fontWeight: 'bold' }}>₺{sayiYaz(pKar)}</TableCell>
+                        <TableCell sx={{ color: 'text.secondary' }}>₺{sayiYaz(pMaliyet)}</TableCell>
+                        <TableCell sx={{ color: karRengi(pKar), fontWeight: 'bold' }}>₺{sayiYaz(pKar)}</TableCell>
                       </TableRow>
                     );
                   })}
@@ -168,34 +140,21 @@ const IsEmriDetayModal = ({ open, data, onClose, isMobile }) => {
             Parça kaydı yok
           </Typography>
         )}
-        <Box sx={{ mt: 2, display: 'flex', gap: 2, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
-          <Paper sx={{ px: 2, py: 1, bgcolor: '#F6DAD7' }}>
-            <Typography variant="body2">
-              Toplam: <strong>₺{sayiYaz(toplamFiyat)}</strong>
-            </Typography>
-          </Paper>
-          <Paper sx={{ px: 2, py: 1, bgcolor: '#F7E7C4' }}>
-            <Typography variant="body2">
-              Maliyet: <strong>₺{sayiYaz(toplamMaliyet)}</strong>
-            </Typography>
-          </Paper>
-          <Paper sx={{ px: 2, py: 1, bgcolor: '#D8EBDD' }}>
-            <Typography variant="body2">
-              Kâr: <strong style={{ color: kar >= 0 ? '#1D6A3B' : '#c62828' }}>₺{sayiYaz(kar)}</strong>
-            </Typography>
-          </Paper>
+        <Box sx={{ mt: 2, display: 'flex', gap: 1.5, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+          <SayiKutusu etiket="Toplam" deger={`₺${sayiYaz(toplamFiyat)}`} ton="kirmizi" sx={{ minWidth: 130 }} />
+          <SayiKutusu etiket="Maliyet" deger={`₺${sayiYaz(toplamMaliyet)}`} ton="turuncu" sx={{ minWidth: 130 }} />
+          <SayiKutusu etiket="Kâr" deger={`₺${sayiYaz(kar)}`} ton={kar >= 0 ? 'yesil' : 'kirmizi'} sx={{ minWidth: 130 }} />
         </Box>
         {d.odeme_detaylari && (
-          <Paper sx={{ p: 1.5, mt: 2, bgcolor: '#E7DFF3', borderLeft: '3px solid #5B3A8C' }}>
-            <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#5B3A8C' }}>
-              Ödeme Detayları
-            </Typography>
-            <Typography variant="body2">{d.odeme_detaylari}</Typography>
-          </Paper>
+          <Not baslik="Ödeme Detayları" ton="mor" sx={{ mt: 2 }}>
+            {d.odeme_detaylari}
+          </Not>
         )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={() => onClose()}>Kapat</Button>
+        <Button variant="outlined" onClick={() => onClose()}>
+          Kapat
+        </Button>
       </DialogActions>
     </Dialog>
   );

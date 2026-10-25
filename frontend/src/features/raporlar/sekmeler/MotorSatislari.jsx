@@ -1,10 +1,10 @@
 import React from 'react';
-import { IslemDugmesi } from '../../../shared/ui';
+import { Damga, IslemDugmesi, Plaka } from '../../../shared/ui';
+import { RENK } from '../../../app/tokenlar';
 import {
   Box,
   Paper,
   Typography,
-  Grid,
   TextField,
   Table,
   TableBody,
@@ -15,13 +15,16 @@ import {
   Tabs,
   Tab,
   Alert,
-  Chip,
   MenuItem,
   Button,
 } from '@mui/material';
 
 import { formatTL, formatDate, karColor, motorIsletmeKari, headerSx } from '../bicim';
 import KartItem from '../bilesenler/KartItem';
+
+const SAYISAL = ['Alış', 'Satış', 'Masraf', 'Payınız', 'Kom. Tutar'];
+const sagaSx = { textAlign: 'right' };
+const FaturaDamgasi = ({ kesildi }) => <Damga ton={kesildi ? 'yesil' : 'kirmizi'}>{kesildi ? 'Kesildi' : 'Kesilmedi'}</Damga>;
 
 // Motor Satışları sekmesi (Satışlar / Komisyonlu alt sekmeleri). Alt sekme ve komisyoncu süzgeci üstte tutulur: sekme değişince kaybolmaz.
 const MotorSatislari = ({ rapor, isMobile, motorSubTab, setMotorSubTab, komisyoncuFilter, setKomisyoncuFilter, onDetay }) => {
@@ -42,17 +45,17 @@ const MotorSatislari = ({ rapor, isMobile, motorSubTab, setMotorSubTab, komisyon
   const komisyonToplamTutar = komisyonluMotorlar.reduce((t, m) => t + parseFloat(m.komisyoncu_tutari || 0), 0);
   return (
     <>
-      <Paper sx={{ mb: 2 }}>
+      <Box sx={{ mb: 2, borderBottom: `1px solid ${RENK.cizgi}` }}>
         <Tabs
           value={motorSubTab}
           onChange={(_, v) => setMotorSubTab(v)}
-          TabIndicatorProps={{ sx: { bgcolor: '#C62828' } }}
-          sx={{ '& .MuiTab-root': { fontWeight: 'bold' }, '& .Mui-selected': { color: '#C62828 !important' } }}
+          TabIndicatorProps={{ sx: { bgcolor: RENK.kirmizi } }}
+          sx={{ '& .MuiTab-root': { fontWeight: 700 } }}
         >
           <Tab label={`Satışlar (${allMotorlar.length})`} />
           <Tab label={`Komisyonlu Satışlar (${komisyonluAll.length})`} />
         </Tabs>
-      </Paper>
+      </Box>
       {motorSubTab === 1 && komisyoncuList.length > 0 && (
         <Paper sx={{ p: 2, mb: 2 }}>
           <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -82,7 +85,7 @@ const MotorSatislari = ({ rapor, isMobile, motorSubTab, setMotorSubTab, komisyon
           </Box>
         </Paper>
       )}
-      <Grid container spacing={2} sx={{ mb: 2 }}>
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(5, 1fr)' }, gap: 2, mb: 2 }}>
         {(motorSubTab === 1
           ? [
               { label: 'Komisyonlu Satış', value: komisyonluMotorlar.length, color: '#C62828' },
@@ -105,11 +108,9 @@ const MotorSatislari = ({ rapor, isMobile, motorSubTab, setMotorSubTab, komisyon
               { label: 'Motor Stok Değeri', value: `₺${formatTL(shownStokDegeri)}`, color: '#5B3A8C' },
             ]
         ).map((k, i) => (
-          <Grid size={{ xs: 12, md: 2 }} key={i}>
-            <KartItem label={k.label} value={k.value} color={k.color} />
-          </Grid>
+          <KartItem key={i} label={k.label} value={k.value} color={k.color} />
         ))}
-      </Grid>
+      </Box>
       {shownMotorlar.length > 0 ? (
         isMobile ? (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
@@ -119,17 +120,7 @@ const MotorSatislari = ({ rapor, isMobile, motorSubTab, setMotorSubTab, komisyon
                   <Typography variant="subtitle2" fontWeight="bold">
                     {m.plaka}
                   </Typography>
-                  <Chip
-                    size="small"
-                    label={m.fatura_kesildi ? '✓ Kesildi' : '✗ Kesilmedi'}
-                    sx={{
-                      bgcolor: m.fatura_kesildi ? '#D8EBDD' : '#F6DAD7',
-                      color: m.fatura_kesildi ? '#1D6A3B' : '#A61F1F',
-                      fontWeight: 'bold',
-                      fontSize: '0.65rem',
-                      height: 20,
-                    }}
-                  />
+                  <FaturaDamgasi kesildi={m.fatura_kesildi} />
                 </Box>
                 <Typography variant="body2">
                   {m.marka} {m.model} • {formatDate(m.satis_tarihi || m.tamamlama_tarihi || m.created_at)}
@@ -158,17 +149,17 @@ const MotorSatislari = ({ rapor, isMobile, motorSubTab, setMotorSubTab, komisyon
           </Box>
         ) : (
           <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
-            <Table size="small" sx={{ '& .MuiTableCell-root': { px: 1, py: 0.5, fontSize: '0.78rem' } }}>
+            <Table>
               <TableHead>
                 <TableRow>
                   {motorSubTab === 1
-                    ? ['', 'Tarih', 'Plaka', 'Marka/Model', 'Satış', 'Komisyoncu', 'Kom. Tel', 'Kom. Tutar', 'Payınız', 'Fatura'].map((h) => (
-                        <TableCell key={h} sx={headerSx}>
+                    ? ['', 'Tarih', 'Plaka', 'Marka / Model', 'Satış', 'Komisyoncu', 'Kom. Tel', 'Kom. Tutar', 'Payınız', 'Fatura'].map((h) => (
+                        <TableCell key={h} sx={{ ...headerSx, textAlign: SAYISAL.includes(h) ? 'right' : 'left' }}>
                           {h}
                         </TableCell>
                       ))
-                    : ['', 'Tarih', 'Plaka', 'Marka/Model', 'Alış', 'Satış', 'Masraf', 'Payınız', 'Ödeme', 'Fatura'].map((h) => (
-                        <TableCell key={h} sx={headerSx}>
+                    : ['', 'Tarih', 'Plaka', 'Marka / Model', 'Alış', 'Satış', 'Masraf', 'Payınız', 'Ödeme', 'Fatura'].map((h) => (
+                        <TableCell key={h} sx={{ ...headerSx, textAlign: SAYISAL.includes(h) ? 'right' : 'left' }}>
                           {h}
                         </TableCell>
                       ))}
@@ -186,49 +177,33 @@ const MotorSatislari = ({ rapor, isMobile, motorSubTab, setMotorSubTab, komisyon
                         }}
                       />
                     </TableCell>
-                    <TableCell sx={{ whiteSpace: 'nowrap' }}>{formatDate(m.satis_tarihi || m.tamamlama_tarihi || m.created_at)}</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold' }}>{m.plaka}</TableCell>
+                    <TableCell sx={{ whiteSpace: 'nowrap', color: RENK.soluk }}>{formatDate(m.satis_tarihi || m.tamamlama_tarihi || m.created_at)}</TableCell>
+                    <TableCell>
+                      <Plaka plaka={m.plaka} />
+                    </TableCell>
                     <TableCell sx={{ whiteSpace: 'nowrap' }}>
-                      {m.marka} {m.model}
+                      <strong>{m.marka}</strong> {m.model}
                     </TableCell>
                     {motorSubTab === 1 ? (
                       <>
-                        <TableCell>{formatTL(m.satis_fiyati)} ₺</TableCell>
+                        <TableCell sx={sagaSx}>{formatTL(m.satis_fiyati)} ₺</TableCell>
                         <TableCell sx={{ fontWeight: 'bold', color: '#8A5300' }}>{m.komisyoncu_adi || '-'}</TableCell>
                         <TableCell>{m.komisyoncu_telefon || '-'}</TableCell>
-                        <TableCell sx={{ fontWeight: 'bold' }}>{formatTL(m.komisyoncu_tutari)} ₺</TableCell>
-                        <TableCell sx={{ color: karColor(motorIsletmeKari(m)), fontWeight: 'bold' }}>{formatTL(motorIsletmeKari(m))} ₺</TableCell>
+                        <TableCell sx={{ ...sagaSx, fontWeight: 'bold' }}>{formatTL(m.komisyoncu_tutari)} ₺</TableCell>
+                        <TableCell sx={{ ...sagaSx, color: karColor(motorIsletmeKari(m)), fontWeight: 'bold' }}>{formatTL(motorIsletmeKari(m))} ₺</TableCell>
                         <TableCell>
-                          <Chip
-                            size="small"
-                            label={m.fatura_kesildi ? '✓ Kesildi' : '✗ Kesilmedi'}
-                            sx={{
-                              bgcolor: m.fatura_kesildi ? '#D8EBDD' : '#F6DAD7',
-                              color: m.fatura_kesildi ? '#1D6A3B' : '#A61F1F',
-                              fontWeight: 'bold',
-                              fontSize: '0.7rem',
-                            }}
-                          />
+                          <FaturaDamgasi kesildi={m.fatura_kesildi} />
                         </TableCell>
                       </>
                     ) : (
                       <>
-                        <TableCell>{formatTL(m.alis_fiyati)} ₺</TableCell>
-                        <TableCell>{formatTL(m.satis_fiyati)} ₺</TableCell>
-                        <TableCell>{formatTL(m.masraflar)} ₺</TableCell>
-                        <TableCell sx={{ color: karColor(motorIsletmeKari(m)), fontWeight: 'bold' }}>{formatTL(motorIsletmeKari(m))} ₺</TableCell>
+                        <TableCell sx={sagaSx}>{formatTL(m.alis_fiyati)} ₺</TableCell>
+                        <TableCell sx={{ ...sagaSx, fontWeight: 700 }}>{formatTL(m.satis_fiyati)} ₺</TableCell>
+                        <TableCell sx={sagaSx}>{formatTL(m.masraflar)} ₺</TableCell>
+                        <TableCell sx={{ ...sagaSx, color: karColor(motorIsletmeKari(m)), fontWeight: 'bold' }}>{formatTL(motorIsletmeKari(m))} ₺</TableCell>
                         <TableCell>{m.odeme_sekli || 'nakit'}</TableCell>
                         <TableCell>
-                          <Chip
-                            size="small"
-                            label={m.fatura_kesildi ? '✓ Kesildi' : '✗ Kesilmedi'}
-                            sx={{
-                              bgcolor: m.fatura_kesildi ? '#D8EBDD' : '#F6DAD7',
-                              color: m.fatura_kesildi ? '#1D6A3B' : '#A61F1F',
-                              fontWeight: 'bold',
-                              fontSize: '0.7rem',
-                            }}
-                          />
+                          <FaturaDamgasi kesildi={m.fatura_kesildi} />
                         </TableCell>
                       </>
                     )}

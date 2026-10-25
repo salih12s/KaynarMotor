@@ -1,10 +1,14 @@
 import React from 'react';
 import { IslemDugmesi } from '../../../shared/ui';
-import { Box, Paper, Typography, Grid, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
+import { Box, Paper, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
 
 import { formatTL, formatDate, karColor, headerSx } from '../bicim';
+import { RENK } from '../../../app/tokenlar';
 import KartItem from '../bilesenler/KartItem';
 import { sayiYaz } from '../../../shared/utils/bicim';
+
+const SAYISAL = ['KM', 'Gelir', 'Maliyet', 'Kâr'];
+const sagaSx = { textAlign: 'right' };
 
 // İş Emirleri (servis) sekmesi; personel süzgeci üstteki tarih çubuğundadır.
 const IsEmirleri = ({ rapor, isMobile, seciliPersonel, onDetay }) => {
@@ -18,18 +22,16 @@ const IsEmirleri = ({ rapor, isMobile, seciliPersonel, onDetay }) => {
   const fKar = filtered.reduce((t, r) => t + parseFloat(r.kar || 0), 0);
   return (
     <>
-      <Grid container spacing={2} sx={{ mb: 2 }}>
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 2, mb: 2 }}>
         {[
-          { label: 'Toplam İş Emri', value: filtered.length },
-          { label: 'Servis Gelir', value: `₺${formatTL(fGelir)}` },
-          { label: 'Servis Maliyet', value: `₺${formatTL(fMaliyet)}` },
-          { label: 'Servis Kâr', value: `₺${formatTL(fKar)}` },
+          { label: 'Toplam İş Emri', value: filtered.length, color: '#C62828' },
+          { label: 'Servis Gelir', value: `₺${formatTL(fGelir)}`, color: '#1E4A86' },
+          { label: 'Servis Maliyet', value: `₺${formatTL(fMaliyet)}`, color: '#A5530F' },
+          { label: 'Servis Kâr', value: `₺${formatTL(fKar)}`, color: '#1D6A3B' },
         ].map((k, i) => (
-          <Grid size={{ xs: 12, md: 3 }} key={i}>
-            <KartItem label={k.label} value={k.value} />
-          </Grid>
+          <KartItem key={i} label={k.label} value={k.value} color={k.color} />
         ))}
-      </Grid>
+      </Box>
       {filtered.length > 0 ? (
         isMobile ? (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
@@ -62,11 +64,11 @@ const IsEmirleri = ({ rapor, isMobile, seciliPersonel, onDetay }) => {
           </Box>
         ) : (
           <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
-            <Table size="small">
+            <Table>
               <TableHead>
                 <TableRow>
-                  {['', 'Tarih', 'Fiş No', 'Müşteri', 'Telefon', 'Marka/Model', 'KM', 'Personel', 'Arıza/Şikayet', 'Gelir', 'Maliyet', 'Kâr'].map((h) => (
-                    <TableCell key={h} sx={headerSx}>
+                  {['', 'Tarih', 'Fiş No', 'Müşteri', 'Telefon', 'Marka / Model', 'KM', 'Personel', 'Arıza / Şikayet', 'Gelir', 'Maliyet', 'Kâr'].map((h) => (
+                    <TableCell key={h} sx={{ ...headerSx, textAlign: SAYISAL.includes(h) ? 'right' : 'left' }}>
                       {h}
                     </TableCell>
                   ))}
@@ -78,21 +80,21 @@ const IsEmirleri = ({ rapor, isMobile, seciliPersonel, onDetay }) => {
                     <TableCell>
                       <IslemDugmesi tur="goz" onClick={() => onDetay(ie)} />
                     </TableCell>
-                    <TableCell>{formatDate(ie.tamamlama_tarihi || ie.created_at)}</TableCell>
+                    <TableCell sx={{ whiteSpace: 'nowrap', color: RENK.soluk }}>{formatDate(ie.tamamlama_tarihi || ie.created_at)}</TableCell>
                     <TableCell sx={{ fontWeight: 'bold' }}>#{ie.fis_no}</TableCell>
-                    <TableCell>{ie.musteri_ad_soyad}</TableCell>
-                    <TableCell>{ie.telefon || '-'}</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>{ie.musteri_ad_soyad}</TableCell>
+                    <TableCell sx={{ whiteSpace: 'nowrap', color: RENK.soluk }}>{ie.telefon || '-'}</TableCell>
                     <TableCell>
                       {ie.marka} {ie.model_tip || ''}
                     </TableCell>
-                    <TableCell>{ie.km ? `${sayiYaz(parseInt(ie.km))} km` : '-'}</TableCell>
+                    <TableCell sx={{ ...sagaSx, whiteSpace: 'nowrap' }}>{ie.km ? `${sayiYaz(parseInt(ie.km))} km` : '-'}</TableCell>
                     <TableCell>{ie.teslim_eden_teknisyen || ie.olusturan_kisi || '-'}</TableCell>
                     <TableCell sx={{ maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {ie.ariza_sikayetler || '-'}
                     </TableCell>
-                    <TableCell>{formatTL(ie.gercek_toplam_ucret)} ₺</TableCell>
-                    <TableCell>{formatTL(ie.toplam_maliyet)} ₺</TableCell>
-                    <TableCell sx={{ color: karColor(ie.kar), fontWeight: 'bold' }}>{formatTL(ie.kar)} ₺</TableCell>
+                    <TableCell sx={{ ...sagaSx, fontWeight: 700, whiteSpace: 'nowrap' }}>{formatTL(ie.gercek_toplam_ucret)} ₺</TableCell>
+                    <TableCell sx={{ ...sagaSx, whiteSpace: 'nowrap', color: RENK.soluk }}>{formatTL(ie.toplam_maliyet)} ₺</TableCell>
+                    <TableCell sx={{ ...sagaSx, whiteSpace: 'nowrap', color: karColor(ie.kar), fontWeight: 'bold' }}>{formatTL(ie.kar)} ₺</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

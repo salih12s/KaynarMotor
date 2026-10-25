@@ -1,22 +1,10 @@
 import React from 'react';
-import { DialogBasligi } from '../../../shared/ui';
-import {
-  Box,
-  Paper,
-  Typography,
-  Grid,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableRow,
-  Dialog,
-  DialogContent,
-  DialogActions,
-  Button,
-} from '@mui/material';
+import { BilgiKarti, BolumBasligi, DialogBasligi, SayiKutusu } from '../../../shared/ui';
+import { Box, Paper, Table, TableBody, TableCell, TableContainer, TableRow, Dialog, DialogContent, DialogActions, Button } from '@mui/material';
 import { formatTL, formatDate } from '../bicim';
 import { hesaplaKomisyon, detectPlatform } from '../../eticaret/komisyon';
+
+const SUTUN_3 = { display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' }, gap: 2, mb: 2 };
 
 // E-ticaret satış detay penceresi (komisyon/kesinti dökümü).
 const ETicaretDetayModal = ({ open, data, onClose, isMobile }) => {
@@ -37,120 +25,77 @@ const ETicaretDetayModal = ({ open, data, onClose, isMobile }) => {
   const netKar = hesap.netKar;
   const toplamKesinti = hesap.toplamKomisyon;
   const karOrani = toplamSatis > 0 ? ((netKar / toplamSatis) * 100).toFixed(1) : '0.0';
+  const tl = (v) => `₺${formatTL(v)}`;
   return (
     <Dialog {...dialogProps}>
       <DialogBasligi baslik={<>E-Ticaret Satış Detayı - {e.urun_adi}</>} onKapat={onClose} />
       <DialogContent dividers>
-        <Grid container spacing={2} sx={{ mb: 2, mt: 0.5 }}>
-          <Grid size={{ xs: 12, md: 4 }}>
-            <Paper sx={{ p: 1.5, bgcolor: '#FBFBF8' }}>
-              <Typography variant="subtitle2" color="#C62828" fontWeight="bold" gutterBottom>
-                Ürün Bilgileri
-              </Typography>
-              <Typography variant="body2">
-                <strong>Ürün:</strong> {e.urun_adi || '-'}
-              </Typography>
-              <Typography variant="body2">
-                <strong>Platform:</strong> {e.platform_adi || '-'}
-              </Typography>
-              <Typography variant="body2">
-                <strong>Adet:</strong> {miktar}
-              </Typography>
-              <Typography variant="body2">
-                <strong>Tarih:</strong> {formatDate(e.tarih)}
-              </Typography>
-            </Paper>
-          </Grid>
-          <Grid size={{ xs: 12, md: 4 }}>
-            <Paper sx={{ p: 1.5, bgcolor: '#FBFBF8' }}>
-              <Typography variant="subtitle2" color="#C62828" fontWeight="bold" gutterBottom>
-                Fiyat Bilgileri
-              </Typography>
-              <Typography variant="body2">
-                <strong>Alış Fiyatı:</strong> ₺{formatTL(alis)}
-              </Typography>
-              <Typography variant="body2">
-                <strong>Satış Fiyatı:</strong> ₺{formatTL(satis)}
-              </Typography>
-              <Typography variant="body2">
-                <strong>Toplam Alış:</strong> ₺{formatTL(toplamAlis)}
-              </Typography>
-              <Typography variant="body2">
-                <strong>Toplam Satış:</strong> ₺{formatTL(toplamSatis)}
-              </Typography>
-            </Paper>
-          </Grid>
-          <Grid size={{ xs: 12, md: 4 }}>
-            <Paper sx={{ p: 1.5, bgcolor: '#FBFBF8' }}>
-              <Typography variant="subtitle2" color="#C62828" fontWeight="bold" gutterBottom>
-                Platform Bilgileri
-              </Typography>
-              <Typography variant="body2">
-                <strong>Komisyon Oranı:</strong> %{komisyonOrani}
-              </Typography>
-              <Typography variant="body2">
-                <strong>KDV Oranı:</strong> %{kdvOrani}
-              </Typography>
-              <Typography variant="body2">
-                <strong>Kargo Ücreti:</strong> ₺{formatTL(kargoUcreti)}
-              </Typography>
-            </Paper>
-          </Grid>
-        </Grid>
+        <Box sx={{ ...SUTUN_3, mt: 0.5 }}>
+          <BilgiKarti
+            baslik="Ürün Bilgileri"
+            satirlar={[
+              ['Ürün', e.urun_adi || '-'],
+              ['Platform', e.platform_adi || '-'],
+              ['Adet', miktar],
+              ['Tarih', formatDate(e.tarih)],
+            ]}
+          />
+          <BilgiKarti
+            baslik="Fiyat Bilgileri"
+            satirlar={[
+              ['Alış Fiyatı', tl(alis)],
+              ['Satış Fiyatı', tl(satis)],
+              ['Toplam Alış', tl(toplamAlis)],
+              ['Toplam Satış', tl(toplamSatis)],
+            ]}
+          />
+          <BilgiKarti
+            baslik="Platform Bilgileri"
+            satirlar={[
+              ['Komisyon Oranı', `%${komisyonOrani}`],
+              ['KDV Oranı', `%${kdvOrani}`],
+              ['Kargo Ücreti', tl(kargoUcreti)],
+            ]}
+          />
+        </Box>
 
-        <Typography variant="subtitle2" color="#C62828" fontWeight="bold" gutterBottom>
-          Kesinti Detayları
-        </Typography>
-        <TableContainer component={Paper} variant="outlined" sx={{ mb: 2, overflowX: 'auto' }}>
-          <Table size="small">
+        <BolumBasligi>Kesinti Detayları</BolumBasligi>
+        <TableContainer component={Paper} sx={{ mb: 2, overflowX: 'auto' }}>
+          <Table>
             <TableBody>
               <TableRow>
                 <TableCell>Komisyon Tutarı (%{komisyonOrani})</TableCell>
                 <TableCell align="right" sx={{ fontWeight: 'bold' }}>
-                  ₺{formatTL(komisyonTutari / miktar)}
+                  {tl(komisyonTutari / miktar)}
                 </TableCell>
               </TableRow>
               <TableRow>
                 <TableCell>Kargo Ücreti</TableCell>
                 <TableCell align="right" sx={{ fontWeight: 'bold' }}>
-                  ₺{formatTL(kargoUcreti)}
+                  {tl(kargoUcreti)}
                 </TableCell>
               </TableRow>
               <TableRow sx={{ bgcolor: '#F3F3EE' }}>
                 <TableCell sx={{ fontWeight: 'bold' }}>Toplam Kesinti ({miktar} adet)</TableCell>
                 <TableCell align="right" sx={{ fontWeight: 'bold' }}>
-                  ₺{formatTL(toplamKesinti)}
+                  {tl(toplamKesinti)}
                 </TableCell>
               </TableRow>
             </TableBody>
           </Table>
         </TableContainer>
 
-        <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
-          <Paper sx={{ px: 2, py: 1, bgcolor: '#F6DAD7' }}>
-            <Typography variant="body2">
-              Toplam Satış: <strong>₺{formatTL(toplamSatis)}</strong>
-            </Typography>
-          </Paper>
-          <Paper sx={{ px: 2, py: 1, bgcolor: '#F7E7C4' }}>
-            <Typography variant="body2">
-              Toplam Maliyet: <strong>₺{formatTL(toplamAlis)}</strong>
-            </Typography>
-          </Paper>
-          <Paper sx={{ px: 2, py: 1, bgcolor: '#F6DAD7' }}>
-            <Typography variant="body2">
-              Toplam Kesinti: <strong>₺{formatTL(toplamKesinti)}</strong>
-            </Typography>
-          </Paper>
-          <Paper sx={{ px: 2, py: 1, bgcolor: netKar >= 0 ? '#D8EBDD' : '#F6DAD7' }}>
-            <Typography variant="body2">
-              Net Kâr: <strong style={{ color: netKar >= 0 ? '#1D6A3B' : '#c62828' }}>₺{formatTL(netKar)}</strong> (%{karOrani})
-            </Typography>
-          </Paper>
+        <Box sx={{ display: 'flex', gap: 1.5, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+          <SayiKutusu etiket="Toplam Satış" deger={tl(toplamSatis)} ton="kirmizi" sx={{ minWidth: 130 }} />
+          <SayiKutusu etiket="Toplam Maliyet" deger={tl(toplamAlis)} ton="turuncu" sx={{ minWidth: 130 }} />
+          <SayiKutusu etiket="Toplam Kesinti" deger={tl(toplamKesinti)} ton="mavi" sx={{ minWidth: 130 }} />
+          <SayiKutusu etiket={`Net Kâr (%${karOrani})`} deger={tl(netKar)} ton={netKar >= 0 ? 'yesil' : 'kirmizi'} sx={{ minWidth: 130 }} />
         </Box>
       </DialogContent>
       <DialogActions>
-        <Button onClick={() => onClose()}>Kapat</Button>
+        <Button variant="outlined" onClick={() => onClose()}>
+          Kapat
+        </Button>
       </DialogActions>
     </Dialog>
   );

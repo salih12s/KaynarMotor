@@ -1,8 +1,8 @@
 import React from 'react';
-import { Box, Paper, Typography, Grid, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Alert } from '@mui/material';
-import { formatTL, formatDate, karColor, headerSx } from '../bicim';
+import { Box, Paper, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Alert } from '@mui/material';
+import { formatTL, formatDate, karColor, headerSx, sagaSutunlar } from '../bicim';
 import DurumChip from '../bilesenler/DurumChip';
-import KartItem from '../bilesenler/KartItem';
+import KartItem, { KART_RENKLERI } from '../bilesenler/KartItem';
 
 // Fiş Kâr Analizi sekmesi (tamamlanmış iş emri fişleri).
 const FisKarAnalizi = ({ fisKar, isMobile }) => {
@@ -10,18 +10,16 @@ const FisKarAnalizi = ({ fisKar, isMobile }) => {
     <>
       {fisKar && Array.isArray(fisKar) && fisKar.length > 0 ? (
         <>
-          <Grid container spacing={2} sx={{ mb: 2 }}>
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 2, mb: 2 }}>
             {[
               { label: 'Toplam Fiş', value: fisKar.length },
               { label: 'Toplam Gelir', value: `₺${formatTL(fisKar.reduce((t, r) => t + parseFloat(r.gercek_toplam_ucret || 0), 0))}` },
               { label: 'Toplam Maliyet', value: `₺${formatTL(fisKar.reduce((t, r) => t + parseFloat(r.toplam_maliyet || 0), 0))}` },
               { label: 'Toplam Kâr', value: `₺${formatTL(fisKar.reduce((t, r) => t + parseFloat(r.kar || 0), 0))}` },
             ].map((k, i) => (
-              <Grid size={{ xs: 12, md: 3 }} key={i}>
-                <KartItem label={k.label} value={k.value} />
-              </Grid>
+              <KartItem key={i} label={k.label} value={k.value} color={k.color || KART_RENKLERI[i % KART_RENKLERI.length]} />
             ))}
-          </Grid>
+          </Box>
           {isMobile ? (
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
               {fisKar.map((r, i) => {
@@ -55,7 +53,7 @@ const FisKarAnalizi = ({ fisKar, isMobile }) => {
             </Box>
           ) : (
             <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
-              <Table size="small">
+              <Table sx={sagaSutunlar(5, 6, 7, 8)}>
                 <TableHead>
                   <TableRow>
                     {['Tarih', 'Fiş No', 'Müşteri', 'Durum', 'Toplam Gelir', 'Toplam Maliyet', 'Kâr', 'Kâr Oranı'].map((h) => (
