@@ -46,5 +46,5 @@ Her dosya: önce karakterizasyon testi, testi bozarak sına, betikle taşı, esk
 - Gözden geçir: vitrin (ana sayfa ve ilan sayfası), mobil görünüm, erişilebilirlik (odak, kontrast, klavye), tutarlı boşluk/renk (şimdi kırmızı `#C62828` değerleri
   dosyalara dağınık: tek tema belirteci olmalı).
 
-## E. Canlıya çıkış
+## E. Canlıya çıkış (YAPILDI 2026-10-25)
 Yeni TS sürümü paketlendi (`npm run package:hostinger`), yedek ve tarif `docs/HOSTINGER.md`'de. **Sahibi açıkça "canlıya al" demeden çıkılmaz.**

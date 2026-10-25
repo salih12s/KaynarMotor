@@ -37,13 +37,20 @@ npm run test:e2e                      # Playwright (gerçek Chrome + sıfırdan 
 - Bash araç satırında tek tırnak sayısı çift değilse komut ayrıştırılamaz: Türkçe metinli dosyaları Write aracıyla yaz.
 - MUI ikonları tek tek içe aktarılır: `import X from '@mui/icons-material/X'`.
 
-## Durum (2026-10-18)
-`typescript` dalı: backend TS geçişi + katmanlı yapı + klasör düzeni + genel temizlik **tamam**; tsc temiz, 248 birim, 201 API (kaynak ve paket),
-328 frontend testi yeşil (Testing Library kurulu; sekiz ekran için bileşen + birim testleri; tam koşu ~4-8 dk, geliştirirken `cd frontend && npm run test:hizli` ~26 sn). Canlı hâlâ eski JS paketi (`hostinger` dalı). `typescript` dalı GitHub'a gönderildi (origin/typescript).
-**KARAR: Salih GitHub faturalandırmasını çözmeyecek, GitHub Actions kullanılmayacak.** `.github/workflows/dogrula.yml` yalnızca elle
-tetiklenir (kırmızı ✗ üretmesin diye) ve GitHub'da hiç doğrulanmadı. Asıl güvenlik ağı yerel: `bash backend/scripts/hepsiniDogrula.sh` (+ frontend testleri) ve
-`.githooks/pre-push` (etkinleştirme: `git config core.hooksPath .githooks`; tsc + birim, ~3 sn). README'de CI rozeti KOYMA; kanıt olarak test sayılarını yaz.
-Frontend bölme **bitti (2026-10-19)**: Raporlar 1563->95, IsEmirleri 950->53, Vitrin 972->75, MotorStok 779->66, IkinciElMotor 709->57, Storefront 721->77, ETicaret 622->52, Aksesuarlar 614->33.
-Yöntem ve kurallar `docs/FRONTEND-BOLME-RAPORU.md` §9'da (önce karakterizasyon testi, betikle taşıma, eski-yeni HTML karşılaştırması).
-Sonraki işler: Vite+TSX, tasarım gözden geçirme, README cilası. (bicim.js, ESLint/Prettier, TanStack Query, Playwright E2E 2026-10-25 tamam.) (bicim.js, ESLint ve Prettier 2026-10-24 tamam.)
+## Durum (2026-10-25)
+`typescript` dalı (= `main`, GitHub'da) **canlıda**: kaynarmotor.com.tr 2026-10-25'te bu daldan yayına alındı (Hostinger build 01a17083; önceki yayın 21 Ekim).
+Doğrulama: tsc temiz, 248 birim, 203 API (kaynak ve paket), 406 frontend, 13 E2E (Playwright, `npm run test:e2e`). Tam frontend koşusu için
+`--maxWorkers=2` kullan (yavaş makinede 60 sn zaman aşımı flaky üretir); geliştirirken `cd frontend && npm run test:hizli` (~26 sn).
+**Deploy (her seferinde kullanıcı onayı):** `npm run package:hostinger` → `cd backend && node --test tests/smoke/paket.smoke.test.js` → Hostinger MCP
+`hosting_deploy` (domain kaynarmotor.com.tr, path = deploy/hostinger/kaynarmotor-hostinger.zip, type nodejs, appType nest, nodeVersion 24,
+outputDirectory dist, buildScript build, entryFile main.cjs) → `hosting_get-deployment` ile bekle → `/api/health`, `/api/health/database`, anonim
+korumalı uçlar 401, canlı arayüz dosya adı yerel paketle eşleşmeli. Ortam değişkenlerine DOKUNMA. Önceki paketler: `deploy/yedek/` (git dışı).
+**Hostinger MCP:** sunucular `npx @latest` yerine `~/.hostinger-mcp` içindeki sabit sürümden (3.8.1) `node` ile çalışır (npx yarışı "Connection closed"
+üretiyordu). Yanlış hesapla oturum açıldıysa: `node ~/.hostinger-mcp/node_modules/@hostinger/mcp/src/servers/all.js --logout`, sonra `--login`.
+**KARAR: Salih GitHub faturalandırmasını çözmeyecek, GitHub Actions kullanılmayacak.** `.github/workflows/dogrula.yml` yalnızca elle tetiklenir.
+Güvenlik ağı yerel: `bash backend/scripts/hepsiniDogrula.sh` (+ frontend + E2E) ve `.githooks/pre-push` (etkinleştirme: `git config core.hooksPath .githooks`).
+README'de CI rozeti KOYMA; kanıt olarak test sayılarını yaz.
+Frontend bölme **bitti**; satır sayıları Prettier sonrası: Raporlar 126 (1563'ten), IsEmirleri 72, Vitrin 107, MotorStok 102, IkinciElMotor 84, Storefront 77, ETicaret 74, Aksesuarlar 49.
+Yöntem ve kurallar `docs/FRONTEND-BOLME-RAPORU.md` §9'da. Tamamlananlar: bicim.js, ESLint/Prettier, TanStack Query (İş Emirleri, Motor, Raporlar), Playwright E2E.
+Sonraki işler: `plain_sifre` kararı, tasarım gözden geçirme, Vite+TSX.
 **Tüm kalan işler, öncelik sırası ve sunum (portföy) hedefi: `docs/YOL-HARITASI.md`.** Yeni sohbette önce onu oku.
