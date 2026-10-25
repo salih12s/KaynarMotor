@@ -3,7 +3,8 @@ import { hataMesaji } from '../../shared/api/istemci';
 import LockIcon from '@mui/icons-material/LockOutlined';
 import PersonAddIcon2 from '@mui/icons-material/PersonAddAltOutlined';
 import { Damga, IslemDugmesi, DialogBasligi } from '../../shared/ui';
-import { FONT, TON } from '../../app/tokenlar';
+import { FONT, TON, type TonAdi } from '../../app/tokenlar';
+import type { Kullanici } from '../../shared/tipler';
 import {
   Box,
   Paper,
@@ -32,9 +33,14 @@ import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import { authService } from './authApi';
 
 // Rol: yuvarlak köşeli düz etiket (personel gri, yatırımcı mor, admin kırmızı).
-const ROL = { admin: ['kirmizi', 'admin'], yatirimci: ['mor', 'yatırımcı'], personel: ['gri', 'personel'], muhasebeci: ['mavi', 'muhasebeci'] };
-const RolEtiketi = ({ rol }) => {
-  const [ton, yazi] = ROL[rol] || ['gri', rol];
+const ROL: Record<string, [TonAdi, string]> = {
+  admin: ['kirmizi', 'admin'],
+  yatirimci: ['mor', 'yatırımcı'],
+  personel: ['gri', 'personel'],
+  muhasebeci: ['mavi', 'muhasebeci'],
+};
+const RolEtiketi = ({ rol }: { rol: string | null | undefined }) => {
+  const [ton, yazi]: [TonAdi, string | null | undefined] = (rol && ROL[rol]) || ['gri', rol];
   return (
     <Box
       component="span"
@@ -46,20 +52,24 @@ const RolEtiketi = ({ rol }) => {
 };
 
 // Onay durumu: çerçeveli damga
-const ONAY = { onaylandi: ['yesil', 'Onaylandı'], reddedildi: ['kirmizi', 'Reddedildi'], beklemede: ['bekle', 'Onay bekliyor'] };
-const OnayDamgasi = ({ durum }) => {
-  const [ton, yazi] = ONAY[durum] || ['gri', durum];
+const ONAY: Record<string, [TonAdi, string]> = {
+  onaylandi: ['yesil', 'Onaylandı'],
+  reddedildi: ['kirmizi', 'Reddedildi'],
+  beklemede: ['bekle', 'Onay bekliyor'],
+};
+const OnayDamgasi = ({ durum }: { durum: string | null | undefined }) => {
+  const [ton, yazi]: [TonAdi, string | null | undefined] = (durum && ONAY[durum]) || ['gri', durum];
   return <Damga ton={ton}>{yazi}</Damga>;
 };
 
 const Kullanicilar = () => {
   const isMobile = useMediaQuery(useTheme().breakpoints.down('sm'));
-  const [users, setUsers] = useState([]);
+  const [users, setUsers] = useState<Kullanici[]>([]);
   const [error, setError] = useState('');
-  const [deleteDialog, setDeleteDialog] = useState({ open: false, user: null });
+  const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; user: Kullanici | null }>({ open: false, user: null });
   const [createDialog, setCreateDialog] = useState(false);
   const [createForm, setCreateForm] = useState({ kullanici_adi: '', sifre: '', ad_soyad: '', rol: 'yatirimci' });
-  const [sifreDialog, setSifreDialog] = useState({ open: false, user: null, sifre: '' });
+  const [sifreDialog, setSifreDialog] = useState<{ open: boolean; user: Kullanici | null; sifre: string }>({ open: false, user: null, sifre: '' });
   const [bilgi, setBilgi] = useState('');
 
   const loadUsers = async () => {
@@ -102,16 +112,18 @@ const Kullanicilar = () => {
       setError('Şifre en az 8 karakter olmalıdır');
       return;
     }
+    const kullanici = sifreDialog.user;
+    if (!kullanici) return;
     try {
-      await authService.setSifre(sifreDialog.user.id, sifreDialog.sifre);
-      setBilgi(`${sifreDialog.user.ad_soyad} için şifre güncellendi. Yeni şifreyi kullanıcıya iletin.`);
+      await authService.setSifre(kullanici.id, sifreDialog.sifre);
+      setBilgi(`${kullanici.ad_soyad} için şifre güncellendi. Yeni şifreyi kullanıcıya iletin.`);
       setSifreDialog({ open: false, user: null, sifre: '' });
     } catch (err) {
       setError(hataMesaji(err, 'Şifre güncellenemedi'));
     }
   };
 
-  const handleApprove = async (id) => {
+  const handleApprove = async (id: number) => {
     try {
       await authService.approveUser(id);
       loadUsers();
@@ -120,7 +132,7 @@ const Kullanicilar = () => {
     }
   };
 
-  const handleReject = async (id) => {
+  const handleReject = async (id: number) => {
     try {
       await authService.rejectUser(id);
       loadUsers();
@@ -130,8 +142,10 @@ const Kullanicilar = () => {
   };
 
   const handleDelete = async () => {
+    const kullanici = deleteDialog.user;
+    if (!kullanici) return;
     try {
-      await authService.deleteUser(deleteDialog.user.id);
+      await authService.deleteUser(kullanici.id);
       setDeleteDialog({ open: false, user: null });
       loadUsers();
     } catch (err) {

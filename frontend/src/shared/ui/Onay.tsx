@@ -9,10 +9,10 @@ export interface OnaySecenegi {
   onayEtiket?: string;
 }
 
-export type OnayFonksiyonu = (mesaj: string, secenek?: OnaySecenegi) => Promise<boolean>;
+export type OnayFonksiyonu = (mesaj: ReactNode, secenek?: OnaySecenegi) => Promise<boolean>;
 
 interface OnayIstegi {
-  mesaj: string;
+  mesaj: ReactNode;
   baslik: string;
   onayEtiket: string;
 }
@@ -20,7 +20,7 @@ interface OnayIstegi {
 const OnayContext = createContext<OnayFonksiyonu | null>(null);
 
 // Sağlayıcı yoksa (ör. tek başına çizilen bir bileşen testi) tarayıcının kendi kutusuna düşer.
-const tarayiciOnayi: OnayFonksiyonu = async (mesaj) => window.confirm(mesaj);
+const tarayiciOnayi: OnayFonksiyonu = async (mesaj) => window.confirm(String(mesaj));
 
 // Uygulamanın kendi silme onay penceresi: const onay = useOnay(); if (!(await onay('Bu kaydı sil?'))) return;
 export const OnayProvider = ({ children }: { children?: ReactNode }) => {

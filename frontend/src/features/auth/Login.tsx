@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, type ChangeEvent, type FormEvent } from 'react';
 import { hataMesaji } from '../../shared/api/istemci';
 import { Box, TextField, Button, Typography, Alert, Tab, Tabs } from '@mui/material';
 import { useAuth } from './AuthContext';
@@ -14,12 +14,12 @@ const Login = () => {
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleChange = (e) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     setError('');
   };
 
-  const handleLogin = async (e) => {
+  const handleLogin = async (e: FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
@@ -32,7 +32,7 @@ const Login = () => {
     setLoading(false);
   };
 
-  const handleRegister = async (e) => {
+  const handleRegister = async (e: FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');

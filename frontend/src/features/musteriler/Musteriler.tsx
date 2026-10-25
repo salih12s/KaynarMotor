@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { hataMesaji } from '../../shared/api/istemci';
 import KisiIkon from '@mui/icons-material/PersonOutlined';
 import { BilgiKarti, BolumBasligi, Damga, DialogBasligi, IslemDugmesi, Plaka, sagaSutunlar, useOnay } from '../../shared/ui';
@@ -34,6 +34,8 @@ import SearchIcon from '@mui/icons-material/Search';
 
 import { musteriService } from './musteriApi';
 import { sayiYaz, tarihYaz, sayiDegeri } from '../../shared/utils/bicim';
+import type { Musteri, MusteriDetayi } from '../../shared/tipler';
+import type { TonAdi } from '../../app/tokenlar';
 import { MENU_RENK, RENK, TON } from '../../app/tokenlar';
 
 // Hızlı yazarken eski aramanın yanıtı yeniyi ezmesin
@@ -42,32 +44,32 @@ const sonAra = sonIstek();
 const Musteriler = () => {
   const onay = useOnay();
   const isMobile = useMediaQuery(useTheme().breakpoints.down('sm'));
-  const [musteriler, setMusteriler] = useState([]);
+  const [musteriler, setMusteriler] = useState<Musteri[]>([]);
   const [search, setSearch] = useState('');
-  const [dialog, setDialog] = useState({ open: false, data: null });
+  const [dialog, setDialog] = useState<{ open: boolean; data: Musteri | null }>({ open: false, data: null });
   const [formData, setFormData] = useState({ ad_soyad: '', telefon: '', adres: '' });
   const [error, setError] = useState('');
-  const [detayDialog, setDetayDialog] = useState({ open: false, data: null });
+  const [detayDialog, setDetayDialog] = useState<{ open: boolean; data: MusteriDetayi | null }>({ open: false, data: null });
 
-  const openDetay = async (musteri) => {
+  const openDetay = async (musteri: Musteri) => {
     try {
       const res = await musteriService.getById(musteri.id);
       setDetayDialog({ open: true, data: res.data });
     } catch {}
   };
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       const res = await musteriService.getAll();
       setMusteriler(res.data);
     } catch {}
-  };
+  }, []);
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [loadData]);
 
-  const handleSearch = async () => {
+  const handleSearch = useCallback(async () => {
     if (!search.trim()) {
       sonAra.iptal();
       return loadData();
@@ -76,16 +78,16 @@ const Musteriler = () => {
       const res = await sonAra(musteriService.search(search));
       if (res) setMusteriler(res.data);
     } catch {}
-  };
+  }, [search, loadData]);
 
   useEffect(() => {
     const timer = setTimeout(handleSearch, 300);
     return () => clearTimeout(timer);
-  }, [search]);
+  }, [handleSearch]);
 
-  const openDialog = (musteri = null) => {
+  const openDialog = (musteri: Musteri | null = null) => {
     setFormData(
-      musteri ? { ad_soyad: musteri.ad_soyad, telefon: musteri.telefon || '', adres: musteri.adres || '' } : { ad_soyad: '', telefon: '', adres: '' },
+      musteri ? { ad_soyad: musteri.ad_soyad || '', telefon: musteri.telefon || '', adres: musteri.adres || '' } : { ad_soyad: '', telefon: '', adres: '' },
     );
     setDialog({ open: true, data: musteri });
     setError('');
@@ -105,7 +107,7 @@ const Musteriler = () => {
     }
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (id: number) => {
     const musteri = musteriler.find((m) => m.id === id);
     const mesaj = musteri ? (
       <>
@@ -282,15 +284,15 @@ const Musteriler = () => {
             const aksesuarlar = d.aksesuarlar || [];
             const isEmirleri = d.isEmirleri || [];
             const kapat = () => setDetayDialog({ open: false, data: null });
-            const durumDamgasi = (durum) => {
-              const harita = {
+            const durumDamgasi = (durum: string | null | undefined) => {
+              const harita: Record<string, [TonAdi, string]> = {
                 tamamlandi: ['yesil', 'Tamamlandı'],
                 stokta: ['gri', 'Stokta'],
                 beklemede: ['bekle', 'Beklemede'],
                 devir_bekliyor: ['mor', 'Devir Bekliyor'],
                 iptal: ['kirmizi', 'İptal'],
               };
-              const [ton, yazi] = harita[durum] || ['gri', durum];
+              const [ton, yazi] = (durum && harita[durum]) || ['gri', durum];
               return <Damga ton={ton}>{yazi}</Damga>;
             };
             return (
@@ -329,8 +331,8 @@ const Musteriler = () => {
                           </TableHead>
                           <TableBody>
                             {motorlar.map((m) => {
-                              const isSatici = m.satici_adi && m.satici_adi.toLowerCase() === d.ad_soyad.toLowerCase();
-                              const isAlici = m.alici_adi && m.alici_adi.toLowerCase() === d.ad_soyad.toLowerCase();
+                              const isSatici = m.satici_adi && m.satici_adi.toLowerCase() === (d.ad_soyad ?? '').toLowerCase();
+                              const isAlici = m.alici_adi && m.alici_adi.toLowerCase() === (d.ad_soyad ?? '').toLowerCase();
                               return (
                                 <TableRow key={m.id} hover>
                                   <TableCell>

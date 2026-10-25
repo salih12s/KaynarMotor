@@ -22,13 +22,14 @@ import {
 } from '@mui/material';
 import { RENK } from '../../app/tokenlar';
 import { authService } from './authApi';
+import type { Kullanici, YetkiBayraklari } from '../../shared/tipler';
 
 // Motor Satış yetkisi ile birlikte verilen görüntüleme yetkileri
 // (satış fiyatı, müşteri bilgisi ve satış geçmişi Motor Satış'ın içinde gelir — alış fiyatı ve kâr DAHİL DEĞİL)
 const MOTOR_SATIS_KAPSAMI = ['satis_fiyati_gor', 'musteri_gor', 'satis_gecmisi_gor'];
 
 // İşlem (modül) yetkileri — tüm yetkilendirme tek bir tabloda toplanır
-const ISLEM_YETKILERI = [
+const ISLEM_YETKILERI: Array<{ key: keyof YetkiBayraklari; label: string }> = [
   { key: 'motor_satis_yetkisi', label: 'Motor Satış' },
   { key: 'aksesuar_yetkisi', label: 'Aksesuar Satış' },
   { key: 'aksesuar_stok_yetkisi', label: 'Aksesuar Stok' },
@@ -43,8 +44,8 @@ const TUM_YETKILER = ISLEM_YETKILERI;
 
 const Yetkilendirme = () => {
   const isMobile = useMediaQuery(useTheme().breakpoints.down('md'));
-  const [users, setUsers] = useState([]);
-  const [muhasebeciler, setMuhasebeciler] = useState([]);
+  const [users, setUsers] = useState<Kullanici[]>([]);
+  const [muhasebeciler, setMuhasebeciler] = useState<Kullanici[]>([]);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
@@ -65,11 +66,11 @@ const Yetkilendirme = () => {
     loadUsers();
   }, []);
 
-  const handleToggle = async (user, key, value) => {
+  const handleToggle = async (user: Kullanici, key: keyof YetkiBayraklari, value: boolean) => {
     setError('');
     setSuccess('');
     // Motor Satış yetkisi açılınca/kapanınca alış-satış fiyatı, kâr, müşteri ve satış geçmişi yetkileri de birlikte değişir
-    const payload =
+    const payload: Partial<Record<keyof YetkiBayraklari, boolean>> =
       key === 'motor_satis_yetkisi' ? { motor_satis_yetkisi: value, ...Object.fromEntries(MOTOR_SATIS_KAPSAMI.map((k) => [k, value])) } : { [key]: value };
     const oncekiUser = user; // hata olursa geri almak için
     // Optimistik güncelleme
@@ -86,7 +87,7 @@ const Yetkilendirme = () => {
   };
 
   // Muhasebeci: Motor Satış sayfasını SALT OKUNUR görme izni (alım/satım, noter, satış ve kişi bilgileri; kâr hariç)
-  const handleMuhasebeToggle = async (user, value) => {
+  const handleMuhasebeToggle = async (user: Kullanici, value: boolean) => {
     setError('');
     setSuccess('');
     setMuhasebeciler((prev) => prev.map((u) => (u.id === user.id ? { ...u, motor_satis_gor: value } : u)));
