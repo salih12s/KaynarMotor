@@ -2,7 +2,7 @@ import React from 'react';
 import { Box, Dialog, DialogContent, DialogActions, Button } from '@mui/material';
 import { BilgiKarti, Damga, DialogBasligi, Not, plakaBicim } from '../../../shared/ui';
 import { formatTL, formatDate, karColor } from '../bicim';
-import { sayiYaz } from '../../../shared/utils/bicim';
+import { sayiYaz, sayiDegeri } from '../../../shared/utils/bicim';
 
 // Üç sütun (araç/satıcı/alıcı), iki sütun (fiyat/noter, tarih/not) düzeni
 const SUTUN_3 = { display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' }, gap: 2, mb: 2 };
@@ -13,13 +13,13 @@ const MotorDetayModal = ({ open, data, onClose, isMobile }) => {
   const dialogProps = { open, onClose, maxWidth: 'md', fullWidth: true, fullScreen: isMobile };
   if (!data) return <Dialog {...dialogProps} />;
   const m = data;
-  const alis = parseFloat(m.alis_fiyati || 0);
-  const satis = parseFloat(m.satis_fiyati || 0);
-  const noterAlis = parseFloat(m.noter_alis || 0);
-  const noterSatis = parseFloat(m.noter_satis || 0);
-  const masraf = parseFloat(m.masraflar || 0);
-  const toplamKar = parseFloat(m.kar || 0);
-  const yatirimciPayi = parseFloat(m.yatirimci_kar || 0);
+  const alis = sayiDegeri(m.alis_fiyati);
+  const satis = sayiDegeri(m.satis_fiyati);
+  const noterAlis = sayiDegeri(m.noter_alis);
+  const noterSatis = sayiDegeri(m.noter_satis);
+  const masraf = sayiDegeri(m.masraflar);
+  const toplamKar = sayiDegeri(m.kar);
+  const yatirimciPayi = sayiDegeri(m.yatirimci_kar);
   const kar = toplamKar - yatirimciPayi;
   const para = (v) => `${formatTL(v)} ₺`;
   const fiyatSatirlari = [

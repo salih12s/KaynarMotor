@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { hataMesaji } from '../../shared/api/istemci';
 import {
   Box,
   Paper,
@@ -78,7 +79,7 @@ const Yetkilendirme = () => {
       setSuccess(`${user.ad_soyad} yetkileri güncellendi`);
       setTimeout(() => setSuccess(''), 2000);
     } catch (err) {
-      setError(err.response?.data?.message || 'Güncelleme hatası');
+      setError(hataMesaji(err, 'Güncelleme hatası'));
       // Geri al
       setUsers((prev) => prev.map((u) => (u.id === user.id ? oncekiUser : u)));
     }
@@ -94,7 +95,7 @@ const Yetkilendirme = () => {
       setSuccess(`${user.ad_soyad} yetkileri güncellendi`);
       setTimeout(() => setSuccess(''), 2000);
     } catch (err) {
-      setError(err.response?.data?.message || 'Güncelleme hatası');
+      setError(hataMesaji(err, 'Güncelleme hatası'));
       setMuhasebeciler((prev) => prev.map((u) => (u.id === user.id ? user : u)));
     }
   };

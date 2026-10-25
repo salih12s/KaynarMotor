@@ -1,4 +1,5 @@
 import React from 'react';
+import { sayiDegeri } from '../../../shared/utils/bicim';
 import { Box, Paper, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Alert } from '@mui/material';
 import { formatTL, formatDate, karColor, headerSx, sagaSutunlar } from '../bicim';
 import DurumChip from '../bilesenler/DurumChip';
@@ -13,9 +14,9 @@ const FisKarAnalizi = ({ fisKar, isMobile }) => {
           <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 2, mb: 2 }}>
             {[
               { label: 'Toplam Fiş', value: fisKar.length },
-              { label: 'Toplam Gelir', value: `₺${formatTL(fisKar.reduce((t, r) => t + parseFloat(r.gercek_toplam_ucret || 0), 0))}` },
-              { label: 'Toplam Maliyet', value: `₺${formatTL(fisKar.reduce((t, r) => t + parseFloat(r.toplam_maliyet || 0), 0))}` },
-              { label: 'Toplam Kâr', value: `₺${formatTL(fisKar.reduce((t, r) => t + parseFloat(r.kar || 0), 0))}` },
+              { label: 'Toplam Gelir', value: `₺${formatTL(fisKar.reduce((t, r) => t + sayiDegeri(r.gercek_toplam_ucret), 0))}` },
+              { label: 'Toplam Maliyet', value: `₺${formatTL(fisKar.reduce((t, r) => t + sayiDegeri(r.toplam_maliyet), 0))}` },
+              { label: 'Toplam Kâr', value: `₺${formatTL(fisKar.reduce((t, r) => t + sayiDegeri(r.kar), 0))}` },
             ].map((k, i) => (
               <KartItem key={i} label={k.label} value={k.value} color={k.color || KART_RENKLERI[i % KART_RENKLERI.length]} />
             ))}
@@ -23,8 +24,7 @@ const FisKarAnalizi = ({ fisKar, isMobile }) => {
           {isMobile ? (
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
               {fisKar.map((r, i) => {
-                const oran =
-                  parseFloat(r.gercek_toplam_ucret || 0) > 0 ? ((parseFloat(r.kar || 0) / parseFloat(r.gercek_toplam_ucret || 1)) * 100).toFixed(1) : '0.0';
+                const oran = sayiDegeri(r.gercek_toplam_ucret) > 0 ? ((sayiDegeri(r.kar) / sayiDegeri(r.gercek_toplam_ucret, 1)) * 100).toFixed(1) : '0.0';
                 return (
                   <Paper key={i} sx={{ p: 1.5 }}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
@@ -65,8 +65,7 @@ const FisKarAnalizi = ({ fisKar, isMobile }) => {
                 </TableHead>
                 <TableBody>
                   {fisKar.map((r, i) => {
-                    const oran =
-                      parseFloat(r.gercek_toplam_ucret || 0) > 0 ? ((parseFloat(r.kar || 0) / parseFloat(r.gercek_toplam_ucret || 1)) * 100).toFixed(1) : '0.0';
+                    const oran = sayiDegeri(r.gercek_toplam_ucret) > 0 ? ((sayiDegeri(r.kar) / sayiDegeri(r.gercek_toplam_ucret, 1)) * 100).toFixed(1) : '0.0';
                     return (
                       <TableRow key={i} hover>
                         <TableCell>{formatDate(r.tamamlama_tarihi || r.created_at)}</TableCell>

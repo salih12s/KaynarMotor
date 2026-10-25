@@ -1,12 +1,14 @@
 import QRCode from 'qrcode';
+import { hataMesaji } from '../../../shared/api/istemci';
+import { escapeHtml } from '../../../shared/utils/htmlKacis';
+import type { IsEmriDetayi } from '../../../shared/tipler';
 import { servisGecmisiService } from '../servisApi';
 import { isEmriYazdirHtml } from '../isEmriYazdir';
 
 // Motorun üzerine yapıştırılacak servis geçmişi QR etiketi — müşteri okutunca
 // sadece o plakanın servis geçmişini gösteren halka açık sayfa açılır.
-export const printServisQr = async (plaka) => {
-  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
-  const temiz = esc(
+export const printServisQr = async (plaka: string | null | undefined) => {
+  const temiz = escapeHtml(
     String(plaka || '')
       .trim()
       .toUpperCase(),
@@ -46,11 +48,11 @@ export const printServisQr = async (plaka) => {
       </body></html>`);
     win.document.close();
   } catch (err) {
-    alert(err.response?.data?.message || 'QR oluşturulamadı');
+    alert(hataMesaji(err, 'QR oluşturulamadı'));
   }
 };
 
-export const printIsEmri = (data) => {
+export const printIsEmri = (data: IsEmriDetayi | null | undefined) => {
   if (!data) return;
   const win = window.open('', '_blank', 'width=900,height=700');
   if (!win) {

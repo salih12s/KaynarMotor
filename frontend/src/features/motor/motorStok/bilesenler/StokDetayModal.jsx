@@ -4,7 +4,7 @@ import PrintIcon from '@mui/icons-material/Print';
 import { BelgeBolumu } from '../../SatisBelgeleri';
 import { useReactToPrint } from 'react-to-print';
 import { parseOdeme } from '../motorStokVeri';
-import { sayiYaz, tarihYaz } from '../../../../shared/utils/bicim';
+import { sayiYaz, tarihYaz, sayiDegeri } from '../../../../shared/utils/bicim';
 import { BilgiKarti, BolumBasligi, DialogBasligi, Not, SayiKutusu } from '../../../../shared/ui';
 
 const SUTUN_2 = { display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' }, gap: 2, mb: 2 };
@@ -17,10 +17,10 @@ const StokDetayModal = ({ open, data, onClose, printRef, isMobile, perms = {} })
   if (!data) return null;
 
   const formatTL = (v) => sayiYaz(v);
-  const alis = parseFloat(data.alis_fiyati || 0);
-  const noterAlis = parseFloat(data.noter_alis || 0);
+  const alis = sayiDegeri(data.alis_fiyati);
+  const noterAlis = sayiDegeri(data.noter_alis);
   const odemeler = parseOdeme(data.odeme_detaylari);
-  const odemeToplami = odemeler.reduce((s, o) => s + parseFloat(o.tutar || 0), 0);
+  const odemeToplami = odemeler.reduce((s, o) => s + sayiDegeri(o.tutar), 0);
 
   const motorSatirlari = [
     ['Plaka', data.plaka || '-'],
@@ -38,7 +38,7 @@ const StokDetayModal = ({ open, data, onClose, printRef, isMobile, perms = {} })
   if (data.satis_fiyati) odemeSatirlari.push(['Toplam Satış', `₺${formatTL(data.satis_fiyati)}`]);
   odemeler.forEach((o) => odemeSatirlari.push([o.tip, `₺${sayiYaz(o.tutar)}`]));
   odemeSatirlari.push(['Toplam Ödeme', `₺${sayiYaz(odemeToplami)}`]);
-  if (parseFloat(data.kalan_odeme || 0) > 0) odemeSatirlari.push(['Kalan', `₺${formatTL(data.kalan_odeme)}`]);
+  if (sayiDegeri(data.kalan_odeme) > 0) odemeSatirlari.push(['Kalan', `₺${formatTL(data.kalan_odeme)}`]);
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth fullScreen={isMobile}>
@@ -77,7 +77,7 @@ const StokDetayModal = ({ open, data, onClose, printRef, isMobile, perms = {} })
               {data.yatirimci_id && canKar && (
                 <Box sx={KUTULAR(2)}>
                   <SayiKutusu etiket="Yatırımcı Kârı" deger={`₺${formatTL(data.yatirimci_kar)}`} ton="mavi" />
-                  <SayiKutusu etiket="İşletme Kârı" deger={`₺${formatTL(parseFloat(data.kar || 0) - parseFloat(data.yatirimci_kar || 0))}`} ton="yesil" />
+                  <SayiKutusu etiket="İşletme Kârı" deger={`₺${formatTL(sayiDegeri(data.kar) - sayiDegeri(data.yatirimci_kar))}`} ton="yesil" />
                 </Box>
               )}
               {isYatirimci && data.durum === 'tamamlandi' && (

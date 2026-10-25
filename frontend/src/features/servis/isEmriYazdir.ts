@@ -1,16 +1,17 @@
 import { escapeHtml as e } from '../../shared/utils/htmlKacis';
-import { sayiYaz, tarihYaz } from '../../shared/utils/bicim';
+import { sayiDegeri, sayiYaz, tarihYaz } from '../../shared/utils/bicim';
+import type { IsEmriDetayi } from '../../shared/tipler';
 
 // İş emri yazdırma sayfasının HTML'ini üretir (saf fonksiyon: pencere açmaz, yazdırmaz).
 // Serbest metin alanlarının TAMAMI kaçışlanır; bkz. htmlKacis.js.
-export const isEmriYazdirHtml = (data) => {
+export const isEmriYazdirHtml = (data: IsEmriDetayi): string => {
   const parcalar = data.parcalar || [];
-  const toplamFiyat = parcalar.reduce((t, p) => t + parseFloat(p.toplam_fiyat || 0), 0);
-  const durumLabel = (d) => (d === 'tamamlandi' ? 'Tamamlandı' : d === 'devam_ediyor' ? 'Devam Ediyor' : 'Beklemede');
+  const toplamFiyat = parcalar.reduce((t, p) => t + sayiDegeri(p.toplam_fiyat), 0);
+  const durumLabel = (d: string) => (d === 'tamamlandi' ? 'Tamamlandı' : d === 'devam_ediyor' ? 'Devam Ediyor' : 'Beklemede');
 
   const parcaRows = parcalar
     .map((p) => {
-      const pSatis = parseFloat(p.toplam_fiyat || 0);
+      const pSatis = sayiDegeri(p.toplam_fiyat);
       return `<tr>
       <td style="padding:6px;border:1px solid #D2D3CA">${e(p.takilan_parca)}</td>
       <td style="padding:6px;border:1px solid #D2D3CA;text-align:center">${e(p.adet)}</td>

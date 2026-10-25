@@ -1,16 +1,27 @@
 import React from 'react';
 import { Box, Paper, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Alert } from '@mui/material';
 import { printServisQr } from './servisYazdir';
-import { durumTon, durumLabel, formatTarih } from './isEmriVeri';
-import { sayiYaz } from '../../../shared/utils/bicim';
+import { durumTon, durumLabel, formatTarih, type ListeSatiri } from './isEmriVeri';
+import { sayiYaz, sayiDegeri } from '../../../shared/utils/bicim';
 import { Damga, IslemDugmesi, Plaka } from '../../../shared/ui';
 import { FONT, RENK } from '../../../app/tokenlar';
 
-const personelAdi = (ie) => ie.teslim_eden_teknisyen || ie.teslim_alan_ad_soyad || ie.olusturan_kisi || '-';
+const personelAdi = (ie: ListeSatiri) => ie.teslim_eden_teknisyen || ie.teslim_alan_ad_soyad || ie.olusturan_kisi || '-';
 
 // Filtrelenmiş iş emirleri: dar ekranda kartlar, geniş ekranda tablo. Kâr sütunu yalnızca karGor için.
-const IsEmriListesi = ({ filtered, isMobile, karGor, isAdmin, onDetay, onYazdir, onDuzenle, onSil }) => {
-  const islemler = (ie) => (
+interface IsEmriListesiProps {
+  filtered: ListeSatiri[];
+  isMobile: boolean;
+  karGor: boolean;
+  isAdmin: boolean;
+  onDetay: (id: number) => void;
+  onYazdir: (id: number) => void;
+  onDuzenle: (id: number) => void;
+  onSil: (id: number) => void;
+}
+
+const IsEmriListesi = ({ filtered, isMobile, karGor, isAdmin, onDetay, onYazdir, onDuzenle, onSil }: IsEmriListesiProps) => {
+  const islemler = (ie: ListeSatiri) => (
     <>
       <IslemDugmesi tur="goz" onClick={() => onDetay(ie.id)} />
       <IslemDugmesi tur="yaz" onClick={() => onYazdir(ie.id)} />
@@ -24,8 +35,8 @@ const IsEmriListesi = ({ filtered, isMobile, karGor, isAdmin, onDetay, onYazdir,
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
       {filtered.length === 0 && <Alert severity="info">Kayıt bulunamadı</Alert>}
       {filtered.map((ie) => {
-        const toplam = parseFloat(ie.gercek_toplam_ucret || 0);
-        const kar = parseFloat(ie.kar || 0);
+        const toplam = sayiDegeri(ie.gercek_toplam_ucret);
+        const kar = sayiDegeri(ie.kar);
         return (
           <Paper key={ie.id} sx={{ p: 1.75 }} onClick={() => onDetay(ie.id)}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -76,9 +87,9 @@ const IsEmriListesi = ({ filtered, isMobile, karGor, isAdmin, onDetay, onYazdir,
         </TableHead>
         <TableBody>
           {filtered.map((ie) => {
-            const toplam = parseFloat(ie.gercek_toplam_ucret || 0);
-            const maliyet = parseFloat(ie.toplam_maliyet || 0);
-            const kar = parseFloat(ie.kar || 0);
+            const toplam = sayiDegeri(ie.gercek_toplam_ucret);
+            const maliyet = sayiDegeri(ie.toplam_maliyet);
+            const kar = sayiDegeri(ie.kar);
             return (
               <TableRow key={ie.id} hover>
                 <TableCell sx={{ fontFamily: FONT.mono, fontSize: '0.8rem !important', color: RENK.soluk }}>{ie.fis_no}</TableCell>

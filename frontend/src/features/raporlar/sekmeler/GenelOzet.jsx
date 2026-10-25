@@ -1,10 +1,11 @@
 import React from 'react';
+import { sayiDegeri } from '../../../shared/utils/bicim';
 import { Box, Paper, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
 import { formatTL, karColor, headerSx } from '../bicim';
 import { FONT, RENK, TON } from '../../../app/tokenlar';
 
 const SEKME_NO = { 'Motor Satışları': 1, 'İş Emirleri (Servis)': 2, 'Aksesuar Satışları': 3, 'E-Ticaret': 4, 'Yedek Parça (Envanter)': 5 };
-const oranYaz = (kar, gelir) => (parseFloat(gelir || 0) > 0 ? ((parseFloat(kar || 0) / parseFloat(gelir || 1)) * 100).toFixed(1) : '0.0');
+const oranYaz = (kar, gelir) => (sayiDegeri(gelir) > 0 ? ((sayiDegeri(kar) / sayiDegeri(gelir, 1)) * 100).toFixed(1) : '0.0');
 
 // Üst sıradaki büyük rakam kartı: geniş ekranda kâğıt zemin ve solda yazı; telefonda tonlu zemin ve ortalı yazı.
 const RakamKarti = ({ etiket, deger, renk = RENK.murekkep, ton }) => {
@@ -50,8 +51,8 @@ const GenelOzet = ({ rapor, toplamlar, isMobile, onSekmeAc }) => {
     },
   ];
   const toplamIslem = satirlar.reduce((t, r) => t + r.count, 0);
-  const satirGelirToplami = satirlar.reduce((t, r) => t + parseFloat(r.gelir || 0), 0);
-  const pay = (gelir) => (satirGelirToplami > 0 ? (parseFloat(gelir || 0) / satirGelirToplami) * 100 : 0);
+  const satirGelirToplami = satirlar.reduce((t, r) => t + sayiDegeri(r.gelir), 0);
+  const pay = (gelir) => (satirGelirToplami > 0 ? (sayiDegeri(gelir) / satirGelirToplami) * 100 : 0);
 
   return (
     <>

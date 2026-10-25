@@ -1,4 +1,6 @@
 import { useOnay } from '../../../shared/ui';
+import { sayiDegeri } from '../../../shared/utils/bicim';
+import { hataMesaji } from '../../../shared/api/istemci';
 import { useState, useEffect } from 'react';
 import { eticaretService } from '../eticaretApi';
 import { aksesuarStokService } from '../../aksesuar/aksesuarApi';
@@ -66,7 +68,7 @@ export const useETicaret = () => {
   const handleStokSelect = (stokId) => {
     const found = stokOptions.find((s) => s.id === Number(stokId));
     if (found) {
-      setSatisForm((prev) => ({ ...prev, stok_id: stokId, urun_adi: found.stok_adi, alis_fiyati: parseFloat(found.alis_fiyati || 0) }));
+      setSatisForm((prev) => ({ ...prev, stok_id: stokId, urun_adi: found.stok_adi, alis_fiyati: sayiDegeri(found.alis_fiyati) }));
     } else {
       setSatisForm((prev) => ({ ...prev, stok_id: stokId }));
     }
@@ -78,9 +80,9 @@ export const useETicaret = () => {
       setSatisForm((prev) => ({
         ...prev,
         platform_id: platformId,
-        komisyon_orani: parseFloat(found.komisyon_orani || 0),
-        kdv_orani: parseFloat(found.kdv_orani || 20),
-        kargo_ucreti: parseFloat(found.kargo_ucreti || 0),
+        komisyon_orani: sayiDegeri(found.komisyon_orani),
+        kdv_orani: sayiDegeri(found.kdv_orani, 20),
+        kargo_ucreti: sayiDegeri(found.kargo_ucreti),
       }));
     } else {
       setSatisForm((prev) => ({ ...prev, platform_id: platformId }));
@@ -103,7 +105,7 @@ export const useETicaret = () => {
       setSatisDialog({ open: false, data: null });
       loadData();
     } catch (err) {
-      setError(err.response?.data?.message || 'Hata');
+      setError(hataMesaji(err, 'Hata'));
     }
   };
 
@@ -113,7 +115,7 @@ export const useETicaret = () => {
       await eticaretService.deleteSale(id);
       loadData();
     } catch (err) {
-      alert(err.response?.data?.message || 'Hata');
+      alert(hataMesaji(err, 'Hata'));
     }
   };
 
@@ -135,7 +137,7 @@ export const useETicaret = () => {
       setPlatformDialog({ open: false, data: null });
       loadData();
     } catch (err) {
-      setError(err.response?.data?.message || 'Hata');
+      setError(hataMesaji(err, 'Hata'));
     }
   };
 
@@ -145,7 +147,7 @@ export const useETicaret = () => {
       await eticaretService.deletePlatform(id);
       loadData();
     } catch (err) {
-      alert(err.response?.data?.message || 'Hata');
+      alert(hataMesaji(err, 'Hata'));
     }
   };
 

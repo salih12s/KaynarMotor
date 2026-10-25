@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, type ChangeEvent, type FormEvent } from 'react';
+import { hataMesaji } from '../../shared/api/istemci';
 import { IslemDugmesi } from '../../shared/ui';
 import { sonIstek } from '../../shared/utils/sonIstek';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -30,7 +31,9 @@ import BackIcon from '@mui/icons-material/ArrowBack';
 import { isEmriService } from './servisApi';
 import { musteriService } from '../musteriler/musteriApi';
 import { useKarGor } from '../auth/AuthContext';
-import { sayiYaz } from '../../shared/utils/bicim';
+import { sayiYaz, sayiDegeri } from '../../shared/utils/bicim';
+import type { Musteri, Parca } from '../../shared/tipler';
+import type { IsEmriFormu } from './isEmirleri/isEmriVeri';
 
 // Hızlı yazarken eski aramanın yanıtı yeniyi ezmesin
 const sonAra = sonIstek();
@@ -42,7 +45,7 @@ const IsEmriForm = () => {
   const { id } = useParams();
   const isEdit = Boolean(id);
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<Omit<IsEmriFormu, 'plaka'>>({
     musteri_ad_soyad: '',
     adres: '',
     telefon: '',
@@ -61,62 +64,62 @@ const IsEmriForm = () => {
     kalan_odeme: '',
     odeme_tamamlandi: true,
   });
-  const [parcalar, setParcalar] = useState([]);
-  const [fisNo, setFisNo] = useState('');
+  const [parcalar, setParcalar] = useState<Parca[]>([]);
+  const [fisNo, setFisNo] = useState<string | number | null>('');
   const [error, setError] = useState('');
-  const [musteriOptions, setMusteriOptions] = useState([]);
+  const [musteriOptions, setMusteriOptions] = useState<Musteri[]>([]);
   // Çift tıklama koruması: ref aynı olay döngüsünde ikinci tıklamayı hemen engeller (state güncellemesi gecikir)
   const kaydediliyorRef = useRef(false);
   const [kaydediliyor, setKaydediliyor] = useState(false);
 
   useEffect(() => {
+    const loadIsEmri = async () => {
+      try {
+        const res = await isEmriService.getById(Number(id));
+        const data = res.data;
+        setFormData({
+          musteri_ad_soyad: data.musteri_ad_soyad || '',
+          adres: data.adres || '',
+          telefon: data.telefon || '',
+          km: data.km || '',
+          model_tip: data.model_tip || '',
+          marka: data.marka || '',
+          aciklama: data.aciklama || '',
+          ariza_sikayetler: data.ariza_sikayetler || '',
+          tahmini_teslim_tarihi: data.tahmini_teslim_tarihi ? data.tahmini_teslim_tarihi.split('T')[0] : '',
+          tahmini_toplam_ucret: data.tahmini_toplam_ucret || '',
+          durum: data.durum || 'beklemede',
+          odeme_detaylari: data.odeme_detaylari || '',
+          teslim_alan_ad_soyad: data.teslim_alan_ad_soyad || '',
+          teslim_eden_teknisyen: data.teslim_eden_teknisyen || '',
+          teslim_tarihi: data.teslim_tarihi ? data.teslim_tarihi.split('T')[0] : '',
+          kalan_odeme: data.kalan_odeme || '',
+          odeme_tamamlandi: !sayiDegeri(data.kalan_odeme),
+        });
+        setFisNo(data.fis_no);
+        setParcalar(data.parcalar || []);
+      } catch {
+        setError('İş emri yüklenemedi');
+      }
+    };
+
+    const loadNextFisNo = async () => {
+      try {
+        const res = await isEmriService.getNextFisNo();
+        setFisNo(res.data.nextFisNo);
+      } catch {}
+    };
+
     if (isEdit) {
       loadIsEmri();
     } else {
       loadNextFisNo();
     }
-  }, [id]);
+  }, [id, isEdit]);
 
-  const loadIsEmri = async () => {
-    try {
-      const res = await isEmriService.getById(id);
-      const data = res.data;
-      setFormData({
-        musteri_ad_soyad: data.musteri_ad_soyad || '',
-        adres: data.adres || '',
-        telefon: data.telefon || '',
-        km: data.km || '',
-        model_tip: data.model_tip || '',
-        marka: data.marka || '',
-        aciklama: data.aciklama || '',
-        ariza_sikayetler: data.ariza_sikayetler || '',
-        tahmini_teslim_tarihi: data.tahmini_teslim_tarihi ? data.tahmini_teslim_tarihi.split('T')[0] : '',
-        tahmini_toplam_ucret: data.tahmini_toplam_ucret || '',
-        durum: data.durum || 'beklemede',
-        odeme_detaylari: data.odeme_detaylari || '',
-        teslim_alan_ad_soyad: data.teslim_alan_ad_soyad || '',
-        teslim_eden_teknisyen: data.teslim_eden_teknisyen || '',
-        teslim_tarihi: data.teslim_tarihi ? data.teslim_tarihi.split('T')[0] : '',
-        kalan_odeme: data.kalan_odeme || '',
-        odeme_tamamlandi: !parseFloat(data.kalan_odeme || 0),
-      });
-      setFisNo(data.fis_no);
-      setParcalar(data.parcalar || []);
-    } catch {
-      setError('İş emri yüklenemedi');
-    }
-  };
+  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
-  const loadNextFisNo = async () => {
-    try {
-      const res = await isEmriService.getNextFisNo();
-      setFisNo(res.data.nextFisNo);
-    } catch {}
-  };
-
-  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
-
-  const handleMusteriSearch = async (query) => {
+  const handleMusteriSearch = async (query: string) => {
     if (query.length < 2) return;
     try {
       const res = await sonAra(musteriService.search(query));
@@ -124,8 +127,8 @@ const IsEmriForm = () => {
     } catch {}
   };
 
-  const handleMusteriSelect = (musteri) => {
-    if (musteri) {
+  const handleMusteriSelect = (musteri: Musteri | string | null) => {
+    if (musteri && typeof musteri !== 'string') {
       setFormData({ ...formData, musteri_ad_soyad: musteri.ad_soyad || '', telefon: musteri.telefon || '', adres: musteri.adres || '' });
     }
   };
@@ -135,7 +138,7 @@ const IsEmriForm = () => {
   };
 
   // Satırlar DEĞİŞTİRİLMEZ: her güncelleme yeni nesne üretir (eski kopya üzerine yazma ve gecikmeli render hatalarını önler)
-  const updateParca = (index, field, value) =>
+  const updateParca = (index: number, field: keyof Parca, value: string) =>
     setParcalar((prev) =>
       prev.map((p, i) => {
         if (i !== index) return p;
@@ -147,29 +150,29 @@ const IsEmriForm = () => {
       }),
     );
 
-  const removeParca = (index) => setParcalar((prev) => prev.filter((_, i) => i !== index));
+  const removeParca = (index: number) => setParcalar((prev) => prev.filter((_, i) => i !== index));
 
   const toplamFiyat = parcalar.reduce((t, p) => t + (Number(p.adet) || 0) * (Number(p.birim_fiyat) || 0), 0);
   const toplamMaliyet = parcalar.reduce((t, p) => t + (Number(p.adet) || 0) * (Number(p.maliyet) || 0), 0);
   const kar = toplamFiyat - toplamMaliyet;
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (kaydediliyorRef.current) return; // ikinci tıklama: ikinci iş emri ve ikinci stok düşümü oluşmasın
     kaydediliyorRef.current = true;
     setKaydediliyor(true);
     setError('');
     try {
-      const payload = { ...formData, parcalar, kalan_odeme: formData.odeme_tamamlandi ? 0 : formData.kalan_odeme || 0 };
-      delete payload.odeme_tamamlandi;
+      const { odeme_tamamlandi, ...alanlar } = formData;
+      const payload = { ...alanlar, parcalar, kalan_odeme: odeme_tamamlandi ? 0 : formData.kalan_odeme || 0 };
       if (isEdit) {
-        await isEmriService.update(id, payload);
+        await isEmriService.update(Number(id), payload);
       } else {
         await isEmriService.create(payload);
       }
       navigate('/servis');
     } catch (err) {
-      setError(err.response?.data?.message || 'Kaydetme hatası');
+      setError(hataMesaji(err, 'Kaydetme hatası'));
       kaydediliyorRef.current = false; // hata: kullanıcı düzeltip yeniden deneyebilsin
       setKaydediliyor(false);
     }

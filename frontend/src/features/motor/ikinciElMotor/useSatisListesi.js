@@ -1,4 +1,5 @@
 import { useOnay } from '../../../shared/ui';
+import { hataMesaji } from '../../../shared/api/istemci';
 import { useState, useEffect, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ikinciElMotorService } from '../motorApi';
@@ -53,7 +54,7 @@ export const useSatisListesi = () => {
       await ikinciElMotorService.delete(id);
       yenile();
     } catch (err) {
-      alert(err.response?.data?.message || 'Hata');
+      alert(hataMesaji(err, 'Hata'));
     }
   };
 

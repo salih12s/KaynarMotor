@@ -1,18 +1,19 @@
 import { useOnay } from '../../../shared/ui';
 import { useState } from 'react';
 import { useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query';
+import { hataMesaji, type Govde } from '../../../shared/api/istemci';
 import { isEmriService } from '../servisApi';
 import { authService } from '../../auth/authApi';
 
 // Önbellek anahtarları: ['isEmirleri'] ile başlayan her şey birlikte geçersiz kılınabilir (silme/kaydetme sonrası)
 export const isEmriAnahtari = {
   hepsi: ['isEmirleri'],
-  liste: (durum) => ['isEmirleri', 'liste', { durum }],
+  liste: (durum: string) => ['isEmirleri', 'liste', { durum }],
   personel: ['personelListesi'],
 };
 
 // Veri gelene kadar her render'da yeni dizi üretilmesin (tüketen useMemo/useEffect'ler boşuna çalışmasın)
-const BOS = [];
+const BOS: never[] = [];
 
 // Liste sayfasının sunucu verisi: iş emirleri (durum süzgeciyle), personel listesi, yenileme ve silme.
 export const useIsEmirleri = () => {
@@ -23,7 +24,7 @@ export const useIsEmirleri = () => {
   const liste = useQuery({
     queryKey: isEmriAnahtari.liste(durumFilter),
     queryFn: async () => {
-      const params = {};
+      const params: Govde = {};
       if (durumFilter) params.durum = durumFilter;
       try {
         return (await isEmriService.getAll(params)).data;
@@ -46,13 +47,13 @@ export const useIsEmirleri = () => {
 
   const yenile = () => istemci.invalidateQueries({ queryKey: isEmriAnahtari.hepsi });
 
-  const sil = async (id) => {
+  const sil = async (id: number) => {
     if (!(await onay('Bu iş emrini silmek istediğinizden emin misiniz?'))) return;
     try {
       await isEmriService.delete(id);
       yenile();
     } catch (err) {
-      alert(err.response?.data?.message || 'Silme hatası');
+      alert(hataMesaji(err, 'Silme hatası'));
     }
   };
 

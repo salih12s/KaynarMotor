@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { hataMesaji } from '../../../shared/api/istemci';
 import { ikinciElMotorService } from '../motorApi';
 import { bekleyenBelgeleriYukle } from '../SatisBelgeleri';
 import { bosForm, motordenForm } from './motorStokVeri';
@@ -42,7 +43,7 @@ export const useMotorFormu = ({ yenile }) => {
         alert(`Motor kaydedildi ancak şu belgeler yüklenemedi:\n${belgeHatalari.join('\n')}\n\nMotoru düzenleyerek tekrar ekleyebilirsiniz.`);
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Hata oluştu');
+      setError(hataMesaji(err, 'Hata oluştu'));
     }
   };
 

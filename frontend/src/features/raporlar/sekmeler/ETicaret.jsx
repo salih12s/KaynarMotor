@@ -1,4 +1,5 @@
 import React from 'react';
+import { sayiDegeri } from '../../../shared/utils/bicim';
 import { IslemDugmesi } from '../../../shared/ui';
 import { Box, Paper, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Alert, Chip } from '@mui/material';
 
@@ -25,8 +26,8 @@ const ETicaret = ({ rapor, hesaplananEticaretKar, isMobile, onDetay }) => {
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
             {rapor.eticaret.map((e, i) => {
               const miktar = parseInt(e.adet || 1);
-              const satis = parseFloat(e.satis_fiyati || 0);
-              const alis = parseFloat(e.alis_fiyati || 0);
+              const satis = sayiDegeri(e.satis_fiyati);
+              const alis = sayiDegeri(e.alis_fiyati);
               const pt = detectPlatform(e.platform_adi);
               const hesap = hesaplaKomisyon(e.satis_fiyati, e.alis_fiyati, e.komisyon_orani, e.kdv_orani || 20, e.kargo_ucreti || 0, e.adet, pt);
               const netKar = hesap.netKar;
@@ -75,10 +76,10 @@ const ETicaret = ({ rapor, hesaplananEticaretKar, isMobile, onDetay }) => {
               <TableBody>
                 {rapor.eticaret.map((e, i) => {
                   const miktar = parseInt(e.adet || 1);
-                  const satis = parseFloat(e.satis_fiyati || 0);
-                  const alis = parseFloat(e.alis_fiyati || 0);
-                  const komisyonOrani = parseFloat(e.komisyon_orani || 0);
-                  const kargoUcreti = parseFloat(e.kargo_ucreti || 0);
+                  const satis = sayiDegeri(e.satis_fiyati);
+                  const alis = sayiDegeri(e.alis_fiyati);
+                  const komisyonOrani = sayiDegeri(e.komisyon_orani);
+                  const kargoUcreti = sayiDegeri(e.kargo_ucreti);
                   const pt = detectPlatform(e.platform_adi);
                   const hesap = hesaplaKomisyon(e.satis_fiyati, e.alis_fiyati, e.komisyon_orani, e.kdv_orani || 20, e.kargo_ucreti || 0, e.adet, pt);
                   const netKar = hesap.netKar;

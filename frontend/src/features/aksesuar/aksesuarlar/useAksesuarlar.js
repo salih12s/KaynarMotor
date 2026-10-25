@@ -1,4 +1,5 @@
 import { useOnay } from '../../../shared/ui';
+import { hataMesaji } from '../../../shared/api/istemci';
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { sonIstek } from '../../../shared/utils/sonIstek';
@@ -151,7 +152,7 @@ export const useAksesuarlar = () => {
       loadData();
       loadStok();
     } catch (err) {
-      setError(err.response?.data?.message || 'Hata oluştu');
+      setError(hataMesaji(err, 'Hata oluştu'));
     }
   };
 
@@ -162,7 +163,7 @@ export const useAksesuarlar = () => {
       loadData();
       loadStok();
     } catch (err) {
-      alert(err.response?.data?.message || 'Hata');
+      alert(hataMesaji(err, 'Hata'));
     }
   };
 

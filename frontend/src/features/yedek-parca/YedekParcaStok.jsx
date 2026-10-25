@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { hataMesaji } from '../../shared/api/istemci';
 import { stokEtiketiYazdir } from '../../shared/utils/stokEtiketi';
 import AyarIkon from '@mui/icons-material/SettingsOutlined';
 import { IslemDugmesi, OzetSeridi, DialogBasligi, MevcutStok } from '../../shared/ui';
@@ -32,7 +33,7 @@ import UploadIcon from '@mui/icons-material/Upload';
 import SearchIcon from '@mui/icons-material/Search';
 import PrintIcon from '@mui/icons-material/Print';
 import { yedekParcaStokService } from './yedekParcaApi';
-import { sayiYaz } from '../../shared/utils/bicim';
+import { sayiYaz, sayiDegeri } from '../../shared/utils/bicim';
 
 // Hızlı yazarken eski aramanın yanıtı yeniyi ezmesin
 const sonAra = sonIstek();
@@ -109,7 +110,7 @@ const YedekParcaStok = () => {
       setDialog({ open: false, data: null });
       loadData();
     } catch (err) {
-      setError(err.response?.data?.message || 'Hata');
+      setError(hataMesaji(err, 'Hata'));
     }
   };
 
@@ -119,7 +120,7 @@ const YedekParcaStok = () => {
       await yedekParcaStokService.delete(id);
       loadData();
     } catch (err) {
-      alert(err.response?.data?.message || 'Hata');
+      alert(hataMesaji(err, 'Hata'));
     }
   };
 
@@ -139,12 +140,12 @@ const YedekParcaStok = () => {
       setImportText('');
       loadData();
     } catch (err) {
-      setError(err.response?.data?.message || 'İçe aktarma hatası');
+      setError(hataMesaji(err, 'İçe aktarma hatası'));
     }
   };
 
   const totalUrun = stoklar.length;
-  const envanter = stoklar.reduce((acc, s) => acc + parseFloat(s.alis_fiyati || 0) * parseInt(s.mevcut || 0), 0);
+  const envanter = stoklar.reduce((acc, s) => acc + sayiDegeri(s.alis_fiyati) * parseInt(s.mevcut || 0), 0);
 
   const filteredStoklar = stoklar.filter((s) => {
     return !stokFilter || (stokFilter === 'biten' ? (s.mevcut || 0) <= 0 : (s.mevcut || 0) > 0);

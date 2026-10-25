@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { hataMesaji } from '../../shared/api/istemci';
 import { useParams } from 'react-router-dom';
 import { Box, AppBar, Toolbar, Typography, Paper, Chip, Divider, CircularProgress } from '@mui/material';
 import MotoIcon from '@mui/icons-material/TwoWheeler';
@@ -23,7 +24,7 @@ const ServisGecmisi = () => {
         const res = await servisGecmisiService.getByToken(token);
         setData(res.data);
       } catch (err) {
-        setError(err.response?.data?.message || 'Servis geçmişi yüklenemedi');
+        setError(hataMesaji(err, 'Servis geçmişi yüklenemedi'));
       } finally {
         setLoading(false);
       }

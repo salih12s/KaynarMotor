@@ -17,7 +17,7 @@ import {
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 
-import { sayiYaz, tarihYaz } from '../../../../shared/utils/bicim';
+import { sayiYaz, tarihYaz, sayiDegeri } from '../../../../shared/utils/bicim';
 import { RENK } from '../../../../app/tokenlar';
 
 const SUTUN_3 = { display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' }, gap: 2, mb: 2 };
@@ -38,7 +38,7 @@ const SatisDetayModal = ({ open, data, onClose, onDuzenle, stokOptions, karGor, 
   const dIndirim = Math.min(Number(d.indirim) || 0, dBrutSatis);
   const dNetSatis = dBrutSatis - dIndirim;
   const dKar = dNetSatis - dToplamMaliyet;
-  const kalan = parseFloat(d.kalan_odeme || 0);
+  const kalan = sayiDegeri(d.kalan_odeme);
   const kayitSatirlari = [
     ['Oluşturan', d.olusturan_kisi || '-'],
     ['Oluşturma', tarihYaz(d.created_at)],

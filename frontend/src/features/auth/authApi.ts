@@ -1,5 +1,5 @@
 import api, { type Govde } from '../../shared/api/istemci';
-import type { AktiviteKaydi, Kullanici, YatirimciKaydi } from '../../shared/tipler';
+import type { AktiviteKaydi, Kullanici, KullaniciOzeti, YatirimciKaydi } from '../../shared/tipler';
 
 /** Giriş yanıtı: oturum anahtarı ve kullanıcı. */
 export interface GirisYaniti {
@@ -17,7 +17,7 @@ export const authService = {
   getUsers: () => api.get<Kullanici[]>('/auth/users'),
   createUser: (data: Govde) => api.post<unknown>('/auth/users', data),
   getYatirimcilar: () => api.get<YatirimciKaydi[]>('/auth/yatirimcilar'),
-  getPersonelListesi: () => api.get<YatirimciKaydi[]>('/auth/personel-listesi'),
+  getPersonelListesi: () => api.get<KullaniciOzeti[]>('/auth/personel-listesi'),
   approveUser: (id: number) => api.patch<unknown>(`/auth/users/${id}/approve`),
   rejectUser: (id: number) => api.patch<unknown>(`/auth/users/${id}/reject`),
   deleteUser: (id: number) => api.delete<unknown>(`/auth/users/${id}`),

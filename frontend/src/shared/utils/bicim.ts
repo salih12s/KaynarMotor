@@ -9,8 +9,8 @@
 /** Sunucudan gelen para/sayı alanı: MariaDB DECIMAL değerleri JSON'da metin gelir, form alanları da metindir. */
 export type Sayi = number | string | null | undefined;
 
-/** Boş/geçersiz değer 0 olur (`parseFloat(v || 0)` ile aynı sonuç; parseFloat zaten metne çevirir). */
-export const sayiDegeri = (v: Sayi): number => parseFloat(String(v || 0));
+/** Boş/geçersiz değer `varsayilan` (0) olur: `parseFloat(v || varsayilan)` ile aynı sonuç; parseFloat zaten metne çevirir. */
+export const sayiDegeri = (v: Sayi, varsayilan = 0): number => parseFloat(String(v || varsayilan));
 
 // 1.234,568 (en çok 3 ondalık); boş/geçersiz değer 0 görünür
 export const sayiYaz = (v: Sayi): string => sayiDegeri(v).toLocaleString('tr-TR');

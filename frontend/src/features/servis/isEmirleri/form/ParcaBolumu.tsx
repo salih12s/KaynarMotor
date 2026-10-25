@@ -21,11 +21,28 @@ import { useKarGor } from '../../../auth/AuthContext';
 import { sayiYaz } from '../../../../shared/utils/bicim';
 import { BolumBasligi, IslemDugmesi } from '../../../../shared/ui';
 import { MENU_RENK, RENK } from '../../../../app/tokenlar';
+import type { IsEmriFormuDurumu } from '../useIsEmriFormu';
 
 const kesikKutu = { borderStyle: 'dashed', borderColor: RENK.cizgiKesik };
 
 // Parçalar ve işçilik: stok araması/barkod, ekleme ve parça tablosu (kâr sütunu yalnızca karGor için).
-const ParcaBolumu = ({ parcalar, newParca, setNewParca, stokOptions, addParca, removeParca, handleStokSearch, selectStok, handleParcaKeyDown, isMobile }) => {
+type ParcaBolumuProps = Pick<
+  IsEmriFormuDurumu,
+  'parcalar' | 'newParca' | 'setNewParca' | 'stokOptions' | 'addParca' | 'removeParca' | 'handleStokSearch' | 'selectStok' | 'handleParcaKeyDown'
+> & { isMobile: boolean };
+
+const ParcaBolumu = ({
+  parcalar,
+  newParca,
+  setNewParca,
+  stokOptions,
+  addParca,
+  removeParca,
+  handleStokSearch,
+  selectStok,
+  handleParcaKeyDown,
+  isMobile,
+}: ParcaBolumuProps) => {
   const karGor = useKarGor();
   return (
     <>

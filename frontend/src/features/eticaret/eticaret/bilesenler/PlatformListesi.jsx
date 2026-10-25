@@ -1,4 +1,5 @@
 import React from 'react';
+import { sayiDegeri } from '../../../../shared/utils/bicim';
 import { IslemDugmesi } from '../../../../shared/ui';
 import { Box, Paper, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Alert } from '@mui/material';
 
@@ -16,10 +17,10 @@ const PlatformListesi = ({ platformlar, isMobile, isAdmin, onDuzenle, onSil }) =
           </Typography>
           <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
             <Typography variant="body2">
-              Komisyon: <strong>%{parseFloat(p.komisyon_orani || 0).toFixed(2)}</strong>
+              Komisyon: <strong>%{sayiDegeri(p.komisyon_orani).toFixed(2)}</strong>
             </Typography>
             <Typography variant="body2">
-              KDV: <strong>%{parseFloat(p.kdv_orani || 20).toFixed(2)}</strong>
+              KDV: <strong>%{sayiDegeri(p.kdv_orani, 20).toFixed(2)}</strong>
             </Typography>
             <Typography variant="body2">
               Kargo: <strong>{formatTL(p.kargo_ucreti)} ₺</strong>
@@ -48,8 +49,8 @@ const PlatformListesi = ({ platformlar, isMobile, isAdmin, onDuzenle, onSil }) =
           {platformlar.map((p) => (
             <TableRow key={p.id} hover>
               <TableCell sx={{ fontWeight: 'bold' }}>{p.platform_adi}</TableCell>
-              <TableCell>%{parseFloat(p.komisyon_orani || 0).toFixed(2)}</TableCell>
-              <TableCell>%{parseFloat(p.kdv_orani || 20).toFixed(2)}</TableCell>
+              <TableCell>%{sayiDegeri(p.komisyon_orani).toFixed(2)}</TableCell>
+              <TableCell>%{sayiDegeri(p.kdv_orani, 20).toFixed(2)}</TableCell>
               <TableCell>{formatTL(p.kargo_ucreti)} ₺</TableCell>
               {isAdmin && (
                 <TableCell>

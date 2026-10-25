@@ -27,7 +27,7 @@ const IsEmirleri = () => {
   const detay = useIsEmriDetayi();
   const form = useIsEmriFormu({ yenile: liste.yenile });
 
-  const yazdirKayit = async (id) => {
+  const yazdirKayit = async (id: number) => {
     try {
       const res = await isEmriService.getById(id);
       printIsEmri(res.data);

@@ -1,5 +1,6 @@
 // Motor Stok ekranının saf kuralları (ekran/durum yok, doğrudan test edilebilir): süzme+sıralama, form dönüşümleri, ödeme çözümleme.
 import { bugunYerel } from '../../../shared/utils/tarih';
+import { sayiDegeri } from '../../../shared/utils/bicim';
 
 // Ödeme dağılımı JSON'unu güvenle diziye çevirir
 export const parseOdeme = (v) => {
@@ -88,8 +89,8 @@ export const filtrele = (motorlar, { isYatirimci, activeFilter, secondaryFilter,
       if (secondaryFilter === 'fatura_kesilmedi' && m.fatura_kesildi) return false;
       if (secondaryFilter === 'devir_verildi' && m.durum !== 'tamamlandi') return false;
       if (secondaryFilter === 'devir_verilmedi' && m.durum !== 'devir_bekliyor') return false;
-      if (secondaryFilter === 'odeme_tamam' && parseFloat(m.kalan_odeme || 0) > 0) return false;
-      if (secondaryFilter === 'odeme_bekliyor' && !(parseFloat(m.kalan_odeme || 0) > 0)) return false;
+      if (secondaryFilter === 'odeme_tamam' && sayiDegeri(m.kalan_odeme) > 0) return false;
+      if (secondaryFilter === 'odeme_bekliyor' && !(sayiDegeri(m.kalan_odeme) > 0)) return false;
 
       return (
         (m.plaka || '').toLowerCase().includes(search.toLowerCase()) ||

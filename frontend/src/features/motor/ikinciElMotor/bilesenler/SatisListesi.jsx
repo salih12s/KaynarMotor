@@ -3,7 +3,7 @@ import { IslemDugmesi, Plaka } from '../../../../shared/ui';
 import { RENK } from '../../../../app/tokenlar';
 import { Box, Paper, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Alert } from '@mui/material';
 
-import { sayiYaz, tarihYaz } from '../../../../shared/utils/bicim';
+import { sayiYaz, tarihYaz, sayiDegeri } from '../../../../shared/utils/bicim';
 
 const SAYISAL = ['KM', 'Alım', 'Satış', 'Noter Alış', 'Noter Satış', 'Kâr'];
 
@@ -45,7 +45,7 @@ const SatisListesi = ({ filteredMotorlar, isMobile, canAlis, canKar, salt, isAdm
                 Noter Satış: <strong>₺{sayiYaz(m.noter_satis)}</strong>
               </Typography>
               {canKar && (
-                <Typography variant="body2" sx={{ color: parseFloat(m.kar || 0) >= 0 ? RENK.yesil : RENK.kirmizi }}>
+                <Typography variant="body2" sx={{ color: sayiDegeri(m.kar) >= 0 ? RENK.yesil : RENK.kirmizi }}>
                   Kâr: <strong>₺{sayiYaz(m.kar)}</strong>
                 </Typography>
               )}
@@ -103,7 +103,7 @@ const SatisListesi = ({ filteredMotorlar, isMobile, canAlis, canKar, salt, isAdm
                 <TableCell align="right">{sayiYaz(m.noter_alis)}</TableCell>
                 <TableCell align="right">{sayiYaz(m.noter_satis)}</TableCell>
                 {canKar && (
-                  <TableCell align="right" sx={{ fontWeight: 700, color: parseFloat(m.kar || 0) >= 0 ? RENK.yesil : RENK.kirmizi }}>
+                  <TableCell align="right" sx={{ fontWeight: 700, color: sayiDegeri(m.kar) >= 0 ? RENK.yesil : RENK.kirmizi }}>
                     {sayiYaz(m.kar)}
                   </TableCell>
                 )}

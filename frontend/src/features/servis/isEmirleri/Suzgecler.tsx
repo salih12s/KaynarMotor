@@ -4,7 +4,19 @@ import SearchIcon from '@mui/icons-material/Search';
 import AddIcon from '@mui/icons-material/Add';
 
 // Arama, durum (sunucuya gider) ve tarih aralığı (oluşturma tarihine göre) süzgeçleri; sağda "Yeni İş Emri".
-const Suzgecler = ({ search, setSearch, durumFilter, setDurumFilter, startDate, setStartDate, endDate, setEndDate, onYeni }) => {
+interface SuzgeclerProps {
+  search: string;
+  setSearch: (v: string) => void;
+  durumFilter: string;
+  setDurumFilter: (v: string) => void;
+  startDate: string;
+  setStartDate: (v: string) => void;
+  endDate: string;
+  setEndDate: (v: string) => void;
+  onYeni: () => void;
+}
+
+const Suzgecler = ({ search, setSearch, durumFilter, setDurumFilter, startDate, setStartDate, endDate, setEndDate, onYeni }: SuzgeclerProps) => {
   return (
     <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap', alignItems: 'flex-end', mb: 2 }}>
       <TextField

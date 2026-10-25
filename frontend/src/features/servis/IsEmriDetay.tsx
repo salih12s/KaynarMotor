@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, type ReactNode } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -24,49 +24,50 @@ import EditIcon from '@mui/icons-material/Edit';
 import { useReactToPrint } from 'react-to-print';
 import { isEmriService } from './servisApi';
 import { useKarGor } from '../auth/AuthContext';
-import { sayiYaz, tarihYaz } from '../../shared/utils/bicim';
+import { sayiYaz, tarihYaz, sayiDegeri } from '../../shared/utils/bicim';
+import type { IsEmriDetayi } from '../../shared/tipler';
 
 const IsEmriDetay = () => {
   const karGor = useKarGor();
   const isMobile = useMediaQuery(useTheme().breakpoints.down('sm'));
   const { id } = useParams();
   const navigate = useNavigate();
-  const printRef = useRef();
-  const [data, setData] = useState(null);
+  const printRef = useRef<HTMLDivElement>(null);
+  const [data, setData] = useState<IsEmriDetayi | null>(null);
 
   useEffect(() => {
     const load = async () => {
       try {
-        const res = await isEmriService.getById(id);
+        const res = await isEmriService.getById(Number(id));
         setData(res.data);
       } catch {
         navigate('/servis');
       }
     };
     load();
-  }, [id]);
+  }, [id, navigate]);
 
   const handlePrint = useReactToPrint({ contentRef: printRef });
 
   if (!data) return null;
 
   const parcalar = data.parcalar || [];
-  const toplamFiyat = parcalar.reduce((t, p) => t + parseFloat(p.toplam_fiyat || 0), 0);
+  const toplamFiyat = parcalar.reduce((t, p) => t + sayiDegeri(p.toplam_fiyat), 0);
   const toplamMaliyet = parcalar.reduce((t, p) => t + (Number(p.adet) || 0) * (Number(p.maliyet) || 0), 0);
   const kar = toplamFiyat - toplamMaliyet;
 
-  const durumLabel = (d) => {
+  const durumLabel = (d: string) => {
     if (d === 'tamamlandi') return 'Tamamlandı';
     if (d === 'devam_ediyor') return 'Devam Ediyor';
     return 'Beklemede';
   };
-  const durumRenk = (d) => {
+  const durumRenk = (d: string) => {
     if (d === 'tamamlandi') return 'success';
     if (d === 'devam_ediyor') return 'info';
     return 'warning';
   };
 
-  const InfoRow = ({ label, value }) => (
+  const InfoRow = ({ label, value }: { label: string; value?: ReactNode }) => (
     <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 0.3 }}>
       <Typography variant="body2" color="text.secondary">
         {label}:
@@ -247,16 +248,16 @@ const IsEmriDetay = () => {
           sx={{
             p: 3,
             mb: 3,
-            bgcolor: parseFloat(data.kalan_odeme || 0) > 0 ? '#F7E7C4' : '#D8EBDD',
+            bgcolor: sayiDegeri(data.kalan_odeme) > 0 ? '#F7E7C4' : '#D8EBDD',
             border: '2px solid',
-            borderColor: parseFloat(data.kalan_odeme || 0) > 0 ? '#A5530F' : '#1D6A3B',
+            borderColor: sayiDegeri(data.kalan_odeme) > 0 ? '#A5530F' : '#1D6A3B',
           }}
         >
-          <Typography variant="subtitle1" fontWeight="bold" gutterBottom sx={{ color: parseFloat(data.kalan_odeme || 0) > 0 ? '#A5530F' : '#1D6A3B' }}>
+          <Typography variant="subtitle1" fontWeight="bold" gutterBottom sx={{ color: sayiDegeri(data.kalan_odeme) > 0 ? '#A5530F' : '#1D6A3B' }}>
             Ödeme Durumu
           </Typography>
           <Divider sx={{ mb: 1 }} />
-          {parseFloat(data.kalan_odeme || 0) > 0 ? (
+          {sayiDegeri(data.kalan_odeme) > 0 ? (
             <Typography variant="h6" sx={{ color: '#A5530F' }}>
               Kalan Ödeme: <strong>₺{sayiYaz(data.kalan_odeme)}</strong>
             </Typography>

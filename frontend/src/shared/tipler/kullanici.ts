@@ -34,6 +34,9 @@ export interface Kullanici extends Partial<YetkiBayraklari> {
   created_at?: string;
 }
 
+/** Personel/kullanıcı seçim listesi satırı (açılır listeler). */
+export type KullaniciOzeti = YatirimciKaydi;
+
 /** Yatırımcı seçim listesi (`/auth/yatirimcilar`). */
 export interface YatirimciKaydi {
   id: number;

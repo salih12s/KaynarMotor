@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { sayiDegeri } from '../../../shared/utils/bicim';
+import { hataMesaji } from '../../../shared/api/istemci';
 import { bugunYerel } from '../../../shared/utils/tarih';
 import { ikinciElMotorService } from '../motorApi';
 import { parseOdeme } from './motorStokVeri';
@@ -22,7 +24,7 @@ export const useHizliSatis = ({ yenile }) => {
   // Parçalı ödeme dağılımı (hızlı satış için)
   const [odemeKalemleri, setOdemeKalemleri] = useState([]);
   const ODEME_TIPLERI = ['Nakit', 'Kart', 'Havale/EFT', 'Diğer'];
-  const odemeToplam = odemeKalemleri.reduce((s, o) => s + parseFloat(o.tutar || 0), 0);
+  const odemeToplam = odemeKalemleri.reduce((s, o) => s + sayiDegeri(o.tutar), 0);
 
   const kapat = () => setHizliSatis({ open: false, motor: null });
 
@@ -48,10 +50,10 @@ export const useHizliSatis = ({ yenile }) => {
   const removeOdemeKalemi = (i) => setOdemeKalemleri(odemeKalemleri.filter((_, idx) => idx !== i));
 
   const handleHizliSatis = async () => {
-    const dolular = odemeKalemleri.filter((o) => parseFloat(o.tutar || 0) > 0);
-    const satis = parseFloat(hizliForm.satis_fiyati || 0);
+    const dolular = odemeKalemleri.filter((o) => sayiDegeri(o.tutar) > 0);
+    const satis = sayiDegeri(hizliForm.satis_fiyati);
     // Ödeme kalemi girildiyse kalanı otomatik hesapla; girilmediyse eski davranış (0)
-    const kalan = dolular.length > 0 ? Math.max(0, satis - dolular.reduce((s, o) => s + parseFloat(o.tutar || 0), 0)) : 0;
+    const kalan = dolular.length > 0 ? Math.max(0, satis - dolular.reduce((s, o) => s + sayiDegeri(o.tutar), 0)) : 0;
     setSatisKaydediliyor(true);
     try {
       await ikinciElMotorService.update(hizliSatis.motor.id, {
@@ -64,7 +66,7 @@ export const useHizliSatis = ({ yenile }) => {
       setHizliSatis({ open: false, motor: null });
       yenile();
     } catch (err) {
-      alert(err.response?.data?.message || 'Hata');
+      alert(hataMesaji(err, 'Hata'));
     }
     setSatisKaydediliyor(false);
   };

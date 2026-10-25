@@ -5,7 +5,7 @@ import { Box, Paper, Typography, Table, TableBody, TableCell, TableContainer, Ta
 import { formatTL, formatDate, karColor, headerSx } from '../bicim';
 import { RENK } from '../../../app/tokenlar';
 import KartItem from '../bilesenler/KartItem';
-import { sayiYaz } from '../../../shared/utils/bicim';
+import { sayiYaz, sayiDegeri } from '../../../shared/utils/bicim';
 
 const SAYISAL = ['KM', 'Gelir', 'Maliyet', 'Kâr'];
 const sagaSx = { textAlign: 'right' };
@@ -17,9 +17,9 @@ const IsEmirleri = ({ rapor, isMobile, seciliPersonel, onDetay }) => {
     const personel = (ie.teslim_eden_teknisyen || ie.olusturan_kisi || '').toLowerCase();
     return personel === seciliPersonel.toLowerCase();
   });
-  const fGelir = filtered.reduce((t, r) => t + parseFloat(r.gercek_toplam_ucret || 0), 0);
-  const fMaliyet = filtered.reduce((t, r) => t + parseFloat(r.toplam_maliyet || 0), 0);
-  const fKar = filtered.reduce((t, r) => t + parseFloat(r.kar || 0), 0);
+  const fGelir = filtered.reduce((t, r) => t + sayiDegeri(r.gercek_toplam_ucret), 0);
+  const fMaliyet = filtered.reduce((t, r) => t + sayiDegeri(r.toplam_maliyet), 0);
+  const fKar = filtered.reduce((t, r) => t + sayiDegeri(r.kar), 0);
   return (
     <>
       <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 2, mb: 2 }}>

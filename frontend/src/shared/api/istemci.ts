@@ -16,6 +16,12 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+/** Sunucu hata yanıtından kullanıcıya gösterilecek mesaj; yoksa `varsayilan`. Axios hatası ve düz nesne hatalarını (testler) aynı okur. */
+export const hataMesaji = (hata: unknown, varsayilan: string): string => {
+  const mesaj = (hata as { response?: { data?: { message?: unknown } } } | null)?.response?.data?.message;
+  return typeof mesaj === 'string' && mesaj ? mesaj : varsayilan;
+};
+
 interface HataGovdesi {
   code?: string;
   message?: unknown;

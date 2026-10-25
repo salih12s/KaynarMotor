@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, Typography } from '@mui/material';
-import { sayiYaz } from '../../../../shared/utils/bicim';
+import { sayiYaz, sayiDegeri } from '../../../../shared/utils/bicim';
 
 // Hızlı satış: kâr önizlemesi (yalnızca admin görür): satış - alış - masraf - komisyon, yatırımcı payı düşülmüş işletme kârı.
 const KarOnizleme = ({ hs, canKar }) => {
@@ -9,12 +9,12 @@ const KarOnizleme = ({ hs, canKar }) => {
     canKar &&
     hizliSatis.motor &&
     (() => {
-      const alis = parseFloat(hizliSatis.motor.alis_fiyati || 0);
-      const masraf = parseFloat(hizliForm.masraflar || 0);
-      const komisyon = parseFloat(hizliSatis.motor.komisyoncu_tutari || 0);
-      const satis = parseFloat(hizliForm.satis_fiyati || 0);
+      const alis = sayiDegeri(hizliSatis.motor.alis_fiyati);
+      const masraf = sayiDegeri(hizliForm.masraflar);
+      const komisyon = sayiDegeri(hizliSatis.motor.komisyoncu_tutari);
+      const satis = sayiDegeri(hizliForm.satis_fiyati);
       const kar = satis - alis - masraf - komisyon;
-      const yatirimciKar = hizliSatis.motor.yatirimci_id ? parseFloat(hizliForm.yatirimci_kar || 0) : 0;
+      const yatirimciKar = hizliSatis.motor.yatirimci_id ? sayiDegeri(hizliForm.yatirimci_kar) : 0;
       const benimKar = kar - yatirimciKar;
       const fmt = (v) => `₺${sayiYaz(v)}`;
       return (

@@ -8,7 +8,7 @@ export const isEmriService = {
   create: (data: Govde) => api.post<IsEmriDetayi>('/is-emirleri', data),
   update: (id: number, data: Govde) => api.put<IsEmriDetayi>(`/is-emirleri/${id}`, data),
   delete: (id: number) => api.delete<unknown>(`/is-emirleri/${id}`),
-  getNextFisNo: () => api.get<{ next_fis_no: number }>('/is-emirleri/next-fis-no/preview'),
+  getNextFisNo: () => api.get<{ nextFisNo: number }>('/is-emirleri/next-fis-no/preview'),
 };
 
 // Servis geçmişi (müşteri QR sayfası — token halka açık, oluşturma yetkili)

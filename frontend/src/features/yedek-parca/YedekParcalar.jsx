@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { hataMesaji } from '../../shared/api/istemci';
 import AyarIkon from '@mui/icons-material/SettingsOutlined';
 import { IslemDugmesi, OzetSeridi, DialogBasligi } from '../../shared/ui';
 import { useOnay } from '../../shared/ui';
@@ -35,7 +36,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { yedekParcaService, yedekParcaStokService } from './yedekParcaApi';
 import { musteriService } from '../musteriler/musteriApi';
 import { useKarGor } from '../auth/AuthContext';
-import { sayiYaz } from '../../shared/utils/bicim';
+import { sayiYaz, sayiDegeri } from '../../shared/utils/bicim';
 
 // Hızlı yazarken eski aramanın yanıtı yeniyi ezmesin
 const sonAra = sonIstek();
@@ -103,8 +104,8 @@ const YedekParcalar = () => {
         ? {
             id: parca.stok_id,
             stok_adi: parca.urun_adi,
-            alis_fiyati: parseFloat(parca.alis_fiyati || 0) / kayitAdet,
-            satis_fiyati: parseFloat(parca.satis_fiyati || 0) / kayitAdet,
+            alis_fiyati: sayiDegeri(parca.alis_fiyati) / kayitAdet,
+            satis_fiyati: sayiDegeri(parca.satis_fiyati) / kayitAdet,
           }
         : null,
     );
@@ -117,7 +118,7 @@ const YedekParcalar = () => {
             musteri_adi: parca.musteri_adi || '',
             musteri_telefon: parca.musteri_telefon || '',
             kalan_odeme: parca.kalan_odeme || '',
-            odeme_tamamlandi: !parseFloat(parca.kalan_odeme || 0),
+            odeme_tamamlandi: !sayiDegeri(parca.kalan_odeme),
             stok_id: parca.stok_id || null,
             adet: parca.adet || 1,
           }
@@ -157,8 +158,8 @@ const YedekParcalar = () => {
       stok_id: stok.id,
       adet: 1,
       urun_adi: stok.stok_adi || '',
-      alis_fiyati: parseFloat(stok.alis_fiyati || 0),
-      satis_fiyati: parseFloat(stok.satis_fiyati || 0),
+      alis_fiyati: sayiDegeri(stok.alis_fiyati),
+      satis_fiyati: sayiDegeri(stok.satis_fiyati),
     }));
     setStokInput('');
     setStokOptions([]);
@@ -186,8 +187,8 @@ const YedekParcalar = () => {
         return {
           ...prev,
           adet: v,
-          alis_fiyati: parseFloat(seciliStok.alis_fiyati || 0) * adet,
-          satis_fiyati: parseFloat(seciliStok.satis_fiyati || 0) * adet,
+          alis_fiyati: sayiDegeri(seciliStok.alis_fiyati) * adet,
+          satis_fiyati: sayiDegeri(seciliStok.satis_fiyati) * adet,
         };
       }
       return { ...prev, adet: v };
@@ -212,7 +213,7 @@ const YedekParcalar = () => {
       setDialog({ open: false, data: null });
       loadData();
     } catch (err) {
-      setError(err.response?.data?.message || 'Hata');
+      setError(hataMesaji(err, 'Hata'));
     }
   };
 
@@ -222,7 +223,7 @@ const YedekParcalar = () => {
       await yedekParcaService.delete(id);
       loadData();
     } catch (err) {
-      alert(err.response?.data?.message || 'Hata');
+      alert(hataMesaji(err, 'Hata'));
     }
   };
 
@@ -258,8 +259,8 @@ const YedekParcalar = () => {
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
           {filtered.length === 0 && <Alert severity="info">Kayıt yok</Alert>}
           {filtered.map((p) => {
-            const pKar = parseFloat(p.satis_fiyati || 0) - parseFloat(p.alis_fiyati || 0);
-            const kalan = parseFloat(p.kalan_odeme || 0);
+            const pKar = sayiDegeri(p.satis_fiyati) - sayiDegeri(p.alis_fiyati);
+            const kalan = sayiDegeri(p.kalan_odeme);
             return (
               <Paper key={p.id} sx={{ p: 1.5 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
@@ -317,8 +318,8 @@ const YedekParcalar = () => {
             </TableHead>
             <TableBody>
               {filtered.map((p) => {
-                const pKar = parseFloat(p.satis_fiyati || 0) - parseFloat(p.alis_fiyati || 0);
-                const kalan = parseFloat(p.kalan_odeme || 0);
+                const pKar = sayiDegeri(p.satis_fiyati) - sayiDegeri(p.alis_fiyati);
+                const kalan = sayiDegeri(p.kalan_odeme);
                 return (
                   <TableRow key={p.id} hover>
                     <TableCell>

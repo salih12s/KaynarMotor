@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { hataMesaji } from '../../shared/api/istemci';
 import { IslemDugmesi } from '../../shared/ui';
 import { useOnay } from '../../shared/ui';
 import { Box, Typography, Button, Alert, CircularProgress, Divider } from '@mui/material';
@@ -88,7 +89,7 @@ export const BelgeBolumu = ({ motorId }) => {
         await satisBelgeService.upload(motorId, f);
         basarili++;
       } catch (err) {
-        hatalar.push(`${f.name}: ${err.response?.data?.message || 'yüklenemedi'}`);
+        hatalar.push(`${f.name}: ${hataMesaji(err, 'yüklenemedi')}`);
       }
     }
     await yukle();
@@ -114,7 +115,7 @@ export const BelgeBolumu = ({ motorId }) => {
       await satisBelgeService.delete(b.id);
       await yukle();
     } catch (err) {
-      setMesaj({ sev: 'error', text: err.response?.data?.message || 'Silinemedi' });
+      setMesaj({ sev: 'error', text: hataMesaji(err, 'Silinemedi') });
     }
     setIslemId(null);
   };
@@ -246,7 +247,7 @@ export const bekleyenBelgeleriYukle = async (motorId, dosyalar) => {
     try {
       await satisBelgeService.upload(motorId, f);
     } catch (err) {
-      hatalar.push(`${f.name}: ${err.response?.data?.message || 'yüklenemedi'}`);
+      hatalar.push(`${f.name}: ${hataMesaji(err, 'yüklenemedi')}`);
     }
   }
   return hatalar;

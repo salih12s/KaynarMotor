@@ -3,7 +3,7 @@ import { IslemDugmesi } from '../../../../shared/ui';
 import { Box, Paper, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Chip, Alert } from '@mui/material';
 
 import { filtrele } from '../aksesuarVeri';
-import { sayiYaz, tarihYaz } from '../../../../shared/utils/bicim';
+import { sayiYaz, tarihYaz, sayiDegeri } from '../../../../shared/utils/bicim';
 
 // Satış listesi: dar ekranda kartlar (süzgeç sonucu boşsa bilgi kutusu), geniş ekranda tablo; kâr yalnızca kâr yetkisi olana.
 const SatisListesi = ({ satislar, aksSearch, aksStart, aksEnd, isMobile, karGor, onDetay, onDuzenle, onSil }) => {
@@ -37,7 +37,7 @@ const SatisListesi = ({ satislar, aksSearch, aksStart, aksEnd, isMobile, karGor,
                 Satış: <strong>{sayiYaz(s.toplam_satis)} ₺</strong>
               </Typography>
               {karGor && (
-                <Typography variant="body2" sx={{ color: parseFloat(s.kar || 0) >= 0 ? 'green' : 'red' }}>
+                <Typography variant="body2" sx={{ color: sayiDegeri(s.kar) >= 0 ? 'green' : 'red' }}>
                   Kâr: <strong>{sayiYaz(s.kar)} ₺</strong>
                 </Typography>
               )}
@@ -71,7 +71,7 @@ const SatisListesi = ({ satislar, aksSearch, aksStart, aksEnd, isMobile, karGor,
                 {sayiYaz(s.toplam_satis)} ₺
               </TableCell>
               {karGor && (
-                <TableCell align="right" sx={{ color: parseFloat(s.kar || 0) >= 0 ? '#1D6A3B' : '#C62828', fontWeight: 700 }}>
+                <TableCell align="right" sx={{ color: sayiDegeri(s.kar) >= 0 ? '#1D6A3B' : '#C62828', fontWeight: 700 }}>
                   {sayiYaz(s.kar)} ₺
                 </TableCell>
               )}

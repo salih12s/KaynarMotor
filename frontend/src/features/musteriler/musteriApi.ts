@@ -9,5 +9,5 @@ export const musteriService = {
   update: (id: number, data: Govde) => api.put<unknown>(`/musteriler/${id}`, data),
   delete: (id: number) => api.delete<unknown>(`/musteriler/${id}`),
   search: (query: string) => api.get<Musteri[]>(`/musteriler/ara/${encodeURIComponent(query)}`),
-  searchByPhone: (telefon: string) => api.get<Musteri[]>(`/musteriler/telefon/${encodeURIComponent(telefon)}`),
+  searchByPhone: (telefon: string) => api.get<Musteri | null>(`/musteriler/telefon/${encodeURIComponent(telefon)}`),
 };

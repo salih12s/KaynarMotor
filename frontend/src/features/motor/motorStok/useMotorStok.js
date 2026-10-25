@@ -1,4 +1,5 @@
 import { useOnay } from '../../../shared/ui';
+import { hataMesaji } from '../../../shared/api/istemci';
 import { ikinciElMotorService } from '../motorApi';
 import { useMotorListesi, useYatirimcilar, useMotorYenile } from '../motorSorgulari';
 
@@ -18,7 +19,7 @@ export const useMotorStok = ({ user }) => {
       await ikinciElMotorService.delete(id);
       yenile();
     } catch (err) {
-      alert(err.response?.data?.message || 'Hata');
+      alert(hataMesaji(err, 'Hata'));
     }
   };
 

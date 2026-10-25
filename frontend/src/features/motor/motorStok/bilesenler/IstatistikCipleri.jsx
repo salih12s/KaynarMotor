@@ -1,4 +1,5 @@
 import React from 'react';
+import { sayiDegeri } from '../../../../shared/utils/bicim';
 import { Box, Button } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { TON } from '../../../../app/tokenlar';
@@ -31,8 +32,8 @@ const IstatistikCipleri = ({ motorlar, isYatirimci, canEdit, activeFilter, setAc
     { label: `Fatura ✗ ${motorlar.filter((m) => !m.fatura_kesildi).length}`, filter: 'fatura_kesilmedi', ton: ikincilTon(false) },
     { label: `Devir ✓ ${tamamlananlar.length}`, filter: 'devir_verildi', ton: ikincilTon(true) },
     { label: `Devir ✗ ${devirBekleyen.length}`, filter: 'devir_verilmedi', ton: ikincilTon(false) },
-    { label: `Ödeme ✓ ${motorlar.filter((m) => !(parseFloat(m.kalan_odeme || 0) > 0)).length}`, filter: 'odeme_tamam', ton: ikincilTon(true) },
-    { label: `Ödeme ✗ ${motorlar.filter((m) => parseFloat(m.kalan_odeme || 0) > 0).length}`, filter: 'odeme_bekliyor', ton: ikincilTon(false) },
+    { label: `Ödeme ✓ ${motorlar.filter((m) => !(sayiDegeri(m.kalan_odeme) > 0)).length}`, filter: 'odeme_tamam', ton: ikincilTon(true) },
+    { label: `Ödeme ✗ ${motorlar.filter((m) => sayiDegeri(m.kalan_odeme) > 0).length}`, filter: 'odeme_bekliyor', ton: ikincilTon(false) },
   ];
   return (
     <>

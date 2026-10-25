@@ -1,4 +1,5 @@
 import React from 'react';
+import { sayiDegeri } from '../../../shared/utils/bicim';
 import { BilgiKarti, BolumBasligi, DialogBasligi, SayiKutusu } from '../../../shared/ui';
 import { Box, Paper, Table, TableBody, TableCell, TableContainer, TableRow, Dialog, DialogContent, DialogActions, Button } from '@mui/material';
 import { formatTL, formatDate } from '../bicim';
@@ -12,11 +13,11 @@ const ETicaretDetayModal = ({ open, data, onClose, isMobile }) => {
   if (!data) return <Dialog {...dialogProps} />;
   const e = data;
   const miktar = parseInt(e.adet || 1);
-  const satis = parseFloat(e.satis_fiyati || 0);
-  const alis = parseFloat(e.alis_fiyati || 0);
-  const komisyonOrani = parseFloat(e.komisyon_orani || 0);
-  const kdvOrani = parseFloat(e.kdv_orani || 20);
-  const kargoUcreti = parseFloat(e.kargo_ucreti || 0);
+  const satis = sayiDegeri(e.satis_fiyati);
+  const alis = sayiDegeri(e.alis_fiyati);
+  const komisyonOrani = sayiDegeri(e.komisyon_orani);
+  const kdvOrani = sayiDegeri(e.kdv_orani, 20);
+  const kargoUcreti = sayiDegeri(e.kargo_ucreti);
   const pt = detectPlatform(e.platform_adi);
   const hesap = hesaplaKomisyon(e.satis_fiyati, e.alis_fiyati, e.komisyon_orani, e.kdv_orani || 20, e.kargo_ucreti || 0, e.adet, pt);
   const komisyonTutari = hesap.komisyonTutari;

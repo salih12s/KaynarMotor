@@ -5,7 +5,7 @@ import { IslemDugmesi, BolumBasligi } from '../../../../shared/ui';
 import { Box, Typography, Button, TextField, Alert, Grid, MenuItem } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 
-import { sayiYaz } from '../../../../shared/utils/bicim';
+import { sayiYaz, sayiDegeri } from '../../../../shared/utils/bicim';
 
 // Hızlı satış: parçalı ödeme satırları ve toplam / girilen / kalan özeti.
 const OdemeDagilimi = ({ hs }) => {
@@ -39,7 +39,7 @@ const OdemeDagilimi = ({ hs }) => {
       </Button>
       {odemeKalemleri.length > 0 &&
         (() => {
-          const satis = parseFloat(hizliForm.satis_fiyati || 0);
+          const satis = sayiDegeri(hizliForm.satis_fiyati);
           const kalan = satis - odemeToplam;
           const fmt = (v) => `₺${sayiYaz(v)}`;
           return (

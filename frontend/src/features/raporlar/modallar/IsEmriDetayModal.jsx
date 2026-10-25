@@ -16,7 +16,7 @@ import {
   Button,
 } from '@mui/material';
 import { formatDate } from '../bicim';
-import { sayiYaz } from '../../../shared/utils/bicim';
+import { sayiYaz, sayiDegeri } from '../../../shared/utils/bicim';
 
 const SUTUN_3 = { display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' }, gap: 2, mb: 2 };
 const sagaSx = { textAlign: 'right' };
@@ -28,7 +28,7 @@ const IsEmriDetayModal = ({ open, data, onClose, isMobile }) => {
   if (!data) return <Dialog {...dialogProps} />;
   const d = data;
   const parcalar = typeof d.parcalar === 'string' ? JSON.parse(d.parcalar) : d.parcalar || [];
-  const toplamFiyat = parcalar.reduce((t, p) => t + parseFloat(p.toplam_fiyat || 0), 0);
+  const toplamFiyat = parcalar.reduce((t, p) => t + sayiDegeri(p.toplam_fiyat), 0);
   const toplamMaliyet = parcalar.reduce((t, p) => t + (Number(p.adet) || 0) * (Number(p.maliyet) || 0), 0);
   const kar = toplamFiyat - toplamMaliyet;
   return (
@@ -83,7 +83,7 @@ const IsEmriDetayModal = ({ open, data, onClose, isMobile }) => {
           isMobile ? (
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
               {parcalar.map((p, i) => {
-                const pSatis = parseFloat(p.toplam_fiyat || 0);
+                const pSatis = sayiDegeri(p.toplam_fiyat);
                 const pMaliyet = (Number(p.adet) || 0) * (Number(p.maliyet) || 0);
                 const pKar = pSatis - pMaliyet;
                 return (
@@ -117,7 +117,7 @@ const IsEmriDetayModal = ({ open, data, onClose, isMobile }) => {
                 </TableHead>
                 <TableBody>
                   {parcalar.map((p, i) => {
-                    const pSatis = parseFloat(p.toplam_fiyat || 0);
+                    const pSatis = sayiDegeri(p.toplam_fiyat);
                     const pMaliyet = (Number(p.adet) || 0) * (Number(p.maliyet) || 0);
                     const pKar = pSatis - pMaliyet;
                     return (

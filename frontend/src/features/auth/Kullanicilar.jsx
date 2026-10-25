@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { hataMesaji } from '../../shared/api/istemci';
 import LockIcon from '@mui/icons-material/LockOutlined';
 import PersonAddIcon2 from '@mui/icons-material/PersonAddAltOutlined';
 import { Damga, IslemDugmesi, DialogBasligi } from '../../shared/ui';
@@ -90,7 +91,7 @@ const Kullanicilar = () => {
       setCreateForm({ kullanici_adi: '', sifre: '', ad_soyad: '', rol: 'yatirimci' });
       loadUsers();
     } catch (err) {
-      setError(err.response?.data?.message || 'Oluşturma hatası');
+      setError(hataMesaji(err, 'Oluşturma hatası'));
     }
   };
 
@@ -106,7 +107,7 @@ const Kullanicilar = () => {
       setBilgi(`${sifreDialog.user.ad_soyad} için şifre güncellendi. Yeni şifreyi kullanıcıya iletin.`);
       setSifreDialog({ open: false, user: null, sifre: '' });
     } catch (err) {
-      setError(err.response?.data?.message || 'Şifre güncellenemedi');
+      setError(hataMesaji(err, 'Şifre güncellenemedi'));
     }
   };
 
@@ -134,7 +135,7 @@ const Kullanicilar = () => {
       setDeleteDialog({ open: false, user: null });
       loadUsers();
     } catch (err) {
-      setError(err.response?.data?.message || 'Silme hatası');
+      setError(hataMesaji(err, 'Silme hatası'));
     }
   };
 

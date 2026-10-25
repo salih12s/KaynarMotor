@@ -6,9 +6,11 @@ import { Grid, Button, Dialog, DialogContent, DialogActions, Alert } from '@mui/
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import CheckIcon from '@mui/icons-material/Check';
 import { DialogBasligi } from '../../../shared/ui';
+import type { KullaniciOzeti } from '../../../shared/tipler';
+import type { IsEmriFormuDurumu } from './useIsEmriFormu';
 
 // Yeni iş emri / düzenleme penceresi. Durum ve işlemler useIsEmriFormu hook'undan gelir (form).
-const IsEmriFormModal = ({ form, kullanicilar, isMobile }) => {
+const IsEmriFormModal = ({ form, kullanicilar, isMobile }: { form: IsEmriFormuDurumu; kullanicilar: KullaniciOzeti[]; isMobile: boolean }) => {
   const {
     modalOpen,
     editId,

@@ -4,7 +4,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import PrintIcon from '@mui/icons-material/Print';
 import { BelgeBolumu } from '../../SatisBelgeleri';
 import { useReactToPrint } from 'react-to-print';
-import { sayiYaz, tarihYaz } from '../../../../shared/utils/bicim';
+import { sayiYaz, tarihYaz, sayiDegeri } from '../../../../shared/utils/bicim';
 
 // Satış detay penceresi: yetkiye göre finansal kutular ve net kâr (admin), yazdırma, belgeler (muhasebeci için yok).
 const InfoRow = ({ label, value }) => (
@@ -23,13 +23,13 @@ const MotorDetayModal = ({ open, data, onClose, printRef, isMobile, canAlis, can
   if (!data) return null;
 
   const formatTL = (v) => sayiYaz(v);
-  const alis = parseFloat(data.alis_fiyati || 0);
-  const satis = parseFloat(data.satis_fiyati || 0);
-  const noterAlis = parseFloat(data.noter_alis || 0);
-  const noterSatis = parseFloat(data.noter_satis || 0);
-  const masraflar = parseFloat(data.masraflar || 0);
+  const alis = sayiDegeri(data.alis_fiyati);
+  const satis = sayiDegeri(data.satis_fiyati);
+  const noterAlis = sayiDegeri(data.noter_alis);
+  const noterSatis = sayiDegeri(data.noter_satis);
+  const masraflar = sayiDegeri(data.masraflar);
   const toplamMaliyet = alis + masraflar;
-  const kar = parseFloat(data.kar || 0);
+  const kar = sayiDegeri(data.kar);
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth fullScreen={isMobile}>
@@ -117,7 +117,7 @@ const MotorDetayModal = ({ open, data, onClose, printRef, isMobile, canAlis, can
                   <InfoRow label="Telefon" value={data.alici_telefon} />
                 </Grid>
                 <Grid size={{ xs: 12, md: 3 }}>
-                  <InfoRow label="Kalan Ödeme" value={parseFloat(data.kalan_odeme || 0) > 0 ? `₺${sayiYaz(data.kalan_odeme)}` : 'Tamamlandı ✓'} />
+                  <InfoRow label="Kalan Ödeme" value={sayiDegeri(data.kalan_odeme) > 0 ? `₺${sayiYaz(data.kalan_odeme)}` : 'Tamamlandı ✓'} />
                 </Grid>
               </Grid>
             </Box>

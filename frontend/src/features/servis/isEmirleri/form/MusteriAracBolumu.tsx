@@ -6,9 +6,15 @@ import BuildIcon from '@mui/icons-material/Build';
 import { musteriService } from '../../../musteriler/musteriApi';
 import { BolumBasligi } from '../../../../shared/ui';
 import { MENU_RENK, RENK } from '../../../../app/tokenlar';
+import type { IsEmriFormuDurumu } from '../useIsEmriFormu';
 
 // Formun sol sütunu: müşteri (telefondan otomatik eşleştirme), araç, arıza ve açıklama.
-const MusteriAracBolumu = ({ formData, setFormData, musteriOptions, setMusteriOptions, handleMusteriSearch, handleMusteriSelect }) => {
+type MusteriAracBolumuProps = Pick<
+  IsEmriFormuDurumu,
+  'formData' | 'setFormData' | 'musteriOptions' | 'setMusteriOptions' | 'handleMusteriSearch' | 'handleMusteriSelect'
+>;
+
+const MusteriAracBolumu = ({ formData, setFormData, musteriOptions, setMusteriOptions, handleMusteriSearch, handleMusteriSelect }: MusteriAracBolumuProps) => {
   return (
     <>
       <BolumBasligi ikon={<PersonIcon />} renk={RENK.mavi}>

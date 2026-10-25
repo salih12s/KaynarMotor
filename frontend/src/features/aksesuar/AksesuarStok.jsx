@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { hataMesaji } from '../../shared/api/istemci';
 import { stokEtiketiYazdir } from '../../shared/utils/stokEtiketi';
 import InventoryIcon from '@mui/icons-material/Inventory2Outlined';
 import { IslemDugmesi, OzetSeridi, DialogBasligi, MevcutStok } from '../../shared/ui';
@@ -32,7 +33,7 @@ import UploadIcon from '@mui/icons-material/Upload';
 import SearchIcon from '@mui/icons-material/Search';
 import PrintIcon from '@mui/icons-material/Print';
 import { aksesuarStokService } from './aksesuarApi';
-import { sayiYaz } from '../../shared/utils/bicim';
+import { sayiYaz, sayiDegeri } from '../../shared/utils/bicim';
 
 // Hızlı yazarken eski aramanın yanıtı yeniyi ezmesin
 const sonAra = sonIstek();
@@ -139,7 +140,7 @@ const AksesuarStok = () => {
       setDialog({ open: false, data: null });
       loadData();
     } catch (err) {
-      setError(err.response?.data?.message || 'Hata');
+      setError(hataMesaji(err, 'Hata'));
     }
   };
 
@@ -149,7 +150,7 @@ const AksesuarStok = () => {
       await aksesuarStokService.delete(id);
       loadData();
     } catch (err) {
-      alert(err.response?.data?.message || 'Hata');
+      alert(hataMesaji(err, 'Hata'));
     }
   };
 
@@ -169,12 +170,12 @@ const AksesuarStok = () => {
       setImportText('');
       loadData();
     } catch (err) {
-      setError(err.response?.data?.message || 'İçe aktarma hatası');
+      setError(hataMesaji(err, 'İçe aktarma hatası'));
     }
   };
 
   const totalUrun = stoklar.length;
-  const envanter = stoklar.reduce((acc, s) => acc + parseFloat(s.alis_fiyati || 0) * parseInt(s.mevcut || 0), 0);
+  const envanter = stoklar.reduce((acc, s) => acc + sayiDegeri(s.alis_fiyati) * parseInt(s.mevcut || 0), 0);
 
   const filteredStoklar = stoklar.filter((s) => {
     const matchKategori = !kategoriFilter || (s.kategori || '').toLowerCase() === kategoriFilter.toLowerCase();

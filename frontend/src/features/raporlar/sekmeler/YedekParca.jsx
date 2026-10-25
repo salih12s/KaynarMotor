@@ -1,4 +1,5 @@
 import React from 'react';
+import { sayiDegeri } from '../../../shared/utils/bicim';
 import { Box, Paper, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Alert } from '@mui/material';
 import { formatTL, karColor, headerSx, sagaSutunlar } from '../bicim';
 import KartItem, { KART_RENKLERI } from '../bilesenler/KartItem';
@@ -21,8 +22,8 @@ const YedekParca = ({ rapor, isMobile }) => {
         isMobile ? (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
             {rapor.yedekParcalar.map((yp, i) => {
-              const alis = parseFloat(yp.alis_fiyati || 0);
-              const satis = parseFloat(yp.satis_fiyati || 0);
+              const alis = sayiDegeri(yp.alis_fiyati);
+              const satis = sayiDegeri(yp.satis_fiyati);
               const kar = satis - alis;
               const oran = satis > 0 ? ((kar / satis) * 100).toFixed(1) : '0.0';
               return (
@@ -62,8 +63,8 @@ const YedekParca = ({ rapor, isMobile }) => {
               </TableHead>
               <TableBody>
                 {rapor.yedekParcalar.map((yp, i) => {
-                  const alis = parseFloat(yp.alis_fiyati || 0);
-                  const satis = parseFloat(yp.satis_fiyati || 0);
+                  const alis = sayiDegeri(yp.alis_fiyati);
+                  const satis = sayiDegeri(yp.satis_fiyati);
                   const kar = satis - alis;
                   const oran = satis > 0 ? ((kar / satis) * 100).toFixed(1) : '0.0';
                   return (

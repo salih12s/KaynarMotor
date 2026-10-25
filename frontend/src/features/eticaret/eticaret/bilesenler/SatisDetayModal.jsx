@@ -5,7 +5,7 @@ import EditIcon from '@mui/icons-material/Edit';
 
 import { hesaplaKomisyon, detectPlatform } from '../../komisyon';
 import { karEtiketi, formatTL } from '../eticaretVeri';
-import { tarihYaz } from '../../../../shared/utils/bicim';
+import { tarihYaz, sayiDegeri } from '../../../../shared/utils/bicim';
 
 // Satış detay penceresi: ürün/fiyat bilgileri, net kâr ve platforma özel komisyon ve KDV dökümü.
 const SatisDetayModal = ({ open, data, onClose, onDuzenle, isMobile, karGor }) => {
@@ -34,8 +34,8 @@ const SatisDetayModal = ({ open, data, onClose, onDuzenle, isMobile, karGor }) =
             satirlar={[
               ['Satış Fiyatı', `${formatTL(s.satis_fiyati)} ₺`],
               ['Alış Fiyatı', `${formatTL(s.alis_fiyati)} ₺`],
-              ['Komisyon', `%${parseFloat(s.komisyon_orani || 0).toFixed(2)}`],
-              ['KDV', `%${parseFloat(s.kdv_orani || 20).toFixed(2)}`],
+              ['Komisyon', `%${sayiDegeri(s.komisyon_orani).toFixed(2)}`],
+              ['KDV', `%${sayiDegeri(s.kdv_orani, 20).toFixed(2)}`],
               ['Kargo', `${formatTL(s.kargo_ucreti)} ₺`],
             ]}
           />

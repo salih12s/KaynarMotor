@@ -6,7 +6,7 @@ import PrintIcon from '@mui/icons-material/Print';
 import { useReactToPrint } from 'react-to-print';
 import { ikinciElMotorService } from './motorApi';
 import { useKarGor } from '../auth/AuthContext';
-import { sayiYaz, tarihYaz } from '../../shared/utils/bicim';
+import { sayiYaz, tarihYaz, sayiDegeri } from '../../shared/utils/bicim';
 
 const MotorDetay = () => {
   const karGor = useKarGor();
@@ -34,13 +34,13 @@ const MotorDetay = () => {
 
   const formatTL = (v) => sayiYaz(v);
 
-  const alis = parseFloat(data.alis_fiyati || 0);
-  const satis = parseFloat(data.satis_fiyati || 0);
-  const noterAlis = parseFloat(data.noter_alis || 0);
-  const noterSatis = parseFloat(data.noter_satis || 0);
-  const masraflar = parseFloat(data.masraflar || 0);
+  const alis = sayiDegeri(data.alis_fiyati);
+  const satis = sayiDegeri(data.satis_fiyati);
+  const noterAlis = sayiDegeri(data.noter_alis);
+  const noterSatis = sayiDegeri(data.noter_satis);
+  const masraflar = sayiDegeri(data.masraflar);
   const toplamMaliyet = alis + noterAlis + masraflar;
-  const kar = parseFloat(data.kar || 0);
+  const kar = sayiDegeri(data.kar);
 
   const durumLabel = (d) => {
     if (d === 'tamamlandi') return 'Tamamlandı';

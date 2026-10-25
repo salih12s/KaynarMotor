@@ -1,4 +1,5 @@
 import React from 'react';
+import { sayiDegeri } from '../../../shared/utils/bicim';
 import { Damga, IslemDugmesi, Plaka } from '../../../shared/ui';
 import { RENK } from '../../../app/tokenlar';
 import {
@@ -29,7 +30,7 @@ const FaturaDamgasi = ({ kesildi }) => <Damga ton={kesildi ? 'yesil' : 'kirmizi'
 // Motor Satışları sekmesi (Satışlar / Komisyonlu alt sekmeleri). Alt sekme ve komisyoncu süzgeci üstte tutulur: sekme değişince kaybolmaz.
 const MotorSatislari = ({ rapor, isMobile, motorSubTab, setMotorSubTab, komisyoncuFilter, setKomisyoncuFilter, onDetay }) => {
   const allMotorlar = rapor.motorlar || [];
-  const komisyonluAll = allMotorlar.filter((m) => (m.komisyoncu_adi && m.komisyoncu_adi.trim()) || parseFloat(m.komisyoncu_tutari || 0) > 0);
+  const komisyonluAll = allMotorlar.filter((m) => (m.komisyoncu_adi && m.komisyoncu_adi.trim()) || sayiDegeri(m.komisyoncu_tutari) > 0);
   const komisyoncuList = Array.from(new Set(komisyonluAll.map((m) => (m.komisyoncu_adi || '').trim()).filter(Boolean))).sort((a, b) =>
     a.localeCompare(b, 'tr'),
   );
@@ -37,12 +38,12 @@ const MotorSatislari = ({ rapor, isMobile, motorSubTab, setMotorSubTab, komisyon
     ? komisyonluAll.filter((m) => (m.komisyoncu_adi || '').trim().toLowerCase() === komisyoncuFilter.toLowerCase())
     : komisyonluAll;
   const shownMotorlar = motorSubTab === 1 ? komisyonluMotorlar : allMotorlar;
-  const shownGelir = shownMotorlar.reduce((t, m) => t + parseFloat(m.satis_fiyati || 0), 0);
-  const shownMaliyet = shownMotorlar.reduce((t, m) => t + parseFloat(m.alis_fiyati || 0) + parseFloat(m.masraflar || 0), 0);
-  const shownKar = shownMotorlar.reduce((t, m) => t + (parseFloat(m.kar || 0) - parseFloat(m.yatirimci_kar || 0)), 0);
-  const shownNoterSatis = shownMotorlar.reduce((t, m) => t + parseFloat(m.noter_satis || 0), 0);
+  const shownGelir = shownMotorlar.reduce((t, m) => t + sayiDegeri(m.satis_fiyati), 0);
+  const shownMaliyet = shownMotorlar.reduce((t, m) => t + sayiDegeri(m.alis_fiyati) + sayiDegeri(m.masraflar), 0);
+  const shownKar = shownMotorlar.reduce((t, m) => t + (sayiDegeri(m.kar) - sayiDegeri(m.yatirimci_kar)), 0);
+  const shownNoterSatis = shownMotorlar.reduce((t, m) => t + sayiDegeri(m.noter_satis), 0);
   const shownStokDegeri = motorSubTab === 1 ? 0 : rapor.motorStokToplam || 0;
-  const komisyonToplamTutar = komisyonluMotorlar.reduce((t, m) => t + parseFloat(m.komisyoncu_tutari || 0), 0);
+  const komisyonToplamTutar = komisyonluMotorlar.reduce((t, m) => t + sayiDegeri(m.komisyoncu_tutari), 0);
   return (
     <>
       <Box sx={{ mb: 2, borderBottom: `1px solid ${RENK.cizgi}` }}>

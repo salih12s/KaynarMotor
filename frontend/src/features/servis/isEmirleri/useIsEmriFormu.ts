@@ -1,25 +1,30 @@
-import { useState } from 'react';
+import { useState, type KeyboardEvent } from 'react';
+import { hataMesaji } from '../../../shared/api/istemci';
 import { sonIstek } from '../../../shared/utils/sonIstek';
 import { isEmriService } from '../servisApi';
 import { musteriService } from '../../musteriler/musteriApi';
 import { aksesuarStokService } from '../../aksesuar/aksesuarApi';
 import { yedekParcaStokService } from '../../yedek-parca/yedekParcaApi';
-import { bosForm, bosParca, kayittanForm } from './isEmriVeri';
+import { bosForm, bosParca, kayittanForm, type IsEmriFormu, type FormParcasi } from './isEmriVeri';
+import type { AksesuarStok, Musteri, Parca, YedekParcaStok } from '../../../shared/tipler';
 
 // Hızlı yazarken eski aramanın yanıtı yeniyi ezmesin
 const sonAra = sonIstek();
 const sonStokAra = sonIstek();
 
+/** Parça seçimi için aranan stok kaydı: aksesuar ya da yedek parça stoğu, hangisinden geldiği etiketiyle. */
+export type StokSecenegi = (AksesuarStok | YedekParcaStok) & { stok_kaynak: string };
+
 // Yeni iş emri / düzenleme penceresinin tüm durumu ve işlemleri. `yenile`: kaydedince listeyi yeniden çeker.
-export const useIsEmriFormu = ({ yenile }) => {
+export const useIsEmriFormu = ({ yenile }: { yenile: () => void }) => {
   const [modalOpen, setModalOpen] = useState(false);
-  const [editId, setEditId] = useState(null);
-  const [formData, setFormData] = useState(bosForm());
-  const [parcalar, setParcalar] = useState([]);
-  const [newParca, setNewParca] = useState(bosParca());
-  const [stokOptions, setStokOptions] = useState([]);
+  const [editId, setEditId] = useState<number | null>(null);
+  const [formData, setFormData] = useState<IsEmriFormu>(bosForm());
+  const [parcalar, setParcalar] = useState<Parca[]>([]);
+  const [newParca, setNewParca] = useState<FormParcasi>(bosParca());
+  const [stokOptions, setStokOptions] = useState<StokSecenegi[]>([]);
   const [error, setError] = useState('');
-  const [musteriOptions, setMusteriOptions] = useState([]);
+  const [musteriOptions, setMusteriOptions] = useState<Musteri[]>([]);
 
   const kapat = () => {
     setModalOpen(false);
@@ -36,7 +41,7 @@ export const useIsEmriFormu = ({ yenile }) => {
     setModalOpen(true);
   };
 
-  const openEditModal = async (id) => {
+  const openEditModal = async (id: number) => {
     setError('');
     try {
       const res = await isEmriService.getById(id);
@@ -59,10 +64,10 @@ export const useIsEmriFormu = ({ yenile }) => {
     setStokOptions([]);
   };
 
-  const removeParca = (index) => setParcalar(parcalar.filter((_, i) => i !== index));
+  const removeParca = (index: number) => setParcalar(parcalar.filter((_, i) => i !== index));
 
   // Aksesuar ve yedek parça stoğundan parça ara (isim, marka veya stok kodu/barkod ile)
-  const handleStokSearch = async (q) => {
+  const handleStokSearch = async (q: string) => {
     if (!q || q.trim().length < 2) {
       sonStokAra.iptal();
       setStokOptions([]);
@@ -70,7 +75,10 @@ export const useIsEmriFormu = ({ yenile }) => {
     }
     try {
       const sonuc = await sonStokAra(
-        Promise.all([aksesuarStokService.search(q.trim()).catch(() => ({ data: [] })), yedekParcaStokService.search(q.trim()).catch(() => ({ data: [] }))]),
+        Promise.all([
+          aksesuarStokService.search(q.trim()).catch(() => ({ data: [] as AksesuarStok[] })),
+          yedekParcaStokService.search(q.trim()).catch(() => ({ data: [] as YedekParcaStok[] })),
+        ]),
       );
       if (!sonuc) return;
       const [aks, yedek] = sonuc;
@@ -82,7 +90,7 @@ export const useIsEmriFormu = ({ yenile }) => {
   };
 
   // Stok kaydını parça alanlarına doldur
-  const selectStok = (stok) => {
+  const selectStok = (stok: AksesuarStok | YedekParcaStok) => {
     setNewParca({
       parca_kodu: stok.stok_kodu || '',
       takilan_parca: stok.stok_adi || '',
@@ -95,7 +103,7 @@ export const useIsEmriFormu = ({ yenile }) => {
 
   // Barkod okutulduğunda (Enter ile) stok kodundan tam eşleşme bul
   // Yedek parça barkodları 9 ile başlar; önce olası kaynağa, bulunamazsa diğerine bakılır.
-  const handleParcaKeyDown = async (e) => {
+  const handleParcaKeyDown = async (e: KeyboardEvent) => {
     if (e.key !== 'Enter') return;
     const kod = (newParca.takilan_parca || '').trim();
     if (!kod) return;
@@ -112,7 +120,7 @@ export const useIsEmriFormu = ({ yenile }) => {
     }
   };
 
-  const handleMusteriSearch = async (query) => {
+  const handleMusteriSearch = async (query: string) => {
     if (query.length < 2) return;
     try {
       const res = await sonAra(musteriService.search(query));
@@ -120,7 +128,7 @@ export const useIsEmriFormu = ({ yenile }) => {
     } catch {}
   };
 
-  const handleMusteriSelect = (musteri) => {
+  const handleMusteriSelect = (musteri: Musteri | null) => {
     if (musteri) {
       setFormData({ ...formData, musteri_ad_soyad: musteri.ad_soyad || '', telefon: musteri.telefon || '', adres: musteri.adres || '' });
     }
@@ -133,8 +141,9 @@ export const useIsEmriFormu = ({ yenile }) => {
       return;
     }
     try {
-      const payload = { ...formData, parcalar, kalan_odeme: formData.odeme_tamamlandi ? 0 : formData.kalan_odeme || 0 };
-      delete payload.odeme_tamamlandi;
+      // `odeme_tamamlandi` yalnızca ekran içindir; sunucuya kalan ödeme olarak gider
+      const { odeme_tamamlandi, ...alanlar } = formData;
+      const payload = { ...alanlar, parcalar, kalan_odeme: odeme_tamamlandi ? 0 : formData.kalan_odeme || 0 };
       if (editId) {
         await isEmriService.update(editId, payload);
       } else {
@@ -144,7 +153,7 @@ export const useIsEmriFormu = ({ yenile }) => {
       setEditId(null);
       yenile();
     } catch (err) {
-      setError(err.response?.data?.message || 'Kaydetme hatası');
+      setError(hataMesaji(err, 'Kaydetme hatası'));
     }
   };
 
@@ -173,3 +182,6 @@ export const useIsEmriFormu = ({ yenile }) => {
     handleMusteriSelect,
   };
 };
+
+/** Formun tüm durumu ve işlemleri (pencere ve bölümler bunun parçalarını prop olarak alır). */
+export type IsEmriFormuDurumu = ReturnType<typeof useIsEmriFormu>;

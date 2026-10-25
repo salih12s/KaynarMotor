@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { hataMesaji } from '../../../shared/api/istemci';
 import { sonIstek } from '../../../shared/utils/sonIstek';
 import { ikinciElMotorService } from '../motorApi';
 import { musteriService } from '../../musteriler/musteriApi';
@@ -71,7 +72,7 @@ export const useSatisFormu = ({ salt, yenile }) => {
         alert(`Satış kaydedildi ancak şu belgeler yüklenemedi:\n${belgeHatalari.join('\n')}\n\nSatışın detayından tekrar ekleyebilirsiniz.`);
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Hata oluştu');
+      setError(hataMesaji(err, 'Hata oluştu'));
     }
     setKaydediliyor(false);
   };

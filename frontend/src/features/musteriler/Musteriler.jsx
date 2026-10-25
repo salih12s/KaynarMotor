@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { hataMesaji } from '../../shared/api/istemci';
 import KisiIkon from '@mui/icons-material/PersonOutlined';
 import { BilgiKarti, BolumBasligi, Damga, DialogBasligi, IslemDugmesi, Plaka, sagaSutunlar, useOnay } from '../../shared/ui';
 import MotorIkon from '@mui/icons-material/TwoWheelerOutlined';
@@ -32,7 +33,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import SearchIcon from '@mui/icons-material/Search';
 
 import { musteriService } from './musteriApi';
-import { sayiYaz, tarihYaz } from '../../shared/utils/bicim';
+import { sayiYaz, tarihYaz, sayiDegeri } from '../../shared/utils/bicim';
 import { MENU_RENK, RENK, TON } from '../../app/tokenlar';
 
 // Hızlı yazarken eski aramanın yanıtı yeniyi ezmesin
@@ -100,7 +101,7 @@ const Musteriler = () => {
       setDialog({ open: false, data: null });
       loadData();
     } catch (err) {
-      setError(err.response?.data?.message || 'Hata oluştu');
+      setError(hataMesaji(err, 'Hata oluştu'));
     }
   };
 
@@ -118,7 +119,7 @@ const Musteriler = () => {
       await musteriService.delete(id);
       loadData();
     } catch (err) {
-      alert(err.response?.data?.message || 'Silme hatası');
+      alert(hataMesaji(err, 'Silme hatası'));
     }
   };
 
@@ -375,9 +376,7 @@ const Musteriler = () => {
                             {aksesuarlar.map((a) => (
                               <TableRow key={a.id} hover>
                                 <TableCell sx={{ fontWeight: 700 }}>₺{sayiYaz(a.toplam_satis)}</TableCell>
-                                <TableCell sx={{ color: parseFloat(a.kar || 0) >= 0 ? RENK.yesil : RENK.kirmizi, fontWeight: 600 }}>
-                                  ₺{sayiYaz(a.kar)}
-                                </TableCell>
+                                <TableCell sx={{ color: sayiDegeri(a.kar) >= 0 ? RENK.yesil : RENK.kirmizi, fontWeight: 600 }}>₺{sayiYaz(a.kar)}</TableCell>
                                 <TableCell>{durumDamgasi(a.durum)}</TableCell>
                                 <TableCell sx={{ color: RENK.soluk }}>{tarihYaz(a.satis_tarihi)}</TableCell>
                               </TableRow>

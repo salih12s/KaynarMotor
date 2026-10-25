@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { type ReactNode } from 'react';
 import {
   Box,
   Typography,
@@ -13,6 +13,8 @@ import {
   DialogContent,
   useMediaQuery,
   useTheme,
+  type SxProps,
+  type Theme,
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import PrintIcon from '@mui/icons-material/Print';
@@ -21,15 +23,16 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircleOutline';
 import WarningIcon from '@mui/icons-material/ErrorOutline';
 import { useKarGor } from '../../auth/AuthContext';
 import { printServisQr, printIsEmri } from './servisYazdir';
-import { sayiYaz, tarihYaz } from '../../../shared/utils/bicim';
+import { sayiYaz, tarihYaz, sayiDegeri } from '../../../shared/utils/bicim';
 import { DialogBasligi, Plaka } from '../../../shared/ui';
 import { FONT, RENK, TON } from '../../../app/tokenlar';
 import { durumLabel, durumTon } from './isEmriVeri';
+import type { IsEmriDetayi } from '../../../shared/tipler';
 
 // İş emri detay penceresi (liste sayfasından açılır): delikli iş emri fişi görünümü. Düzenle / Servis QR / Yazdır düğmeleri başlıkta.
 
 // Etiket .......... değer (noktalı kılavuz çizgili)
-const Satir = ({ label, value }) => (
+const Satir = ({ label, value }: { label: string; value?: ReactNode }) => (
   <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1, py: 0.45, fontSize: 14.5 }}>
     <Box component="span" sx={{ color: RENK.soluk, flex: 'none' }}>
       {label}
@@ -41,7 +44,7 @@ const Satir = ({ label, value }) => (
   </Box>
 );
 
-const Bolum = ({ baslik, children }) => (
+const Bolum = ({ baslik, children }: { baslik: string; children?: ReactNode }) => (
   <Box>
     <Typography component="h3" sx={{ fontFamily: FONT.baslik, fontWeight: 700, fontSize: 22, mb: 0.75 }}>
       {baslik}
@@ -51,7 +54,7 @@ const Bolum = ({ baslik, children }) => (
 );
 
 // Fişin üst ve alt kenarındaki delik sırası
-const delikler = (yer) => ({
+const delikler = (yer: 'top' | 'bottom'): SxProps<Theme> => ({
   position: 'absolute',
   left: 0,
   right: 0,
@@ -62,18 +65,26 @@ const delikler = (yer) => ({
   backgroundRepeat: 'repeat-x',
 });
 
-const IsEmriDetayModal = ({ open, data, onClose, onEdit, isMobile }) => {
+interface IsEmriDetayModalProps {
+  open: boolean;
+  data: IsEmriDetayi | null;
+  onClose: () => void;
+  onEdit: (id: number) => void;
+  isMobile: boolean;
+}
+
+const IsEmriDetayModal = ({ open, data, onClose, onEdit, isMobile }: IsEmriDetayModalProps) => {
   const karGor = useKarGor();
   const dar = useMediaQuery(useTheme().breakpoints.down('md'));
   if (!data) return null;
 
   const parcalar = data.parcalar || [];
-  const toplamFiyat = parcalar.reduce((t, p) => t + parseFloat(p.toplam_fiyat || 0), 0);
+  const toplamFiyat = parcalar.reduce((t, p) => t + sayiDegeri(p.toplam_fiyat), 0);
   const toplamMaliyet = parcalar.reduce((t, p) => t + (Number(p.adet) || 0) * (Number(p.maliyet) || 0), 0);
   const kar = toplamFiyat - toplamMaliyet;
   const ton = durumTon(data.durum);
-  const kalan = parseFloat(data.kalan_odeme || 0);
-  const odemeToplam = parseFloat(data.gercek_toplam_ucret || data.tahmini_toplam_ucret || 0);
+  const kalan = sayiDegeri(data.kalan_odeme);
+  const odemeToplam = sayiDegeri(data.gercek_toplam_ucret || data.tahmini_toplam_ucret);
   const odenen = Math.max(0, odemeToplam - kalan);
   const odemeRenk = kalan > 0 ? TON.turuncu : TON.yesil;
 
@@ -193,7 +204,7 @@ const IsEmriDetayModal = ({ open, data, onClose, onEdit, isMobile }) => {
                 dar ? (
                   <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, borderTop: `1.5px solid ${RENK.murekkep}` }}>
                     {parcalar.map((p, i) => {
-                      const pSatis = parseFloat(p.toplam_fiyat || 0);
+                      const pSatis = sayiDegeri(p.toplam_fiyat);
                       const pMaliyet = (Number(p.adet) || 0) * (Number(p.maliyet) || 0);
                       const pKar = pSatis - pMaliyet;
                       return (
@@ -233,7 +244,7 @@ const IsEmriDetayModal = ({ open, data, onClose, onEdit, isMobile }) => {
                       </TableHead>
                       <TableBody>
                         {parcalar.map((p, i) => {
-                          const pSatis = parseFloat(p.toplam_fiyat || 0);
+                          const pSatis = sayiDegeri(p.toplam_fiyat);
                           const pMaliyet = (Number(p.adet) || 0) * (Number(p.maliyet) || 0);
                           const pKar = pSatis - pMaliyet;
                           return (

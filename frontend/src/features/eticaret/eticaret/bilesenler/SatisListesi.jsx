@@ -5,7 +5,7 @@ import { Box, Paper, Typography, Table, TableBody, TableCell, TableContainer, Ta
 
 import { hesaplaKomisyon, detectPlatform } from '../../komisyon';
 import { formatTL } from '../eticaretVeri';
-import { tarihYaz } from '../../../../shared/utils/bicim';
+import { tarihYaz, sayiDegeri } from '../../../../shared/utils/bicim';
 
 // Satış listesi: dar ekranda kartlar, geniş ekranda tablo; kâr sütunu yalnızca e-ticaret yetkisi olanlar için.
 const SatisListesi = ({ satislar, platformFiltre, isMobile, karGor, onDetay, onDuzenle, onSil }) => {
@@ -81,8 +81,8 @@ const SatisListesi = ({ satislar, platformFiltre, isMobile, karGor, onDetay, onD
                 <TableCell>{s.adet}</TableCell>
                 <TableCell>{formatTL(s.alis_fiyati)}</TableCell>
                 <TableCell sx={{ fontWeight: 700 }}>{formatTL(s.satis_fiyati)}</TableCell>
-                <TableCell>%{parseFloat(s.komisyon_orani || 0).toFixed(2)}</TableCell>
-                <TableCell>%{parseFloat(s.kdv_orani || 20).toFixed(0)}</TableCell>
+                <TableCell>%{sayiDegeri(s.komisyon_orani).toFixed(2)}</TableCell>
+                <TableCell>%{sayiDegeri(s.kdv_orani, 20).toFixed(0)}</TableCell>
                 <TableCell>{formatTL(sHesap.komisyonTutari)}</TableCell>
                 {karGor && <TableCell sx={{ color: sHesap.netKar >= 0 ? RENK.yesil : RENK.kirmizi, fontWeight: 'bold' }}>{formatTL(sHesap.netKar)}</TableCell>}
                 <TableCell sx={{ color: RENK.soluk, whiteSpace: 'nowrap' }}>{tarihYaz(s.tarih)}</TableCell>

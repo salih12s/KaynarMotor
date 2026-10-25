@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { hataMesaji } from '../../shared/api/istemci';
 import { Box, TextField, Button, Typography, Alert, Tab, Tabs } from '@mui/material';
 import { useAuth } from './AuthContext';
 import { authService } from './authApi';
@@ -26,7 +27,7 @@ const Login = () => {
       const res = await authService.login({ kullanici_adi: formData.kullanici_adi, sifre: formData.sifre });
       login(res.data.user, res.data.token);
     } catch (err) {
-      setError(err.response?.data?.message || 'Giriş başarısız');
+      setError(hataMesaji(err, 'Giriş başarısız'));
     }
     setLoading(false);
   };
@@ -42,7 +43,7 @@ const Login = () => {
       setTab(0);
       setFormData({ ...formData, ad_soyad: '' });
     } catch (err) {
-      setError(err.response?.data?.message || 'Kayıt başarısız');
+      setError(hataMesaji(err, 'Kayıt başarısız'));
     }
     setLoading(false);
   };

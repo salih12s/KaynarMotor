@@ -5,9 +5,13 @@ import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import { BolumBasligi } from '../../../../shared/ui';
 import { MENU_RENK, RENK, TON } from '../../../../app/tokenlar';
+import type { KullaniciOzeti } from '../../../../shared/tipler';
+import type { IsEmriFormuDurumu } from '../useIsEmriFormu';
 
 // Ödeme detayları, kalan ödeme (veresiye) ve yalnızca düzenlemede görünen teslim bilgileri.
-const OdemeTeslimBolumu = ({ formData, setFormData, editId, kullanicilar }) => {
+type OdemeTeslimBolumuProps = Pick<IsEmriFormuDurumu, 'formData' | 'setFormData' | 'editId'> & { kullanicilar: KullaniciOzeti[] };
+
+const OdemeTeslimBolumu = ({ formData, setFormData, editId, kullanicilar }: OdemeTeslimBolumuProps) => {
   // Ödeme tamam: yeşil kutu; bekleyen: sarı kutu (Veresiye'ye düşer)
   const kutu = formData.odeme_tamamlandi ? TON.yesil : TON.bekle;
   return (
