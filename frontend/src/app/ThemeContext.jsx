@@ -1,5 +1,6 @@
 import React, { createContext, useState, useContext, useMemo } from 'react';
 import { createTheme } from '@mui/material/styles';
+import { temaOlustur } from './tema';
 
 const ThemeContext = createContext(null);
 
@@ -45,10 +46,17 @@ export const CustomThemeProvider = ({ children }) => {
     });
   }, [currentTheme]);
 
+  // Yönetim paneli (Servis Defteri tasarımı). Vitrin ve müşteriye açık sayfalar `theme` ile (eski) kalır.
+  const panelTheme = useMemo(() => {
+    const config = themeConfigs[currentTheme] || themeConfigs.default;
+    return temaOlustur({ primary: config.primary, secondary: config.secondary });
+  }, [currentTheme]);
+
   return (
     <ThemeContext.Provider
       value={{
         theme,
+        panelTheme,
         currentTheme,
         themeConfigs,
         setDefaultTheme,

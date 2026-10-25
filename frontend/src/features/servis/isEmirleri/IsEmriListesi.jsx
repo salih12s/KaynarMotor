@@ -1,16 +1,25 @@
 import React from 'react';
-import { Box, Paper, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Chip, IconButton, Alert } from '@mui/material';
-import ViewIcon from '@mui/icons-material/Visibility';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import PrintIcon from '@mui/icons-material/Print';
-import QrIcon from '@mui/icons-material/QrCode2';
+import { Box, Paper, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Alert } from '@mui/material';
 import { printServisQr } from './servisYazdir';
-import { durumRenk, durumLabel, formatTarih } from './isEmriVeri';
+import { durumTon, durumLabel, formatTarih } from './isEmriVeri';
 import { sayiYaz } from '../../../shared/utils/bicim';
+import { Damga, IslemDugmesi, Plaka } from '../../../shared/ui';
+import { FONT, RENK } from '../../../app/tokenlar';
+
+const personelAdi = (ie) => ie.teslim_eden_teknisyen || ie.teslim_alan_ad_soyad || ie.olusturan_kisi || '-';
 
 // Filtrelenmiş iş emirleri: dar ekranda kartlar, geniş ekranda tablo. Kâr sütunu yalnızca karGor için.
 const IsEmriListesi = ({ filtered, isMobile, karGor, isAdmin, onDetay, onYazdir, onDuzenle, onSil }) => {
+  const islemler = (ie) => (
+    <>
+      <IslemDugmesi tur="goz" onClick={() => onDetay(ie.id)} />
+      <IslemDugmesi tur="yaz" onClick={() => onYazdir(ie.id)} />
+      {ie.plaka && <IslemDugmesi tur="qr" title="Servis Geçmişi QR Yazdır" onClick={() => printServisQr(ie.plaka)} />}
+      <IslemDugmesi tur="duz" onClick={() => onDuzenle(ie.id)} />
+      {isAdmin && <IslemDugmesi tur="sil" onClick={() => onSil(ie.id)} />}
+    </>
+  );
+
   return isMobile ? (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
       {filtered.length === 0 && <Alert severity="info">Kayıt bulunamadı</Alert>}
@@ -18,49 +27,34 @@ const IsEmriListesi = ({ filtered, isMobile, karGor, isAdmin, onDetay, onYazdir,
         const toplam = parseFloat(ie.gercek_toplam_ucret || 0);
         const kar = parseFloat(ie.kar || 0);
         return (
-          <Paper key={ie.id} sx={{ p: 1.5 }} onClick={() => onDetay(ie.id)}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
-              <Typography variant="subtitle2" sx={{ color: '#C62828', fontWeight: 'bold' }}>
-                #{ie.fis_no}
-              </Typography>
-              <Chip label={durumLabel(ie.durum)} size="small" color={durumRenk(ie.durum)} sx={{ height: 20, fontSize: '0.7rem' }} />
+          <Paper key={ie.id} sx={{ p: 1.75 }} onClick={() => onDetay(ie.id)}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Damga ton={durumTon(ie.durum)}>{durumLabel(ie.durum)}</Damga>
+                <Typography sx={{ fontFamily: FONT.mono, fontSize: 13, color: RENK.soluk }}>{ie.fis_no}</Typography>
+              </Box>
+              <Typography sx={{ fontSize: 13, color: RENK.soluk }}>{formatTarih(ie.created_at || ie.tarih)}</Typography>
             </Box>
-            <Typography variant="body2" fontWeight="bold">
-              {ie.musteri_ad_soyad}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, mt: 1.25, flexWrap: 'wrap' }}>
+              <Plaka plaka={ie.plaka} />
+              <Typography sx={{ fontWeight: 700, fontSize: 16 }}>{ie.musteri_ad_soyad}</Typography>
+            </Box>
+            <Typography sx={{ mt: 0.75, fontSize: 14, color: RENK.soluk }}>
               {ie.marka} {ie.model_tip} • {ie.telefon || '-'}
             </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {formatTarih(ie.created_at || ie.tarih)} • {ie.teslim_eden_teknisyen || ie.teslim_alan_ad_soyad || ie.olusturan_kisi || '-'}
-            </Typography>
-            <Box sx={{ display: 'flex', gap: 2, mt: 0.5 }}>
-              <Typography variant="body2">
+            <Typography sx={{ fontSize: 14, color: RENK.soluk }}>{personelAdi(ie)}</Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mt: 1.25 }}>
+              <Typography sx={{ fontSize: 14 }}>
                 Toplam: <strong>₺{sayiYaz(toplam)}</strong>
               </Typography>
               {karGor && (
-                <Typography variant="body2" sx={{ color: kar >= 0 ? '#2e7d32' : '#c62828' }}>
+                <Typography sx={{ fontSize: 14, fontWeight: 600, color: kar >= 0 ? 'success.main' : 'error.main' }}>
                   Kâr: <strong>₺{sayiYaz(kar)}</strong>
                 </Typography>
               )}
             </Box>
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 0.5 }} onClick={(e) => e.stopPropagation()}>
-              <IconButton size="small" sx={{ color: '#C62828' }} onClick={() => onYazdir(ie.id)}>
-                <PrintIcon />
-              </IconButton>
-              {ie.plaka && (
-                <IconButton size="small" sx={{ color: '#1a1a1a' }} onClick={() => printServisQr(ie.plaka)} title="Servis Geçmişi QR Yazdır">
-                  <QrIcon />
-                </IconButton>
-              )}
-              <IconButton size="small" color="info" onClick={() => onDuzenle(ie.id)}>
-                <EditIcon />
-              </IconButton>
-              {isAdmin && (
-                <IconButton size="small" color="error" onClick={() => onSil(ie.id)}>
-                  <DeleteIcon />
-                </IconButton>
-              )}
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 0.75 }} onClick={(e) => e.stopPropagation()}>
+              {islemler(ie)}
             </Box>
           </Paper>
         );
@@ -68,12 +62,12 @@ const IsEmriListesi = ({ filtered, isMobile, karGor, isAdmin, onDetay, onYazdir,
     </Box>
   ) : (
     <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
-      <Table size="small" sx={{ '& td, & th': { px: 0.75, py: 0.55, fontSize: '0.76rem' } }}>
+      <Table size="small" sx={{ '& td, & th': { px: 1, py: 0.9, fontSize: '0.88rem' } }}>
         <TableHead>
-          <TableRow sx={{ bgcolor: 'primary.main' }}>
-            {['Fiş No', 'Müşteri', 'Araç', 'Telefon', 'Tarih/Durum', 'Personel', 'Arıza', 'Toplam', 'Maliyet', ...(karGor ? ['Kar'] : []), 'İşlemler'].map(
+          <TableRow>
+            {['Fiş', 'Plaka', 'Müşteri ve araç', 'Telefon', 'Durum', 'Personel', 'Arıza', 'Toplam', 'Maliyet', ...(karGor ? ['Kâr'] : []), 'İşlemler'].map(
               (h) => (
-                <TableCell key={h} sx={{ color: 'white', fontWeight: 'bold', whiteSpace: 'nowrap' }}>
+                <TableCell key={h} align={['Toplam', 'Maliyet', 'Kâr'].includes(h) ? 'right' : 'left'}>
                   {h}
                 </TableCell>
               ),
@@ -87,46 +81,40 @@ const IsEmriListesi = ({ filtered, isMobile, karGor, isAdmin, onDetay, onYazdir,
             const kar = parseFloat(ie.kar || 0);
             return (
               <TableRow key={ie.id} hover>
-                <TableCell sx={{ color: '#C62828', fontWeight: 'bold' }}>{ie.fis_no}</TableCell>
-                <TableCell sx={{ fontWeight: 'bold' }}>{ie.musteri_ad_soyad}</TableCell>
+                <TableCell sx={{ fontFamily: FONT.mono, fontSize: '0.8rem !important', color: RENK.soluk }}>{ie.fis_no}</TableCell>
                 <TableCell>
-                  {ie.marka} {ie.model_tip}
+                  <Plaka plaka={ie.plaka} />
                 </TableCell>
-                <TableCell>{ie.telefon}</TableCell>
                 <TableCell>
-                  <Typography variant="body2" fontSize="0.8rem">
-                    {formatTarih(ie.created_at || ie.tarih)}
-                  </Typography>
-                  <Chip label={durumLabel(ie.durum)} size="small" color={durumRenk(ie.durum)} sx={{ height: 20, fontSize: '0.7rem', mt: 0.3 }} />
+                  <Box sx={{ fontWeight: 700 }}>{ie.musteri_ad_soyad}</Box>
+                  <Box sx={{ fontSize: 13, color: RENK.soluk }}>
+                    {ie.marka} {ie.model_tip}
+                  </Box>
                 </TableCell>
-                <TableCell>{ie.teslim_eden_teknisyen || ie.teslim_alan_ad_soyad || ie.olusturan_kisi || '-'}</TableCell>
-                <TableCell sx={{ maxWidth: 150, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={ie.ariza_sikayetler || ''}>
+                <TableCell sx={{ color: RENK.soluk, whiteSpace: 'nowrap' }}>{ie.telefon}</TableCell>
+                <TableCell>
+                  <Damga ton={durumTon(ie.durum)}>{durumLabel(ie.durum)}</Damga>
+                  <Box sx={{ fontSize: 12, color: RENK.soluk, mt: 0.25 }}>{formatTarih(ie.created_at || ie.tarih)}</Box>
+                </TableCell>
+                <TableCell sx={{ fontSize: '0.82rem !important' }}>{personelAdi(ie)}</TableCell>
+                <TableCell
+                  sx={{ maxWidth: 190, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#3C4046' }}
+                  title={ie.ariza_sikayetler || ''}
+                >
                   {ie.ariza_sikayetler || '-'}
                 </TableCell>
-                <TableCell sx={{ fontWeight: 'bold' }}>₺{sayiYaz(toplam)}</TableCell>
-                <TableCell sx={{ color: '#C62828' }}>₺{sayiYaz(maliyet)}</TableCell>
-                {karGor && <TableCell sx={{ color: kar >= 0 ? '#2e7d32' : '#c62828', fontWeight: 'bold' }}>₺{sayiYaz(kar)}</TableCell>}
-                <TableCell sx={{ whiteSpace: 'nowrap' }}>
-                  <IconButton size="small" color="primary" onClick={() => onDetay(ie.id)}>
-                    <ViewIcon />
-                  </IconButton>
-                  <IconButton size="small" sx={{ color: '#C62828' }} onClick={() => onYazdir(ie.id)}>
-                    <PrintIcon />
-                  </IconButton>
-                  {ie.plaka && (
-                    <IconButton size="small" sx={{ color: '#1a1a1a' }} onClick={() => printServisQr(ie.plaka)} title="Servis Geçmişi QR Yazdır">
-                      <QrIcon />
-                    </IconButton>
-                  )}
-                  <IconButton size="small" color="info" onClick={() => onDuzenle(ie.id)}>
-                    <EditIcon />
-                  </IconButton>
-                  {isAdmin && (
-                    <IconButton size="small" color="error" onClick={() => onSil(ie.id)}>
-                      <DeleteIcon />
-                    </IconButton>
-                  )}
+                <TableCell align="right" sx={{ fontWeight: 700 }}>
+                  ₺{sayiYaz(toplam)}
                 </TableCell>
+                <TableCell align="right" sx={{ color: RENK.soluk }}>
+                  ₺{sayiYaz(maliyet)}
+                </TableCell>
+                {karGor && (
+                  <TableCell align="right" sx={{ color: kar >= 0 ? 'success.main' : 'error.main', fontWeight: 700 }}>
+                    ₺{sayiYaz(kar)}
+                  </TableCell>
+                )}
+                <TableCell sx={{ whiteSpace: 'nowrap' }}>{islemler(ie)}</TableCell>
               </TableRow>
             );
           })}

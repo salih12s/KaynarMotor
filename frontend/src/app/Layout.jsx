@@ -1,21 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import {
-  Typography,
-  Drawer,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-  IconButton,
-  Box,
-  Divider,
-  Collapse,
-  useMediaQuery,
-  useTheme,
-  Avatar,
-} from '@mui/material';
+import { Typography, Drawer, IconButton, Box, Collapse, useMediaQuery, useTheme, Avatar, ButtonBase } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import BuildIcon from '@mui/icons-material/Build';
 import PeopleIcon from '@mui/icons-material/People';
@@ -34,11 +19,18 @@ import VeresiyeIcon from '@mui/icons-material/AccountBalanceWallet';
 import HomeIcon from '@mui/icons-material/Home';
 import CalculateIcon from '@mui/icons-material/Calculate';
 import FolderIcon from '@mui/icons-material/FolderCopy';
+import PublicIcon from '@mui/icons-material/Public';
+import GppGoodIcon from '@mui/icons-material/GppGood';
 import { useAuth } from '../features/auth/AuthContext';
 import { useCustomTheme } from './ThemeContext';
 import { authService } from '../features/auth/authApi';
+import { FONT, MENU_RENK, RENK } from './tokenlar';
 
-const DRAWER_WIDTH = 240;
+const KENAR_GENISLIK = 216;
+const MOBIL_GENISLIK = 300;
+
+// Alt sekme çubuğunda (telefon) gösterilecek menü kodları, öncelik sırasıyla; yetkisi olan ilk 4 tanesi görünür.
+const ALT_SEKME_SIRASI = ['servis', 'motor', 'raporlar', 'musteriler', 'aksesuar', 'eticaret', 'yedek', 'vitrin', 'veresiye'];
 
 const Layout = () => {
   const { user, logout } = useAuth();
@@ -124,7 +116,7 @@ const Layout = () => {
     {
       title: 'Motorsiklet',
       icon: <MotorIcon />,
-      color: '#C62828',
+      kod: 'motor',
       show: isAdmin || hasMotor || isYatirimci || muhasebeMotor,
       key: 'motor',
       subItems: [
@@ -132,221 +124,286 @@ const Layout = () => {
         ...(!muhasebeMotor ? [{ title: isYatirimci ? 'Motorlarım' : 'Motor Stok', path: '/motor-stok', icon: <StokIcon /> }] : []),
       ],
     },
-    { title: 'Servis', path: '/servis', icon: <BuildIcon />, show: isAdmin || hasServis, color: '#C62828' },
+    { title: 'Servis', path: '/servis', icon: <BuildIcon />, show: isAdmin || hasServis, kod: 'servis' },
     {
       title: 'Aksesuarlar',
       icon: <ShopIcon />,
-      color: '#C62828',
+      kod: 'aksesuar',
       show: isAdmin || hasAksesuar || hasAksesuarStok,
       subItems: [
         ...(isAdmin || hasAksesuar ? [{ title: 'Aksesuar Satış', path: '/aksesuarlar', icon: <SellIcon /> }] : []),
         ...(isAdmin || hasAksesuarStok ? [{ title: 'Aksesuar Stok', path: '/aksesuar-stok', icon: <StokIcon /> }] : []),
       ],
     },
-    { title: 'E-Ticaret', path: '/eticaret', icon: <StoreIcon />, show: isAdmin || hasEticaret, color: '#C62828' },
-    { title: 'Taksit Hesaplama', path: '/taksit-hesaplama', icon: <CalculateIcon />, show: !isYatirimci && !isMuhasebeci, color: '#C62828' },
+    { title: 'E-Ticaret', path: '/eticaret', icon: <StoreIcon />, show: isAdmin || hasEticaret, kod: 'eticaret' },
+    { title: 'Taksit Hesaplama', path: '/taksit-hesaplama', icon: <CalculateIcon />, show: !isYatirimci && !isMuhasebeci, kod: 'taksit' },
     {
       title: 'Yedek Parça',
       icon: <SettingsIcon />,
-      color: '#C62828',
+      kod: 'yedek',
       show: isAdmin || hasYedekParca,
       subItems: [
         { title: 'Yedek Parça Satış', path: '/yedek-parcalar', icon: <SellIcon /> },
         { title: 'Yedek Parça Stok', path: '/yedek-parca-stok', icon: <StokIcon /> },
       ],
     },
-    { title: 'Vitrin / Site', path: '/vitrin', icon: <StoreIcon />, show: isAdmin || hasMotorVitrin || hasAksesuarVitrin, color: '#C62828' },
-    { title: 'Veresiye', path: '/veresiye', icon: <VeresiyeIcon />, show: isAdmin, color: '#C62828' },
-    { title: isYatirimci ? 'Raporum' : 'Raporlar', path: '/raporlar', icon: <ReportIcon />, show: isAdmin || isYatirimci, color: '#C62828' },
-    { title: 'Müşteriler', path: '/musteriler', icon: <PeopleIcon />, show: isAdmin, color: '#C62828' },
-    { title: 'Belge Arşivi', path: '/belge-arsivi', icon: <FolderIcon />, show: isAdmin || isMuhasebeci, color: '#C62828' },
-    { title: 'Kullanıcılar', path: '/kullanicilar', icon: <AdminIcon />, show: isAdmin, color: '#C62828' },
-    { title: 'Yetkilendirme', path: '/yetkilendirme', icon: <SettingsIcon />, show: isAdmin, color: '#C62828' },
-    { title: 'Ana Sayfaya Git', path: '/site', icon: <HomeIcon />, show: !isMuhasebeci, color: '#C62828' },
+    { title: 'Vitrin / Site', path: '/vitrin', icon: <PublicIcon />, show: isAdmin || hasMotorVitrin || hasAksesuarVitrin, kod: 'vitrin' },
+    { title: 'Veresiye', path: '/veresiye', icon: <VeresiyeIcon />, show: isAdmin, kod: 'veresiye' },
+    { title: isYatirimci ? 'Raporum' : 'Raporlar', path: '/raporlar', icon: <ReportIcon />, show: isAdmin || isYatirimci, kod: 'raporlar' },
+    { title: 'Müşteriler', path: '/musteriler', icon: <PeopleIcon />, show: isAdmin, kod: 'musteriler' },
+    { title: 'Belge Arşivi', path: '/belge-arsivi', icon: <FolderIcon />, show: isAdmin || isMuhasebeci, kod: 'belge' },
+    { title: 'Kullanıcılar', path: '/kullanicilar', icon: <AdminIcon />, show: isAdmin, kod: 'kullanicilar' },
+    { title: 'Yetkilendirme', path: '/yetkilendirme', icon: <GppGoodIcon />, show: isAdmin, kod: 'yetki' },
   ];
+  const anaSayfa = { title: 'Ana Sayfaya Git', path: '/site', icon: <HomeIcon />, show: !isMuhasebeci, kod: 'ana' };
+  const gorunenler = menuItems.filter((item) => item.show);
 
   const isActive = (path) => pathname === path;
   const isSubActive = (item) => item.subItems?.some((s) => pathname === s.path);
+  const hedefYol = (item) => item.path || item.subItems?.[0]?.path;
+
+  // Ortak satır görünümü: renkli simge + ad; seçili satır açık yüzey rengi ve ince çerçeve alır.
+  const satirStili = (aktif, ic = false) => ({
+    display: 'flex',
+    alignItems: 'center',
+    gap: ic ? 1.25 : 1.5,
+    width: '100%',
+    minHeight: ic ? 34 : 40,
+    px: 1.5,
+    pl: ic ? 5 : 1.5,
+    borderRadius: '6px',
+    justifyContent: 'flex-start',
+    textAlign: 'left',
+    color: aktif ? RENK.murekkep : '#3C4046',
+    fontFamily: FONT.metin,
+    fontSize: ic ? 14 : 15,
+    fontWeight: aktif ? 700 : 500,
+    bgcolor: aktif ? RENK.yuzey : 'transparent',
+    boxShadow: aktif ? `0 0 0 1px ${RENK.cizgi}` : 'none',
+    '&:hover': { bgcolor: aktif ? RENK.yuzey : 'rgba(22,24,28,.06)' },
+    '& svg': { fontSize: ic ? 17 : 20 },
+  });
+  const ikonKutusu = (kod, ic = false) => ({ display: 'inline-flex', color: MENU_RENK[kod], opacity: ic ? 0.9 : 1, flex: 'none' });
 
   const drawer = (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: '#1a1a1a', color: 'white', overflow: 'hidden' }}>
-      <Box sx={{ p: 1.5, textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1.5, flexShrink: 0 }}>
-        <span className="kmt-logo-wrap" style={{ width: 40, height: 44, overflow: 'hidden', display: 'inline-flex', alignItems: 'center', flexShrink: 0 }}>
-          <img
-            className="kmt-logo"
-            src="/KaynarMotor.png"
-            alt="Kaynar Motor"
-            width="40"
-            height="44"
-            style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', filter: 'brightness(0) invert(1)' }}
-          />
-        </span>
-        <Typography variant="h7" fontWeight="bold" sx={{ letterSpacing: 1 }}>
-          <span>KAYNAR </span>
-          <span style={{ color: '#C62828' }}>MOTOR</span>
-        </Typography>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: RENK.kenarMenu, overflow: 'hidden' }}>
+      <Box sx={{ px: 2.5, pt: 2.5, pb: 2, flexShrink: 0 }}>
+        <img src="/kaynar-logo.png" alt="Kaynar Motor" style={{ display: 'block', width: 150, height: 'auto' }} />
       </Box>
-      <List
+      <Box
+        component="nav"
+        aria-label="Ana gezinme"
         sx={{
           flex: 1,
-          pt: 0,
-          pb: 0,
+          px: 1.5,
           overflowY: 'auto',
           overflowX: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '3px',
           '&::-webkit-scrollbar': { width: 6 },
-          '&::-webkit-scrollbar-thumb': { bgcolor: 'rgba(255,255,255,0.2)', borderRadius: 3 },
+          '&::-webkit-scrollbar-thumb': { bgcolor: 'rgba(22,24,28,.2)', borderRadius: 3 },
         }}
       >
-        {menuItems
-          .filter((item) => item.show)
-          .map((item, index) => (
-            <React.Fragment key={index}>
-              {item.subItems ? (
-                <>
-                  <ListItem disablePadding>
-                    <ListItemButton
-                      onClick={() => toggleMenu(item.key || item.title)}
-                      sx={{
-                        color: 'white',
-                        py: 1,
-                        borderLeft: isSubActive(item) ? '4px solid white' : '4px solid transparent',
-                        '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' },
-                      }}
-                    >
-                      <ListItemIcon sx={{ color: 'white', minWidth: 34, '& svg': { fontSize: 21 } }}>{item.icon}</ListItemIcon>
-                      <ListItemText primary={item.title} primaryTypographyProps={{ fontSize: '0.92rem', fontWeight: isSubActive(item) ? 'bold' : 'normal' }} />
-                      {openMenus[item.key || item.title] ? <ExpandLess /> : <ExpandMore />}
-                    </ListItemButton>
-                  </ListItem>
-                  <Collapse in={!!openMenus[item.key || item.title]} timeout="auto" unmountOnExit>
-                    <List component="div" disablePadding>
-                      {item.subItems.map((sub, si) => (
-                        <ListItemButton
-                          key={si}
-                          onClick={() => handleNavigate(sub.path)}
-                          sx={{
-                            pl: 4,
-                            py: 0.6,
-                            color: 'white',
-                            borderLeft: isActive(sub.path) ? '4px solid white' : '4px solid transparent',
-                            bgcolor: isActive(sub.path) ? 'rgba(255,255,255,0.1)' : 'transparent',
-                            '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' },
-                          }}
-                        >
-                          <ListItemIcon sx={{ color: 'rgba(255,255,255,0.7)', minWidth: 30, '& svg': { fontSize: 19 } }}>{sub.icon}</ListItemIcon>
-                          <ListItemText
-                            primary={sub.title}
-                            primaryTypographyProps={{ fontSize: '0.85rem', fontWeight: isActive(sub.path) ? 'bold' : 'normal' }}
-                          />
-                        </ListItemButton>
-                      ))}
-                    </List>
-                  </Collapse>
-                </>
-              ) : (
-                <ListItem disablePadding>
-                  <ListItemButton
-                    onClick={() => handleNavigate(item.path)}
-                    sx={{
-                      color: 'white',
-                      py: 1,
-                      borderLeft: isActive(item.path) ? '4px solid white' : '4px solid transparent',
-                      bgcolor: isActive(item.path) ? 'rgba(255,255,255,0.1)' : 'transparent',
-                      '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' },
-                    }}
-                  >
-                    <ListItemIcon sx={{ color: 'white', minWidth: 34, '& svg': { fontSize: 21 } }}>{item.icon}</ListItemIcon>
-                    <ListItemText primary={item.title} primaryTypographyProps={{ fontSize: '0.92rem', fontWeight: isActive(item.path) ? 'bold' : 'normal' }} />
-                  </ListItemButton>
-                </ListItem>
-              )}
+        {gorunenler.map((item) =>
+          item.subItems ? (
+            <React.Fragment key={item.kod}>
+              <ButtonBase onClick={() => toggleMenu(item.key || item.title)} sx={satirStili(false)} aria-expanded={!!openMenus[item.key || item.title]}>
+                <Box component="span" sx={ikonKutusu(item.kod)}>
+                  {item.icon}
+                </Box>
+                <Box component="span" sx={{ flex: 1, fontWeight: isSubActive(item) ? 700 : 500, color: RENK.murekkep }}>
+                  {item.title}
+                </Box>
+                <Box component="span" sx={{ display: 'inline-flex', opacity: 0.6 }}>
+                  {openMenus[item.key || item.title] ? <ExpandLess /> : <ExpandMore />}
+                </Box>
+              </ButtonBase>
+              <Collapse in={!!openMenus[item.key || item.title]} timeout="auto" unmountOnExit>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: '2px', pb: 0.5 }}>
+                  {item.subItems.map((sub) => (
+                    <ButtonBase key={sub.path} onClick={() => handleNavigate(sub.path)} sx={satirStili(isActive(sub.path), true)}>
+                      <Box component="span" sx={ikonKutusu(item.kod, true)}>
+                        {sub.icon}
+                      </Box>
+                      {sub.title}
+                    </ButtonBase>
+                  ))}
+                </Box>
+              </Collapse>
             </React.Fragment>
-          ))}
-      </List>
-      <Divider sx={{ borderColor: 'rgba(255,255,255,0.2)' }} />
+          ) : (
+            <ButtonBase key={item.kod} onClick={() => handleNavigate(item.path)} sx={satirStili(isActive(item.path))}>
+              <Box component="span" sx={ikonKutusu(item.kod)}>
+                {item.icon}
+              </Box>
+              {item.title}
+            </ButtonBase>
+          ),
+        )}
+      </Box>
+      <Box sx={{ px: 1.5, pb: 2, pt: 1, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '3px' }}>
+        {anaSayfa.show && (
+          <ButtonBase onClick={() => handleNavigate(anaSayfa.path)} sx={satirStili(false)}>
+            <Box component="span" sx={ikonKutusu(anaSayfa.kod)}>
+              {anaSayfa.icon}
+            </Box>
+            {anaSayfa.title}
+          </ButtonBase>
+        )}
+        {isMobile && (
+          <ButtonBase onClick={handleLogout} sx={satirStili(false)}>
+            <Box component="span" sx={{ display: 'inline-flex', color: '#B3261E' }}>
+              <LogoutIcon />
+            </Box>
+            Çıkış Yap
+          </ButtonBase>
+        )}
+      </Box>
     </Box>
   );
+
+  // Telefon alt sekmeleri: yetkisi olan ilk dört bölüm + Menü
+  const altSekmeler = ALT_SEKME_SIRASI.map((kod) => gorunenler.find((m) => m.kod === kod))
+    .filter(Boolean)
+    .slice(0, 4);
+  const altSekmeAktif = (item) => (item.subItems ? isSubActive(item) : isActive(item.path));
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh' }}>
       {isMobile ? (
-        <>
-          <IconButton
-            onClick={() => setMobileOpen(!mobileOpen)}
-            sx={{
-              position: 'fixed',
-              top: 8,
-              left: 8,
-              zIndex: 1300,
-              bgcolor: theme.palette.primary.main,
-              color: 'white',
-              '&:hover': { bgcolor: theme.palette.primary.dark },
-            }}
-          >
-            <MenuIcon />
-          </IconButton>
-          <Drawer
-            variant="temporary"
-            open={mobileOpen}
-            onClose={() => setMobileOpen(false)}
-            ModalProps={{ keepMounted: true }}
-            sx={{ '& .MuiDrawer-paper': { width: DRAWER_WIDTH, border: 'none', borderRadius: 0 } }}
-          >
-            {drawer}
-          </Drawer>
-        </>
+        <Drawer
+          variant="temporary"
+          open={mobileOpen}
+          onClose={() => setMobileOpen(false)}
+          ModalProps={{ keepMounted: true }}
+          sx={{ '& .MuiDrawer-paper': { width: MOBIL_GENISLIK, maxWidth: '86vw', border: 'none', borderRadius: 0 } }}
+        >
+          {drawer}
+        </Drawer>
       ) : (
-        <Drawer variant="permanent" sx={{ width: DRAWER_WIDTH, flexShrink: 0, '& .MuiDrawer-paper': { width: DRAWER_WIDTH, border: 'none', borderRadius: 0 } }}>
+        <Drawer
+          variant="permanent"
+          sx={{
+            width: KENAR_GENISLIK,
+            flexShrink: 0,
+            '& .MuiDrawer-paper': { width: KENAR_GENISLIK, border: 'none', borderRight: `1px solid ${RENK.cizgi}`, borderRadius: 0 },
+          }}
+        >
           {drawer}
         </Drawer>
       )}
 
-      <Box component="main" sx={{ flexGrow: 1, minHeight: '100vh', bgcolor: '#f5f5f5', width: isMobile ? '100%' : `calc(100% - ${DRAWER_WIDTH}px)` }}>
-        {/* Page Header */}
-        <Box
-          sx={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            px: { xs: 1.5, md: 3 },
-            pl: { xs: 6, md: 3 },
-            pt: { xs: 1, md: 2 },
-            pb: 1,
-            bgcolor: 'white',
-            borderBottom: '1px solid #eee',
-            flexWrap: 'wrap',
-            gap: 1,
-          }}
-        >
-          <Box sx={{ minWidth: 0 }}>
-            <Typography variant={isMobile ? 'subtitle1' : 'h5'} fontWeight="bold" noWrap>
+      <Box
+        component="main"
+        sx={{ flexGrow: 1, minHeight: '100vh', bgcolor: RENK.kagit, width: isMobile ? '100%' : `calc(100% - ${KENAR_GENISLIK}px)`, pb: isMobile ? 9 : 0 }}
+      >
+        {/* Sayfa başlığı */}
+        {isMobile ? (
+          <Box
+            sx={{
+              position: 'sticky',
+              top: 0,
+              zIndex: 20,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1.5,
+              px: 1.75,
+              py: 1.25,
+              bgcolor: RENK.kenarMenu,
+              borderBottom: `1px solid ${RENK.cizgi}`,
+            }}
+          >
+            <IconButton
+              onClick={() => setMobileOpen(true)}
+              aria-label="Menüyü aç"
+              sx={{
+                width: 38,
+                height: 38,
+                borderRadius: '6px',
+                bgcolor: RENK.yuzey,
+                border: `1px solid ${RENK.cizgi}`,
+                color: RENK.murekkep,
+                '&:hover': { bgcolor: RENK.yuzey },
+              }}
+            >
+              <MenuIcon />
+            </IconButton>
+            <Typography component="h1" noWrap sx={{ flex: 1, fontFamily: FONT.baslik, fontWeight: 700, fontSize: 26, lineHeight: 1.1 }}>
               {getPageTitle()}
             </Typography>
-            {!isMobile && (
-              <Typography variant="body2" color="text.secondary">
-                {dateStr}
-              </Typography>
-            )}
+            <Avatar sx={{ width: 32, height: 32, bgcolor: RENK.murekkep, fontSize: 14, fontWeight: 700 }}>{user?.ad_soyad?.charAt(0) || 'U'}</Avatar>
           </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-            {!isMobile && (
-              <Typography variant="body2" fontWeight="500">
-                {user?.ad_soyad}
+        ) : (
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', px: 3.5, pt: 3, pb: 1 }}>
+            <Box sx={{ minWidth: 0 }}>
+              <Typography component="h1" sx={{ fontFamily: FONT.baslik, fontWeight: 700, fontSize: 46, lineHeight: 1 }}>
+                {getPageTitle()}
               </Typography>
-            )}
-            <Avatar sx={{ width: { xs: 30, md: 36 }, height: { xs: 30, md: 36 }, bgcolor: theme.palette.primary.main, fontSize: { xs: 13, md: 15 } }}>
-              {user?.ad_soyad?.charAt(0) || 'U'}
-            </Avatar>
-            <IconButton onClick={handleLogout} size="small" sx={{ color: '#c62828' }} title="Çıkış Yap">
-              <LogoutIcon />
-            </IconButton>
+              <Typography sx={{ mt: 0.75, fontSize: 14, color: RENK.soluk }}>{dateStr}</Typography>
+            </Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+              <Typography sx={{ fontSize: 14, fontWeight: 600 }}>{user?.ad_soyad}</Typography>
+              <Avatar sx={{ width: 36, height: 36, bgcolor: RENK.murekkep, fontSize: 15, fontWeight: 700 }}>{user?.ad_soyad?.charAt(0) || 'U'}</Avatar>
+              <IconButton onClick={handleLogout} size="small" aria-label="Çıkış yap" title="Çıkış Yap" sx={{ color: RENK.soluk }}>
+                <LogoutIcon />
+              </IconButton>
+            </Box>
           </Box>
-        </Box>
+        )}
 
-        <Box sx={{ p: { xs: 1, sm: 2, md: 3 } }}>
+        <Box sx={{ px: { xs: 1.75, md: 3.5 }, pt: { xs: 1.75, md: 1.5 }, pb: { xs: 2, md: 5 } }}>
           <Outlet />
         </Box>
       </Box>
+
+      {isMobile && (
+        <Box
+          component="nav"
+          aria-label="Alt sekmeler"
+          sx={{
+            position: 'fixed',
+            left: 0,
+            right: 0,
+            bottom: 0,
+            height: 66,
+            zIndex: 25,
+            display: 'grid',
+            gridTemplateColumns: `repeat(${altSekmeler.length + 1}, 1fr)`,
+            bgcolor: RENK.kenarMenu,
+            borderTop: `1px solid ${RENK.cizgi}`,
+          }}
+        >
+          {altSekmeler.map((item) => (
+            <ButtonBase
+              key={item.kod}
+              onClick={() => handleNavigate(hedefYol(item))}
+              sx={{
+                flexDirection: 'column',
+                gap: '3px',
+                fontSize: 12,
+                fontWeight: altSekmeAktif(item) ? 700 : 500,
+                color: RENK.murekkep,
+                fontFamily: FONT.metin,
+              }}
+            >
+              <Box component="span" sx={{ display: 'inline-flex', color: MENU_RENK[item.kod], '& svg': { fontSize: 22 } }}>
+                {item.icon}
+              </Box>
+              {item.title === 'Motorsiklet' ? 'Motor' : item.title === 'Müşteriler' ? 'Müşteriler' : item.title.split(' ')[0]}
+            </ButtonBase>
+          ))}
+          <ButtonBase
+            onClick={() => setMobileOpen(true)}
+            sx={{ flexDirection: 'column', gap: '3px', fontSize: 12, fontWeight: 500, color: RENK.murekkep, fontFamily: FONT.metin }}
+          >
+            <Box component="span" sx={{ display: 'inline-flex', '& svg': { fontSize: 22 } }}>
+              <MenuIcon />
+            </Box>
+            Menü
+          </ButtonBase>
+        </Box>
+      )}
     </Box>
   );
 };

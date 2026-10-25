@@ -1,13 +1,20 @@
 import React from 'react';
-import { Paper, Typography, Grid, TextField, MenuItem, Checkbox, FormControlLabel } from '@mui/material';
+import { Box, Typography, Grid, TextField, MenuItem, Checkbox, FormControlLabel } from '@mui/material';
+import PaymentsIcon from '@mui/icons-material/Payments';
+import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
+import EventAvailableIcon from '@mui/icons-material/EventAvailable';
+import { BolumBasligi } from '../../../../shared/ui';
+import { MENU_RENK, RENK, TON } from '../../../../app/tokenlar';
 
 // Ödeme detayları, kalan ödeme (veresiye) ve yalnızca düzenlemede görünen teslim bilgileri.
 const OdemeTeslimBolumu = ({ formData, setFormData, editId, kullanicilar }) => {
+  // Ödeme tamam: yeşil kutu; bekleyen: sarı kutu (Veresiye'ye düşer)
+  const kutu = formData.odeme_tamamlandi ? TON.yesil : TON.bekle;
   return (
     <>
-      <Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
-        📋 Ödeme Detayları
-      </Typography>
+      <BolumBasligi ikon={<PaymentsIcon />} renk={RENK.mavi}>
+        Ödeme Detayları
+      </BolumBasligi>
       <TextField
         fullWidth
         size="small"
@@ -18,10 +25,10 @@ const OdemeTeslimBolumu = ({ formData, setFormData, editId, kullanicilar }) => {
         rows={2}
       />
 
-      <Typography variant="subtitle1" fontWeight="bold" sx={{ mt: 2, mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
-        💰 Kalan Ödeme
-      </Typography>
-      <Paper variant="outlined" sx={{ p: 1.5, bgcolor: formData.odeme_tamamlandi ? '#e8f5e9' : '#fff3e0' }}>
+      <BolumBasligi ikon={<AccountBalanceWalletIcon />} renk={MENU_RENK.veresiye} sx={{ mt: 2.5 }}>
+        Kalan Ödeme
+      </BolumBasligi>
+      <Box sx={{ p: 1.5, borderRadius: '6px', bgcolor: kutu.bg, border: `1px solid ${kutu.fg}40`, borderLeft: `4px solid ${kutu.fg}` }}>
         <Grid container spacing={2} alignItems="center">
           <Grid size={{ xs: 12, sm: 6 }}>
             <FormControlLabel
@@ -48,17 +55,17 @@ const OdemeTeslimBolumu = ({ formData, setFormData, editId, kullanicilar }) => {
           )}
         </Grid>
         {!formData.odeme_tamamlandi && (
-          <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+          <Typography variant="caption" sx={{ mt: 1, display: 'block', color: kutu.fg }}>
             Bu kayıt Veresiye sayfasında listelenecektir.
           </Typography>
         )}
-      </Paper>
+      </Box>
 
       {editId && (
         <>
-          <Typography variant="subtitle1" fontWeight="bold" sx={{ mt: 2, mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
-            📅 Teslim Bilgileri
-          </Typography>
+          <BolumBasligi ikon={<EventAvailableIcon />} renk={MENU_RENK.taksit} sx={{ mt: 2.5 }}>
+            Teslim Bilgileri
+          </BolumBasligi>
           <Grid container spacing={2}>
             <Grid size={{ xs: 6 }}>
               <TextField

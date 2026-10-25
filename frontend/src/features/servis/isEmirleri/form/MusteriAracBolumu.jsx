@@ -1,14 +1,19 @@
 import React from 'react';
 import { Box, Paper, Typography, Grid, TextField, MenuItem, InputAdornment } from '@mui/material';
+import PersonIcon from '@mui/icons-material/Person';
+import TwoWheelerIcon from '@mui/icons-material/TwoWheeler';
+import BuildIcon from '@mui/icons-material/Build';
 import { musteriService } from '../../../musteriler/musteriApi';
+import { BolumBasligi } from '../../../../shared/ui';
+import { MENU_RENK, RENK } from '../../../../app/tokenlar';
 
 // Formun sol sütunu: müşteri (telefondan otomatik eşleştirme), araç, arıza ve açıklama.
 const MusteriAracBolumu = ({ formData, setFormData, musteriOptions, setMusteriOptions, handleMusteriSearch, handleMusteriSelect }) => {
   return (
     <>
-      <Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
-        👤 Müşteri Bilgileri
-      </Typography>
+      <BolumBasligi ikon={<PersonIcon />} renk={RENK.mavi}>
+        Müşteri Bilgileri
+      </BolumBasligi>
       <Grid container spacing={2}>
         <Grid size={{ xs: 6 }}>
           <TextField
@@ -58,11 +63,23 @@ const MusteriAracBolumu = ({ formData, setFormData, musteriOptions, setMusteriOp
             }}
           />
           {musteriOptions.length > 0 && formData.telefon.length >= 2 && (
-            <Paper sx={{ position: 'absolute', zIndex: 10, left: 16, right: 0, maxHeight: 200, overflow: 'auto', boxShadow: 3, bgcolor: 'white' }}>
+            <Paper
+              sx={{
+                position: 'absolute',
+                zIndex: 10,
+                left: 16,
+                right: 0,
+                top: '100%',
+                maxHeight: 200,
+                overflow: 'auto',
+                boxShadow: '0 8px 20px rgba(22,24,28,.15)',
+                bgcolor: RENK.yuzey,
+              }}
+            >
               {musteriOptions.map((m) => (
                 <Box
                   key={m.id}
-                  sx={{ p: 1, cursor: 'pointer', '&:hover': { bgcolor: '#f5f5f5' }, borderBottom: '1px solid #eee' }}
+                  sx={{ p: 1, cursor: 'pointer', '&:hover': { bgcolor: RENK.yuzeyKoyu }, borderBottom: `1px solid ${RENK.cizgiSoluk}` }}
                   onClick={() => {
                     handleMusteriSelect(m);
                     setMusteriOptions([]);
@@ -91,9 +108,9 @@ const MusteriAracBolumu = ({ formData, setFormData, musteriOptions, setMusteriOp
         </Grid>
       </Grid>
 
-      <Typography variant="subtitle1" fontWeight="bold" sx={{ mt: 3, mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
-        🏍️ Araç Bilgileri
-      </Typography>
+      <BolumBasligi ikon={<TwoWheelerIcon />} renk={MENU_RENK.motor} sx={{ mt: 3 }}>
+        Araç Bilgileri
+      </BolumBasligi>
       <Grid container spacing={2}>
         <Grid size={{ xs: 6, sm: 3 }}>
           <TextField
@@ -147,9 +164,9 @@ const MusteriAracBolumu = ({ formData, setFormData, musteriOptions, setMusteriOp
         </Grid>
       </Grid>
 
-      <Typography variant="subtitle1" fontWeight="bold" sx={{ mt: 3, mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
-        🔧 Arıza ve Açıklama
-      </Typography>
+      <BolumBasligi ikon={<BuildIcon />} renk={MENU_RENK.servis} sx={{ mt: 3 }}>
+        Arıza ve Açıklama
+      </BolumBasligi>
       <Grid container spacing={2}>
         <Grid size={{ xs: 6 }}>
           <TextField

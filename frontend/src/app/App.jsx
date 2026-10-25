@@ -225,6 +225,17 @@ const RootRoute = () => {
   return <Navigate to={hedef} />;
 };
 
+// Yönetim paneli ve giriş ekranı yeni tasarımla (Servis Defteri) çizilir; vitrin ve müşteriye açık sayfalar eski temada kalır.
+const PanelTema = ({ children }) => {
+  const { panelTheme } = useCustomTheme();
+  return (
+    <ThemeProvider theme={panelTheme}>
+      <CssBaseline />
+      {children}
+    </ThemeProvider>
+  );
+};
+
 const ThemedApp = () => {
   const { theme } = useCustomTheme();
 
@@ -238,7 +249,9 @@ const ThemedApp = () => {
               path="/login"
               element={
                 <PublicRoute>
-                  <Login />
+                  <PanelTema>
+                    <Login />
+                  </PanelTema>
                 </PublicRoute>
               }
             />
@@ -253,7 +266,9 @@ const ThemedApp = () => {
             <Route
               element={
                 <ProtectedRoute>
-                  <Layout />
+                  <PanelTema>
+                    <Layout />
+                  </PanelTema>
                 </ProtectedRoute>
               }
             >

@@ -2,7 +2,7 @@
  * İş emri liste kurallarının (saf fonksiyonlar) BİRİM testleri: ekran, sahte API, bekleme yok; girdi -> çıktı.
  * Ekran düzeyindeki karşılıkları ../IsEmirleri.test.js içinde.
  */
-import { filtrele, istatistikler, kayittanForm, bosForm, bosParca, durumRenk, durumLabel, formatTarih } from './isEmriVeri';
+import { filtrele, istatistikler, kayittanForm, bosForm, bosParca, durumRenk, durumLabel, durumTon, formatTarih } from './isEmriVeri';
 
 const liste = [
   {
@@ -113,7 +113,8 @@ describe('form dönüşümleri', () => {
 describe('durum etiketleri', () => {
   test('renk ve kısa etiket', () => {
     expect([durumRenk('tamamlandi'), durumRenk('devam_ediyor'), durumRenk('beklemede'), durumRenk('?')]).toEqual(['success', 'info', 'warning', 'warning']);
-    expect([durumLabel('tamamlandi'), durumLabel('devam_ediyor'), durumLabel('beklemede')]).toEqual(['Tamam', 'İşlemde', 'Bekl.']);
+    expect([durumLabel('tamamlandi'), durumLabel('devam_ediyor'), durumLabel('beklemede')]).toEqual(['Tamamlandı', 'İşlemde', 'Beklemede']);
+    expect([durumTon('tamamlandi'), durumTon('devam_ediyor'), durumTon('beklemede'), durumTon('?')]).toEqual(['yesil', 'mavi', 'bekle', 'bekle']);
   });
   test('formatTarih: boşsa boş metin', () => {
     expect(formatTarih(null)).toBe('');

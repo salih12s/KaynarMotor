@@ -1,0 +1,8 @@
+export { default as Plaka } from './Plaka';
+export { default as Damga } from './Damga';
+export { default as IslemDugmesi } from './IslemDugmesi';
+export { default as OzetSeridi } from './OzetSeridi';
+export { default as DialogBasligi } from './DialogBasligi';
+export { default as BolumBasligi } from './BolumBasligi';
+export { BilgiKarti, SayiKutusu, Not } from './BilgiKartlari';
+export { plakaBicim } from './plakaBicim';

@@ -81,9 +81,16 @@ export const durumRenk = (d) => {
 };
 
 export const durumLabel = (d) => {
-  if (d === 'tamamlandi') return 'Tamam';
+  if (d === 'tamamlandi') return 'Tamamlandı';
   if (d === 'devam_ediyor') return 'İşlemde';
-  return 'Bekl.';
+  return 'Beklemede';
+};
+
+// Damga (shared/ui/Damga) tonu: beklemede amber, işlemde mavi, tamamlandı yeşil
+export const durumTon = (d) => {
+  if (d === 'tamamlandi') return 'yesil';
+  if (d === 'devam_ediyor') return 'mavi';
+  return 'bekle';
 };
 
 export const formatTarih = (d) => tarihYaz(d, '');

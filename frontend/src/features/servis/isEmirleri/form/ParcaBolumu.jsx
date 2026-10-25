@@ -12,28 +12,38 @@ import {
   TableHead,
   TableRow,
   Button,
-  Chip,
-  IconButton,
   InputAdornment,
   Autocomplete,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import CloseIcon from '@mui/icons-material/Close';
+import SettingsIcon from '@mui/icons-material/Settings';
 import { useKarGor } from '../../../auth/AuthContext';
 import { sayiYaz } from '../../../../shared/utils/bicim';
+import { BolumBasligi, IslemDugmesi } from '../../../../shared/ui';
+import { MENU_RENK, RENK } from '../../../../app/tokenlar';
+
+const kesikKutu = { borderStyle: 'dashed', borderColor: RENK.cizgiKesik };
 
 // Parçalar ve işçilik: stok araması/barkod, ekleme ve parça tablosu (kâr sütunu yalnızca karGor için).
 const ParcaBolumu = ({ parcalar, newParca, setNewParca, stokOptions, addParca, removeParca, handleStokSearch, selectStok, handleParcaKeyDown, isMobile }) => {
   const karGor = useKarGor();
   return (
     <>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-        <Typography variant="subtitle1" fontWeight="bold" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          📋 Parçalar ve İşçilik
-        </Typography>
-        <Chip label={`${parcalar.length} parça`} size="small" color="primary" variant="outlined" />
-      </Box>
-      <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
+      <BolumBasligi
+        ikon={<SettingsIcon />}
+        renk={MENU_RENK.aksesuar}
+        sag={
+          <Box
+            component="span"
+            sx={{ px: 1.25, py: 0.25, borderRadius: '999px', border: `1.5px solid ${RENK.alanCizgi}`, fontSize: 13, fontWeight: 600, color: RENK.soluk }}
+          >
+            {parcalar.length} parça
+          </Box>
+        }
+      >
+        Parçalar ve İşçilik
+      </BolumBasligi>
+      <Paper variant="outlined" sx={{ p: 2, mb: 2, bgcolor: RENK.yuzeyKoyu, ...kesikKutu }}>
         <Autocomplete
           freeSolo
           options={stokOptions}
@@ -125,14 +135,12 @@ const ParcaBolumu = ({ parcalar, newParca, setNewParca, stokOptions, addParca, r
                       Adet: {p.adet} • Satış: ₺{sayiYaz(pSatis)} • Maliyet: ₺{sayiYaz(pMaliyet)}
                     </Typography>
                     {karGor && (
-                      <Typography variant="caption" sx={{ display: 'block', color: pKar >= 0 ? '#2e7d32' : '#c62828', fontWeight: 'bold' }}>
+                      <Typography variant="caption" sx={{ display: 'block', color: pKar >= 0 ? RENK.yesil : RENK.kirmizi, fontWeight: 'bold' }}>
                         Kâr: ₺{sayiYaz(pKar)}
                       </Typography>
                     )}
                   </Box>
-                  <IconButton size="small" color="error" onClick={() => removeParca(i)}>
-                    <CloseIcon fontSize="small" />
-                  </IconButton>
+                  <IslemDugmesi tur="carpi" etiket="Parçayı çıkar" onClick={() => removeParca(i)} />
                 </Paper>
               );
             })}
@@ -142,24 +150,12 @@ const ParcaBolumu = ({ parcalar, newParca, setNewParca, stokOptions, addParca, r
             <Table size="small">
               <TableHead>
                 <TableRow>
-                  <TableCell sx={{ fontWeight: 'bold' }}>Parça</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold' }} align="center">
-                    Adet
-                  </TableCell>
-                  <TableCell sx={{ fontWeight: 'bold' }} align="right">
-                    Satış
-                  </TableCell>
-                  <TableCell sx={{ fontWeight: 'bold' }} align="right">
-                    Maliyet
-                  </TableCell>
-                  {karGor && (
-                    <TableCell sx={{ fontWeight: 'bold' }} align="right">
-                      Kâr
-                    </TableCell>
-                  )}
-                  <TableCell sx={{ fontWeight: 'bold' }} align="center">
-                    Sil
-                  </TableCell>
+                  <TableCell>Parça</TableCell>
+                  <TableCell align="center">Adet</TableCell>
+                  <TableCell align="right">Satış</TableCell>
+                  <TableCell align="right">Maliyet</TableCell>
+                  {karGor && <TableCell align="right">Kâr</TableCell>}
+                  <TableCell align="center">Sil</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -174,14 +170,12 @@ const ParcaBolumu = ({ parcalar, newParca, setNewParca, stokOptions, addParca, r
                       <TableCell align="right">₺{sayiYaz(pSatis)}</TableCell>
                       <TableCell align="right">₺{sayiYaz(pMaliyet)}</TableCell>
                       {karGor && (
-                        <TableCell align="right" sx={{ color: pKar >= 0 ? '#2e7d32' : '#c62828', fontWeight: 'bold' }}>
+                        <TableCell align="right" sx={{ color: pKar >= 0 ? RENK.yesil : RENK.kirmizi, fontWeight: 'bold' }}>
                           ₺{sayiYaz(pKar)}
                         </TableCell>
                       )}
                       <TableCell align="center">
-                        <IconButton size="small" color="error" onClick={() => removeParca(i)}>
-                          <CloseIcon fontSize="small" />
-                        </IconButton>
+                        <IslemDugmesi tur="carpi" etiket="Parçayı çıkar" onClick={() => removeParca(i)} />
                       </TableCell>
                     </TableRow>
                   );
@@ -191,7 +185,7 @@ const ParcaBolumu = ({ parcalar, newParca, setNewParca, stokOptions, addParca, r
           </TableContainer>
         )
       ) : (
-        <Paper variant="outlined" sx={{ p: 3, textAlign: 'center', color: 'text.secondary', mb: 2 }}>
+        <Paper variant="outlined" sx={{ p: 3, textAlign: 'center', color: 'text.secondary', mb: 2, ...kesikKutu }}>
           Henüz parça eklenmedi
         </Paper>
       )}

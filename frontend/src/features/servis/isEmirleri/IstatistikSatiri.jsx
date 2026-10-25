@@ -1,30 +1,24 @@
 import React from 'react';
-import { Box, Button, Chip } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
+import { Box } from '@mui/material';
 import { sayiYaz } from '../../../shared/utils/bicim';
+import { OzetSeridi } from '../../../shared/ui';
 
-// Üstteki sayı çipleri ve "Yeni İş Emri" düğmesi. Kâr çipi yalnızca karGor için.
-const IstatistikSatiri = ({ istatistik: s, karGor, onYeni }) => {
-  const etiketler = [
-    `Toplam: ${s.toplam}`,
-    `Bugün: ${s.bugun}`,
-    `Beklemede: ${s.beklemede}`,
-    `İşlemde: ${s.islemde}`,
-    `Ödeme Bekl.: 0`,
-    `Tamamlandı: ${s.tamamlandi}`,
-    `İptal: 0`,
-    `₺${sayiYaz(s.tutar)}`,
-    ...(karGor ? [`Kar: ₺${sayiYaz(s.kar)}`] : []),
+// Sayfanın üstündeki özet şeridi. Kâr yalnızca karGor için.
+const IstatistikSatiri = ({ istatistik: s, karGor }) => {
+  const ogeler = [
+    { etiket: 'Toplam', deger: s.toplam },
+    { etiket: 'Bugün', deger: s.bugun },
+    { etiket: 'Beklemede', deger: s.beklemede, ton: 'bekle' },
+    { etiket: 'İşlemde', deger: s.islemde, ton: 'mavi' },
+    { etiket: 'Ödeme bekl.', deger: 0 },
+    { etiket: 'Tamamlandı', deger: s.tamamlandi, ton: 'yesil' },
+    { etiket: 'İptal', deger: 0 },
+    { etiket: 'Ciro', deger: `₺${sayiYaz(s.tutar)}` },
+    ...(karGor ? [{ etiket: 'Kâr', deger: `₺${sayiYaz(s.kar)}`, ton: 'yesil' }] : []),
   ];
   return (
-    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2, alignItems: 'center' }}>
-      {etiketler.map((label, i) => (
-        <Chip key={i} label={label} sx={{ bgcolor: '#ffebee', color: '#C62828', fontWeight: 'bold', fontSize: '0.8rem', borderLeft: '4px solid #C62828' }} />
-      ))}
-      <Box sx={{ flexGrow: 1 }} />
-      <Button variant="contained" size="large" startIcon={<AddIcon />} onClick={onYeni}>
-        Yeni İş Emri
-      </Button>
+    <Box sx={{ mb: 2 }}>
+      <OzetSeridi ogeler={ogeler} />
     </Box>
   );
 };

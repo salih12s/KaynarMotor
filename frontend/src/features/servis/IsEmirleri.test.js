@@ -137,6 +137,9 @@ const hucreler = (row) =>
     .getAllByRole('cell')
     .map((c) => c.textContent);
 const ikon = (kapsam, ad) => within(kapsam).getByTestId(ad);
+// Üstteki özet şeridi: etiketin yanındaki büyük rakam
+const ozet = (etiket) => within(screen.getByLabelText('Özet')).getByText(etiket).previousSibling.textContent;
+const ozetYok = (etiket) => within(screen.getByLabelText('Özet')).queryByText(etiket);
 const alan = (etiket) => screen.getByLabelText(etiket);
 // Typography: body -> <p>, caption -> <span>
 const yazi = (metin) => screen.getByText((_, el) => (el.tagName === 'P' || el.tagName === 'SPAN') && el.textContent === metin);
@@ -158,22 +161,23 @@ afterEach(() => {
 describe('İş Emirleri: liste', () => {
   test('istatistik çipleri sayıları ve toplamı gösterir; kâr çipi yalnızca admin için', async () => {
     await ekranAc();
-    for (const t of ['Toplam: 3', 'Bugün: 1', 'Beklemede: 1', 'İşlemde: 1', 'Ödeme Bekl.: 0', 'Tamamlandı: 1', 'İptal: 0', '₺5.000', 'Kar: ₺2.000']) {
-      expect(screen.getByText(t)).toBeInTheDocument();
+    const beklenen = { Toplam: '3', Bugün: '1', Beklemede: '1', İşlemde: '1', 'Ödeme bekl.': '0', Tamamlandı: '1', İptal: '0', Ciro: '₺5.000', Kâr: '₺2.000' };
+    for (const [etiket, deger] of Object.entries(beklenen)) {
+      expect(ozet(etiket)).toBe(deger);
     }
   });
 
   test('personel: kâr çipi, Kar sütunu ve silme düğmesi görünmez', async () => {
     await ekranAc({ rol: 'personel' });
-    expect(screen.queryByText(/^Kar:/)).not.toBeInTheDocument();
-    expect(screen.queryByRole('columnheader', { name: 'Kar' })).not.toBeInTheDocument();
+    expect(ozetYok('Kâr')).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: 'Kâr' })).not.toBeInTheDocument();
     expect(screen.queryAllByTestId('DeleteIcon')).toHaveLength(0);
     expect(screen.getAllByRole('columnheader').map((h) => h.textContent)).toEqual([
-      'Fiş No',
-      'Müşteri',
-      'Araç',
+      'Fiş',
+      'Plaka',
+      'Müşteri ve araç',
       'Telefon',
-      'Tarih/Durum',
+      'Durum',
       'Personel',
       'Arıza',
       'Toplam',
@@ -184,14 +188,14 @@ describe('İş Emirleri: liste', () => {
 
   test('admin: Kar sütunu ve her satırda silme düğmesi var; satır içeriği', async () => {
     await ekranAc();
-    expect(screen.getByRole('columnheader', { name: 'Kar' })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Kâr' })).toBeInTheDocument();
     expect(screen.getAllByTestId('DeleteIcon')).toHaveLength(3);
     expect(hucreler(satir(/Ayşe Yılmaz/))).toEqual([
       '101',
-      'Ayşe Yılmaz',
-      'Honda PCX',
+      '34 ABC 123',
+      'Ayşe YılmazHonda PCX',
       '05551112233',
-      `${tarihTr(BUGUN)}Bekl.`,
+      `Beklemede${tarihTr(BUGUN)}`,
       'Usta Mehmet',
       'Fren sesi',
       '₺1.500',
@@ -202,8 +206,8 @@ describe('İş Emirleri: liste', () => {
     // personel: teslim_eden yoksa oluşturan kişi; ikisi de yoksa tire
     expect(hucreler(satir(/Veli Demir/))[5]).toBe('ofis');
     expect(hucreler(satir(/Zeynep Kaya/))[5]).toBe('-');
-    expect(hucreler(satir(/Veli Demir/))[4]).toBe('15.09.2026İşlemde');
-    expect(hucreler(satir(/Zeynep Kaya/))[4]).toBe('01.10.2026Tamam');
+    expect(hucreler(satir(/Veli Demir/))[4]).toBe('İşlemde15.09.2026');
+    expect(hucreler(satir(/Zeynep Kaya/))[4]).toBe('Tamamlandı01.10.2026');
   });
 
   test('QR düğmesi yalnızca plakası olan satırda var', async () => {
@@ -215,7 +219,7 @@ describe('İş Emirleri: liste', () => {
   test('liste boşsa "Kayıt bulunamadı" satırı görünür', async () => {
     await ekranAc({ liste: [], bekleme: true });
     expect(await screen.findByText('Kayıt bulunamadı')).toBeInTheDocument();
-    expect(screen.getByText('Toplam: 0')).toBeInTheDocument();
+    expect(ozet('Toplam')).toBe('0');
   });
 });
 
@@ -246,7 +250,7 @@ describe('İş Emirleri: süzgeçler', () => {
     expect(screen.getByText('Veli Demir')).toBeInTheDocument();
     expect(screen.queryByText('Ayşe Yılmaz')).not.toBeInTheDocument();
     expect(screen.queryByText('Zeynep Kaya')).not.toBeInTheDocument();
-    expect(screen.getByText('Toplam: 3')).toBeInTheDocument();
+    expect(ozet('Toplam')).toBe('3');
     fireEvent.change(screen.getByLabelText('Bitiş'), { target: { value: '' } });
     fireEvent.change(screen.getByLabelText('Başlangıç'), { target: { value: '2026-09-30' } });
     expect(screen.queryByText('Veli Demir')).not.toBeInTheDocument();
@@ -261,7 +265,7 @@ describe('İş Emirleri: süzgeçler', () => {
     await user.click(screen.getByRole('option', { name: 'Tamamlandı' }));
     await waitFor(() => expect(isEmriService.getAll).toHaveBeenLastCalledWith({ durum: 'tamamlandi' }));
     await waitFor(() => expect(screen.queryByText('Veli Demir')).not.toBeInTheDocument());
-    expect(screen.getByText('Toplam: 1')).toBeInTheDocument();
+    expect(ozet('Toplam')).toBe('1');
   });
 
   // ---- Önbellek (TanStack Query) ----
@@ -335,7 +339,7 @@ describe('İş Emirleri: detay penceresi', () => {
     expect(yazi('Maliyet: ₺300')).toBeInTheDocument();
     expect(yazi('Kâr: ₺300')).toBeInTheDocument();
     // ödeme: toplam 1500, kalan 500 -> ödenen 1000
-    expect(within(p).getByText('⚠️ Kalan Ödeme')).toBeInTheDocument();
+    expect(within(p).getByText('Kalan Ödeme')).toBeInTheDocument();
     expect(within(p).getByText('Toplam Tutar').nextElementSibling).toHaveTextContent('₺1.500');
     expect(within(p).getByText('Ödenen').nextElementSibling).toHaveTextContent('₺1.000');
     expect(within(p).getByText('Kalan Borç').nextElementSibling).toHaveTextContent('₺500');
@@ -356,7 +360,7 @@ describe('İş Emirleri: detay penceresi', () => {
     isEmriService.getById.mockResolvedValue({ data: { ...DETAY_A, kalan_odeme: 0 } });
     await user.click(ikon(satir(/Ayşe Yılmaz/), 'VisibilityIcon'));
     const p = await screen.findByRole('dialog');
-    expect(within(p).getByText('✓ Ödeme Tamamlandı')).toBeInTheDocument();
+    expect(within(p).getByText('Ödeme Tamamlandı')).toBeInTheDocument();
     expect(within(p).getByText('Kalan Borç').nextElementSibling).toHaveTextContent('Tamamlandı');
   });
 
@@ -720,7 +724,7 @@ describe('İş Emirleri: mobil görünüm', () => {
   test('tablo yerine kart listesi; kartta kâr yalnızca admin için; karta dokunmak detayı açar', async () => {
     const { user } = await ekranAc();
     expect(screen.queryByRole('table')).not.toBeInTheDocument();
-    expect(screen.getByText('#101')).toBeInTheDocument();
+    expect(screen.getByText('101')).toBeInTheDocument();
     expect(yazi('Kâr: ₺600')).toBeInTheDocument();
     await user.click(screen.getByText('Ayşe Yılmaz'));
     const p = await screen.findByRole('dialog');

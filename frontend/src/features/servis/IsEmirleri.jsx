@@ -38,7 +38,7 @@ const IsEmirleri = () => {
 
   return (
     <Box>
-      <IstatistikSatiri istatistik={istatistikler(liste.isEmirleri)} karGor={karGor} onYeni={form.openModal} />
+      <IstatistikSatiri istatistik={istatistikler(liste.isEmirleri)} karGor={karGor} />
 
       <Suzgecler
         search={search}
@@ -49,6 +49,7 @@ const IsEmirleri = () => {
         setStartDate={setStartDate}
         endDate={endDate}
         setEndDate={setEndDate}
+        onYeni={form.openModal}
       />
 
       <IsEmriListesi
