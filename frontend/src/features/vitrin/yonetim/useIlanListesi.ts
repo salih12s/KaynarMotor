@@ -2,19 +2,27 @@ import { useOnay } from '../../../shared/ui';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { vitrinService } from '../vitrinApi';
 import { ilanAramaUygunMu } from '../ilanArama';
+import type { VitrinIlan } from '../../../shared/tipler';
+import type { Bildir } from './tipler';
 
 // İlan listesi: sunucudan yükleme, yayında/arşiv görünümü, arama, sıralama (sayı kutusu, ok, sürükle) ve yayın/silme işlemleri.
-export const useIlanListesi = ({ kategori, isAdmin, bildir }) => {
+interface IlanListesiGirdisi {
+  kategori: string;
+  isAdmin: boolean;
+  bildir: Bildir;
+}
+
+export const useIlanListesi = ({ kategori, isAdmin, bildir }: IlanListesiGirdisi) => {
   const onay = useOnay();
-  const [urunler, setUrunler] = useState([]);
-  const [gorunum, setGorunum] = useState('aktif'); // 'aktif' = yayındakiler, 'arsiv' = yayından kaldırılanlar
+  const [urunler, setUrunler] = useState<VitrinIlan[]>([]);
+  const [gorunum, setGorunum] = useState<'aktif' | 'arsiv'>('aktif'); // 'aktif' = yayındakiler, 'arsiv' = yayından kaldırılanlar
   const [arama, setArama] = useState('');
   const [loading, setLoading] = useState(false);
-  const [draggedUrunId, setDraggedUrunId] = useState(null);
+  const [draggedUrunId, setDraggedUrunId] = useState<number | null>(null);
   const [orderSaving, setOrderSaving] = useState(false);
-  const [siraTaslaklari, setSiraTaslaklari] = useState({});
-  const [siraSavingId, setSiraSavingId] = useState(null);
-  const [yayinSavingId, setYayinSavingId] = useState(null);
+  const [siraTaslaklari, setSiraTaslaklari] = useState<Record<number, string>>({});
+  const [siraSavingId, setSiraSavingId] = useState<number | null>(null);
+  const [yayinSavingId, setYayinSavingId] = useState<number | null>(null);
 
   // Yayındaki ilanlar sıralanabilir; yayından kaldırılanlar arşivde toplanır (sunucu sırasını korur)
   const aktifler = useMemo(() => urunler.filter((u) => u.yayinda), [urunler]);
@@ -41,7 +49,7 @@ export const useIlanListesi = ({ kategori, isAdmin, bildir }) => {
       }
       setLoading(false);
     },
-    [kategori],
+    [kategori, bildir],
   );
 
   useEffect(() => {
@@ -52,7 +60,7 @@ export const useIlanListesi = ({ kategori, isAdmin, bildir }) => {
   }, [aktifler]);
 
   // siraliUrunler: yayındaki ilanların yeni sırası (arşivdekiler listenin sonunda aynen kalır)
-  const saveUrunSirasi = async (siraliUrunler) => {
+  const saveUrunSirasi = async (siraliUrunler: VitrinIlan[]) => {
     const onceki = urunler;
     const yeni = siraliUrunler.map((u, index) => ({ ...u, siralama: index }));
     setUrunler([...yeni, ...arsivdekiler]);
@@ -72,7 +80,7 @@ export const useIlanListesi = ({ kategori, isAdmin, bildir }) => {
     }
   };
 
-  const moveUrun = (id, direction) => {
+  const moveUrun = (id: number, direction: number) => {
     if (orderSaving || !siraDegistirilebilir) return;
     const from = aktifler.findIndex((u) => u.id === id);
     const to = from + direction;
@@ -83,7 +91,7 @@ export const useIlanListesi = ({ kategori, isAdmin, bildir }) => {
     saveUrunSirasi(yeni);
   };
 
-  const handleUrunDrop = (targetId) => {
+  const handleUrunDrop = (targetId: number) => {
     if (orderSaving || !siraDegistirilebilir || draggedUrunId === null || draggedUrunId === targetId) {
       setDraggedUrunId(null);
       return;
@@ -101,7 +109,7 @@ export const useIlanListesi = ({ kategori, isAdmin, bildir }) => {
     saveUrunSirasi(yeni);
   };
 
-  const handleYayinToggle = async (urun) => {
+  const handleYayinToggle = async (urun: VitrinIlan) => {
     if (!isAdmin || yayinSavingId !== null) return;
     const yeniDurum = !urun.yayinda;
     setYayinSavingId(urun.id);
@@ -117,7 +125,7 @@ export const useIlanListesi = ({ kategori, isAdmin, bildir }) => {
     }
   };
 
-  const handleDogrudanSira = async (urun) => {
+  const handleDogrudanSira = async (urun: VitrinIlan) => {
     if (!isAdmin || orderSaving || siraSavingId !== null) return;
     const yeniSira = Number(siraTaslaklari[urun.id]);
     if (!Number.isInteger(yeniSira) || yeniSira < 1 || yeniSira > aktifler.length) {
@@ -134,7 +142,7 @@ export const useIlanListesi = ({ kategori, isAdmin, bildir }) => {
       const res = await vitrinService.moveToPosition(urun.id, yeniSira);
       setUrunler((prev) => {
         const urunMap = new Map(prev.map((item) => [Number(item.id), item]));
-        const siraliAktifler = (res.data.urun_ids || []).map((id, index) => ({ ...urunMap.get(Number(id)), siralama: index }));
+        const siraliAktifler = (res.data.urun_ids || []).map((id, index) => ({ ...(urunMap.get(Number(id)) as VitrinIlan), siralama: index }));
         return [...siraliAktifler, ...prev.filter((item) => !item.yayinda)];
       });
       bildir(`İlan ${res.data.sira}. sıraya taşındı`);
@@ -147,7 +155,7 @@ export const useIlanListesi = ({ kategori, isAdmin, bildir }) => {
     }
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (id: number) => {
     if (!(await onay('Bu ilanı silmek istediğinize emin misiniz?'))) return;
     try {
       await vitrinService.delete(id);
@@ -188,3 +196,5 @@ export const useIlanListesi = ({ kategori, isAdmin, bildir }) => {
     handleDelete,
   };
 };
+
+export type IlanListesiDurumu = ReturnType<typeof useIlanListesi>;

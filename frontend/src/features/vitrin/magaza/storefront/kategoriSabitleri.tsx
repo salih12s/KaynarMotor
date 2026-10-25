@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { type ReactElement } from 'react';
 import TwoWheelerIcon from '@mui/icons-material/TwoWheeler';
 import CheckroomIcon from '@mui/icons-material/Checkroom';
 import BuildIcon from '@mui/icons-material/Build';
@@ -9,14 +9,14 @@ import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
 export const RED = '#C62828';
 
 // Motor Satışı'na girince gösterilen Sıfır / İkinci El seçim kartlarının açıklamaları
-export const MOTOR_DURUM_BASLIK = { sifir: 'Sıfır motorlar', ikinci_el: 'İkinci el motorlar' };
-export const MOTOR_DURUM_ACIKLAMA = {
+export const MOTOR_DURUM_BASLIK: Record<string, string> = { sifir: 'Sıfır motorlar', ikinci_el: 'İkinci el motorlar' };
+export const MOTOR_DURUM_ACIKLAMA: Record<string, string> = {
   sifir: 'Kutusundan yeni, garantili motorlar.',
   ikinci_el: 'Kontrolden geçmiş, bakımlı ikinci el motorlar.',
 };
 
 // Her kategori için giriş ekranında ve mobil menüde gösterilecek ikon
-export const KATEGORI_ICON = {
+export const KATEGORI_ICON: Record<string, ReactElement> = {
   motor: <TwoWheelerIcon sx={{ fontSize: 30 }} />,
   aksesuar: <CheckroomIcon sx={{ fontSize: 30 }} />,
   yedek_parca: <BuildIcon sx={{ fontSize: 30 }} />,

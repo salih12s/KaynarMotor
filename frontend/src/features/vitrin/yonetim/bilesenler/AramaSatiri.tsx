@@ -1,11 +1,21 @@
 import React from 'react';
+
 import { TextField, IconButton, Paper, ToggleButton, ToggleButtonGroup, InputAdornment } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import SearchIcon from '@mui/icons-material/Search';
 import ArchiveIcon from '@mui/icons-material/Archive';
 
 // İlan arama kutusu ve Yayında / Arşiv görünüm anahtarı.
-const AramaSatiri = ({ arama, setArama, gorunum, setGorunum, aktifSayisi, arsivSayisi }) => {
+interface AramaSatiriProps {
+  arama: string;
+  setArama: (v: string) => void;
+  gorunum: 'aktif' | 'arsiv';
+  setGorunum: (v: 'aktif' | 'arsiv') => void;
+  aktifSayisi: number;
+  arsivSayisi: number;
+}
+
+const AramaSatiri = ({ arama, setArama, gorunum, setGorunum, aktifSayisi, arsivSayisi }: AramaSatiriProps) => {
   return (
     <Paper variant="outlined" sx={{ p: 1.5, mb: 2, display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
       <TextField

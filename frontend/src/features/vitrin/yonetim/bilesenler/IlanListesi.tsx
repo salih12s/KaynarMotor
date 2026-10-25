@@ -1,10 +1,19 @@
 import React from 'react';
+import type { VitrinIlan } from '../../../../shared/tipler';
+import type { IlanListesiDurumu } from '../useIlanListesi';
 import { Alert, Box, Button, Typography, Grid, Paper, CircularProgress } from '@mui/material';
 import DragIcon from '@mui/icons-material/DragIndicator';
 import IlanKarti from './IlanKarti';
 
 // İlan listesi: yükleniyor / boş / sonuç yok mesajları ve ilan kartları ızgarası.
-const IlanListesi = ({ liste, isAdmin, isMotor, onDuzenle }) => {
+interface IlanListesiProps {
+  liste: IlanListesiDurumu;
+  isAdmin: boolean;
+  isMotor: boolean;
+  onDuzenle: (ilan: VitrinIlan) => void;
+}
+
+const IlanListesi = ({ liste, isAdmin, isMotor, onDuzenle }: IlanListesiProps) => {
   const { loading, urunler, filtrelenmis, aramaVar, arama, arsivGorunumu, digerSonuc, setGorunum, siraDegistirilebilir, orderSaving, siraMap } = liste;
   return loading ? (
     <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>

@@ -1,4 +1,7 @@
 import React from 'react';
+import type { VitrinIletisim } from '../../../../shared/tipler';
+import type { KategoriBilgisi } from '../../vitrinSabitleri';
+import type { IletisimFormuDurumu } from '../useIletisimFormu';
 import TelefonIkon from '@mui/icons-material/PhoneOutlined';
 import { DialogBasligi } from '../../../../shared/ui';
 import { Box, Button, Typography, Dialog, DialogContent, DialogActions, TextField, Stack } from '@mui/material';
@@ -7,7 +10,15 @@ import PhotoIcon from '@mui/icons-material/PhotoCamera';
 import { vitrinService } from '../../vitrinApi';
 
 // Kategori iletişim penceresi; hizmet sayfalarında başlık ve görsel de düzenlenir.
-const IletisimDialog = ({ ilet, aktifKategori, isHizmet, kategori, iletisim }) => {
+interface IletisimDialogProps {
+  ilet: IletisimFormuDurumu;
+  aktifKategori: KategoriBilgisi;
+  isHizmet: boolean;
+  kategori: string;
+  iletisim: Record<string, VitrinIletisim>;
+}
+
+const IletisimDialog = ({ ilet, aktifKategori, isHizmet, kategori, iletisim }: IletisimDialogProps) => {
   const { iletDlg, kapat, iletForm, setIletForm, iletGorsel, iletGorselVar, iletGorselSil, removeIletGorsel, handleIletGorsel, handleSaveIletisim } = ilet;
   return (
     <Dialog open={iletDlg} onClose={kapat} maxWidth="xs" fullWidth>

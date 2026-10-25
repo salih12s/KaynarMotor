@@ -1,5 +1,5 @@
 // Görseli istemcide küçültüp JPEG base64 döndürür (DB yükünü azaltmak için)
-export const resizeImage = (file, maxSize = 1280, quality = 0.7) =>
+export const resizeImage = (file: File, maxSize = 1280, quality = 0.7): Promise<string> =>
   new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -16,11 +16,16 @@ export const resizeImage = (file, maxSize = 1280, quality = 0.7) =>
         const canvas = document.createElement('canvas');
         canvas.width = width;
         canvas.height = height;
-        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          reject(new Error('Canvas bağlamı alınamadı'));
+          return;
+        }
+        ctx.drawImage(img, 0, 0, width, height);
         resolve(canvas.toDataURL('image/jpeg', quality));
       };
       img.onerror = reject;
-      img.src = e.target.result;
+      img.src = e.target?.result as string;
     };
     reader.onerror = reject;
     reader.readAsDataURL(file);

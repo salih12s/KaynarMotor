@@ -1,11 +1,12 @@
 import React from 'react';
+import type { IlanFormuDurumu } from '../useIlanFormu';
 import { Box, Button, Typography, CircularProgress } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import MovieIcon from '@mui/icons-material/Movie';
 import PlayCircleIcon from '@mui/icons-material/PlayCircle';
 
 // Tanıtım videosu: dosya yükleme (veritabanında tutulur), değiştirme ve kaldırma.
-const VideoAlani = ({ f, videoLimitMb }) => {
+const VideoAlani = ({ f, videoLimitMb }: { f: IlanFormuDurumu; videoLimitMb: number }) => {
   const { videoFile, videoAdi, videoVar, videoSil, videoYukleniyor, removeVideo, handleVideoFile } = f;
   return (
     <Box sx={{ border: '1px solid #D2D3CA', borderRadius: 2, p: 1.5 }}>

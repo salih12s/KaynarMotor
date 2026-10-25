@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Box, Tabs, Tab, Paper, Snackbar, Alert } from '@mui/material';
 import { useAuth } from '../../auth/AuthContext';
 import { KATEGORILER, HIZMET_KATEGORILER } from '../vitrinSabitleri';
@@ -6,6 +6,7 @@ import { useIlanListesi } from './useIlanListesi';
 import { useVitrinReferans } from './useVitrinReferans';
 import { useIlanFormu } from './useIlanFormu';
 import { useIletisimFormu } from './useIletisimFormu';
+import type { Bildir, BildirimTuru } from './tipler';
 import HizmetPaneli from './bilesenler/HizmetPaneli';
 import IletisimSatiri from './bilesenler/IletisimSatiri';
 import AramaSatiri from './bilesenler/AramaSatiri';
@@ -30,8 +31,9 @@ const Vitrin = () => {
   const isAksesuar = kategori === 'aksesuar';
   const isHizmet = HIZMET_KATEGORILER.includes(kategori);
 
-  const [snack, setSnack] = useState({ open: false, msg: '', sev: 'success' });
-  const showSnack = (msg, sev = 'success') => setSnack({ open: true, msg, sev });
+  const [snack, setSnack] = useState<{ open: boolean; msg: string; sev: BildirimTuru }>({ open: false, msg: '', sev: 'success' });
+  // Kararlı kimlik: ilan listesi hook'u bunu bağımlılık olarak alır (her render'da değişse liste sürekli yeniden yüklenirdi)
+  const showSnack = useCallback<Bildir>((msg, sev = 'success') => setSnack({ open: true, msg, sev }), []);
 
   const liste = useIlanListesi({ kategori, isAdmin, bildir: showSnack });
   const ref = useVitrinReferans();

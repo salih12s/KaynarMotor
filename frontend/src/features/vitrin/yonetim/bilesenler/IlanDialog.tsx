@@ -1,4 +1,7 @@
 import React from 'react';
+import type { AksesuarStok, Motor } from '../../../../shared/tipler';
+import type { KategoriBilgisi } from '../../vitrinSabitleri';
+import type { IlanFormuDurumu } from '../useIlanFormu';
 import DunyaIkon from '@mui/icons-material/LanguageOutlined';
 import { DialogBasligi } from '../../../../shared/ui';
 import { Button, Dialog, DialogContent, DialogActions, TextField, Switch, FormControlLabel, Stack, CircularProgress, Autocomplete } from '@mui/material';
@@ -9,7 +12,19 @@ import GorselYonetimi from './GorselYonetimi';
 import { sayiYaz } from '../../../../shared/utils/bicim';
 
 // İlan ekleme/düzenleme penceresi. Durum ve işlemler useIlanFormu hook'undan gelir (f).
-const IlanDialog = ({ f, aktifKategori, isMotor, isAksesuar, isAdmin, stokMotorlar, stokAksesuarlar, segmentler, videoLimitMb }) => {
+interface IlanDialogProps {
+  f: IlanFormuDurumu;
+  aktifKategori: KategoriBilgisi;
+  isMotor: boolean;
+  isAksesuar: boolean;
+  isAdmin: boolean;
+  stokMotorlar: Motor[];
+  stokAksesuarlar: AksesuarStok[];
+  segmentler: string[];
+  videoLimitMb: number;
+}
+
+const IlanDialog = ({ f, aktifKategori, isMotor, isAksesuar, isAdmin, stokMotorlar, stokAksesuarlar, segmentler, videoLimitMb }: IlanDialogProps) => {
   const { dlgOpen, kapat, form, setForm, editId, saving, secStokAksesuar, handleSave } = f;
   return (
     <Dialog open={dlgOpen} onClose={kapat} maxWidth="sm" fullWidth>

@@ -1,4 +1,5 @@
 import React from 'react';
+import type { IlanFormuDurumu } from '../useIlanFormu';
 import { Box, Button, Typography, Grid, IconButton, Chip } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import PhotoIcon from '@mui/icons-material/PhotoCamera';
@@ -6,7 +7,7 @@ import BackIcon from '@mui/icons-material/ArrowBack';
 import ForwardIcon from '@mui/icons-material/ArrowForward';
 
 // İlan görselleri: ekleme, vitrin fotoğrafı seçme, oklarla ve sürükleyerek sıralama, silme.
-const GorselYonetimi = ({ f }) => {
+const GorselYonetimi = ({ f }: { f: IlanFormuDurumu }) => {
   const { gorseller, handleFiles, draggedGorselIndex, setDraggedGorselIndex, handleGorselDrop, makeKapak, removeGorsel, moveGorsel } = f;
   return (
     <Box>

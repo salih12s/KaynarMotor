@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import type { AksesuarStok, Motor, VitrinIletisim } from '../../../shared/tipler';
 import { vitrinService } from '../vitrinApi';
 import { ikinciElMotorService } from '../../motor/motorApi';
 import { aksesuarStokService } from '../../aksesuar/aksesuarApi';
@@ -6,16 +7,16 @@ import { SEGMENTLER } from '../vitrinSabitleri';
 
 // Formlar için yardımcı veriler: segment listesi, kategori iletişim kayıtları, video boyut sınırı, stoktaki motor ve aksesuarlar.
 export const useVitrinReferans = () => {
-  const [segmentler, setSegmentler] = useState(SEGMENTLER); // dinamik segment listesi (adlar)
-  const [iletisim, setIletisim] = useState({}); // { kategori: {personel_adi, telefon} }
-  const [stokMotorlar, setStokMotorlar] = useState([]); // stoktaki motorlar (vitrine aktarma için)
-  const [stokAksesuarlar, setStokAksesuarlar] = useState([]); // aksesuar stok (vitrine aktarma için)
+  const [segmentler, setSegmentler] = useState<string[]>(SEGMENTLER); // dinamik segment listesi (adlar)
+  const [iletisim, setIletisim] = useState<Record<string, VitrinIletisim>>({}); // { kategori: {personel_adi, telefon} }
+  const [stokMotorlar, setStokMotorlar] = useState<Motor[]>([]); // stoktaki motorlar (vitrine aktarma için)
+  const [stokAksesuarlar, setStokAksesuarlar] = useState<AksesuarStok[]>([]); // aksesuar stok (vitrine aktarma için)
   const [videoLimitMb, setVideoLimitMb] = useState(40); // sunucudan öğrenilir (veritabanı paket sınırına bağlı)
 
   const loadIletisim = useCallback(async () => {
     try {
       const res = await vitrinService.getIletisim();
-      const map = {};
+      const map: Record<string, VitrinIletisim> = {};
       res.data.forEach((r) => {
         map[r.kategori] = r;
       });
@@ -73,3 +74,5 @@ export const useVitrinReferans = () => {
 
   return { segmentler, iletisim, loadIletisim, stokMotorlar, stokAksesuarlar, videoLimitMb };
 };
+
+export type VitrinReferans = ReturnType<typeof useVitrinReferans>;

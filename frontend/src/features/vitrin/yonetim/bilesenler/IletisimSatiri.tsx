@@ -1,10 +1,17 @@
 import React from 'react';
+import type { VitrinIletisim } from '../../../../shared/tipler';
 import { Box, Button, Typography, Paper, Stack } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import PhoneIcon from '@mui/icons-material/Phone';
 
 // Kategori iletişim kartı ve "İlan Ekle" düğmesi.
-const IletisimSatiri = ({ curIletisim, onIletisim, onYeni }) => {
+interface IletisimSatiriProps {
+  curIletisim: VitrinIletisim | undefined;
+  onIletisim: () => void;
+  onYeni: () => void;
+}
+
+const IletisimSatiri = ({ curIletisim, onIletisim, onYeni }: IletisimSatiriProps) => {
   return (
     <Paper sx={{ p: 2, mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
       <Box>

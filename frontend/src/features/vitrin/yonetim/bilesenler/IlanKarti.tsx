@@ -1,4 +1,6 @@
 import React from 'react';
+import type { VitrinIlan } from '../../../../shared/tipler';
+import type { IlanListesiDurumu } from '../useIlanListesi';
 import { IslemDugmesi } from '../../../../shared/ui';
 import MotorIcon from '@mui/icons-material/TwoWheelerOutlined';
 import { Box, Button, Typography, Grid, Card, CardMedia, CardContent, CardActions, TextField, IconButton, Chip, CircularProgress } from '@mui/material';
@@ -13,7 +15,17 @@ import { vitrinService } from '../../vitrinApi';
 import { sayiYaz } from '../../../../shared/utils/bicim';
 
 // Tek bir ilan kartı: sıra kutusu / sürükleme tutacağı, görsel, rozetler, fiyat, yayın düğmesi ve işlemler.
-const IlanKarti = ({ u, index, liste, isAdmin, isMotor, onDuzenle }) => {
+interface IlanKartiProps {
+  u: VitrinIlan;
+  /** Yayındaki listedeki konum (0 tabanlı); arşivdeki ilanlarda yoktur. */
+  index: number | undefined;
+  liste: IlanListesiDurumu;
+  isAdmin: boolean;
+  isMotor: boolean;
+  onDuzenle: (ilan: VitrinIlan) => void;
+}
+
+const IlanKarti = ({ u, index, liste, isAdmin, isMotor, onDuzenle }: IlanKartiProps) => {
   const {
     arsivGorunumu,
     aktifler,
@@ -56,7 +68,7 @@ const IlanKarti = ({ u, index, liste, isAdmin, isMotor, onDuzenle }) => {
             <TextField
               size="small"
               type="number"
-              value={siraTaslaklari[u.id] ?? String(index + 1)}
+              value={siraTaslaklari[u.id] ?? String((index ?? 0) + 1)}
               onChange={(e) => setSiraTaslaklari((prev) => ({ ...prev, [u.id]: e.target.value }))}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
@@ -93,7 +105,7 @@ const IlanKarti = ({ u, index, liste, isAdmin, isMotor, onDuzenle }) => {
           >
             <DragIcon fontSize="small" color="action" />
             <Typography variant="caption" fontWeight="bold">
-              {index + 1}. sıra
+              {(index ?? 0) + 1}. sıra
             </Typography>
           </Box>
         )}

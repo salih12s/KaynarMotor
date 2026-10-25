@@ -1,11 +1,13 @@
 import React from 'react';
+import type { Motor } from '../../../../shared/tipler';
+import type { IlanFormuDurumu } from '../useIlanFormu';
 import { RENK } from '../../../../app/tokenlar';
 import { Box, Typography, TextField, Chip, Stack, Autocomplete, ToggleButton, ToggleButtonGroup } from '@mui/material';
 import { BelgeBolumu } from '../../../motor/SatisBelgeleri';
 import { MOTOR_DURUMLARI } from '../../vitrinSabitleri';
 
 // Motor ilanına özel alanlar: durum (sıfır/ikinci el), stoktan seçim, marka/model/yıl/cc/km, segment, hasar kaydı ve belgeler.
-const MotorAlanlari = ({ f, stokMotorlar, segmentler }) => {
+const MotorAlanlari = ({ f, stokMotorlar, segmentler }: { f: IlanFormuDurumu; stokMotorlar: Motor[]; segmentler: string[] }) => {
   const { form, setForm, secStokMotor } = f;
   return (
     <>

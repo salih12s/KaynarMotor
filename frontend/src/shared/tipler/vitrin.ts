@@ -37,7 +37,8 @@ export interface VitrinIletisim {
   personel_adi: string | null;
   telefon: string | null;
   aciklama: string | null;
-  gorsel?: string | null;
+  /** Sunucu görselin kendisini değil, var olup olmadığını döner. */
+  gorsel_var?: boolean;
   baslik: string | null;
   personel_adi_2: string | null;
   telefon_2: string | null;
