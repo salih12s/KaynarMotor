@@ -1,4 +1,5 @@
 import React from 'react';
+import { IslemDugmesi } from '../../../shared/ui';
 import {
   Box,
   Paper,
@@ -17,9 +18,8 @@ import {
   Chip,
   MenuItem,
   Button,
-  IconButton,
 } from '@mui/material';
-import ViewIcon from '@mui/icons-material/Visibility';
+
 import { formatTL, formatDate, karColor, motorIsletmeKari, headerSx } from '../bicim';
 import KartItem from '../bilesenler/KartItem';
 
@@ -86,23 +86,23 @@ const MotorSatislari = ({ rapor, isMobile, motorSubTab, setMotorSubTab, komisyon
         {(motorSubTab === 1
           ? [
               { label: 'Komisyonlu Satış', value: komisyonluMotorlar.length, color: '#C62828' },
-              { label: 'Motor Gelir', value: `₺${formatTL(shownGelir)}`, color: '#1565C0' },
-              { label: 'Motor Maliyet', value: `₺${formatTL(shownMaliyet)}`, color: '#E65100' },
-              { label: 'Motor Kâr', value: `₺${formatTL(shownKar)}`, color: '#2e7d32' },
-              { label: 'Noter Satış Cirosu', value: `₺${formatTL(shownNoterSatis)}`, color: '#6A1B9A' },
-              { label: 'Toplam Komisyon', value: `₺${formatTL(komisyonToplamTutar)}`, color: '#f57f17' },
-              { label: 'Faturalı', value: komisyonluMotorlar.filter((m) => m.fatura_kesildi).length, color: '#00695C' },
+              { label: 'Motor Gelir', value: `₺${formatTL(shownGelir)}`, color: '#1E4A86' },
+              { label: 'Motor Maliyet', value: `₺${formatTL(shownMaliyet)}`, color: '#A5530F' },
+              { label: 'Motor Kâr', value: `₺${formatTL(shownKar)}`, color: '#1D6A3B' },
+              { label: 'Noter Satış Cirosu', value: `₺${formatTL(shownNoterSatis)}`, color: '#5B3A8C' },
+              { label: 'Toplam Komisyon', value: `₺${formatTL(komisyonToplamTutar)}`, color: '#8A5300' },
+              { label: 'Faturalı', value: komisyonluMotorlar.filter((m) => m.fatura_kesildi).length, color: '#0F7B6C' },
             ]
           : [
               { label: 'Toplam Satış', value: allMotorlar.length, color: '#C62828' },
-              { label: 'Motor Gelir', value: `₺${formatTL(rapor.motorGelir)}`, color: '#1565C0' },
-              { label: 'Motor Maliyet', value: `₺${formatTL(rapor.motorMaliyet)}`, color: '#E65100' },
-              { label: 'Motor Kârı (Payınız)', value: `₺${formatTL(rapor.motorKar)}`, color: '#2e7d32' },
-              { label: 'Yatırımcı Payı', value: `₺${formatTL(rapor.motorYatirimciKar)}`, color: '#1565C0' },
-              { label: 'Komisyoncu Payı', value: `₺${formatTL(rapor.motorKomisyon)}`, color: '#f57f17' },
-              { label: 'Noter Satış Cirosu', value: `₺${formatTL(rapor.motorNoterSatisCiro)}`, color: '#6A1B9A' },
-              { label: 'Faturalı', value: allMotorlar.filter((m) => m.fatura_kesildi).length, color: '#00695C' },
-              { label: 'Motor Stok Değeri', value: `₺${formatTL(shownStokDegeri)}`, color: '#4A148C' },
+              { label: 'Motor Gelir', value: `₺${formatTL(rapor.motorGelir)}`, color: '#1E4A86' },
+              { label: 'Motor Maliyet', value: `₺${formatTL(rapor.motorMaliyet)}`, color: '#A5530F' },
+              { label: 'Motor Kârı (Payınız)', value: `₺${formatTL(rapor.motorKar)}`, color: '#1D6A3B' },
+              { label: 'Yatırımcı Payı', value: `₺${formatTL(rapor.motorYatirimciKar)}`, color: '#1E4A86' },
+              { label: 'Komisyoncu Payı', value: `₺${formatTL(rapor.motorKomisyon)}`, color: '#8A5300' },
+              { label: 'Noter Satış Cirosu', value: `₺${formatTL(rapor.motorNoterSatisCiro)}`, color: '#5B3A8C' },
+              { label: 'Faturalı', value: allMotorlar.filter((m) => m.fatura_kesildi).length, color: '#0F7B6C' },
+              { label: 'Motor Stok Değeri', value: `₺${formatTL(shownStokDegeri)}`, color: '#5B3A8C' },
             ]
         ).map((k, i) => (
           <Grid size={{ xs: 12, md: 2 }} key={i}>
@@ -123,8 +123,8 @@ const MotorSatislari = ({ rapor, isMobile, motorSubTab, setMotorSubTab, komisyon
                     size="small"
                     label={m.fatura_kesildi ? '✓ Kesildi' : '✗ Kesilmedi'}
                     sx={{
-                      bgcolor: m.fatura_kesildi ? '#e8f5e9' : '#ffebee',
-                      color: m.fatura_kesildi ? '#2e7d32' : '#d32f2f',
+                      bgcolor: m.fatura_kesildi ? '#D8EBDD' : '#F6DAD7',
+                      color: m.fatura_kesildi ? '#1D6A3B' : '#A61F1F',
                       fontWeight: 'bold',
                       fontSize: '0.65rem',
                       height: 20,
@@ -146,7 +146,7 @@ const MotorSatislari = ({ rapor, isMobile, motorSubTab, setMotorSubTab, komisyon
                   </Typography>
                 </Box>
                 {m.komisyoncu_adi && (
-                  <Typography variant="body2" sx={{ color: '#f57f17', mt: 0.5 }}>
+                  <Typography variant="body2" sx={{ color: '#8A5300', mt: 0.5 }}>
                     Komisyoncu: <strong>{m.komisyoncu_adi}</strong> • ₺{formatTL(m.komisyoncu_tutari)}
                   </Typography>
                 )}
@@ -160,7 +160,7 @@ const MotorSatislari = ({ rapor, isMobile, motorSubTab, setMotorSubTab, komisyon
           <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
             <Table size="small" sx={{ '& .MuiTableCell-root': { px: 1, py: 0.5, fontSize: '0.78rem' } }}>
               <TableHead>
-                <TableRow sx={{ bgcolor: '#C62828' }}>
+                <TableRow>
                   {motorSubTab === 1
                     ? ['', 'Tarih', 'Plaka', 'Marka/Model', 'Satış', 'Komisyoncu', 'Kom. Tel', 'Kom. Tutar', 'Payınız', 'Fatura'].map((h) => (
                         <TableCell key={h} sx={headerSx}>
@@ -178,16 +178,13 @@ const MotorSatislari = ({ rapor, isMobile, motorSubTab, setMotorSubTab, komisyon
                 {shownMotorlar.map((m, i) => (
                   <TableRow key={i} hover sx={{ cursor: 'pointer' }} onClick={() => onDetay(m)}>
                     <TableCell>
-                      <IconButton
-                        size="small"
-                        color="primary"
+                      <IslemDugmesi
+                        tur="goz"
                         onClick={(e) => {
                           e.stopPropagation();
                           onDetay(m);
                         }}
-                      >
-                        <ViewIcon fontSize="small" />
-                      </IconButton>
+                      />
                     </TableCell>
                     <TableCell sx={{ whiteSpace: 'nowrap' }}>{formatDate(m.satis_tarihi || m.tamamlama_tarihi || m.created_at)}</TableCell>
                     <TableCell sx={{ fontWeight: 'bold' }}>{m.plaka}</TableCell>
@@ -197,7 +194,7 @@ const MotorSatislari = ({ rapor, isMobile, motorSubTab, setMotorSubTab, komisyon
                     {motorSubTab === 1 ? (
                       <>
                         <TableCell>{formatTL(m.satis_fiyati)} ₺</TableCell>
-                        <TableCell sx={{ fontWeight: 'bold', color: '#f57f17' }}>{m.komisyoncu_adi || '-'}</TableCell>
+                        <TableCell sx={{ fontWeight: 'bold', color: '#8A5300' }}>{m.komisyoncu_adi || '-'}</TableCell>
                         <TableCell>{m.komisyoncu_telefon || '-'}</TableCell>
                         <TableCell sx={{ fontWeight: 'bold' }}>{formatTL(m.komisyoncu_tutari)} ₺</TableCell>
                         <TableCell sx={{ color: karColor(motorIsletmeKari(m)), fontWeight: 'bold' }}>{formatTL(motorIsletmeKari(m))} ₺</TableCell>
@@ -206,8 +203,8 @@ const MotorSatislari = ({ rapor, isMobile, motorSubTab, setMotorSubTab, komisyon
                             size="small"
                             label={m.fatura_kesildi ? '✓ Kesildi' : '✗ Kesilmedi'}
                             sx={{
-                              bgcolor: m.fatura_kesildi ? '#e8f5e9' : '#ffebee',
-                              color: m.fatura_kesildi ? '#2e7d32' : '#d32f2f',
+                              bgcolor: m.fatura_kesildi ? '#D8EBDD' : '#F6DAD7',
+                              color: m.fatura_kesildi ? '#1D6A3B' : '#A61F1F',
                               fontWeight: 'bold',
                               fontSize: '0.7rem',
                             }}
@@ -226,8 +223,8 @@ const MotorSatislari = ({ rapor, isMobile, motorSubTab, setMotorSubTab, komisyon
                             size="small"
                             label={m.fatura_kesildi ? '✓ Kesildi' : '✗ Kesilmedi'}
                             sx={{
-                              bgcolor: m.fatura_kesildi ? '#e8f5e9' : '#ffebee',
-                              color: m.fatura_kesildi ? '#2e7d32' : '#d32f2f',
+                              bgcolor: m.fatura_kesildi ? '#D8EBDD' : '#F6DAD7',
+                              color: m.fatura_kesildi ? '#1D6A3B' : '#A61F1F',
                               fontWeight: 'bold',
                               fontSize: '0.7rem',
                             }}

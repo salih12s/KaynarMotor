@@ -8,7 +8,7 @@ import PlayCircleIcon from '@mui/icons-material/PlayCircle';
 const VideoAlani = ({ f, videoLimitMb }) => {
   const { videoFile, videoAdi, videoVar, videoSil, videoYukleniyor, removeVideo, handleVideoFile } = f;
   return (
-    <Box sx={{ border: '1px solid #e0e0e0', borderRadius: 2, p: 1.5 }}>
+    <Box sx={{ border: '1px solid #D2D3CA', borderRadius: 2, p: 1.5 }}>
       <Typography variant="subtitle2" sx={{ mb: 1 }}>
         Tanıtım Videosu
       </Typography>

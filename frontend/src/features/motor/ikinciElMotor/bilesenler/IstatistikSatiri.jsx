@@ -1,36 +1,18 @@
 import React from 'react';
-import { Box, Button, Chip } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
-import FileDownloadIcon from '@mui/icons-material/FileDownload';
+import { Box } from '@mui/material';
 import { sayiYaz } from '../../../../shared/utils/bicim';
+import { OzetSeridi } from '../../../../shared/ui';
 
-// Üst çipler (adet, satış tutarı, yalnızca admin için kâr), "Excel'e Aktar" ve "Motor Satış" düğmeleri.
-const IstatistikSatiri = ({ motorlar, stats, canKar, salt, onExcel, onYeni }) => {
-  const statChips = [
-    { label: `Toplam: ${motorlar.length}`, color: '#C62828', bg: '#ffebee' },
-    { label: `Satış: ₺${sayiYaz(stats.toplam_satis_tutari)}`, color: '#C62828', bg: '#ffebee' },
-    ...(canKar ? [{ label: `Kâr: ₺${sayiYaz(stats.toplam_kar)}`, color: '#C62828', bg: '#ffebee' }] : []),
+// Üst özet şeridi: adet, satış tutarı, yalnızca admin için kâr.
+const IstatistikSatiri = ({ motorlar, stats, canKar }) => {
+  const ogeler = [
+    { etiket: 'Toplam', deger: motorlar.length },
+    { etiket: 'Satış', deger: `₺${sayiYaz(stats.toplam_satis_tutari)}` },
+    ...(canKar ? [{ etiket: 'Kâr', deger: `₺${sayiYaz(stats.toplam_kar)}`, ton: 'yesil' }] : []),
   ];
   return (
-    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2, alignItems: 'center' }}>
-      {statChips.map((c, i) => (
-        <Chip key={i} label={c.label} sx={{ bgcolor: c.bg, color: c.color, fontWeight: 'bold', fontSize: '0.8rem', borderLeft: `4px solid ${c.color}` }} />
-      ))}
-      <Box sx={{ flexGrow: 1 }} />
-      <Button
-        variant="outlined"
-        size="large"
-        startIcon={<FileDownloadIcon />}
-        onClick={onExcel}
-        sx={{ mr: 1, color: '#1B5E20', borderColor: '#1B5E20', '&:hover': { borderColor: '#1B5E20', bgcolor: '#E8F5E9' } }}
-      >
-        Excel'e Aktar
-      </Button>
-      {!salt && (
-        <Button variant="contained" size="large" startIcon={<AddIcon />} onClick={onYeni} sx={{ bgcolor: '#C62828', '&:hover': { bgcolor: '#b71c1c' } }}>
-          Motor Satış
-        </Button>
-      )}
+    <Box sx={{ mb: 2 }}>
+      <OzetSeridi ogeler={ogeler} />
     </Box>
   );
 };

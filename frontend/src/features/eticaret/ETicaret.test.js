@@ -116,6 +116,7 @@ const hucreler = (row) =>
     .map((c) => c.textContent);
 const basliklar = () => screen.getAllByRole('columnheader').map((h) => h.textContent);
 const ikon = (kapsam, ad) => within(kapsam).getByTestId(ad);
+const ozet = (etiket) => within(screen.getByLabelText('Özet')).getByText(etiket).previousSibling.textContent;
 const alan = (etiket) => screen.getByLabelText(etiket);
 const kart = (etiket) => screen.getByText(etiket).nextElementSibling.textContent;
 const bekleDialogKapanana = () => waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
@@ -170,17 +171,17 @@ describe('E-Ticaret: satışlar', () => {
   test('istatistik çipleri: sunucu toplamları + canlı hesaplanan toplam kâr (yalnızca admin)', async () => {
     await ekranAc();
     const toplamKar = SATISLAR.reduce((t, s) => t + hesap(s).netKar, 0);
-    expect(screen.getByText('Satış: 3')).toBeInTheDocument();
-    expect(screen.getByText('Gelir: ₺3.000')).toBeInTheDocument();
-    expect(screen.getByText('Komisyon: ₺480')).toBeInTheDocument();
-    expect(screen.getByText(`Kâr: ₺${toplamKar.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`)).toBeInTheDocument();
+    expect(ozet('Satış')).toBe('3');
+    expect(ozet('Gelir')).toBe('₺3.000');
+    expect(ozet('Komisyon')).toBe('₺480');
+    expect(ozet('Kâr')).toBe(`₺${toplamKar.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`);
   });
 
   test('e-ticaret yetkili personel: admin gibi kâr sütununu ve kâr çipini görür', async () => {
     await ekranAc({ user: PERSONEL });
     const h = hesap(E1);
     expect(basliklar()).toContain('Kâr (₺)');
-    expect(screen.getByText(/^Kâr: ₺/)).toBeInTheDocument();
+    expect(ozet('Kâr')).toMatch(/^₺/);
     expect(hucreler(satir('Kask Visor'))).toHaveLength(11);
     expect(hucreler(satir('Kask Visor'))[8]).toBe(tl(h.netKar));
   });

@@ -144,8 +144,8 @@ const Yetkilendirme = () => {
             <TableContainer component={Paper}>
               <Table size="small">
                 <TableHead>
-                  <TableRow sx={{ bgcolor: '#fafafa' }}>
-                    <TableCell sx={{ fontWeight: 'bold', position: 'sticky', left: 0, bgcolor: '#fafafa' }}>Personel</TableCell>
+                  <TableRow sx={{ bgcolor: '#FBFBF8' }}>
+                    <TableCell sx={{ fontWeight: 'bold', position: 'sticky', left: 0, bgcolor: '#FBFBF8' }}>Personel</TableCell>
                     {TUM_YETKILER.map((y) => (
                       <TableCell key={y.key} align="center" sx={{ fontWeight: 'bold', fontSize: '0.72rem' }}>
                         {y.label}

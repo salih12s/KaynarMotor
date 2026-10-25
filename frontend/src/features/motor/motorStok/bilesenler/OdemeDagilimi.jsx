@@ -1,7 +1,8 @@
 import React from 'react';
-import { Box, Typography, Button, IconButton, TextField, Alert, Grid, MenuItem } from '@mui/material';
+import { IslemDugmesi } from '../../../../shared/ui';
+import { Box, Typography, Button, TextField, Alert, Grid, MenuItem } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import CloseIcon from '@mui/icons-material/Close';
+
 import { sayiYaz } from '../../../../shared/utils/bicim';
 
 // Hızlı satış: parçalı ödeme satırları ve toplam / girilen / kalan özeti.
@@ -27,9 +28,7 @@ const OdemeDagilimi = ({ hs }) => {
             <TextField fullWidth size="small" label="Tutar (₺)" type="number" value={o.tutar} onChange={(e) => updateOdemeKalemi(i, 'tutar', e.target.value)} />
           </Grid>
           <Grid size={{ xs: 2 }}>
-            <IconButton color="error" onClick={() => removeOdemeKalemi(i)}>
-              <CloseIcon fontSize="small" />
-            </IconButton>
+            <IslemDugmesi tur="carpi" etiket="Ödemeyi çıkar" onClick={() => removeOdemeKalemi(i)} />
           </Grid>
         </Grid>
       ))}
@@ -42,7 +41,7 @@ const OdemeDagilimi = ({ hs }) => {
           const kalan = satis - odemeToplam;
           const fmt = (v) => `₺${sayiYaz(v)}`;
           return (
-            <Box sx={{ mt: 1.5, p: 1.5, borderRadius: 1, bgcolor: '#f5f5f5', border: '1px solid #e0e0e0' }}>
+            <Box sx={{ mt: 1.5, p: 1.5, borderRadius: 1, bgcolor: '#F3F3EE', border: '1px solid #D2D3CA' }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                 <Typography variant="body2">Toplam Satış:</Typography>
                 <Typography variant="body2" fontWeight="bold">
@@ -57,7 +56,7 @@ const OdemeDagilimi = ({ hs }) => {
               </Box>
               <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                 <Typography variant="body2">{kalan < 0 ? 'Fazla Ödeme:' : 'Kalan:'}</Typography>
-                <Typography variant="body2" fontWeight="bold" sx={{ color: kalan === 0 ? '#2e7d32' : kalan < 0 ? '#d32f2f' : '#ef6c00' }}>
+                <Typography variant="body2" fontWeight="bold" sx={{ color: kalan === 0 ? '#1D6A3B' : kalan < 0 ? '#A61F1F' : '#A5530F' }}>
                   {fmt(Math.abs(kalan))}
                 </Typography>
               </Box>

@@ -54,7 +54,7 @@ const YedekParca = ({ rapor, isMobile }) => {
           <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
             <Table size="small">
               <TableHead>
-                <TableRow sx={{ bgcolor: '#C62828' }}>
+                <TableRow>
                   {['Ürün Adı', 'Alış Fiyatı', 'Satış Fiyatı', 'Kâr Marjı', 'Kâr Oranı'].map((h) => (
                     <TableCell key={h} sx={headerSx}>
                       {h}

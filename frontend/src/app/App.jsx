@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { QueryClientProvider } from '@tanstack/react-query';
+import { OnayProvider } from '../shared/ui';
 import { sorguIstemcisiOlustur } from '../shared/sorgu/sorguIstemcisi';
 import { AuthProvider, useAuth } from '../features/auth/AuthContext';
 import { CustomThemeProvider, useCustomTheme } from './ThemeContext';
@@ -231,7 +232,7 @@ const PanelTema = ({ children }) => {
   return (
     <ThemeProvider theme={panelTheme}>
       <CssBaseline />
-      {children}
+      <OnayProvider>{children}</OnayProvider>
     </ThemeProvider>
   );
 };

@@ -9,6 +9,7 @@ import { sorguluRender } from '../../shared/sorgu/sorguluRender';
 import userEvent from '@testing-library/user-event';
 import MotorStok from './MotorStok';
 import { ikinciElMotorService } from './motorApi';
+import { plakaBicim } from '../../shared/ui';
 import { musteriService } from '../musteriler/musteriApi';
 import { authService } from '../auth/authApi';
 import { bekleyenBelgeleriYukle } from './SatisBelgeleri';
@@ -134,11 +135,11 @@ const ekranAc = async (secenek = {}) => {
   kur(secenek);
   const user = userEvent.setup();
   sonEkran = sorguluRender(<MotorStok />);
-  if (!secenek.bekleme) await screen.findByText(secenek.bekle || '34AAA111');
+  if (!secenek.bekleme) await screen.findByText(secenek.bekle || plakaBicim('34AAA111'));
   return user;
 };
 
-const satir = (plaka) => screen.getByRole('row', { name: new RegExp(plaka) });
+const satir = (plaka) => screen.getByRole('row', { name: new RegExp(plakaBicim(plaka)) });
 const hucreler = (row) =>
   within(row)
     .getAllByRole('cell')
@@ -151,7 +152,7 @@ const plakalar = () =>
   screen
     .getAllByRole('row')
     .slice(1)
-    .map((r) => within(r).getAllByRole('cell')[0].textContent);
+    .map((r) => within(r).getAllByRole('cell')[0].textContent.replace(/\s/g, ''));
 
 beforeEach(() => {
   jest.spyOn(window, 'alert').mockImplementation(() => {});
@@ -166,8 +167,32 @@ afterEach(() => {
 describe('Motor Stok: rollere göre sütunlar ve düğmeler', () => {
   test('admin: tüm sütunlar, Motor Ekle, her satırda düzenle/sil/hızlı satış', async () => {
     await ekranAc();
-    expect(basliklar()).toEqual(['Plaka', 'Marka', 'Model', 'Yıl', 'KM', 'İlan Fiyatı', 'Alım', 'Alış Bedeli', 'İsim Soyisim', 'Alım Tarihi', 'İşlemler']);
-    expect(hucreler(satir('34AAA111'))).toEqual(['34AAA111', 'Honda', 'PCX', '2020', '10.000', '65.000', '50.000', '40.000', 'Ali Veli', '01.09.2026', '']);
+    expect(basliklar()).toEqual([
+      'Plaka',
+      'Marka / Model',
+      'Yıl',
+      'KM',
+      'İlan Fiyatı',
+      'Alım',
+      'Alış Bedeli',
+      'İsim Soyisim',
+      'Alım Tarihi',
+      'Durum',
+      'İşlemler',
+    ]);
+    expect(hucreler(satir('34AAA111'))).toEqual([
+      '34 AAA 111',
+      'HondaPCX',
+      '2020',
+      '10.000',
+      '65.000',
+      '50.000',
+      '40.000',
+      'Ali Veli',
+      '01.09.2026',
+      'Stokta',
+      '',
+    ]);
     expect(screen.getByRole('button', { name: 'Motor Ekle' })).toBeInTheDocument();
     expect(screen.getAllByTestId('DeleteIcon')).toHaveLength(7);
     expect(screen.getAllByTestId('ShoppingCartIcon')).toHaveLength(5); // satılan ve perte hariç
@@ -175,7 +200,7 @@ describe('Motor Stok: rollere göre sütunlar ve düğmeler', () => {
 
   test('motor satış yetkilisi: alım ve müşteri sütunları var, ilan fiyatı yok; düzenleyebilir ama silemez', async () => {
     await ekranAc({ user: SATIS });
-    expect(basliklar()).toEqual(['Plaka', 'Marka', 'Model', 'Yıl', 'KM', 'Alım', 'Alış Bedeli', 'İsim Soyisim', 'Alım Tarihi', 'İşlemler']);
+    expect(basliklar()).toEqual(['Plaka', 'Marka / Model', 'Yıl', 'KM', 'Alım', 'Alış Bedeli', 'İsim Soyisim', 'Alım Tarihi', 'Durum', 'İşlemler']);
     expect(screen.getByRole('button', { name: 'Motor Ekle' })).toBeInTheDocument();
     expect(screen.queryAllByTestId('DeleteIcon')).toHaveLength(0);
     expect(screen.getAllByTestId('EditIcon')).toHaveLength(7);
@@ -183,7 +208,7 @@ describe('Motor Stok: rollere göre sütunlar ve düğmeler', () => {
 
   test('yetkisiz personel: yalnızca temel sütunlar, düzenleme/ekleme yok, sadece göz ikonu', async () => {
     await ekranAc({ user: YETKISIZ });
-    expect(basliklar()).toEqual(['Plaka', 'Marka', 'Model', 'Yıl', 'KM', 'Alım Tarihi', 'İşlemler']);
+    expect(basliklar()).toEqual(['Plaka', 'Marka / Model', 'Yıl', 'KM', 'Alım Tarihi', 'Durum', 'İşlemler']);
     expect(screen.queryByRole('button', { name: 'Motor Ekle' })).not.toBeInTheDocument();
     expect(screen.queryAllByTestId('EditIcon')).toHaveLength(0);
     expect(screen.getAllByTestId('VisibilityIcon')).toHaveLength(7);
@@ -191,7 +216,7 @@ describe('Motor Stok: rollere göre sütunlar ve düğmeler', () => {
 
   test('yatırımcı (vitrin): yalnızca ilan fiyatı görür; satılanlar gizli; ikincil sayaçlar ve işlem düğmeleri yok', async () => {
     await ekranAc({ user: YAT_VITRIN });
-    expect(basliklar()).toEqual(['Plaka', 'Marka', 'Model', 'Yıl', 'KM', 'İlan Fiyatı', 'Alım Tarihi', 'Detay']);
+    expect(basliklar()).toEqual(['Plaka', 'Marka / Model', 'Yıl', 'KM', 'İlan Fiyatı', 'Alım Tarihi', 'Durum', 'Detay']);
     expect(plakalar()).not.toContain('07FFF666'); // satılan Vespa gizli
     expect(screen.getByText('Toplam: 6')).toBeInTheDocument(); // 7 - 1 satılan
     expect(screen.queryByText(/^Fatura ✓/)).not.toBeInTheDocument();
@@ -204,8 +229,7 @@ describe('Motor Stok: rollere göre sütunlar ve düğmeler', () => {
     const user = await ekranAc({ user: YAT_SAHIP });
     expect(basliklar()).toEqual([
       'Plaka',
-      'Marka',
-      'Model',
+      'Marka / Model',
       'Yıl',
       'KM',
       'İlan Fiyatı',
@@ -214,12 +238,13 @@ describe('Motor Stok: rollere göre sütunlar ve düğmeler', () => {
       'İsim Soyisim',
       'Alım Tarihi',
       'Kârım',
+      'Durum',
       'Detay',
     ]);
     expect(plakalar()).not.toContain('07FFF666');
     await user.click(screen.getByText('Satılan: 1'));
     expect(plakalar()).toEqual(['07FFF666']);
-    expect(hucreler(satir('07FFF666')).slice(-2)[0]).toBe('1.000'); // Kârım = yatırımcı payı
+    expect(hucreler(satir('07FFF666')).slice(-3)[0]).toBe('1.000'); // Kârım = yatırımcı payı
   });
 
   test('yalnızca admin yatırımcı listesini sunucudan ister', async () => {
@@ -507,7 +532,7 @@ describe('Motor Stok: hızlı satış', () => {
     await user.type(alan('Tutar (₺)'), '70000');
     expect(within(p).getByText('Fazla Ödeme:').nextElementSibling).toHaveTextContent('₺10.000');
     expect(within(p).getByText('Girilen ödeme toplamı satış tutarını aşıyor.')).toBeInTheDocument();
-    await user.click(ikon(p, 'CloseIcon')); // satırı sil
+    await user.click(within(p).getByRole('button', { name: 'Ödemeyi çıkar' })); // satırı sil
     expect(within(p).queryByText('Girilen Ödeme:')).not.toBeInTheDocument();
   });
 
@@ -579,7 +604,7 @@ describe('Motor Stok: mobil görünüm', () => {
     const user = await ekranAc();
     expect(screen.queryByRole('table')).not.toBeInTheDocument();
     expect(screen.getByText((_, el) => el.tagName === 'P' && el.textContent === 'Alım: ₺50.000')).toBeInTheDocument();
-    await user.click(screen.getByText('34AAA111'));
+    await user.click(screen.getByText(plakaBicim('34AAA111')));
     expect(await screen.findByText('Motor Stok Detay')).toBeInTheDocument();
   });
 

@@ -1,8 +1,7 @@
 import React from 'react';
-import { Box, Paper, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, IconButton, Chip, Alert } from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import ViewIcon from '@mui/icons-material/Visibility';
+import { IslemDugmesi } from '../../../../shared/ui';
+import { Box, Paper, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Chip, Alert } from '@mui/material';
+
 import { filtrele } from '../aksesuarVeri';
 import { sayiYaz, tarihYaz } from '../../../../shared/utils/bicim';
 
@@ -44,12 +43,8 @@ const SatisListesi = ({ satislar, aksSearch, aksStart, aksEnd, isMobile, karGor,
               )}
             </Box>
             <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 0.5 }} onClick={(e) => e.stopPropagation()}>
-              <IconButton size="small" color="info" onClick={() => onDuzenle(s)}>
-                <EditIcon />
-              </IconButton>
-              <IconButton size="small" color="error" onClick={() => onSil(s.id)}>
-                <DeleteIcon />
-              </IconButton>
+              <IslemDugmesi tur="duz" onClick={() => onDuzenle(s)} />
+              <IslemDugmesi tur="sil" onClick={() => onSil(s.id)} />
             </Box>
           </Paper>
         ));
@@ -59,9 +54,9 @@ const SatisListesi = ({ satislar, aksSearch, aksStart, aksEnd, isMobile, karGor,
     <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
       <Table>
         <TableHead>
-          <TableRow sx={{ bgcolor: 'primary.main' }}>
+          <TableRow>
             {['Müşteri', 'Telefon', 'Toplam Satış', ...(karGor ? ['Kâr'] : []), 'Oluşturan', 'Durum', 'Tarih', 'İşlemler'].map((h) => (
-              <TableCell key={h} sx={{ color: 'white', fontWeight: 'bold' }}>
+              <TableCell key={h} align={['Toplam Satış', 'Kâr'].includes(h) ? 'right' : 'left'}>
                 {h}
               </TableCell>
             ))}
@@ -70,25 +65,25 @@ const SatisListesi = ({ satislar, aksSearch, aksStart, aksEnd, isMobile, karGor,
         <TableBody>
           {filtrele(satislar, { aksSearch, aksStart, aksEnd }).map((s) => (
             <TableRow key={s.id} hover>
-              <TableCell>{s.ad_soyad}</TableCell>
-              <TableCell>{s.telefon || '-'}</TableCell>
-              <TableCell>{sayiYaz(s.toplam_satis)} ₺</TableCell>
-              {karGor && <TableCell sx={{ color: parseFloat(s.kar || 0) >= 0 ? 'green' : 'red' }}>{sayiYaz(s.kar)} ₺</TableCell>}
+              <TableCell sx={{ fontWeight: 700 }}>{s.ad_soyad}</TableCell>
+              <TableCell sx={{ color: '#5B5F66' }}>{s.telefon || '-'}</TableCell>
+              <TableCell align="right" sx={{ fontWeight: 700 }}>
+                {sayiYaz(s.toplam_satis)} ₺
+              </TableCell>
+              {karGor && (
+                <TableCell align="right" sx={{ color: parseFloat(s.kar || 0) >= 0 ? '#1D6A3B' : '#C62828', fontWeight: 700 }}>
+                  {sayiYaz(s.kar)} ₺
+                </TableCell>
+              )}
               <TableCell>{s.olusturan_kisi || '-'}</TableCell>
               <TableCell>
                 <Chip label={s.durum === 'tamamlandi' ? 'Tamamlandı' : 'Beklemede'} size="small" color={durumRenk(s.durum)} />
               </TableCell>
-              <TableCell>{tarihYaz(s.satis_tarihi)}</TableCell>
+              <TableCell sx={{ color: '#5B5F66' }}>{tarihYaz(s.satis_tarihi)}</TableCell>
               <TableCell>
-                <IconButton size="small" color="primary" onClick={() => onDetay(s.id)}>
-                  <ViewIcon />
-                </IconButton>
-                <IconButton size="small" color="info" onClick={() => onDuzenle(s)}>
-                  <EditIcon />
-                </IconButton>
-                <IconButton size="small" color="error" onClick={() => onSil(s.id)}>
-                  <DeleteIcon />
-                </IconButton>
+                <IslemDugmesi tur="goz" onClick={() => onDetay(s.id)} />
+                <IslemDugmesi tur="duz" onClick={() => onDuzenle(s)} />
+                <IslemDugmesi tur="sil" onClick={() => onSil(s.id)} />
               </TableCell>
             </TableRow>
           ))}

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Box, Typography, TextField, Alert, CircularProgress, IconButton, Chip, InputAdornment, ToggleButton, ToggleButtonGroup, Button } from '@mui/material';
-import ViewIcon from '@mui/icons-material/Visibility';
-import FileDownloadIcon from '@mui/icons-material/FileDownload';
+import { IslemDugmesi } from '../../shared/ui';
+import { Box, Typography, TextField, Alert, CircularProgress, Chip, InputAdornment, ToggleButton, ToggleButtonGroup, Button } from '@mui/material';
+
 import DescriptionIcon from '@mui/icons-material/Description';
 import SearchIcon from '@mui/icons-material/Search';
 import { satisBelgeService } from './motorApi';
@@ -212,14 +212,8 @@ const BelgeArsivi = () => {
                     <CircularProgress size={20} />
                   ) : (
                     <>
-                      {belgeOnizlenebilir(b) && (
-                        <IconButton size="small" onClick={() => ac(b, true)} title="Görüntüle">
-                          <ViewIcon fontSize="small" />
-                        </IconButton>
-                      )}
-                      <IconButton size="small" onClick={() => ac(b, false)} title="İndir">
-                        <FileDownloadIcon fontSize="small" />
-                      </IconButton>
+                      {belgeOnizlenebilir(b) && <IslemDugmesi tur="goz" onClick={() => ac(b, true)} title="Görüntüle" />}
+                      <IslemDugmesi tur="indir" onClick={() => ac(b, false)} title="İndir" />
                     </>
                   )}
                 </Box>

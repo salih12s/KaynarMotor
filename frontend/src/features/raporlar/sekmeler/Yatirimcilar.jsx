@@ -14,12 +14,12 @@ const Yatirimcilar = ({ yatirimciOzetGosterim, isMobile }) => {
           <Grid container spacing={2} sx={{ mb: 2 }}>
             {[
               { label: 'Yatırımcı Sayısı', value: yatirimciOzetGosterim.length, color: '#C62828' },
-              { label: 'Toplam Stok', value: yatirimciOzetGosterim.reduce((t, y) => t + Number(y.stok_adet || 0), 0), color: '#1565C0' },
-              { label: 'Toplam Satılan', value: yatirimciOzetGosterim.reduce((t, y) => t + Number(y.satilan_adet || 0), 0), color: '#E65100' },
+              { label: 'Toplam Stok', value: yatirimciOzetGosterim.reduce((t, y) => t + Number(y.stok_adet || 0), 0), color: '#1E4A86' },
+              { label: 'Toplam Satılan', value: yatirimciOzetGosterim.reduce((t, y) => t + Number(y.satilan_adet || 0), 0), color: '#A5530F' },
               {
                 label: 'Toplam Yatırımcı Kârı',
                 value: `₺${formatTL(yatirimciOzetGosterim.reduce((t, y) => t + Number(y.yatirimci_kar || 0), 0))}`,
-                color: '#2e7d32',
+                color: '#1D6A3B',
               },
             ].map((k, i) => (
               <Grid size={{ xs: 12, md: 3 }} key={i}>
@@ -46,10 +46,10 @@ const Yatirimcilar = ({ yatirimciOzetGosterim, isMobile }) => {
                     </Typography>
                   </Box>
                   <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mt: 0.5 }}>
-                    <Typography variant="body2" sx={{ color: '#1565C0' }}>
+                    <Typography variant="body2" sx={{ color: '#1E4A86' }}>
                       Yatırımcı Kârı: <strong>{formatTL(y.yatirimci_kar)} ₺</strong>
                     </Typography>
-                    <Typography variant="body2" sx={{ color: '#2e7d32' }}>
+                    <Typography variant="body2" sx={{ color: '#1D6A3B' }}>
                       İşletme Kârı: <strong>{formatTL(y.isletme_kar)} ₺</strong>
                     </Typography>
                   </Box>
@@ -60,7 +60,7 @@ const Yatirimcilar = ({ yatirimciOzetGosterim, isMobile }) => {
             <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
               <Table size="small">
                 <TableHead>
-                  <TableRow sx={{ bgcolor: '#C62828' }}>
+                  <TableRow>
                     {['Yatırımcı', 'Stok Adet', 'Satılan', 'Stok Değeri', 'Toplam Satış', 'Yatırımcı Kârı', 'İşletme Kârı'].map((h) => (
                       <TableCell key={h} sx={headerSx}>
                         {h}
@@ -76,8 +76,8 @@ const Yatirimcilar = ({ yatirimciOzetGosterim, isMobile }) => {
                       <TableCell>{y.satilan_adet}</TableCell>
                       <TableCell>{formatTL(y.stok_degeri)} ₺</TableCell>
                       <TableCell>{formatTL(y.toplam_satis)} ₺</TableCell>
-                      <TableCell sx={{ color: '#1565C0', fontWeight: 'bold' }}>{formatTL(y.yatirimci_kar)} ₺</TableCell>
-                      <TableCell sx={{ color: '#2e7d32', fontWeight: 'bold' }}>{formatTL(y.isletme_kar)} ₺</TableCell>
+                      <TableCell sx={{ color: '#1E4A86', fontWeight: 'bold' }}>{formatTL(y.yatirimci_kar)} ₺</TableCell>
+                      <TableCell sx={{ color: '#1D6A3B', fontWeight: 'bold' }}>{formatTL(y.isletme_kar)} ₺</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

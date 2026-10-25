@@ -1,3 +1,4 @@
+import { useOnay } from '../../../shared/ui';
 import { ikinciElMotorService } from '../motorApi';
 import { useMotorListesi, useYatirimcilar, useMotorYenile } from '../motorSorgulari';
 
@@ -6,12 +7,13 @@ const BOS = [];
 
 // Motor listesi (sunucudan), yatırımcı listesi (yalnızca admin) ve silme.
 export const useMotorStok = ({ user }) => {
+  const onay = useOnay();
   const liste = useMotorListesi();
   const yatirimcilar = useYatirimcilar({ etkin: user?.rol === 'admin' });
   const yenile = useMotorYenile();
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Bu kaydı silmek istediğinizden emin misiniz?')) return;
+    if (!(await onay('Bu kaydı silmek istediğinizden emin misiniz?'))) return;
     try {
       await ikinciElMotorService.delete(id);
       yenile();

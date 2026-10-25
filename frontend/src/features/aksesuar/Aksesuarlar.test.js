@@ -96,6 +96,8 @@ const hucreler = (row) =>
     .map((c) => c.textContent);
 const basliklar = () => screen.getAllByRole('columnheader').map((h) => h.textContent);
 const ikon = (kapsam, ad) => within(kapsam).getByTestId(ad);
+const ozet = (etiket) => within(screen.getByLabelText('Özet')).getByText(etiket).previousSibling.textContent;
+const ozetYok = (etiket) => within(screen.getByLabelText('Özet')).queryByText(etiket);
 const alan = (etiket) => screen.getByLabelText(etiket);
 const adlar = () =>
   screen
@@ -128,13 +130,22 @@ afterEach(() => {
 describe('Aksesuarlar: liste', () => {
   test('istatistik çipleri; kâr çipi yalnızca kâr yetkisi olana', async () => {
     await ekranAc();
-    for (const t of ['Toplam: 3', 'Bugün: 1', 'Beklemede: 2', 'İşlemde: 0', 'Tamamlandı: 1', 'İptal: 0', '₺3.500', 'Kâr: ₺450'])
-      expect(screen.getByText(t)).toBeInTheDocument();
+    for (const [etiket, deger] of [
+      ['Toplam', '3'],
+      ['Bugün', '1'],
+      ['Beklemede', '2'],
+      ['İşlemde', '0'],
+      ['Tamamlandı', '1'],
+      ['İptal', '0'],
+      ['Satış', '₺3.500'],
+      ['Kâr', '₺450'],
+    ])
+      expect(ozet(etiket)).toBe(deger);
   });
 
   test('kâr yetkisi yoksa kâr çipi ve Kâr sütunu görünmez', async () => {
     await ekranAc({ karGor: false });
-    expect(screen.queryByText(/^Kâr:/)).not.toBeInTheDocument();
+    expect(ozetYok('Kâr')).not.toBeInTheDocument();
     expect(basliklar()).toEqual(['Müşteri', 'Telefon', 'Toplam Satış', 'Oluşturan', 'Durum', 'Tarih', 'İşlemler']);
   });
 

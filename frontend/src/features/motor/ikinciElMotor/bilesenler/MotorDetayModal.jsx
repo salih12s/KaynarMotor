@@ -42,7 +42,7 @@ const MotorDetayModal = ({ open, data, onClose, printRef, isMobile, canAlis, can
           variant="contained"
           size="small"
           onClick={handlePrint}
-          sx={{ bgcolor: '#C62828', '&:hover': { bgcolor: '#b71c1c' }, mr: 1 }}
+          sx={{ bgcolor: '#C62828', '&:hover': { bgcolor: '#A61F1F' }, mr: 1 }}
         >
           Yazdır
         </Button>
@@ -55,7 +55,7 @@ const MotorDetayModal = ({ open, data, onClose, printRef, isMobile, canAlis, can
           <Grid container spacing={3} sx={{ mb: 3 }}>
             <Grid size={{ xs: 12, md: 6 }}>
               <Typography variant="subtitle1" fontWeight="bold" color="primary" gutterBottom>
-                🏍️ Motor Bilgileri
+                Motor Bilgileri
               </Typography>
               <Divider sx={{ mb: 1 }} />
               <InfoRow label="Plaka" value={data.plaka} />
@@ -90,7 +90,7 @@ const MotorDetayModal = ({ open, data, onClose, printRef, isMobile, canAlis, can
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
               <Typography variant="subtitle1" fontWeight="bold" color="primary" gutterBottom>
-                🏪 Satıcı (Alım) Bilgileri
+                Satıcı (Alım) Bilgileri
               </Typography>
               <Divider sx={{ mb: 1 }} />
               <InfoRow label="İsim Soyisim" value={data.satici_adi} />
@@ -103,7 +103,7 @@ const MotorDetayModal = ({ open, data, onClose, printRef, isMobile, canAlis, can
           {(data.alici_adi || data.alici_tc) && (
             <Box sx={{ mb: 3 }}>
               <Typography variant="subtitle1" fontWeight="bold" color="primary" gutterBottom>
-                👤 Alıcı (Satım) Bilgileri
+                Alıcı (Satım) Bilgileri
               </Typography>
               <Divider sx={{ mb: 1 }} />
               <Grid container spacing={3}>
@@ -126,7 +126,7 @@ const MotorDetayModal = ({ open, data, onClose, printRef, isMobile, canAlis, can
           {data.komisyoncu_adi && (
             <Box sx={{ mb: 3 }}>
               <Typography variant="subtitle1" fontWeight="bold" color="primary" gutterBottom>
-                🤝 Komisyoncu
+                Komisyoncu
               </Typography>
               <Divider sx={{ mb: 1 }} />
               <Grid container spacing={3}>
@@ -146,12 +146,12 @@ const MotorDetayModal = ({ open, data, onClose, printRef, isMobile, canAlis, can
           {canAlis && (
             <>
               <Typography variant="subtitle1" fontWeight="bold" color="primary" gutterBottom>
-                💰 Finansal Detaylar
+                Finansal Detaylar
               </Typography>
               <Divider sx={{ mb: 2 }} />
               <Grid container spacing={2} sx={{ mb: 2 }}>
                 <Grid size={{ xs: 6, md: 3 }}>
-                  <Paper sx={{ p: 1.5, textAlign: 'center', bgcolor: '#ffebee', borderLeft: '4px solid #C62828' }}>
+                  <Paper sx={{ p: 1.5, textAlign: 'center', bgcolor: '#F6DAD7', borderLeft: '4px solid #C62828' }}>
                     <Typography variant="caption" color="text.secondary">
                       Alış
                     </Typography>
@@ -161,7 +161,7 @@ const MotorDetayModal = ({ open, data, onClose, printRef, isMobile, canAlis, can
                   </Paper>
                 </Grid>
                 <Grid size={{ xs: 6, md: 3 }}>
-                  <Paper sx={{ p: 1.5, textAlign: 'center', bgcolor: '#ffebee', borderLeft: '4px solid #C62828' }}>
+                  <Paper sx={{ p: 1.5, textAlign: 'center', bgcolor: '#F6DAD7', borderLeft: '4px solid #C62828' }}>
                     <Typography variant="caption" color="text.secondary">
                       Satış
                     </Typography>
@@ -171,7 +171,7 @@ const MotorDetayModal = ({ open, data, onClose, printRef, isMobile, canAlis, can
                   </Paper>
                 </Grid>
                 <Grid size={{ xs: 6, md: 3 }}>
-                  <Paper sx={{ p: 1.5, textAlign: 'center', bgcolor: '#fce4ec', borderLeft: '4px solid #c62828' }}>
+                  <Paper sx={{ p: 1.5, textAlign: 'center', bgcolor: '#F6DAD7', borderLeft: '4px solid #c62828' }}>
                     <Typography variant="caption" color="text.secondary">
                       Noter Alış
                     </Typography>
@@ -181,7 +181,7 @@ const MotorDetayModal = ({ open, data, onClose, printRef, isMobile, canAlis, can
                   </Paper>
                 </Grid>
                 <Grid size={{ xs: 6, md: 3 }}>
-                  <Paper sx={{ p: 1.5, textAlign: 'center', bgcolor: '#fce4ec', borderLeft: '4px solid #c62828' }}>
+                  <Paper sx={{ p: 1.5, textAlign: 'center', bgcolor: '#F6DAD7', borderLeft: '4px solid #c62828' }}>
                     <Typography variant="caption" color="text.secondary">
                       Noter Satış
                     </Typography>
@@ -191,7 +191,7 @@ const MotorDetayModal = ({ open, data, onClose, printRef, isMobile, canAlis, can
                   </Paper>
                 </Grid>
                 <Grid size={{ xs: 6, md: canKar ? 4 : 6 }}>
-                  <Paper sx={{ p: 1.5, textAlign: 'center', bgcolor: '#ffebee', borderLeft: '4px solid #C62828' }}>
+                  <Paper sx={{ p: 1.5, textAlign: 'center', bgcolor: '#F6DAD7', borderLeft: '4px solid #C62828' }}>
                     <Typography variant="caption" color="text.secondary">
                       Masraflar
                     </Typography>
@@ -201,7 +201,7 @@ const MotorDetayModal = ({ open, data, onClose, printRef, isMobile, canAlis, can
                   </Paper>
                 </Grid>
                 <Grid size={{ xs: 6, md: canKar ? 4 : 6 }}>
-                  <Paper sx={{ p: 1.5, textAlign: 'center', bgcolor: '#ffebee', borderLeft: '4px solid #C62828' }}>
+                  <Paper sx={{ p: 1.5, textAlign: 'center', bgcolor: '#F6DAD7', borderLeft: '4px solid #C62828' }}>
                     <Typography variant="caption" color="text.secondary">
                       Toplam Maliyet
                     </Typography>
@@ -216,14 +216,14 @@ const MotorDetayModal = ({ open, data, onClose, printRef, isMobile, canAlis, can
                       sx={{
                         p: 1.5,
                         textAlign: 'center',
-                        bgcolor: kar >= 0 ? '#e8f5e9' : '#ffebee',
-                        borderLeft: `4px solid ${kar >= 0 ? '#2e7d32' : '#C62828'}`,
+                        bgcolor: kar >= 0 ? '#D8EBDD' : '#F6DAD7',
+                        borderLeft: `4px solid ${kar >= 0 ? '#1D6A3B' : '#C62828'}`,
                       }}
                     >
                       <Typography variant="caption" color="text.secondary">
                         NET KÂR
                       </Typography>
-                      <Typography variant="h6" fontWeight="bold" sx={{ color: kar >= 0 ? '#2e7d32' : '#C62828' }}>
+                      <Typography variant="h6" fontWeight="bold" sx={{ color: kar >= 0 ? '#1D6A3B' : '#C62828' }}>
                         ₺{formatTL(kar)}
                       </Typography>
                     </Paper>
@@ -236,7 +236,7 @@ const MotorDetayModal = ({ open, data, onClose, printRef, isMobile, canAlis, can
           {data.aciklama && (
             <>
               <Typography variant="subtitle1" fontWeight="bold" color="primary" gutterBottom>
-                📝 Açıklama
+                Açıklama
               </Typography>
               <Divider sx={{ mb: 1 }} />
               <Typography>{data.aciklama}</Typography>

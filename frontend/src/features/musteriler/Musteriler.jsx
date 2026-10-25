@@ -1,4 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { IslemDugmesi } from '../../shared/ui';
+import { useOnay } from '../../shared/ui';
+import { DialogBasligi } from '../../shared/ui';
 import { sonIstek } from '../../shared/utils/sonIstek';
 import {
   Box,
@@ -11,7 +14,6 @@ import {
   TableHead,
   TableRow,
   Button,
-  IconButton,
   TextField,
   Dialog,
   DialogTitle,
@@ -27,10 +29,9 @@ import {
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
+
 import SearchIcon from '@mui/icons-material/Search';
-import ViewIcon from '@mui/icons-material/Visibility';
-import CloseIcon from '@mui/icons-material/Close';
+
 import { musteriService } from './musteriApi';
 import { sayiYaz, tarihYaz } from '../../shared/utils/bicim';
 
@@ -38,6 +39,7 @@ import { sayiYaz, tarihYaz } from '../../shared/utils/bicim';
 const sonAra = sonIstek();
 
 const Musteriler = () => {
+  const onay = useOnay();
   const isMobile = useMediaQuery(useTheme().breakpoints.down('sm'));
   const [musteriler, setMusteriler] = useState([]);
   const [search, setSearch] = useState('');
@@ -103,7 +105,7 @@ const Musteriler = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Bu müşteriyi silmek istediğinizden emin misiniz?')) return;
+    if (!(await onay('Bu müşteriyi silmek istediğinizden emin misiniz?'))) return;
     try {
       await musteriService.delete(id);
       loadData();
@@ -150,22 +152,15 @@ const Musteriler = () => {
                   {m.ad_soyad}
                 </Typography>
                 <Box>
-                  <IconButton
-                    size="small"
-                    color="primary"
+                  <IslemDugmesi
+                    tur="goz"
                     onClick={(e) => {
                       e.stopPropagation();
                       openDetay(m);
                     }}
-                  >
-                    <ViewIcon />
-                  </IconButton>
-                  <IconButton size="small" color="info" onClick={() => openDialog(m)}>
-                    <EditIcon />
-                  </IconButton>
-                  <IconButton size="small" color="error" onClick={() => handleDelete(m.id)}>
-                    <DeleteIcon />
-                  </IconButton>
+                  />
+                  <IslemDugmesi tur="duz" onClick={() => openDialog(m)} />
+                  <IslemDugmesi tur="sil" onClick={() => handleDelete(m.id)} />
                 </Box>
               </Box>
               <Typography variant="body2" color="text.secondary">
@@ -183,11 +178,9 @@ const Musteriler = () => {
         <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
           <Table>
             <TableHead>
-              <TableRow sx={{ bgcolor: 'primary.main' }}>
+              <TableRow>
                 {['Ad Soyad', 'Telefon', 'Adres', 'İşlemler'].map((h) => (
-                  <TableCell key={h} sx={{ color: 'white', fontWeight: 'bold' }}>
-                    {h}
-                  </TableCell>
+                  <TableCell key={h}>{h}</TableCell>
                 ))}
               </TableRow>
             </TableHead>
@@ -198,15 +191,9 @@ const Musteriler = () => {
                   <TableCell>{m.telefon || '-'}</TableCell>
                   <TableCell>{m.adres || '-'}</TableCell>
                   <TableCell>
-                    <IconButton size="small" color="primary" onClick={() => openDetay(m)}>
-                      <ViewIcon />
-                    </IconButton>
-                    <IconButton size="small" color="info" onClick={() => openDialog(m)}>
-                      <EditIcon />
-                    </IconButton>
-                    <IconButton size="small" color="error" onClick={() => handleDelete(m.id)}>
-                      <DeleteIcon />
-                    </IconButton>
+                    <IslemDugmesi tur="goz" onClick={() => openDetay(m)} />
+                    <IslemDugmesi tur="duz" onClick={() => openDialog(m)} />
+                    <IslemDugmesi tur="sil" onClick={() => handleDelete(m.id)} />
                   </TableCell>
                 </TableRow>
               ))}
@@ -271,19 +258,12 @@ const Musteriler = () => {
             const formatTL = (v) => sayiYaz(v);
             return (
               <>
-                <DialogTitle sx={{ bgcolor: '#1565C0', color: 'white', py: 1.5, display: 'flex', alignItems: 'center' }}>
-                  <Typography variant="h6" fontWeight="bold" sx={{ flexGrow: 1 }}>
-                    👤 {d.ad_soyad}
-                  </Typography>
-                  <IconButton onClick={() => setDetayDialog({ open: false, data: null })} sx={{ color: 'white' }}>
-                    <CloseIcon />
-                  </IconButton>
-                </DialogTitle>
+                <DialogBasligi baslik={<>{d.ad_soyad}</>} onKapat={() => setDetayDialog({ open: false, data: null })} />
                 <DialogContent dividers>
                   <Grid container spacing={2} sx={{ mb: 3 }}>
                     <Grid size={{ xs: 12, md: 4 }}>
-                      <Paper sx={{ p: 1.5, bgcolor: '#e3f2fd', borderLeft: '4px solid #1565C0' }}>
-                        <Typography variant="subtitle2" fontWeight="bold" color="#1565C0">
+                      <Paper sx={{ p: 1.5, bgcolor: '#DCE6F4', borderLeft: '4px solid #1E4A86' }}>
+                        <Typography variant="subtitle2" fontWeight="bold" color="#1E4A86">
                           İletişim
                         </Typography>
                         <Typography variant="body2">
@@ -296,9 +276,9 @@ const Musteriler = () => {
                     </Grid>
                     <Grid size={{ xs: 12, md: 8 }}>
                       <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                        <Chip label={`Motor: ${(d.motorlar || []).length}`} sx={{ bgcolor: '#ffebee', color: '#C62828', fontWeight: 'bold' }} />
-                        <Chip label={`Aksesuar: ${(d.aksesuarlar || []).length}`} sx={{ bgcolor: '#e8f5e9', color: '#2e7d32', fontWeight: 'bold' }} />
-                        <Chip label={`Servis: ${(d.isEmirleri || []).length}`} sx={{ bgcolor: '#fff3e0', color: '#e65100', fontWeight: 'bold' }} />
+                        <Chip label={`Motor: ${(d.motorlar || []).length}`} sx={{ bgcolor: '#F6DAD7', color: '#C62828', fontWeight: 'bold' }} />
+                        <Chip label={`Aksesuar: ${(d.aksesuarlar || []).length}`} sx={{ bgcolor: '#D8EBDD', color: '#1D6A3B', fontWeight: 'bold' }} />
+                        <Chip label={`Servis: ${(d.isEmirleri || []).length}`} sx={{ bgcolor: '#F7E7C4', color: '#A5530F', fontWeight: 'bold' }} />
                       </Box>
                     </Grid>
                   </Grid>
@@ -307,13 +287,13 @@ const Musteriler = () => {
                   {(d.motorlar || []).length > 0 && (
                     <Box sx={{ mb: 3 }}>
                       <Typography variant="subtitle1" fontWeight="bold" color="#C62828" gutterBottom>
-                        🏍️ Motor İşlemleri
+                        Motor İşlemleri
                       </Typography>
                       <Divider sx={{ mb: 1 }} />
                       <TableContainer component={Paper} variant="outlined" sx={{ overflowX: 'auto' }}>
                         <Table size="small">
                           <TableHead>
-                            <TableRow sx={{ bgcolor: '#ffebee' }}>
+                            <TableRow sx={{ bgcolor: '#F6DAD7' }}>
                               {['Plaka', 'Marka/Model', 'Rol', 'Fiyat', 'Durum', 'Tarih'].map((h) => (
                                 <TableCell key={h} sx={{ fontWeight: 'bold', color: '#C62828' }}>
                                   {h}
@@ -334,8 +314,8 @@ const Musteriler = () => {
                                     {m.marka} {m.model} {m.yil ? `(${m.yil})` : ''}
                                   </TableCell>
                                   <TableCell>
-                                    {isSatici && <Chip label="Satıcı" size="small" sx={{ bgcolor: '#fff3e0', color: '#e65100', mr: 0.5 }} />}
-                                    {isAlici && <Chip label="Alıcı" size="small" sx={{ bgcolor: '#e8f5e9', color: '#2e7d32' }} />}
+                                    {isSatici && <Chip label="Satıcı" size="small" sx={{ bgcolor: '#F7E7C4', color: '#A5530F', mr: 0.5 }} />}
+                                    {isAlici && <Chip label="Alıcı" size="small" sx={{ bgcolor: '#D8EBDD', color: '#1D6A3B' }} />}
                                   </TableCell>
                                   <TableCell>
                                     {isSatici && `₺${formatTL(m.alis_fiyati)}`}
@@ -355,16 +335,16 @@ const Musteriler = () => {
                   {/* Aksesuar İşlemleri */}
                   {(d.aksesuarlar || []).length > 0 && (
                     <Box sx={{ mb: 3 }}>
-                      <Typography variant="subtitle1" fontWeight="bold" color="#2e7d32" gutterBottom>
-                        🛒 Aksesuar Satışları
+                      <Typography variant="subtitle1" fontWeight="bold" color="#1D6A3B" gutterBottom>
+                        Aksesuar Satışları
                       </Typography>
                       <Divider sx={{ mb: 1 }} />
                       <TableContainer component={Paper} variant="outlined" sx={{ overflowX: 'auto' }}>
                         <Table size="small">
                           <TableHead>
-                            <TableRow sx={{ bgcolor: '#e8f5e9' }}>
+                            <TableRow sx={{ bgcolor: '#D8EBDD' }}>
                               {['Toplam Satış', 'Kâr', 'Durum', 'Tarih'].map((h) => (
-                                <TableCell key={h} sx={{ fontWeight: 'bold', color: '#2e7d32' }}>
+                                <TableCell key={h} sx={{ fontWeight: 'bold', color: '#1D6A3B' }}>
                                   {h}
                                 </TableCell>
                               ))}
@@ -388,16 +368,16 @@ const Musteriler = () => {
                   {/* İş Emirleri */}
                   {(d.isEmirleri || []).length > 0 && (
                     <Box sx={{ mb: 3 }}>
-                      <Typography variant="subtitle1" fontWeight="bold" color="#e65100" gutterBottom>
-                        🔧 Servis İşlemleri
+                      <Typography variant="subtitle1" fontWeight="bold" color="#A5530F" gutterBottom>
+                        Servis İşlemleri
                       </Typography>
                       <Divider sx={{ mb: 1 }} />
                       <TableContainer component={Paper} variant="outlined" sx={{ overflowX: 'auto' }}>
                         <Table size="small">
                           <TableHead>
-                            <TableRow sx={{ bgcolor: '#fff3e0' }}>
+                            <TableRow sx={{ bgcolor: '#F7E7C4' }}>
                               {['Fiş No', 'Model', 'Tutar', 'Durum', 'Tarih'].map((h) => (
-                                <TableCell key={h} sx={{ fontWeight: 'bold', color: '#e65100' }}>
+                                <TableCell key={h} sx={{ fontWeight: 'bold', color: '#A5530F' }}>
                                   {h}
                                 </TableCell>
                               ))}

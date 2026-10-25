@@ -1,9 +1,11 @@
+import { useOnay } from '../../../shared/ui';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { vitrinService } from '../vitrinApi';
 import { ilanAramaUygunMu } from '../ilanArama';
 
 // İlan listesi: sunucudan yükleme, yayında/arşiv görünümü, arama, sıralama (sayı kutusu, ok, sürükle) ve yayın/silme işlemleri.
 export const useIlanListesi = ({ kategori, isAdmin, bildir }) => {
+  const onay = useOnay();
   const [urunler, setUrunler] = useState([]);
   const [gorunum, setGorunum] = useState('aktif'); // 'aktif' = yayındakiler, 'arsiv' = yayından kaldırılanlar
   const [arama, setArama] = useState('');
@@ -146,7 +148,7 @@ export const useIlanListesi = ({ kategori, isAdmin, bildir }) => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Bu ilanı silmek istediğinize emin misiniz?')) return;
+    if (!(await onay('Bu ilanı silmek istediğinize emin misiniz?'))) return;
     try {
       await vitrinService.delete(id);
       bildir('Silindi');

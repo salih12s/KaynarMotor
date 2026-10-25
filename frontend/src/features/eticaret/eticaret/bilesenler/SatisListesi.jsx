@@ -1,8 +1,7 @@
 import React from 'react';
-import { Box, Paper, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, IconButton, Alert, Chip } from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import ViewIcon from '@mui/icons-material/Visibility';
+import { IslemDugmesi } from '../../../../shared/ui';
+import { Box, Paper, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Alert, Chip } from '@mui/material';
+
 import { hesaplaKomisyon, detectPlatform } from '../../komisyon';
 import { formatTL } from '../eticaretVeri';
 import { tarihYaz } from '../../../../shared/utils/bicim';
@@ -22,7 +21,7 @@ const SatisListesi = ({ satislar, platformFiltre, isMobile, karGor, onDetay, onD
               <Typography variant="subtitle2" fontWeight="bold">
                 {s.urun_adi}
               </Typography>
-              <Chip label={s.platform_adi || '-'} size="small" sx={{ bgcolor: '#ffebee', color: '#C62828', fontWeight: 'bold', fontSize: '0.7rem' }} />
+              <Chip label={s.platform_adi || '-'} size="small" sx={{ bgcolor: '#F6DAD7', color: '#C62828', fontWeight: 'bold', fontSize: '0.7rem' }} />
             </Box>
             <Typography variant="body2" color="text.secondary">
               Adet: {s.adet} • {tarihYaz(s.tarih)}
@@ -41,12 +40,8 @@ const SatisListesi = ({ satislar, platformFiltre, isMobile, karGor, onDetay, onD
               )}
             </Box>
             <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 0.5 }} onClick={(e) => e.stopPropagation()}>
-              <IconButton size="small" color="info" onClick={() => onDuzenle(s)}>
-                <EditIcon />
-              </IconButton>
-              <IconButton size="small" color="error" onClick={() => onSil(s.id)}>
-                <DeleteIcon />
-              </IconButton>
+              <IslemDugmesi tur="duz" onClick={() => onDuzenle(s)} />
+              <IslemDugmesi tur="sil" onClick={() => onSil(s.id)} />
             </Box>
           </Paper>
         );
@@ -56,7 +51,7 @@ const SatisListesi = ({ satislar, platformFiltre, isMobile, karGor, onDetay, onD
     <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
       <Table size="small">
         <TableHead>
-          <TableRow sx={{ bgcolor: '#C62828' }}>
+          <TableRow>
             {[
               'Ürün',
               'Platform',
@@ -70,9 +65,7 @@ const SatisListesi = ({ satislar, platformFiltre, isMobile, karGor, onDetay, onD
               'Tarih',
               'İşlemler',
             ].map((h) => (
-              <TableCell key={h} sx={{ color: 'white', fontWeight: 'bold' }}>
-                {h}
-              </TableCell>
+              <TableCell key={h}>{h}</TableCell>
             ))}
           </TableRow>
         </TableHead>
@@ -93,15 +86,9 @@ const SatisListesi = ({ satislar, platformFiltre, isMobile, karGor, onDetay, onD
                 {karGor && <TableCell sx={{ color: sHesap.netKar >= 0 ? 'green' : 'red', fontWeight: 'bold' }}>{formatTL(sHesap.netKar)}</TableCell>}
                 <TableCell>{tarihYaz(s.tarih)}</TableCell>
                 <TableCell sx={{ whiteSpace: 'nowrap' }}>
-                  <IconButton size="small" color="primary" onClick={() => onDetay(s)}>
-                    <ViewIcon />
-                  </IconButton>
-                  <IconButton size="small" color="info" onClick={() => onDuzenle(s)}>
-                    <EditIcon />
-                  </IconButton>
-                  <IconButton size="small" color="error" onClick={() => onSil(s.id)}>
-                    <DeleteIcon />
-                  </IconButton>
+                  <IslemDugmesi tur="goz" onClick={() => onDetay(s)} />
+                  <IslemDugmesi tur="duz" onClick={() => onDuzenle(s)} />
+                  <IslemDugmesi tur="sil" onClick={() => onSil(s.id)} />
                 </TableCell>
               </TableRow>
             );

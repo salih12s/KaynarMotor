@@ -19,8 +19,16 @@ const Aksesuarlar = () => {
 
   return (
     <Box>
-      <IstatistikSatiri satislar={a.satislar} stats={a.stats} karGor={karGor} onYeni={() => a.openDialog()} />
-      <Suzgecler aksSearch={aksSearch} setAksSearch={setAksSearch} aksStart={aksStart} setAksStart={setAksStart} aksEnd={aksEnd} setAksEnd={setAksEnd} />
+      <IstatistikSatiri satislar={a.satislar} stats={a.stats} karGor={karGor} />
+      <Suzgecler
+        aksSearch={aksSearch}
+        setAksSearch={setAksSearch}
+        aksStart={aksStart}
+        setAksStart={setAksStart}
+        aksEnd={aksEnd}
+        setAksEnd={setAksEnd}
+        onYeni={() => a.openDialog()}
+      />
       <SatisListesi
         satislar={a.satislar}
         aksSearch={aksSearch}

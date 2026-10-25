@@ -18,7 +18,7 @@ const KarOnizleme = ({ hs, canKar }) => {
       const benimKar = kar - yatirimciKar;
       const fmt = (v) => `₺${sayiYaz(v)}`;
       return (
-        <Box sx={{ mt: 2, p: 1.5, borderRadius: 1, bgcolor: '#f1f8e9', border: '1px solid #c5e1a5' }}>
+        <Box sx={{ mt: 2, p: 1.5, borderRadius: 1, bgcolor: '#D8EBDD', border: '1px solid #c5e1a5' }}>
           <Typography variant="subtitle2" fontWeight="bold" sx={{ mb: 0.5 }}>
             Kâr Önizleme
           </Typography>
@@ -32,13 +32,13 @@ const KarOnizleme = ({ hs, canKar }) => {
             <>
               <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                 <Typography variant="body2">Yatırımcı Kârı:</Typography>
-                <Typography variant="body2" fontWeight="bold" sx={{ color: '#1565C0' }}>
+                <Typography variant="body2" fontWeight="bold" sx={{ color: '#1E4A86' }}>
                   {fmt(yatirimciKar)}
                 </Typography>
               </Box>
               <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                 <Typography variant="body2">İşletme Kârı (Sizin):</Typography>
-                <Typography variant="body2" fontWeight="bold" sx={{ color: '#2e7d32' }}>
+                <Typography variant="body2" fontWeight="bold" sx={{ color: '#1D6A3B' }}>
                   {fmt(benimKar)}
                 </Typography>
               </Box>

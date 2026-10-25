@@ -1,3 +1,4 @@
+import { useOnay } from '../../../shared/ui';
 import { useState, useEffect, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ikinciElMotorService } from '../motorApi';
@@ -11,6 +12,7 @@ const BOS_NESNE = {};
 // Başka sayfadan `state.openDetailId` ile gelinirse detay otomatik açılır ve konum durumu temizlenir.
 // Liste ve yatırımcılar Motor Stok ile ortak önbellekten gelir (motorSorgulari.js).
 export const useSatisListesi = () => {
+  const onay = useOnay();
   const location = useLocation();
   const navigate = useNavigate();
   const [detayModal, setDetayModal] = useState({ open: false, data: null });
@@ -46,7 +48,7 @@ export const useSatisListesi = () => {
   }, [location.state]);
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Bu kaydı silmek istediğinizden emin misiniz?')) return;
+    if (!(await onay('Bu kaydı silmek istediğinizden emin misiniz?'))) return;
     try {
       await ikinciElMotorService.delete(id);
       yenile();

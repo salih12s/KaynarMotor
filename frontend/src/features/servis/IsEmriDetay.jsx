@@ -100,7 +100,7 @@ const IsEmriDetay = () => {
           <Grid size={{ xs: 12, md: 4 }}>
             <Paper sx={{ p: 3, height: '100%' }}>
               <Typography variant="subtitle1" fontWeight="bold" color="primary" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                👤 Müşteri Bilgileri
+                Müşteri Bilgileri
               </Typography>
               <Divider sx={{ mb: 1 }} />
               <InfoRow label="Ad Soyad" value={data.musteri_ad_soyad} />
@@ -114,7 +114,7 @@ const IsEmriDetay = () => {
           <Grid size={{ xs: 12, md: 4 }}>
             <Paper sx={{ p: 3, height: '100%' }}>
               <Typography variant="subtitle1" fontWeight="bold" color="primary" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                🏍️ Araç Bilgileri
+                Araç Bilgileri
               </Typography>
               <Divider sx={{ mb: 1 }} />
               <InfoRow label="Fiş No" value={`#${data.fis_no}`} />
@@ -130,7 +130,7 @@ const IsEmriDetay = () => {
           <Grid size={{ xs: 12, md: 4 }}>
             <Paper sx={{ p: 3, height: '100%' }}>
               <Typography variant="subtitle1" fontWeight="bold" color="primary" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                📅 Tarih ve Teslim
+                Tarih ve Teslim
               </Typography>
               <Divider sx={{ mb: 1 }} />
               <InfoRow label="Oluşturma" value={tarihYaz(data.created_at)} />
@@ -147,7 +147,7 @@ const IsEmriDetay = () => {
           <Grid size={{ xs: 12, md: 6 }}>
             <Paper sx={{ p: 3 }}>
               <Typography variant="subtitle1" fontWeight="bold" color="primary" gutterBottom>
-                🔧 Arıza / Şikayetler
+                Arıza / Şikayetler
               </Typography>
               <Divider sx={{ mb: 1 }} />
               <Typography>{data.ariza_sikayetler || 'Belirtilmemiş'}</Typography>
@@ -156,7 +156,7 @@ const IsEmriDetay = () => {
           <Grid size={{ xs: 12, md: 6 }}>
             <Paper sx={{ p: 3 }}>
               <Typography variant="subtitle1" fontWeight="bold" color="primary" gutterBottom>
-                📝 Açıklama
+                Açıklama
               </Typography>
               <Divider sx={{ mb: 1 }} />
               <Typography>{data.aciklama || 'Belirtilmemiş'}</Typography>
@@ -167,7 +167,7 @@ const IsEmriDetay = () => {
         {/* Parçalar */}
         <Paper sx={{ p: 3, mb: 3 }}>
           <Typography variant="subtitle1" fontWeight="bold" color="primary" gutterBottom>
-            📋 Parçalar ve İşçilik
+            Parçalar ve İşçilik
           </Typography>
           <Divider sx={{ mb: 1 }} />
           {parcalar.length > 0 ? (
@@ -192,7 +192,7 @@ const IsEmriDetay = () => {
                 <TableContainer>
                   <Table size="small">
                     <TableHead>
-                      <TableRow sx={{ bgcolor: '#f5f5f5' }}>
+                      <TableRow sx={{ bgcolor: '#F3F3EE' }}>
                         {['Parça Kodu', 'Takılan Parça', 'Adet', 'Birim Fiyat', 'Maliyet', 'Toplam'].map((h) => (
                           <TableCell key={h} sx={{ fontWeight: 'bold' }}>
                             {h}
@@ -216,19 +216,19 @@ const IsEmriDetay = () => {
                 </TableContainer>
               )}
               <Box sx={{ mt: 2, display: 'flex', gap: 3, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
-                <Paper sx={{ px: 2, py: 1, bgcolor: '#ffebee' }}>
+                <Paper sx={{ px: 2, py: 1, bgcolor: '#F6DAD7' }}>
                   <Typography variant="body2">
                     Toplam: <strong>₺{sayiYaz(toplamFiyat)}</strong>
                   </Typography>
                 </Paper>
-                <Paper sx={{ px: 2, py: 1, bgcolor: '#ffebee' }}>
+                <Paper sx={{ px: 2, py: 1, bgcolor: '#F6DAD7' }}>
                   <Typography variant="body2">
                     Maliyet: <strong>₺{sayiYaz(toplamMaliyet)}</strong>
                   </Typography>
                 </Paper>
                 {karGor && (
-                  <Paper sx={{ px: 2, py: 1, bgcolor: kar >= 0 ? '#e8f5e9' : '#ffebee' }}>
-                    <Typography variant="body2" sx={{ color: kar >= 0 ? '#2e7d32' : '#c62828' }}>
+                  <Paper sx={{ px: 2, py: 1, bgcolor: kar >= 0 ? '#D8EBDD' : '#F6DAD7' }}>
+                    <Typography variant="body2" sx={{ color: kar >= 0 ? '#1D6A3B' : '#c62828' }}>
                       Kâr: <strong>₺{sayiYaz(kar)}</strong>
                     </Typography>
                   </Paper>
@@ -247,21 +247,21 @@ const IsEmriDetay = () => {
           sx={{
             p: 3,
             mb: 3,
-            bgcolor: parseFloat(data.kalan_odeme || 0) > 0 ? '#fff3e0' : '#e8f5e9',
+            bgcolor: parseFloat(data.kalan_odeme || 0) > 0 ? '#F7E7C4' : '#D8EBDD',
             border: '2px solid',
-            borderColor: parseFloat(data.kalan_odeme || 0) > 0 ? '#ed6c02' : '#2e7d32',
+            borderColor: parseFloat(data.kalan_odeme || 0) > 0 ? '#A5530F' : '#1D6A3B',
           }}
         >
-          <Typography variant="subtitle1" fontWeight="bold" gutterBottom sx={{ color: parseFloat(data.kalan_odeme || 0) > 0 ? '#ed6c02' : '#2e7d32' }}>
-            💰 Ödeme Durumu
+          <Typography variant="subtitle1" fontWeight="bold" gutterBottom sx={{ color: parseFloat(data.kalan_odeme || 0) > 0 ? '#A5530F' : '#1D6A3B' }}>
+            Ödeme Durumu
           </Typography>
           <Divider sx={{ mb: 1 }} />
           {parseFloat(data.kalan_odeme || 0) > 0 ? (
-            <Typography variant="h6" sx={{ color: '#ed6c02' }}>
+            <Typography variant="h6" sx={{ color: '#A5530F' }}>
               Kalan Ödeme: <strong>₺{sayiYaz(data.kalan_odeme)}</strong>
             </Typography>
           ) : (
-            <Typography variant="h6" sx={{ color: '#2e7d32' }}>
+            <Typography variant="h6" sx={{ color: '#1D6A3B' }}>
               Ödeme Tamamlandı ✓
             </Typography>
           )}
@@ -276,7 +276,7 @@ const IsEmriDetay = () => {
         {data.odeme_detaylari && (
           <Paper sx={{ p: 3 }}>
             <Typography variant="subtitle1" fontWeight="bold" color="primary" gutterBottom>
-              💳 Ödeme Detayları
+              Ödeme Detayları
             </Typography>
             <Divider sx={{ mb: 1 }} />
             <Typography>{data.odeme_detaylari}</Typography>

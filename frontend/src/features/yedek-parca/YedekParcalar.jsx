@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { IslemDugmesi, OzetSeridi } from '../../shared/ui';
+import { useOnay } from '../../shared/ui';
 import { sonIstek } from '../../shared/utils/sonIstek';
 import {
   Box,
@@ -11,7 +13,6 @@ import {
   TableHead,
   TableRow,
   Button,
-  IconButton,
   TextField,
   Dialog,
   DialogTitle,
@@ -28,8 +29,7 @@ import {
   useMediaQuery,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
+
 import SearchIcon from '@mui/icons-material/Search';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { yedekParcaService, yedekParcaStokService } from './yedekParcaApi';
@@ -41,6 +41,7 @@ import { sayiYaz } from '../../shared/utils/bicim';
 const sonAra = sonIstek();
 
 const YedekParcalar = () => {
+  const onay = useOnay();
   const karGor = useKarGor();
   const isMobile = useMediaQuery(useTheme().breakpoints.down('sm'));
   const location = useLocation();
@@ -216,7 +217,7 @@ const YedekParcalar = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Bu kaydı silmek istediğinizden emin misiniz?')) return;
+    if (!(await onay('Bu kaydı silmek istediğinizden emin misiniz?'))) return;
     try {
       await yedekParcaService.delete(id);
       loadData();
@@ -229,19 +230,11 @@ const YedekParcalar = () => {
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2, alignItems: 'center' }}>
-        <Chip
-          label={`Toplam: ${parcalar.length}`}
-          sx={{ bgcolor: '#ffebee', color: '#C62828', fontWeight: 'bold', fontSize: '0.8rem', borderLeft: '4px solid #C62828' }}
-        />
-        <Box sx={{ flexGrow: 1 }} />
-        <Button
-          variant="contained"
-          size="large"
-          startIcon={<AddIcon />}
-          onClick={() => openDialog()}
-          sx={{ bgcolor: '#C62828', '&:hover': { bgcolor: '#b71c1c' } }}
-        >
+      <Box sx={{ mb: 2 }}>
+        <OzetSeridi ogeler={[{ etiket: 'Toplam', deger: parcalar.length }]} />
+      </Box>
+      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2, alignItems: 'center', justifyContent: 'flex-end' }}>
+        <Button variant="contained" size="large" startIcon={<AddIcon />} onClick={() => openDialog()}>
           Yeni Parça
         </Button>
       </Box>
@@ -277,12 +270,8 @@ const YedekParcalar = () => {
                     {(p.adet || 1) > 1 ? ` (x${p.adet})` : ''}
                   </Typography>
                   <Box>
-                    <IconButton size="small" color="info" onClick={() => openDialog(p)}>
-                      <EditIcon />
-                    </IconButton>
-                    <IconButton size="small" color="error" onClick={() => handleDelete(p.id)}>
-                      <DeleteIcon />
-                    </IconButton>
+                    <IslemDugmesi tur="duz" onClick={() => openDialog(p)} />
+                    <IslemDugmesi tur="sil" onClick={() => handleDelete(p.id)} />
                   </Box>
                 </Box>
                 <Box sx={{ display: 'flex', gap: 2 }}>
@@ -300,9 +289,9 @@ const YedekParcalar = () => {
                 </Box>
                 <Box sx={{ mt: 0.5 }}>
                   {kalan > 0 ? (
-                    <Chip size="small" label={`Kalan: ₺${sayiYaz(kalan)}`} sx={{ bgcolor: '#fff3e0', color: '#ed6c02', fontWeight: 'bold' }} />
+                    <Chip size="small" label={`Kalan: ₺${sayiYaz(kalan)}`} sx={{ bgcolor: '#F7E7C4', color: '#A5530F', fontWeight: 'bold' }} />
                   ) : (
-                    <Chip size="small" label="Ödeme Tamamlandı" sx={{ bgcolor: '#e8f5e9', color: '#2e7d32', fontWeight: 'bold' }} />
+                    <Chip size="small" label="Ödeme Tamamlandı" sx={{ bgcolor: '#D8EBDD', color: '#1D6A3B', fontWeight: 'bold' }} />
                   )}
                 </Box>
                 {(p.musteri_adi || p.musteri_telefon) && (
@@ -320,12 +309,10 @@ const YedekParcalar = () => {
         <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
           <Table>
             <TableHead>
-              <TableRow sx={{ bgcolor: '#C62828' }}>
+              <TableRow>
                 {['Ürün Adı', 'Alış Fiyatı (₺)', 'Satış Fiyatı (₺)', 'Müşteri', 'Telefon', ...(karGor ? ['Kâr (₺)'] : []), 'Ödeme Durumu', 'İşlemler'].map(
                   (h) => (
-                    <TableCell key={h} sx={{ color: 'white', fontWeight: 'bold' }}>
-                      {h}
-                    </TableCell>
+                    <TableCell key={h}>{h}</TableCell>
                   ),
                 )}
               </TableRow>
@@ -350,23 +337,19 @@ const YedekParcalar = () => {
                         <Chip
                           size="small"
                           label={`Kalan: ₺${sayiYaz(kalan)}`}
-                          sx={{ bgcolor: '#fff3e0', color: '#ed6c02', fontWeight: 'bold', borderLeft: '3px solid #ed6c02' }}
+                          sx={{ bgcolor: '#F7E7C4', color: '#A5530F', fontWeight: 'bold', borderLeft: '3px solid #A5530F' }}
                         />
                       ) : (
                         <Chip
                           size="small"
                           label="Tamamlandı"
-                          sx={{ bgcolor: '#e8f5e9', color: '#2e7d32', fontWeight: 'bold', borderLeft: '3px solid #2e7d32' }}
+                          sx={{ bgcolor: '#D8EBDD', color: '#1D6A3B', fontWeight: 'bold', borderLeft: '3px solid #1D6A3B' }}
                         />
                       )}
                     </TableCell>
                     <TableCell>
-                      <IconButton size="small" color="info" onClick={() => openDialog(p)}>
-                        <EditIcon />
-                      </IconButton>
-                      <IconButton size="small" color="error" onClick={() => handleDelete(p.id)}>
-                        <DeleteIcon />
-                      </IconButton>
+                      <IslemDugmesi tur="duz" onClick={() => openDialog(p)} />
+                      <IslemDugmesi tur="sil" onClick={() => handleDelete(p.id)} />
                     </TableCell>
                   </TableRow>
                 );
@@ -419,7 +402,7 @@ const YedekParcalar = () => {
               {formData.stok_id && (
                 <Chip
                   size="small"
-                  sx={{ mt: 1, bgcolor: '#e8f5e9', color: '#2e7d32', fontWeight: 'bold' }}
+                  sx={{ mt: 1, bgcolor: '#D8EBDD', color: '#1D6A3B', fontWeight: 'bold' }}
                   label={
                     seciliStok
                       ? `Stoğa bağlı: ${seciliStok.stok_adi}${seciliStok.mevcut !== undefined ? ` (Mevcut: ${seciliStok.mevcut || 0})` : ''} — kaydedilince stoktan düşer`
@@ -496,13 +479,13 @@ const YedekParcalar = () => {
             </Grid>
           </Grid>
           {karGor && (
-            <Paper sx={{ p: 1, mt: 2, textAlign: 'center', bgcolor: kar >= 0 ? '#e8f5e9' : '#ffebee' }}>
+            <Paper sx={{ p: 1, mt: 2, textAlign: 'center', bgcolor: kar >= 0 ? '#D8EBDD' : '#F6DAD7' }}>
               <Typography sx={{ color: kar >= 0 ? 'green' : 'red' }}>
                 Kâr: <strong>{sayiYaz(kar)} ₺</strong>
               </Typography>
             </Paper>
           )}
-          <Box sx={{ mt: 2, p: 1.5, border: '1px solid #e0e0e0', borderRadius: 1 }}>
+          <Box sx={{ mt: 2, p: 1.5, border: '1px solid #D2D3CA', borderRadius: 1 }}>
             <Typography variant="subtitle2" fontWeight="bold" sx={{ mb: 1 }}>
               Kalan Ödeme
             </Typography>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { IslemDugmesi } from '../../shared/ui';
 import { sonIstek } from '../../shared/utils/sonIstek';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
@@ -24,7 +25,7 @@ import {
   useTheme,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import DeleteIcon from '@mui/icons-material/Delete';
+
 import BackIcon from '@mui/icons-material/ArrowBack';
 import { isEmriService } from './servisApi';
 import { musteriService } from '../musteriler/musteriApi';
@@ -256,13 +257,13 @@ const IsEmriForm = () => {
             p: 3,
             mb: 3,
             border: '2px solid',
-            borderColor: formData.durum === 'tamamlandi' ? '#2e7d32' : formData.durum === 'devam_ediyor' ? '#1565C0' : '#ed6c02',
+            borderColor: formData.durum === 'tamamlandi' ? '#1D6A3B' : formData.durum === 'devam_ediyor' ? '#1E4A86' : '#A5530F',
           }}
         >
           <Typography
             variant="h6"
             gutterBottom
-            sx={{ color: formData.durum === 'tamamlandi' ? '#2e7d32' : formData.durum === 'devam_ediyor' ? '#1565C0' : '#ed6c02' }}
+            sx={{ color: formData.durum === 'tamamlandi' ? '#1D6A3B' : formData.durum === 'devam_ediyor' ? '#1E4A86' : '#A5530F' }}
           >
             Durum
           </Typography>
@@ -277,7 +278,7 @@ const IsEmriForm = () => {
                 onChange={handleChange}
                 sx={{
                   '& .MuiInputBase-root': {
-                    bgcolor: formData.durum === 'tamamlandi' ? '#e8f5e9' : formData.durum === 'devam_ediyor' ? '#e3f2fd' : '#fff3e0',
+                    bgcolor: formData.durum === 'tamamlandi' ? '#D8EBDD' : formData.durum === 'devam_ediyor' ? '#DCE6F4' : '#F7E7C4',
                     fontWeight: 'bold',
                   },
                 }}
@@ -308,9 +309,7 @@ const IsEmriForm = () => {
                       <Typography variant="subtitle2" fontWeight="bold">
                         Parça #{i + 1}
                       </Typography>
-                      <IconButton size="small" color="error" onClick={() => removeParca(i)}>
-                        <DeleteIcon />
-                      </IconButton>
+                      <IslemDugmesi tur="sil" onClick={() => removeParca(i)} />
                     </Box>
                     <Grid container spacing={1}>
                       <Grid size={6}>
@@ -410,9 +409,7 @@ const IsEmriForm = () => {
                         </TableCell>
                         <TableCell>{sayiYaz((Number(p.adet) || 0) * (Number(p.birim_fiyat) || 0))} ₺</TableCell>
                         <TableCell>
-                          <IconButton size="small" color="error" onClick={() => removeParca(i)}>
-                            <DeleteIcon />
-                          </IconButton>
+                          <IslemDugmesi tur="sil" onClick={() => removeParca(i)} />
                         </TableCell>
                       </TableRow>
                     ))}

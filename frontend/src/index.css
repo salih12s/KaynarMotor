@@ -13,7 +13,8 @@ body {
   body * {
     visibility: hidden;
   }
-  .print-area, .print-area * {
+  .print-area,
+  .print-area * {
     visibility: visible;
   }
   .print-area {

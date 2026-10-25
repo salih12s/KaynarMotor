@@ -34,14 +34,7 @@ const IkinciElMotor = () => {
 
   return (
     <Box>
-      <IstatistikSatiri
-        motorlar={liste.motorlar}
-        stats={liste.stats}
-        canKar={canKar}
-        salt={salt}
-        onExcel={() => excelIndir(excelHtml(filteredMotorlar, { canAlis, canKar }))}
-        onYeni={() => form.openDialog()}
-      />
+      <IstatistikSatiri motorlar={liste.motorlar} stats={liste.stats} canKar={canKar} />
 
       <Suzgecler
         search={search}
@@ -50,6 +43,9 @@ const IkinciElMotor = () => {
         setTarihBaslangic={setTarihBaslangic}
         tarihBitis={tarihBitis}
         setTarihBitis={setTarihBitis}
+        salt={salt}
+        onExcel={() => excelIndir(excelHtml(filteredMotorlar, { canAlis, canKar }))}
+        onYeni={() => form.openDialog()}
       />
 
       <SatisListesi

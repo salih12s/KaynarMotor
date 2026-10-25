@@ -1,4 +1,5 @@
 import React from 'react';
+import { IslemDugmesi } from '../../../../shared/ui';
 import {
   Box,
   Paper,
@@ -10,14 +11,13 @@ import {
   TableHead,
   TableRow,
   Button,
-  IconButton,
   TextField,
   Grid,
   InputAdornment,
   Autocomplete,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import DeleteIcon from '@mui/icons-material/Delete';
+
 import ScannerIcon from '@mui/icons-material/QrCodeScanner';
 import { sayiYaz } from '../../../../shared/utils/bicim';
 
@@ -58,9 +58,7 @@ const UrunlerBolumu = ({ a, isMobile }) => {
                   <Typography variant="subtitle2" fontWeight="bold">
                     Ürün #{i + 1}
                   </Typography>
-                  <IconButton size="small" color="error" onClick={() => removeParca(i)}>
-                    <DeleteIcon />
-                  </IconButton>
+                  <IslemDugmesi tur="sil" onClick={() => removeParca(i)} />
                 </Box>
                 <Autocomplete
                   size="small"
@@ -147,9 +145,7 @@ const UrunlerBolumu = ({ a, isMobile }) => {
                     </TableCell>
                     <TableCell>{sayiYaz((Number(p.adet) || 0) * (Number(p.satis_fiyati) || 0))} ₺</TableCell>
                     <TableCell>
-                      <IconButton size="small" color="error" onClick={() => removeParca(i)}>
-                        <DeleteIcon />
-                      </IconButton>
+                      <IslemDugmesi tur="sil" onClick={() => removeParca(i)} />
                     </TableCell>
                   </TableRow>
                 ))}

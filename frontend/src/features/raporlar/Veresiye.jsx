@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { IslemDugmesi } from '../../shared/ui';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -33,16 +34,16 @@ import MotorIcon from '@mui/icons-material/TwoWheeler';
 import ShopIcon from '@mui/icons-material/ShoppingCart';
 import SettingsIcon from '@mui/icons-material/Settings';
 import OpenIcon from '@mui/icons-material/OpenInNew';
-import ViewIcon from '@mui/icons-material/Visibility';
+
 import CloseIcon from '@mui/icons-material/Close';
 import { veresiyeService } from './raporApi';
 import { sayiYaz, tarihYaz } from '../../shared/utils/bicim';
 
 const KAYNAK_INFO = {
-  motor: { label: 'Motor Satış', color: '#C62828', bg: '#ffebee', icon: <MotorIcon fontSize="small" />, path: '/ikinci-el-motor' },
-  servis: { label: 'Servis', color: '#1565C0', bg: '#e3f2fd', icon: <BuildIcon fontSize="small" />, path: '/' },
-  aksesuar: { label: 'Aksesuar', color: '#2e7d32', bg: '#e8f5e9', icon: <ShopIcon fontSize="small" />, path: '/aksesuarlar' },
-  yedek_parca: { label: 'Yedek Parça', color: '#6a1b9a', bg: '#f3e5f5', icon: <SettingsIcon fontSize="small" />, path: '/yedek-parcalar' },
+  motor: { label: 'Motor Satış', color: '#C62828', bg: '#F6DAD7', icon: <MotorIcon fontSize="small" />, path: '/ikinci-el-motor' },
+  servis: { label: 'Servis', color: '#1E4A86', bg: '#DCE6F4', icon: <BuildIcon fontSize="small" />, path: '/' },
+  aksesuar: { label: 'Aksesuar', color: '#1D6A3B', bg: '#D8EBDD', icon: <ShopIcon fontSize="small" />, path: '/aksesuarlar' },
+  yedek_parca: { label: 'Yedek Parça', color: '#5B3A8C', bg: '#E7DFF3', icon: <SettingsIcon fontSize="small" />, path: '/yedek-parcalar' },
 };
 
 const Veresiye = () => {
@@ -81,7 +82,7 @@ const Veresiye = () => {
   const fmtTL = (v) => `₺${sayiYaz(v)}`;
 
   const ozetCards = [
-    { key: 'toplam', label: 'Toplam Borç', value: ozet.toplam, color: '#C62828', bg: '#ffebee' },
+    { key: 'toplam', label: 'Toplam Borç', value: ozet.toplam, color: '#C62828', bg: '#F6DAD7' },
     { key: 'motor', label: 'Motor Satış', value: ozet.motor, color: KAYNAK_INFO.motor.color, bg: KAYNAK_INFO.motor.bg },
     { key: 'servis', label: 'Servis', value: ozet.servis, color: KAYNAK_INFO.servis.color, bg: KAYNAK_INFO.servis.bg },
     { key: 'aksesuar', label: 'Aksesuar', value: ozet.aksesuar, color: KAYNAK_INFO.aksesuar.color, bg: KAYNAK_INFO.aksesuar.bg },
@@ -141,7 +142,7 @@ const Veresiye = () => {
       </Paper>
 
       {loading && <Alert severity="info">Yükleniyor...</Alert>}
-      {!loading && filtered.length === 0 && <Alert severity="success">Açık borç bulunmuyor 🎉</Alert>}
+      {!loading && filtered.length === 0 && <Alert severity="success">Açık borç bulunmuyor</Alert>}
 
       {!loading &&
         filtered.length > 0 &&
@@ -162,7 +163,7 @@ const Veresiye = () => {
                   </Typography>
                   {b.telefon && (
                     <Typography variant="body2" color="text.secondary">
-                      📞 {b.telefon}
+                      {b.telefon}
                     </Typography>
                   )}
                   {b.aciklama && (
@@ -180,14 +181,10 @@ const Veresiye = () => {
                   </Box>
                   <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 0.5 }}>
                     <Tooltip title="Detaylar">
-                      <IconButton size="small" color="primary" onClick={() => openDetail(b)}>
-                        <ViewIcon fontSize="small" />
-                      </IconButton>
+                      <IslemDugmesi tur="goz" onClick={() => openDetail(b)} />
                     </Tooltip>
                     <Tooltip title={`${info.label || ''} sayfasına git`}>
-                      <IconButton size="small" onClick={() => info.path && navigate(info.path)}>
-                        <OpenIcon fontSize="small" />
-                      </IconButton>
+                      <IslemDugmesi tur="ac" onClick={() => info.path && navigate(info.path)} />
                     </Tooltip>
                   </Box>
                 </Paper>
@@ -198,9 +195,9 @@ const Veresiye = () => {
           <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
             <Table size="small">
               <TableHead>
-                <TableRow sx={{ bgcolor: '#C62828' }}>
+                <TableRow>
                   {['Kaynak', 'Müşteri', 'Telefon', 'Açıklama', 'Tarih', 'Toplam', 'Kalan Borç', ''].map((h) => (
-                    <TableCell key={h} sx={{ color: 'white', fontWeight: 'bold', whiteSpace: 'nowrap' }}>
+                    <TableCell key={h} sx={{ whiteSpace: 'nowrap' }}>
                       {h}
                     </TableCell>
                   ))}
@@ -224,14 +221,10 @@ const Veresiye = () => {
                       <TableCell sx={{ color: '#C62828', fontWeight: 'bold' }}>{fmtTL(b.kalan_odeme)}</TableCell>
                       <TableCell>
                         <Tooltip title="Detaylar">
-                          <IconButton size="small" color="primary" onClick={() => openDetail(b)}>
-                            <ViewIcon fontSize="small" />
-                          </IconButton>
+                          <IslemDugmesi tur="goz" onClick={() => openDetail(b)} />
                         </Tooltip>
                         <Tooltip title={`${info.label || ''} sayfasına git`}>
-                          <IconButton size="small" onClick={() => info.path && navigate(info.path)}>
-                            <OpenIcon fontSize="small" />
-                          </IconButton>
+                          <IslemDugmesi tur="ac" onClick={() => info.path && navigate(info.path)} />
                         </Tooltip>
                       </TableCell>
                     </TableRow>
@@ -288,9 +281,9 @@ const Veresiye = () => {
                   </Grid>
 
                   {/* Ödeme özeti */}
-                  <Paper variant="outlined" sx={{ p: 1.5, mb: 2, bgcolor: '#fff3e0', borderLeft: '4px solid #ed6c02' }}>
-                    <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#ed6c02', mb: 1 }}>
-                      💰 Ödeme Durumu
+                  <Paper variant="outlined" sx={{ p: 1.5, mb: 2, bgcolor: '#F7E7C4', borderLeft: '4px solid #A5530F' }}>
+                    <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#A5530F', mb: 1 }}>
+                      Ödeme Durumu
                     </Typography>
                     <Grid container spacing={2}>
                       <Grid size={{ xs: 4 }}>
@@ -303,7 +296,7 @@ const Veresiye = () => {
                         <Typography variant="caption" color="text.secondary">
                           Ödenen
                         </Typography>
-                        <Typography fontWeight="bold" sx={{ color: '#2e7d32' }}>
+                        <Typography fontWeight="bold" sx={{ color: '#1D6A3B' }}>
                           {fmtTL(odenen)}
                         </Typography>
                       </Grid>
@@ -323,7 +316,7 @@ const Veresiye = () => {
                   {b.kaynak_key === 'motor' && (
                     <>
                       <Typography variant="subtitle1" fontWeight="bold" color="primary" gutterBottom>
-                        🏍️ Motor Bilgileri
+                        Motor Bilgileri
                       </Typography>
                       <Grid container spacing={1.5}>
                         {d.plaka && (
@@ -399,7 +392,7 @@ const Veresiye = () => {
                   {b.kaynak_key === 'servis' && (
                     <>
                       <Typography variant="subtitle1" fontWeight="bold" color="primary" gutterBottom>
-                        🔧 Servis Bilgileri
+                        Servis Bilgileri
                       </Typography>
                       <Grid container spacing={1.5} sx={{ mb: 2 }}>
                         {d.fis_no && (
@@ -464,12 +457,12 @@ const Veresiye = () => {
                       {parcalar.length > 0 && (
                         <>
                           <Typography variant="subtitle2" fontWeight="bold" sx={{ mb: 1 }}>
-                            🛠️ Takılan Parçalar
+                            Takılan Parçalar
                           </Typography>
                           <TableContainer component={Paper} variant="outlined">
                             <Table size="small">
                               <TableHead>
-                                <TableRow sx={{ bgcolor: '#f5f5f5' }}>
+                                <TableRow sx={{ bgcolor: '#F3F3EE' }}>
                                   <TableCell sx={{ fontWeight: 'bold' }}>Parça</TableCell>
                                   <TableCell align="center" sx={{ fontWeight: 'bold' }}>
                                     Adet
@@ -504,7 +497,7 @@ const Veresiye = () => {
                   {b.kaynak_key === 'aksesuar' && (
                     <>
                       <Typography variant="subtitle1" fontWeight="bold" color="primary" gutterBottom>
-                        🛒 Aksesuar Satışı
+                        Aksesuar Satışı
                       </Typography>
                       <Grid container spacing={1.5} sx={{ mb: 2 }}>
                         {d.odeme_sekli && (
@@ -543,12 +536,12 @@ const Veresiye = () => {
                       {parcalar.length > 0 && (
                         <>
                           <Typography variant="subtitle2" fontWeight="bold" sx={{ mb: 1 }}>
-                            📦 Ürünler
+                            Ürünler
                           </Typography>
                           <TableContainer component={Paper} variant="outlined">
                             <Table size="small">
                               <TableHead>
-                                <TableRow sx={{ bgcolor: '#f5f5f5' }}>
+                                <TableRow sx={{ bgcolor: '#F3F3EE' }}>
                                   <TableCell sx={{ fontWeight: 'bold' }}>Ürün</TableCell>
                                   <TableCell align="center" sx={{ fontWeight: 'bold' }}>
                                     Adet
@@ -579,7 +572,7 @@ const Veresiye = () => {
                   {b.kaynak_key === 'yedek_parca' && (
                     <>
                       <Typography variant="subtitle1" fontWeight="bold" color="primary" gutterBottom>
-                        ⚙️ Yedek Parça
+                        Yedek Parça
                       </Typography>
                       <Grid container spacing={1.5}>
                         {d.urun_adi && (

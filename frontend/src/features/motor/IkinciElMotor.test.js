@@ -14,6 +14,7 @@ import { authService } from '../auth/authApi';
 import { bekleyenBelgeleriYukle } from './SatisBelgeleri';
 import { useAuth } from '../auth/AuthContext';
 import { useReactToPrint } from 'react-to-print';
+import { plakaBicim } from '../../shared/ui';
 
 jest.mock('./motorApi', () => ({
   ikinciElMotorService: { getAll: jest.fn(), getStats: jest.fn(), getById: jest.fn(), create: jest.fn(), update: jest.fn(), delete: jest.fn() },
@@ -129,11 +130,13 @@ const ekranAc = async (secenek = {}) => {
   kur(secenek);
   const user = userEvent.setup();
   sonEkran = sorguluRender(<IkinciElMotor />);
-  if (!secenek.bekleme) await screen.findByText('34SAT111');
+  if (!secenek.bekleme) await screen.findByText(plakaBicim('34SAT111'));
   return user;
 };
 
-const satir = (plaka) => screen.getByRole('row', { name: new RegExp(plaka) });
+const satir = (plaka) => screen.getByRole('row', { name: new RegExp(plakaBicim(plaka)) });
+const ozet = (etiket) => within(screen.getByLabelText('Özet')).getByText(etiket).previousSibling.textContent;
+const ozetYok = (etiket) => within(screen.getByLabelText('Özet')).queryByText(etiket);
 const hucreler = (row) =>
   within(row)
     .getAllByRole('cell')
@@ -145,7 +148,7 @@ const plakalar = () =>
   screen
     .getAllByRole('row')
     .slice(1)
-    .map((r) => within(r).getAllByRole('cell')[0].textContent);
+    .map((r) => within(r).getAllByRole('cell')[0].textContent.replace(/\s/g, ''));
 const bekleDialogKapanana = () => waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
 
 beforeEach(() => {
@@ -164,24 +167,22 @@ describe('İkinci El Motor: roller, liste ve süzgeçler', () => {
     await ekranAc();
     expect(basliklar()).toEqual([
       'Plaka',
-      'Marka',
-      'Model',
+      'Marka / Model',
       'Yıl',
       'KM',
-      'Alım (₺)',
-      'Satış (₺)',
-      'Noter Alış (₺)',
-      'Noter Satış (₺)',
-      'Kâr (₺)',
+      'Alım',
+      'Satış',
+      'Noter Alış',
+      'Noter Satış',
+      'Kâr',
       'Alıcı',
       'Satış Tarihi',
       'İşlemler',
     ]);
     expect(plakalar()).toEqual(['34SAT111', '06SAT222']); // 05.10 -> 20.09; stokta/kapora/perte yok
     expect(hucreler(satir('34SAT111'))).toEqual([
-      '34SAT111',
-      'Honda',
-      'PCX',
+      '34 SAT 111',
+      'HondaPCX',
       '2020',
       '10.000',
       '50.000',
@@ -200,26 +201,15 @@ describe('İkinci El Motor: roller, liste ve süzgeçler', () => {
 
   test('istatistik çipleri: adet, satış tutarı ve (yalnızca admin) kâr', async () => {
     await ekranAc();
-    for (const t of ['Toplam: 2', 'Satış: ₺140.000', 'Kâr: ₺17.000']) expect(screen.getByText(t)).toBeInTheDocument();
+    expect(ozet('Toplam')).toBe('2');
+    expect(ozet('Satış')).toBe('₺140.000');
+    expect(ozet('Kâr')).toBe('₺17.000');
   });
 
   test('muhasebeci SALT OKUNUR: alım, noter ve alıcı bilgisi var; kâr, ekleme, düzenleme ve silme yok', async () => {
     await ekranAc({ user: MUHASEBE });
-    expect(basliklar()).toEqual([
-      'Plaka',
-      'Marka',
-      'Model',
-      'Yıl',
-      'KM',
-      'Alım (₺)',
-      'Satış (₺)',
-      'Noter Alış (₺)',
-      'Noter Satış (₺)',
-      'Alıcı',
-      'Satış Tarihi',
-      'İşlemler',
-    ]);
-    expect(screen.queryByText(/^Kâr:/)).not.toBeInTheDocument();
+    expect(basliklar()).toEqual(['Plaka', 'Marka / Model', 'Yıl', 'KM', 'Alım', 'Satış', 'Noter Alış', 'Noter Satış', 'Alıcı', 'Satış Tarihi', 'İşlemler']);
+    expect(ozetYok('Kâr')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Motor Satış' })).not.toBeInTheDocument();
     expect(screen.queryAllByTestId('EditIcon')).toHaveLength(0);
     expect(screen.queryAllByTestId('DeleteIcon')).toHaveLength(0);
@@ -228,8 +218,8 @@ describe('İkinci El Motor: roller, liste ve süzgeçler', () => {
 
   test('motor satış yetkilisi: alım var, kâr yok; düzenler ama silemez', async () => {
     await ekranAc({ user: SATIS });
-    expect(basliklar()).toContain('Alım (₺)');
-    expect(basliklar()).not.toContain('Kâr (₺)');
+    expect(basliklar()).toContain('Alım');
+    expect(basliklar()).not.toContain('Kâr');
     expect(screen.getAllByTestId('EditIcon')).toHaveLength(2);
     expect(screen.queryAllByTestId('DeleteIcon')).toHaveLength(0);
   });
@@ -577,7 +567,7 @@ describe('İkinci El Motor: mobil görünüm', () => {
     expect(screen.queryByRole('table')).not.toBeInTheDocument();
     expect(screen.getByText((_, el) => el.tagName === 'P' && el.textContent === 'Alım: ₺50.000')).toBeInTheDocument();
     expect(screen.getByText((_, el) => el.tagName === 'P' && el.textContent === 'Kâr: ₺9.000')).toBeInTheDocument();
-    await user.click(screen.getByText('34SAT111'));
+    await user.click(screen.getByText(plakaBicim('34SAT111')));
     expect(await screen.findByText('Motor Detay')).toBeInTheDocument();
   });
 

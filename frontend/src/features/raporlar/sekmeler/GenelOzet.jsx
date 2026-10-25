@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, Paper, Typography, Grid, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
 import { formatTL, karColor, headerSx } from '../bicim';
+import { SayiKutusu } from '../../../shared/ui';
 
 // Genel Özet sekmesi: toplam kartları + kategori tablosu (satıra tıklamak o sekmeye geçirir).
 const GenelOzet = ({ rapor, toplamlar, isMobile, onSekmeAc }) => {
@@ -9,60 +10,25 @@ const GenelOzet = ({ rapor, toplamlar, isMobile, onSekmeAc }) => {
     <>
       {/* Toplam Kartları */}
       <Grid container spacing={2} sx={{ mb: 3 }}>
-        <Grid size={{ xs: 12, md: 3 }}>
-          <Paper sx={{ p: 2, textAlign: 'center', bgcolor: '#C62828', color: 'white', borderRadius: 2 }}>
-            <Typography variant="body2" sx={{ opacity: 0.9 }}>
-              Toplam Gelir
-            </Typography>
-            <Typography variant="h4" fontWeight="bold">
-              ₺{formatTL(duzeltilmisTotalGelir)}
-            </Typography>
-          </Paper>
-        </Grid>
-        <Grid size={{ xs: 12, md: 3 }}>
-          <Paper sx={{ p: 2, textAlign: 'center', bgcolor: '#1565C0', color: 'white', borderRadius: 2 }}>
-            <Typography variant="body2" sx={{ opacity: 0.9 }}>
-              Toplam Maliyet
-            </Typography>
-            <Typography variant="h4" fontWeight="bold">
-              ₺{formatTL(duzeltilmisTotalMaliyet)}
-            </Typography>
-          </Paper>
-        </Grid>
-        <Grid size={{ xs: 12, md: 3 }}>
-          <Paper sx={{ p: 2, textAlign: 'center', bgcolor: duzeltilmisTotalKar >= 0 ? '#2e7d32' : '#C62828', color: 'white', borderRadius: 2 }}>
-            <Typography variant="body2" sx={{ opacity: 0.9 }}>
-              Toplam Kâr
-            </Typography>
-            <Typography variant="h4" fontWeight="bold">
-              ₺{formatTL(duzeltilmisTotalKar)}
-            </Typography>
-          </Paper>
-        </Grid>
-        <Grid size={{ xs: 12, md: 3 }}>
-          <Paper sx={{ p: 2, textAlign: 'center', bgcolor: '#E65100', color: 'white', borderRadius: 2 }}>
-            <Typography variant="body2" sx={{ opacity: 0.9 }}>
-              Toplam İşlem
-            </Typography>
-            <Typography variant="h4" fontWeight="bold">
-              {(rapor.motorlar?.length || 0) +
-                (rapor.isEmirleri?.length || 0) +
-                (rapor.aksesuarlar?.length || 0) +
-                (rapor.eticaret?.length || 0) +
-                (rapor.yedekParcalar?.length || 0)}
-            </Typography>
-          </Paper>
-        </Grid>
-        <Grid size={{ xs: 12, md: 3 }}>
-          <Paper sx={{ p: 2, textAlign: 'center', bgcolor: '#4A148C', color: 'white', borderRadius: 2 }}>
-            <Typography variant="body2" sx={{ opacity: 0.9 }}>
-              Motor Stok Değeri
-            </Typography>
-            <Typography variant="h4" fontWeight="bold">
-              ₺{formatTL(rapor.motorStokToplam)}
-            </Typography>
-          </Paper>
-        </Grid>
+        {[
+          ['Toplam Gelir', `₺${formatTL(duzeltilmisTotalGelir)}`, 'mavi'],
+          ['Toplam Maliyet', `₺${formatTL(duzeltilmisTotalMaliyet)}`, 'bekle'],
+          ['Toplam Kâr', `₺${formatTL(duzeltilmisTotalKar)}`, duzeltilmisTotalKar >= 0 ? 'yesil' : 'kirmizi'],
+          [
+            'Toplam İşlem',
+            (rapor.motorlar?.length || 0) +
+              (rapor.isEmirleri?.length || 0) +
+              (rapor.aksesuarlar?.length || 0) +
+              (rapor.eticaret?.length || 0) +
+              (rapor.yedekParcalar?.length || 0),
+            'gri',
+          ],
+          ['Motor Stok Değeri', `₺${formatTL(rapor.motorStokToplam)}`, 'mor'],
+        ].map(([etiket, deger, ton]) => (
+          <Grid key={etiket} size={{ xs: 12, md: 3 }}>
+            <SayiKutusu etiket={etiket} deger={deger} ton={ton} />
+          </Grid>
+        ))}
       </Grid>
 
       {/* Kategori Detay */}
@@ -122,7 +88,7 @@ const GenelOzet = ({ rapor, toplamlar, isMobile, onSekmeAc }) => {
               </Paper>
             );
           })}
-          <Paper sx={{ p: 1.5, bgcolor: '#f5f5f5' }}>
+          <Paper sx={{ p: 1.5, bgcolor: '#F3F3EE' }}>
             <Typography variant="subtitle2" fontWeight="bold" sx={{ mb: 0.5 }}>
               TOPLAM
             </Typography>
@@ -143,7 +109,7 @@ const GenelOzet = ({ rapor, toplamlar, isMobile, onSekmeAc }) => {
         <TableContainer component={Paper} sx={{ mb: 2, overflowX: 'auto' }}>
           <Table>
             <TableHead>
-              <TableRow sx={{ bgcolor: '#C62828' }}>
+              <TableRow>
                 {['Kategori', 'İşlem Sayısı', 'Gelir', 'Maliyet', 'Kâr', 'Kâr Oranı'].map((h) => (
                   <TableCell key={h} sx={headerSx}>
                     {h}
@@ -196,7 +162,7 @@ const GenelOzet = ({ rapor, toplamlar, isMobile, onSekmeAc }) => {
                   </TableRow>
                 );
               })}
-              <TableRow sx={{ bgcolor: '#f5f5f5' }}>
+              <TableRow sx={{ bgcolor: '#F3F3EE' }}>
                 <TableCell sx={{ fontWeight: 'bold', fontSize: '1rem' }}>TOPLAM</TableCell>
                 <TableCell sx={{ fontWeight: 'bold' }}>
                   {(rapor.motorlar?.length || 0) +

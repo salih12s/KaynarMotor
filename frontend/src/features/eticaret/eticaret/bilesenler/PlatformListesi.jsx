@@ -1,7 +1,7 @@
 import React from 'react';
-import { Box, Paper, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, IconButton, Alert } from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
+import { IslemDugmesi } from '../../../../shared/ui';
+import { Box, Paper, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Alert } from '@mui/material';
+
 import { formatTL } from '../eticaretVeri';
 
 // Platform listesi: dar ekranda kartlar, geniş ekranda tablo; düzenle/sil yalnızca admin için.
@@ -27,12 +27,8 @@ const PlatformListesi = ({ platformlar, isMobile, isAdmin, onDuzenle, onSil }) =
           </Box>
           {isAdmin && (
             <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 0.5 }}>
-              <IconButton size="small" color="info" onClick={() => onDuzenle(p)}>
-                <EditIcon />
-              </IconButton>
-              <IconButton size="small" color="error" onClick={() => onSil(p.id)}>
-                <DeleteIcon />
-              </IconButton>
+              <IslemDugmesi tur="duz" onClick={() => onDuzenle(p)} />
+              <IslemDugmesi tur="sil" onClick={() => onSil(p.id)} />
             </Box>
           )}
         </Paper>
@@ -42,11 +38,9 @@ const PlatformListesi = ({ platformlar, isMobile, isAdmin, onDuzenle, onSil }) =
     <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
       <Table>
         <TableHead>
-          <TableRow sx={{ bgcolor: '#C62828' }}>
+          <TableRow>
             {['Platform Adı', 'Komisyon (%)', 'KDV (%)', 'Kargo (₺)', ...(isAdmin ? ['İşlemler'] : [])].map((h) => (
-              <TableCell key={h} sx={{ color: 'white', fontWeight: 'bold' }}>
-                {h}
-              </TableCell>
+              <TableCell key={h}>{h}</TableCell>
             ))}
           </TableRow>
         </TableHead>
@@ -59,12 +53,8 @@ const PlatformListesi = ({ platformlar, isMobile, isAdmin, onDuzenle, onSil }) =
               <TableCell>{formatTL(p.kargo_ucreti)} ₺</TableCell>
               {isAdmin && (
                 <TableCell>
-                  <IconButton size="small" color="info" onClick={() => onDuzenle(p)}>
-                    <EditIcon />
-                  </IconButton>
-                  <IconButton size="small" color="error" onClick={() => onSil(p.id)}>
-                    <DeleteIcon />
-                  </IconButton>
+                  <IslemDugmesi tur="duz" onClick={() => onDuzenle(p)} />
+                  <IslemDugmesi tur="sil" onClick={() => onSil(p.id)} />
                 </TableCell>
               )}
             </TableRow>

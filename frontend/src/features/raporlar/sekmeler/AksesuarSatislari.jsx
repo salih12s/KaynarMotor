@@ -1,6 +1,7 @@
 import React from 'react';
-import { Box, Paper, Typography, Grid, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Alert, IconButton } from '@mui/material';
-import ViewIcon from '@mui/icons-material/Visibility';
+import { IslemDugmesi } from '../../../shared/ui';
+import { Box, Paper, Typography, Grid, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Alert } from '@mui/material';
+
 import { formatTL, formatDate, karColor, headerSx } from '../bicim';
 import DurumChip from '../bilesenler/DurumChip';
 import KartItem from '../bilesenler/KartItem';
@@ -50,7 +51,7 @@ const AksesuarSatislari = ({ rapor, isMobile, onDetay }) => {
           <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
             <Table size="small">
               <TableHead>
-                <TableRow sx={{ bgcolor: '#C62828' }}>
+                <TableRow>
                   {['', 'Tarih', 'Müşteri', 'Telefon', 'Oluşturan', 'Ödeme Şekli', 'Satış', 'Maliyet', 'Kâr', 'Durum'].map((h) => (
                     <TableCell key={h} sx={headerSx}>
                       {h}
@@ -62,9 +63,7 @@ const AksesuarSatislari = ({ rapor, isMobile, onDetay }) => {
                 {rapor.aksesuarlar.map((a, i) => (
                   <TableRow key={i} hover>
                     <TableCell>
-                      <IconButton size="small" color="primary" onClick={() => onDetay(a)}>
-                        <ViewIcon fontSize="small" />
-                      </IconButton>
+                      <IslemDugmesi tur="goz" onClick={() => onDetay(a)} />
                     </TableCell>
                     <TableCell>{formatDate(a.tamamlama_tarihi || a.satis_tarihi || a.created_at)}</TableCell>
                     <TableCell>{a.ad_soyad}</TableCell>

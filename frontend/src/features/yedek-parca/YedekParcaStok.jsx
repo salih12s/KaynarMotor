@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { IslemDugmesi, OzetSeridi } from '../../shared/ui';
+import { useOnay } from '../../shared/ui';
 import { sonIstek } from '../../shared/utils/sonIstek';
 import {
   Box,
@@ -11,7 +13,6 @@ import {
   TableHead,
   TableRow,
   Button,
-  IconButton,
   TextField,
   Dialog,
   DialogTitle,
@@ -19,15 +20,13 @@ import {
   DialogActions,
   Alert,
   Grid,
-  Chip,
   InputAdornment,
   MenuItem,
   useTheme,
   useMediaQuery,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
+
 import UploadIcon from '@mui/icons-material/Upload';
 import SearchIcon from '@mui/icons-material/Search';
 import PrintIcon from '@mui/icons-material/Print';
@@ -79,6 +78,7 @@ const printYedekParcaLabel = (stok) => {
 };
 
 const YedekParcaStok = () => {
+  const onay = useOnay();
   const isMobile = useMediaQuery(useTheme().breakpoints.down('sm'));
   const [stoklar, setStoklar] = useState([]);
   const [dialog, setDialog] = useState({ open: false, data: null });
@@ -154,7 +154,7 @@ const YedekParcaStok = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Bu stok kaydını silmek istediğinizden emin misiniz?')) return;
+    if (!(await onay('Bu stok kaydını silmek istediğinizden emin misiniz?'))) return;
     try {
       await yedekParcaStokService.delete(id);
       loadData();
@@ -192,16 +192,15 @@ const YedekParcaStok = () => {
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2, alignItems: 'center' }}>
-        <Chip
-          label={`Toplam: ${totalUrun} ürün`}
-          sx={{ bgcolor: '#ffebee', color: '#C62828', fontWeight: 'bold', fontSize: '0.8rem', borderLeft: '4px solid #C62828' }}
+      <Box sx={{ mb: 2 }}>
+        <OzetSeridi
+          ogeler={[
+            { etiket: 'Toplam ürün', deger: totalUrun },
+            { etiket: 'Envanter', deger: `₺${sayiYaz(envanter)}` },
+          ]}
         />
-        <Chip
-          label={`Envanter: ₺${sayiYaz(envanter)}`}
-          sx={{ bgcolor: '#ffebee', color: '#C62828', fontWeight: 'bold', fontSize: '0.8rem', borderLeft: '4px solid #C62828' }}
-        />
-        <Box sx={{ flexGrow: 1 }} />
+      </Box>
+      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2, alignItems: 'center', justifyContent: 'flex-end' }}>
         <Button variant="outlined" startIcon={<UploadIcon />} onClick={() => setImportDialog(true)}>
           İçe Aktar
         </Button>
@@ -238,7 +237,7 @@ const YedekParcaStok = () => {
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
           {filteredStoklar.length === 0 && <Alert severity="info">Kayıt yok</Alert>}
           {filteredStoklar.map((s) => (
-            <Paper key={s.id} sx={{ p: 1.5, bgcolor: (s.mevcut || 0) <= 0 ? '#ffebee' : '#fff' }}>
+            <Paper key={s.id} sx={{ p: 1.5, bgcolor: (s.mevcut || 0) <= 0 ? '#F6DAD7' : '#fff' }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
                 <Typography variant="subtitle2" fontWeight="bold">
                   {s.stok_adi}
@@ -259,15 +258,9 @@ const YedekParcaStok = () => {
                 </Typography>
               </Box>
               <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 0.5 }}>
-                <IconButton size="small" color="primary" onClick={() => printYedekParcaLabel(s)} title="Etiket Yazdır">
-                  <PrintIcon />
-                </IconButton>
-                <IconButton size="small" color="info" onClick={() => openDialog(s)}>
-                  <EditIcon />
-                </IconButton>
-                <IconButton size="small" color="error" onClick={() => handleDelete(s.id)}>
-                  <DeleteIcon />
-                </IconButton>
+                <IslemDugmesi tur="yaz" onClick={() => printYedekParcaLabel(s)} title="Etiket Yazdır" />
+                <IslemDugmesi tur="duz" onClick={() => openDialog(s)} />
+                <IslemDugmesi tur="sil" onClick={() => handleDelete(s.id)} />
               </Box>
             </Paper>
           ))}
@@ -276,17 +269,15 @@ const YedekParcaStok = () => {
         <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
           <Table size="small">
             <TableHead>
-              <TableRow sx={{ bgcolor: 'primary.main' }}>
+              <TableRow>
                 {['Stok Kodu', 'Stok Adı', 'Marka', 'Alış (₺)', 'Satış (₺)', 'Mevcut', 'İşlemler'].map((h) => (
-                  <TableCell key={h} sx={{ color: 'white', fontWeight: 'bold' }}>
-                    {h}
-                  </TableCell>
+                  <TableCell key={h}>{h}</TableCell>
                 ))}
               </TableRow>
             </TableHead>
             <TableBody>
               {filteredStoklar.map((s) => (
-                <TableRow key={s.id} hover sx={{ bgcolor: (s.mevcut || 0) <= 0 ? '#ffebee' : 'inherit' }}>
+                <TableRow key={s.id} hover sx={{ bgcolor: (s.mevcut || 0) <= 0 ? '#F6DAD7' : 'inherit' }}>
                   <TableCell>{s.stok_kodu || '-'}</TableCell>
                   <TableCell>{s.stok_adi}</TableCell>
                   <TableCell>{s.marka || '-'}</TableCell>
@@ -294,15 +285,9 @@ const YedekParcaStok = () => {
                   <TableCell>{sayiYaz(s.satis_fiyati)}</TableCell>
                   <TableCell sx={{ fontWeight: 'bold', color: (s.mevcut || 0) <= 0 ? 'red' : 'green' }}>{s.mevcut || 0}</TableCell>
                   <TableCell>
-                    <IconButton size="small" color="primary" onClick={() => printYedekParcaLabel(s)} title="Etiket Yazdır">
-                      <PrintIcon />
-                    </IconButton>
-                    <IconButton size="small" color="info" onClick={() => openDialog(s)}>
-                      <EditIcon />
-                    </IconButton>
-                    <IconButton size="small" color="error" onClick={() => handleDelete(s.id)}>
-                      <DeleteIcon />
-                    </IconButton>
+                    <IslemDugmesi tur="yaz" onClick={() => printYedekParcaLabel(s)} title="Etiket Yazdır" />
+                    <IslemDugmesi tur="duz" onClick={() => openDialog(s)} />
+                    <IslemDugmesi tur="sil" onClick={() => handleDelete(s.id)} />
                   </TableCell>
                 </TableRow>
               ))}

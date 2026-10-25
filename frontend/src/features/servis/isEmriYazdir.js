@@ -12,10 +12,10 @@ export const isEmriYazdirHtml = (data) => {
     .map((p) => {
       const pSatis = parseFloat(p.toplam_fiyat || 0);
       return `<tr>
-      <td style="padding:6px;border:1px solid #ddd">${e(p.takilan_parca)}</td>
-      <td style="padding:6px;border:1px solid #ddd;text-align:center">${e(p.adet)}</td>
-      <td style="padding:6px;border:1px solid #ddd;text-align:right">₺${sayiYaz(p.birim_fiyat)}</td>
-      <td style="padding:6px;border:1px solid #ddd;text-align:right;font-weight:bold">₺${sayiYaz(pSatis)}</td>
+      <td style="padding:6px;border:1px solid #D2D3CA">${e(p.takilan_parca)}</td>
+      <td style="padding:6px;border:1px solid #D2D3CA;text-align:center">${e(p.adet)}</td>
+      <td style="padding:6px;border:1px solid #D2D3CA;text-align:right">₺${sayiYaz(p.birim_fiyat)}</td>
+      <td style="padding:6px;border:1px solid #D2D3CA;text-align:right;font-weight:bold">₺${sayiYaz(pSatis)}</td>
     </tr>`;
     })
     .join('');
@@ -26,10 +26,10 @@ export const isEmriYazdirHtml = (data) => {
     h2{text-align:center;margin:0 0 5px;color:#C62828}
     .header{text-align:center;margin-bottom:15px;border-bottom:2px solid #C62828;padding-bottom:10px}
     .section{margin-bottom:12px}
-    .section-title{font-weight:bold;color:#C62828;font-size:13px;margin-bottom:5px;border-bottom:1px solid #eee;padding-bottom:3px}
+    .section-title{font-weight:bold;color:#C62828;font-size:13px;margin-bottom:5px;border-bottom:1px solid #E1E2DA;padding-bottom:3px}
     .info-grid{display:flex;gap:20px;margin-bottom:12px}
     .info-box{flex:1}
-    .info-row{display:flex;justify-content:space-between;padding:2px 0;border-bottom:1px dotted #eee}
+    .info-row{display:flex;justify-content:space-between;padding:2px 0;border-bottom:1px dotted #E1E2DA}
     .info-row .label{color:#666}
     .info-row .value{font-weight:500}
     table{width:100%;border-collapse:collapse;margin-top:5px}

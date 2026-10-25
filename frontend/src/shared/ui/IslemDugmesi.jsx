@@ -33,6 +33,7 @@ const TUR = {
   yukari: { Ikon: UpIcon, etiket: 'Yukarı taşı' },
   asagi: { Ikon: DownIcon, etiket: 'Aşağı taşı' },
   gizle: { Ikon: HideIcon, etiket: 'Yayından kaldır' },
+  satis: { Ikon: CartIcon, etiket: 'Hızlı satış' },
 };
 
 const IslemDugmesi = ({ tur, etiket, title, sx, ...diger }) => {

@@ -1,5 +1,6 @@
 import React from 'react';
-import { Box, Paper, Typography, Grid, Chip, Dialog, DialogTitle, DialogContent, DialogActions, Button } from '@mui/material';
+import { Box, Paper, Typography, Grid, Chip, Dialog, DialogContent, DialogActions, Button } from '@mui/material';
+import { DialogBasligi } from '../../../shared/ui';
 import { formatTL, formatDate, karColor } from '../bicim';
 import { sayiYaz } from '../../../shared/utils/bicim';
 
@@ -18,11 +19,11 @@ const MotorDetayModal = ({ open, data, onClose, isMobile }) => {
   const kar = toplamKar - yatirimciPayi;
   return (
     <Dialog {...dialogProps}>
-      <DialogTitle sx={{ bgcolor: '#C62828', color: 'white', py: 1.5 }}>Motor Satış Detayı - {m.plaka}</DialogTitle>
+      <DialogBasligi baslik={<>Motor Satış Detayı - {m.plaka}</>} onKapat={onClose} />
       <DialogContent dividers>
         <Grid container spacing={2} sx={{ mb: 2, mt: 0.5 }}>
           <Grid size={{ xs: 12, md: 4 }}>
-            <Paper sx={{ p: 1.5, bgcolor: '#fafafa' }}>
+            <Paper sx={{ p: 1.5, bgcolor: '#FBFBF8' }}>
               <Typography variant="subtitle2" color="#C62828" fontWeight="bold" gutterBottom>
                 Araç Bilgileri
               </Typography>
@@ -44,7 +45,7 @@ const MotorDetayModal = ({ open, data, onClose, isMobile }) => {
             </Paper>
           </Grid>
           <Grid size={{ xs: 12, md: 4 }}>
-            <Paper sx={{ p: 1.5, bgcolor: '#fafafa' }}>
+            <Paper sx={{ p: 1.5, bgcolor: '#FBFBF8' }}>
               <Typography variant="subtitle2" color="#C62828" fontWeight="bold" gutterBottom>
                 Satıcı Bilgileri
               </Typography>
@@ -57,7 +58,7 @@ const MotorDetayModal = ({ open, data, onClose, isMobile }) => {
             </Paper>
           </Grid>
           <Grid size={{ xs: 12, md: 4 }}>
-            <Paper sx={{ p: 1.5, bgcolor: '#fafafa' }}>
+            <Paper sx={{ p: 1.5, bgcolor: '#FBFBF8' }}>
               <Typography variant="subtitle2" color="#C62828" fontWeight="bold" gutterBottom>
                 Alıcı Bilgileri
               </Typography>
@@ -79,11 +80,11 @@ const MotorDetayModal = ({ open, data, onClose, isMobile }) => {
 
         <Grid container spacing={2} sx={{ mb: 2 }}>
           <Grid size={{ xs: 12, md: 6 }}>
-            <Paper sx={{ p: 1.5, bgcolor: '#fafafa' }}>
+            <Paper sx={{ p: 1.5, bgcolor: '#FBFBF8' }}>
               <Typography variant="subtitle2" color="#C62828" fontWeight="bold" gutterBottom>
                 Fiyat Bilgileri
               </Typography>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 0.3, borderBottom: '1px dotted #eee' }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 0.3, borderBottom: '1px dotted #E1E2DA' }}>
                 <Typography variant="body2" color="text.secondary">
                   Alış Fiyatı:
                 </Typography>
@@ -91,7 +92,7 @@ const MotorDetayModal = ({ open, data, onClose, isMobile }) => {
                   {formatTL(alis)} ₺
                 </Typography>
               </Box>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 0.3, borderBottom: '1px dotted #eee' }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 0.3, borderBottom: '1px dotted #E1E2DA' }}>
                 <Typography variant="body2" color="text.secondary">
                   Satış Fiyatı:
                 </Typography>
@@ -99,7 +100,7 @@ const MotorDetayModal = ({ open, data, onClose, isMobile }) => {
                   {formatTL(satis)} ₺
                 </Typography>
               </Box>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 0.3, borderBottom: '1px dotted #eee' }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 0.3, borderBottom: '1px dotted #E1E2DA' }}>
                 <Typography variant="body2" color="text.secondary">
                   Masraflar:
                 </Typography>
@@ -109,7 +110,7 @@ const MotorDetayModal = ({ open, data, onClose, isMobile }) => {
               </Box>
               {yatirimciPayi > 0 && (
                 <>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 0.3, borderBottom: '1px dotted #eee' }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 0.3, borderBottom: '1px dotted #E1E2DA' }}>
                     <Typography variant="body2" color="text.secondary">
                       Toplam Kâr:
                     </Typography>
@@ -117,18 +118,18 @@ const MotorDetayModal = ({ open, data, onClose, isMobile }) => {
                       {formatTL(toplamKar)} ₺
                     </Typography>
                   </Box>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 0.3, borderBottom: '1px dotted #eee' }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 0.3, borderBottom: '1px dotted #E1E2DA' }}>
                     <Typography variant="body2" color="text.secondary">
                       Yatırımcı Payı:
                     </Typography>
-                    <Typography variant="body2" fontWeight="bold" sx={{ color: '#1565C0' }}>
+                    <Typography variant="body2" fontWeight="bold" sx={{ color: '#1E4A86' }}>
                       - {formatTL(yatirimciPayi)} ₺
                     </Typography>
                   </Box>
                 </>
               )}
               <Box
-                sx={{ display: 'flex', justifyContent: 'space-between', py: 0.3, mt: 0.5, bgcolor: kar >= 0 ? '#e8f5e9' : '#ffebee', px: 1, borderRadius: 1 }}
+                sx={{ display: 'flex', justifyContent: 'space-between', py: 0.3, mt: 0.5, bgcolor: kar >= 0 ? '#D8EBDD' : '#F6DAD7', px: 1, borderRadius: 1 }}
               >
                 <Typography variant="body2" fontWeight="bold">
                   Net Kâr (Payınız):
@@ -140,11 +141,11 @@ const MotorDetayModal = ({ open, data, onClose, isMobile }) => {
             </Paper>
           </Grid>
           <Grid size={{ xs: 12, md: 6 }}>
-            <Paper sx={{ p: 1.5, bgcolor: '#fafafa' }}>
+            <Paper sx={{ p: 1.5, bgcolor: '#FBFBF8' }}>
               <Typography variant="subtitle2" color="#C62828" fontWeight="bold" gutterBottom>
                 Noter Bilgileri
               </Typography>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 0.3, borderBottom: '1px dotted #eee' }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 0.3, borderBottom: '1px dotted #E1E2DA' }}>
                 <Typography variant="body2" color="text.secondary">
                   Noter Alış:
                 </Typography>
@@ -152,7 +153,7 @@ const MotorDetayModal = ({ open, data, onClose, isMobile }) => {
                   {formatTL(noterAlis)} ₺
                 </Typography>
               </Box>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 0.3, borderBottom: '1px dotted #eee' }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 0.3, borderBottom: '1px dotted #E1E2DA' }}>
                 <Typography variant="body2" color="text.secondary">
                   Noter Satış:
                 </Typography>
@@ -160,7 +161,7 @@ const MotorDetayModal = ({ open, data, onClose, isMobile }) => {
                   {formatTL(noterSatis)} ₺
                 </Typography>
               </Box>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 0.3, borderBottom: '1px dotted #eee' }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 0.3, borderBottom: '1px dotted #E1E2DA' }}>
                 <Typography variant="body2" color="text.secondary">
                   Ödeme Şekli:
                 </Typography>
@@ -176,8 +177,8 @@ const MotorDetayModal = ({ open, data, onClose, isMobile }) => {
                   size="small"
                   label={m.fatura_kesildi ? '✓ Kesildi' : '✗ Kesilmedi'}
                   sx={{
-                    bgcolor: m.fatura_kesildi ? '#e8f5e9' : '#ffebee',
-                    color: m.fatura_kesildi ? '#2e7d32' : '#d32f2f',
+                    bgcolor: m.fatura_kesildi ? '#D8EBDD' : '#F6DAD7',
+                    color: m.fatura_kesildi ? '#1D6A3B' : '#A61F1F',
                     fontWeight: 'bold',
                     fontSize: '0.75rem',
                   }}
@@ -199,7 +200,7 @@ const MotorDetayModal = ({ open, data, onClose, isMobile }) => {
 
         <Grid container spacing={2}>
           <Grid size={{ xs: 12, md: 6 }}>
-            <Paper sx={{ p: 1.5, bgcolor: '#fafafa' }}>
+            <Paper sx={{ p: 1.5, bgcolor: '#FBFBF8' }}>
               <Typography variant="subtitle2" color="#C62828" fontWeight="bold" gutterBottom>
                 Tarih Bilgileri
               </Typography>
@@ -213,8 +214,8 @@ const MotorDetayModal = ({ open, data, onClose, isMobile }) => {
           </Grid>
           {m.komisyoncu_adi && (
             <Grid size={{ xs: 12, md: 6 }}>
-              <Paper sx={{ p: 1.5, bgcolor: '#fff8e1', borderLeft: '3px solid #f57f17' }}>
-                <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#f57f17' }} gutterBottom>
+              <Paper sx={{ p: 1.5, bgcolor: '#F7E7C4', borderLeft: '3px solid #8A5300' }}>
+                <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#8A5300' }} gutterBottom>
                   Komisyoncu
                 </Typography>
                 <Typography variant="body2">
@@ -231,8 +232,8 @@ const MotorDetayModal = ({ open, data, onClose, isMobile }) => {
           )}
           {m.aciklama && (
             <Grid size={{ xs: 12, md: 6 }}>
-              <Paper sx={{ p: 1.5, bgcolor: '#e3f2fd', borderLeft: '3px solid #1565C0' }}>
-                <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#1565C0' }}>
+              <Paper sx={{ p: 1.5, bgcolor: '#DCE6F4', borderLeft: '3px solid #1E4A86' }}>
+                <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#1E4A86' }}>
                   Açıklama
                 </Typography>
                 <Typography variant="body2">{m.aciklama}</Typography>

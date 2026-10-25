@@ -1,5 +1,6 @@
 import React from 'react';
-import { Typography, Button, TextField, Dialog, DialogTitle, DialogContent, DialogActions, Alert, Grid, InputAdornment, Autocomplete } from '@mui/material';
+import { Typography, Button, TextField, Dialog, DialogContent, DialogActions, Alert, Grid, InputAdornment, Autocomplete } from '@mui/material';
+import { DialogBasligi } from '../../../../shared/ui';
 import { BelgeBolumu } from '../../SatisBelgeleri';
 import OdemeDagilimi from './OdemeDagilimi';
 import KarOnizleme from './KarOnizleme';
@@ -11,9 +12,10 @@ const HizliSatisModal = ({ hs, perms, musteri, isMobile }) => {
   const { canKar } = perms;
   return (
     <Dialog open={hizliSatis.open} onClose={kapat} maxWidth="sm" fullWidth fullScreen={isMobile}>
-      <DialogTitle sx={{ bgcolor: '#2e7d32', color: 'white' }}>
-        ⚡ Hızlı Satış {hizliSatis.motor && `- ${hizliSatis.motor.plaka} ${hizliSatis.motor.marka || ''} ${hizliSatis.motor.model || ''}`}
-      </DialogTitle>
+      <DialogBasligi
+        baslik={<>Hızlı Satış {hizliSatis.motor && `- ${hizliSatis.motor.plaka} ${hizliSatis.motor.marka || ''} ${hizliSatis.motor.model || ''}`}</>}
+        onKapat={kapat}
+      />
       <DialogContent>
         {hizliSatis.motor?.yatirimci_id && (
           <Alert severity="info" sx={{ mt: 1 }}>
@@ -124,7 +126,7 @@ const HizliSatisModal = ({ hs, perms, musteri, isMobile }) => {
                   value={hizliForm.yatirimci_kar}
                   onChange={(e) => setHizliForm({ ...hizliForm, yatirimci_kar: e.target.value })}
                   helperText="Yatırımcıya verilecek tutar. Kalanı işletme (sizin) kârınızdır."
-                  sx={{ '& .MuiInputBase-root': { bgcolor: '#e3f2fd' } }}
+                  sx={{ '& .MuiInputBase-root': { bgcolor: '#DCE6F4' } }}
                   InputProps={{ startAdornment: <InputAdornment position="start">₺</InputAdornment> }}
                 />
               </Grid>
@@ -141,7 +143,7 @@ const HizliSatisModal = ({ hs, perms, musteri, isMobile }) => {
         <Button onClick={kapat} disabled={satisKaydediliyor}>
           İptal
         </Button>
-        <Button variant="contained" onClick={handleHizliSatis} disabled={satisKaydediliyor} sx={{ bgcolor: '#2e7d32', '&:hover': { bgcolor: '#1b5e20' } }}>
+        <Button variant="contained" onClick={handleHizliSatis} disabled={satisKaydediliyor} sx={{ bgcolor: '#1D6A3B', '&:hover': { bgcolor: '#1D6A3B' } }}>
           {satisKaydediliyor ? 'Kaydediliyor…' : 'Satışı Tamamla'}
         </Button>
       </DialogActions>

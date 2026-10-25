@@ -93,8 +93,8 @@ describe('bicim', () => {
   });
 
   test('karColor: sıfır ve pozitif yeşil, negatif kırmızı', () => {
-    expect(karColor(0)).toBe('#2e7d32');
-    expect(karColor('12.5')).toBe('#2e7d32');
+    expect(karColor(0)).toBe('#1D6A3B');
+    expect(karColor('12.5')).toBe('#1D6A3B');
     expect(karColor(-0.01)).toBe('#C62828');
   });
 

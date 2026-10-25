@@ -1,7 +1,8 @@
 import React from 'react';
-import { Paper, Typography, Button, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Grid, Divider } from '@mui/material';
+import { Paper, Typography, Button, Dialog, DialogContent, DialogActions, Grid, Divider } from '@mui/material';
+import { DialogBasligi } from '../../../../shared/ui';
 import EditIcon from '@mui/icons-material/Edit';
-import CloseIcon from '@mui/icons-material/Close';
+
 import { hesaplaKomisyon, detectPlatform } from '../../komisyon';
 import { karEtiketi, formatTL } from '../eticaretVeri';
 import { tarihYaz } from '../../../../shared/utils/bicim';
@@ -15,19 +16,12 @@ const SatisDetayModal = ({ open, data, onClose, onDuzenle, isMobile, karGor }) =
   const h = hesaplaKomisyon(s.satis_fiyati, s.alis_fiyati, s.komisyon_orani, s.kdv_orani || 20, s.kargo_ucreti || 0, s.adet, detayPlatformTipi);
   return (
     <Dialog {...dialogProps}>
-      <DialogTitle sx={{ bgcolor: '#C62828', color: 'white', py: 1.5, display: 'flex', alignItems: 'center' }}>
-        <Typography variant="h6" fontWeight="bold" sx={{ flexGrow: 1 }}>
-          E-Ticaret Satış Detayı
-        </Typography>
-        <IconButton onClick={onClose} sx={{ color: 'white' }}>
-          <CloseIcon />
-        </IconButton>
-      </DialogTitle>
+      <DialogBasligi baslik="E-Ticaret Satış Detayı" onKapat={onClose} />
       <DialogContent dividers>
         {/* Ürün Bilgileri */}
         <Grid container spacing={2} sx={{ mb: 3, mt: 0.5 }}>
           <Grid size={{ xs: 12, md: 4 }}>
-            <Paper sx={{ p: 1.5, bgcolor: '#fafafa' }}>
+            <Paper sx={{ p: 1.5, bgcolor: '#FBFBF8' }}>
               <Typography variant="subtitle2" color="#C62828" fontWeight="bold" gutterBottom>
                 Ürün Bilgileri
               </Typography>
@@ -47,7 +41,7 @@ const SatisDetayModal = ({ open, data, onClose, onDuzenle, isMobile, karGor }) =
             </Paper>
           </Grid>
           <Grid size={{ xs: 12, md: 4 }}>
-            <Paper sx={{ p: 1.5, bgcolor: '#fafafa' }}>
+            <Paper sx={{ p: 1.5, bgcolor: '#FBFBF8' }}>
               <Typography variant="subtitle2" color="#C62828" fontWeight="bold" gutterBottom>
                 Fiyat Bilgileri
               </Typography>
@@ -74,7 +68,7 @@ const SatisDetayModal = ({ open, data, onClose, onDuzenle, isMobile, karGor }) =
               <Paper
                 sx={{
                   p: 2,
-                  bgcolor: h.netKar >= 0 ? '#e8f5e9' : '#ffebee',
+                  bgcolor: h.netKar >= 0 ? '#D8EBDD' : '#F6DAD7',
                   textAlign: 'center',
                   display: 'flex',
                   flexDirection: 'column',
@@ -84,7 +78,7 @@ const SatisDetayModal = ({ open, data, onClose, onDuzenle, isMobile, karGor }) =
                 <Typography variant="body2" color="text.secondary">
                   Net Kâr
                 </Typography>
-                <Typography variant="h4" fontWeight="bold" sx={{ color: h.netKar >= 0 ? '#2e7d32' : '#c62828' }}>
+                <Typography variant="h4" fontWeight="bold" sx={{ color: h.netKar >= 0 ? '#1D6A3B' : '#c62828' }}>
                   {formatTL(h.netKar)} ₺
                 </Typography>
               </Paper>
@@ -96,7 +90,7 @@ const SatisDetayModal = ({ open, data, onClose, onDuzenle, isMobile, karGor }) =
         <Typography variant="subtitle1" fontWeight="bold" color="#C62828" gutterBottom>
           Komisyon Hesaplama Detayları {detayPlatformTipi === 'hepsiburada' ? '(HepsiBurada)' : detayPlatformTipi === 'n11' ? '(N11)' : '(Trendyol)'}
         </Typography>
-        <Paper sx={{ p: 2, bgcolor: '#fff8e1', mb: 2, borderTop: '3px solid #f57f17' }}>
+        <Paper sx={{ p: 2, bgcolor: '#F7E7C4', mb: 2, borderTop: '3px solid #8A5300' }}>
           <Grid container spacing={2} textAlign="center">
             {(() => {
               let items = [];
@@ -149,7 +143,7 @@ const SatisDetayModal = ({ open, data, onClose, onDuzenle, isMobile, karGor }) =
         <Typography variant="subtitle1" fontWeight="bold" color="#C62828" gutterBottom>
           KDV Detayları
         </Typography>
-        <Paper sx={{ p: 2, bgcolor: '#fafafa', borderTop: '3px solid #C62828' }}>
+        <Paper sx={{ p: 2, bgcolor: '#FBFBF8', borderTop: '3px solid #C62828' }}>
           <Grid container spacing={2} textAlign="center">
             {(() => {
               let kdvItems = [

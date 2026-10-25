@@ -5,7 +5,7 @@ import { Box, Typography, TextField, Grid, Checkbox, FormControlLabel } from '@m
 const KalanOdemeKutusu = ({ formData, setFormData }) => {
   return (
     <>
-      <Box sx={{ mt: 3, p: 2, border: '1px solid #e0e0e0', borderRadius: 1 }}>
+      <Box sx={{ mt: 3, p: 2, border: '1px solid #D2D3CA', borderRadius: 1 }}>
         <Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 1 }}>
           Kalan Ödeme
         </Typography>

@@ -1,3 +1,4 @@
+import { useOnay } from '../../../shared/ui';
 import { useState, useEffect } from 'react';
 import { eticaretService } from '../eticaretApi';
 import { aksesuarStokService } from '../../aksesuar/aksesuarApi';
@@ -7,6 +8,7 @@ import { bosSatisForm, satistanForm, bosPlatformForm, platformdanForm, hesaplaTo
 // E-Ticaret sayfasının sunucu verisi ve pencere durumları: satışlar, platformlar, istatistik, stok listesi; satış/platform ekle-düzenle-sil;
 // seçili platforma göre canlı komisyon hesabı.
 export const useETicaret = () => {
+  const onay = useOnay();
   const [satislar, setSatislar] = useState([]);
   const [platformlar, setPlatformlar] = useState([]);
   const [stokOptions, setStokOptions] = useState([]);
@@ -106,7 +108,7 @@ export const useETicaret = () => {
   };
 
   const handleSatisDelete = async (id) => {
-    if (!window.confirm('Bu satışı silmek istediğinizden emin misiniz?')) return;
+    if (!(await onay('Bu satışı silmek istediğinizden emin misiniz?'))) return;
     try {
       await eticaretService.deleteSale(id);
       loadData();
@@ -138,7 +140,7 @@ export const useETicaret = () => {
   };
 
   const handlePlatformDelete = async (id) => {
-    if (!window.confirm('Bu platformu silmek istediğinizden emin misiniz?')) return;
+    if (!(await onay('Bu platformu silmek istediğinizden emin misiniz?'))) return;
     try {
       await eticaretService.deletePlatform(id);
       loadData();

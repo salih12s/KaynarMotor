@@ -1,7 +1,7 @@
 import React from 'react';
+import { IslemDugmesi } from '../../../../shared/ui';
 import { Box, Button, Typography, Grid, Card, CardMedia, CardContent, CardActions, TextField, IconButton, Chip, CircularProgress } from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
+
 import DragIcon from '@mui/icons-material/DragIndicator';
 import UpIcon from '@mui/icons-material/KeyboardArrowUp';
 import DownIcon from '@mui/icons-material/KeyboardArrowDown';
@@ -96,7 +96,7 @@ const IlanKarti = ({ u, index, liste, isAdmin, isMotor, onDuzenle }) => {
             </Typography>
           </Box>
         )}
-        <Box sx={{ position: 'relative', width: '100%', aspectRatio: '4 / 3', overflow: 'hidden', bgcolor: '#f0f0f0', flexShrink: 0 }}>
+        <Box sx={{ position: 'relative', width: '100%', aspectRatio: '4 / 3', overflow: 'hidden', bgcolor: '#F3F3EE', flexShrink: 0 }}>
           <CardMedia
             component="img"
             image={u.kapak_gorsel_id ? vitrinService.gorselUrl(u.kapak_gorsel_id) : '/KaynarMotor.png'}
@@ -150,12 +150,8 @@ const IlanKarti = ({ u, index, liste, isAdmin, isMotor, onDuzenle }) => {
           </Box>
         )}
         <CardActions sx={{ pt: 0 }}>
-          <IconButton size="small" color="primary" onClick={() => onDuzenle(u)}>
-            <EditIcon />
-          </IconButton>
-          <IconButton size="small" color="error" onClick={() => handleDelete(u.id)}>
-            <DeleteIcon />
-          </IconButton>
+          <IslemDugmesi tur="duz" onClick={() => onDuzenle(u)} />
+          <IslemDugmesi tur="sil" onClick={() => handleDelete(u.id)} />
           <Box sx={{ flexGrow: 1 }} />
           {!arsivGorunumu && (
             <>

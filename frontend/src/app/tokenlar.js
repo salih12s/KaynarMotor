@@ -48,6 +48,7 @@ export const ISLEM = {
   asagi: { fg: '#5B5F66', bg: '#E3E3DC' },
   gizle: { fg: '#9A6200', bg: '#F7E7C4' },
   belge: { fg: '#1E5FAE', bg: '#DCE6F4' },
+  satis: { fg: '#1D6A3B', bg: '#D8EBDD' },
 };
 
 // Kenar menü simge renkleri (anahtar: menü kodu)

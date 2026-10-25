@@ -108,11 +108,9 @@ export const TaksitTablo = ({ sonuc, isMobile }) => {
     <TableContainer component={Paper} sx={{ borderRadius: 3 }}>
       <Table>
         <TableHead>
-          <TableRow sx={{ bgcolor: '#C62828' }}>
+          <TableRow>
             {['Taksit Süresi', 'Taksitli Toplam Fiyat', 'Aylık Ödeme'].map((h) => (
-              <TableCell key={h} sx={{ color: '#fff', fontWeight: 'bold' }}>
-                {h}
-              </TableCell>
+              <TableCell key={h}>{h}</TableCell>
             ))}
           </TableRow>
         </TableHead>
@@ -207,7 +205,7 @@ const TaksitHesaplama = () => {
               size="large"
               startIcon={<CalculateIcon />}
               onClick={hesapla}
-              sx={{ bgcolor: '#C62828', '&:hover': { bgcolor: '#b71c1c' }, whiteSpace: 'nowrap', px: 3 }}
+              sx={{ bgcolor: '#C62828', '&:hover': { bgcolor: '#A61F1F' }, whiteSpace: 'nowrap', px: 3 }}
             >
               Hesapla
             </Button>

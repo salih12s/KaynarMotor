@@ -57,7 +57,7 @@ const FisKarAnalizi = ({ fisKar, isMobile }) => {
             <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
               <Table size="small">
                 <TableHead>
-                  <TableRow sx={{ bgcolor: '#C62828' }}>
+                  <TableRow>
                     {['Tarih', 'Fiş No', 'Müşteri', 'Durum', 'Toplam Gelir', 'Toplam Maliyet', 'Kâr', 'Kâr Oranı'].map((h) => (
                       <TableCell key={h} sx={headerSx}>
                         {h}

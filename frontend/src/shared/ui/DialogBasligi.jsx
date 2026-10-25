@@ -31,7 +31,7 @@ const DialogBasligi = ({ baslik, ikon, onKapat, eylemler, sx }) => (
     </Box>
     {eylemler}
     {onKapat && (
-      <IconButton onClick={onKapat} aria-label="Kapat" size="small" sx={{ color: RENK.soluk }}>
+      <IconButton onClick={onKapat} aria-label="Pencereyi kapat" size="small" sx={{ color: RENK.soluk }}>
         <CloseIcon />
       </IconButton>
     )}

@@ -1,3 +1,4 @@
+import { useOnay } from '../../../shared/ui';
 import { useState } from 'react';
 import { useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { isEmriService } from '../servisApi';
@@ -15,6 +16,7 @@ const BOS = [];
 
 // Liste sayfasının sunucu verisi: iş emirleri (durum süzgeciyle), personel listesi, yenileme ve silme.
 export const useIsEmirleri = () => {
+  const onay = useOnay();
   const [durumFilter, setDurumFilter] = useState('');
   const istemci = useQueryClient();
 
@@ -45,7 +47,7 @@ export const useIsEmirleri = () => {
   const yenile = () => istemci.invalidateQueries({ queryKey: isEmriAnahtari.hepsi });
 
   const sil = async (id) => {
-    if (!window.confirm('Bu iş emrini silmek istediğinizden emin misiniz?')) return;
+    if (!(await onay('Bu iş emrini silmek istediğinizden emin misiniz?'))) return;
     try {
       await isEmriService.delete(id);
       yenile();

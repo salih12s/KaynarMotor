@@ -1,6 +1,7 @@
 import React from 'react';
-import { Box, Paper, Typography, Grid, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Alert, Chip, IconButton } from '@mui/material';
-import ViewIcon from '@mui/icons-material/Visibility';
+import { IslemDugmesi } from '../../../shared/ui';
+import { Box, Paper, Typography, Grid, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Alert, Chip } from '@mui/material';
+
 import { formatTL, formatDate, karColor, headerSx } from '../bicim';
 import KartItem from '../bilesenler/KartItem';
 import { hesaplaKomisyon, detectPlatform } from '../../eticaret/komisyon';
@@ -40,7 +41,7 @@ const ETicaret = ({ rapor, hesaplananEticaretKar, isMobile, onDetay }) => {
                     <Chip
                       label={e.platform_adi || '-'}
                       size="small"
-                      sx={{ bgcolor: '#ffebee', color: '#C62828', fontWeight: 'bold', fontSize: '0.65rem', height: 20 }}
+                      sx={{ bgcolor: '#F6DAD7', color: '#C62828', fontWeight: 'bold', fontSize: '0.65rem', height: 20 }}
                     />
                   </Box>
                   <Typography variant="body2" color="text.secondary">
@@ -65,7 +66,7 @@ const ETicaret = ({ rapor, hesaplananEticaretKar, isMobile, onDetay }) => {
           <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
             <Table size="small">
               <TableHead>
-                <TableRow sx={{ bgcolor: '#C62828' }}>
+                <TableRow>
                   {['', 'Tarih', 'Platform', 'Ürün', 'Adet', 'Alış', 'Satış', 'Kargo', 'Komisyon', 'Toplam Kesinti', 'Net Kâr'].map((h) => (
                     <TableCell key={h} sx={headerSx}>
                       {h}
@@ -86,9 +87,7 @@ const ETicaret = ({ rapor, hesaplananEticaretKar, isMobile, onDetay }) => {
                   return (
                     <TableRow key={i} hover>
                       <TableCell>
-                        <IconButton size="small" color="primary" onClick={() => onDetay(e)}>
-                          <ViewIcon fontSize="small" />
-                        </IconButton>
+                        <IslemDugmesi tur="goz" onClick={() => onDetay(e)} />
                       </TableCell>
                       <TableCell>{formatDate(e.tarih)}</TableCell>
                       <TableCell sx={{ fontWeight: 'bold' }}>{e.platform_adi || '-'}</TableCell>

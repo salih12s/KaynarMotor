@@ -61,14 +61,14 @@ const FiyatKarBolumu = ({ f, setFormData, canAlis, canKar, canliKar }) => {
               value={f.yatirimci_kar}
               onChange={(e) => setFormData({ ...f, yatirimci_kar: e.target.value })}
               helperText="Yatırımcıya verilecek tutar; kalanı işletme kârıdır."
-              sx={{ '& .MuiInputBase-root': { bgcolor: '#e3f2fd' } }}
+              sx={{ '& .MuiInputBase-root': { bgcolor: '#DCE6F4' } }}
               InputProps={{ startAdornment: <InputAdornment position="start">₺</InputAdornment> }}
             />
           </Grid>
         )}
       </Grid>
       {canKar && (
-        <Paper sx={{ p: 2, mt: 2, bgcolor: canliKar >= 0 ? '#e8f5e9' : '#ffebee', textAlign: 'center' }}>
+        <Paper sx={{ p: 2, mt: 2, bgcolor: canliKar >= 0 ? '#D8EBDD' : '#F6DAD7', textAlign: 'center' }}>
           <Typography variant="h6" sx={{ color: canliKar >= 0 ? 'green' : 'red' }}>
             Net Kâr: <strong>{sayiYaz(canliKar)} ₺</strong>
           </Typography>
@@ -78,10 +78,10 @@ const FiyatKarBolumu = ({ f, setFormData, canAlis, canKar, canliKar }) => {
           {f.yatirimci_id ? (
             <Box sx={{ mt: 1, pt: 1, borderTop: '1px dashed #bbb', display: 'flex', justifyContent: 'center', gap: 3, flexWrap: 'wrap' }}>
               <Typography variant="body2">
-                Yatırımcı Kârı: <strong style={{ color: '#1565C0' }}>{sayiYaz(Number(f.yatirimci_kar) || 0)} ₺</strong>
+                Yatırımcı Kârı: <strong style={{ color: '#1E4A86' }}>{sayiYaz(Number(f.yatirimci_kar) || 0)} ₺</strong>
               </Typography>
               <Typography variant="body2">
-                Benim Kârım: <strong style={{ color: '#2e7d32' }}>{sayiYaz(canliKar - (Number(f.yatirimci_kar) || 0))} ₺</strong>
+                Benim Kârım: <strong style={{ color: '#1D6A3B' }}>{sayiYaz(canliKar - (Number(f.yatirimci_kar) || 0))} ₺</strong>
               </Typography>
             </Box>
           ) : null}

@@ -3,10 +3,10 @@ import { paraYaz, tarihYaz } from '../../shared/utils/bicim';
 export const formatTL = (v) => paraYaz(v);
 export const formatDate = (d) => tarihYaz(d);
 
-// Tablo başlık hücresi stili (kırmızı başlık satırında beyaz yazı)
-export const headerSx = { color: 'white', fontWeight: 'bold', whiteSpace: 'nowrap' };
+// Tablo başlık hücresi stili (renk ve ağırlık temadan gelir)
+export const headerSx = { whiteSpace: 'nowrap' };
 
-export const karColor = (v) => (parseFloat(v || 0) >= 0 ? '#2e7d32' : '#C62828');
+export const karColor = (v) => (parseFloat(v || 0) >= 0 ? '#1D6A3B' : '#C62828');
 
 // Motorun toplam kârından yatırımcıya ayrılan pay düşüldükten sonra işletmede kalan tutar.
 export const motorIsletmeKari = (motor) => parseFloat(motor?.kar || 0) - parseFloat(motor?.yatirimci_kar || 0);

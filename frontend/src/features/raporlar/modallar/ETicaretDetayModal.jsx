@@ -1,4 +1,5 @@
 import React from 'react';
+import { DialogBasligi } from '../../../shared/ui';
 import {
   Box,
   Paper,
@@ -10,7 +11,6 @@ import {
   TableContainer,
   TableRow,
   Dialog,
-  DialogTitle,
   DialogContent,
   DialogActions,
   Button,
@@ -39,11 +39,11 @@ const ETicaretDetayModal = ({ open, data, onClose, isMobile }) => {
   const karOrani = toplamSatis > 0 ? ((netKar / toplamSatis) * 100).toFixed(1) : '0.0';
   return (
     <Dialog {...dialogProps}>
-      <DialogTitle sx={{ bgcolor: '#C62828', color: 'white', py: 1.5 }}>E-Ticaret Satış Detayı - {e.urun_adi}</DialogTitle>
+      <DialogBasligi baslik={<>E-Ticaret Satış Detayı - {e.urun_adi}</>} onKapat={onClose} />
       <DialogContent dividers>
         <Grid container spacing={2} sx={{ mb: 2, mt: 0.5 }}>
           <Grid size={{ xs: 12, md: 4 }}>
-            <Paper sx={{ p: 1.5, bgcolor: '#fafafa' }}>
+            <Paper sx={{ p: 1.5, bgcolor: '#FBFBF8' }}>
               <Typography variant="subtitle2" color="#C62828" fontWeight="bold" gutterBottom>
                 Ürün Bilgileri
               </Typography>
@@ -62,7 +62,7 @@ const ETicaretDetayModal = ({ open, data, onClose, isMobile }) => {
             </Paper>
           </Grid>
           <Grid size={{ xs: 12, md: 4 }}>
-            <Paper sx={{ p: 1.5, bgcolor: '#fafafa' }}>
+            <Paper sx={{ p: 1.5, bgcolor: '#FBFBF8' }}>
               <Typography variant="subtitle2" color="#C62828" fontWeight="bold" gutterBottom>
                 Fiyat Bilgileri
               </Typography>
@@ -81,7 +81,7 @@ const ETicaretDetayModal = ({ open, data, onClose, isMobile }) => {
             </Paper>
           </Grid>
           <Grid size={{ xs: 12, md: 4 }}>
-            <Paper sx={{ p: 1.5, bgcolor: '#fafafa' }}>
+            <Paper sx={{ p: 1.5, bgcolor: '#FBFBF8' }}>
               <Typography variant="subtitle2" color="#C62828" fontWeight="bold" gutterBottom>
                 Platform Bilgileri
               </Typography>
@@ -116,7 +116,7 @@ const ETicaretDetayModal = ({ open, data, onClose, isMobile }) => {
                   ₺{formatTL(kargoUcreti)}
                 </TableCell>
               </TableRow>
-              <TableRow sx={{ bgcolor: '#f5f5f5' }}>
+              <TableRow sx={{ bgcolor: '#F3F3EE' }}>
                 <TableCell sx={{ fontWeight: 'bold' }}>Toplam Kesinti ({miktar} adet)</TableCell>
                 <TableCell align="right" sx={{ fontWeight: 'bold' }}>
                   ₺{formatTL(toplamKesinti)}
@@ -127,24 +127,24 @@ const ETicaretDetayModal = ({ open, data, onClose, isMobile }) => {
         </TableContainer>
 
         <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
-          <Paper sx={{ px: 2, py: 1, bgcolor: '#ffebee' }}>
+          <Paper sx={{ px: 2, py: 1, bgcolor: '#F6DAD7' }}>
             <Typography variant="body2">
               Toplam Satış: <strong>₺{formatTL(toplamSatis)}</strong>
             </Typography>
           </Paper>
-          <Paper sx={{ px: 2, py: 1, bgcolor: '#fff3e0' }}>
+          <Paper sx={{ px: 2, py: 1, bgcolor: '#F7E7C4' }}>
             <Typography variant="body2">
               Toplam Maliyet: <strong>₺{formatTL(toplamAlis)}</strong>
             </Typography>
           </Paper>
-          <Paper sx={{ px: 2, py: 1, bgcolor: '#fce4ec' }}>
+          <Paper sx={{ px: 2, py: 1, bgcolor: '#F6DAD7' }}>
             <Typography variant="body2">
               Toplam Kesinti: <strong>₺{formatTL(toplamKesinti)}</strong>
             </Typography>
           </Paper>
-          <Paper sx={{ px: 2, py: 1, bgcolor: netKar >= 0 ? '#e8f5e9' : '#ffebee' }}>
+          <Paper sx={{ px: 2, py: 1, bgcolor: netKar >= 0 ? '#D8EBDD' : '#F6DAD7' }}>
             <Typography variant="body2">
-              Net Kâr: <strong style={{ color: netKar >= 0 ? '#2e7d32' : '#c62828' }}>₺{formatTL(netKar)}</strong> (%{karOrani})
+              Net Kâr: <strong style={{ color: netKar >= 0 ? '#1D6A3B' : '#c62828' }}>₺{formatTL(netKar)}</strong> (%{karOrani})
             </Typography>
           </Paper>
         </Box>

@@ -66,7 +66,7 @@ const MotorDetay = () => {
           variant="contained"
           size={isMobile ? 'small' : 'medium'}
           onClick={handlePrint}
-          sx={{ bgcolor: '#C62828', '&:hover': { bgcolor: '#b71c1c' } }}
+          sx={{ bgcolor: '#C62828', '&:hover': { bgcolor: '#A61F1F' } }}
         >
           Yazdır
         </Button>
@@ -209,7 +209,7 @@ const MotorDetay = () => {
           <Divider sx={{ mb: 2 }} />
           <Grid container spacing={2}>
             <Grid size={{ xs: 6, md: 3 }}>
-              <Paper sx={{ p: 2, textAlign: 'center', bgcolor: '#ffebee', borderLeft: '4px solid #C62828' }}>
+              <Paper sx={{ p: 2, textAlign: 'center', bgcolor: '#F6DAD7', borderLeft: '4px solid #C62828' }}>
                 <Typography variant="body2" color="text.secondary">
                   Alış Fiyatı
                 </Typography>
@@ -219,7 +219,7 @@ const MotorDetay = () => {
               </Paper>
             </Grid>
             <Grid size={{ xs: 6, md: 3 }}>
-              <Paper sx={{ p: 2, textAlign: 'center', bgcolor: '#ffebee', borderLeft: '4px solid #C62828' }}>
+              <Paper sx={{ p: 2, textAlign: 'center', bgcolor: '#F6DAD7', borderLeft: '4px solid #C62828' }}>
                 <Typography variant="body2" color="text.secondary">
                   Satış Fiyatı
                 </Typography>
@@ -229,7 +229,7 @@ const MotorDetay = () => {
               </Paper>
             </Grid>
             <Grid size={{ xs: 6, md: 3 }}>
-              <Paper sx={{ p: 2, textAlign: 'center', bgcolor: '#fce4ec', borderLeft: '4px solid #c62828' }}>
+              <Paper sx={{ p: 2, textAlign: 'center', bgcolor: '#F6DAD7', borderLeft: '4px solid #c62828' }}>
                 <Typography variant="body2" color="text.secondary">
                   Noter Alış
                 </Typography>
@@ -239,7 +239,7 @@ const MotorDetay = () => {
               </Paper>
             </Grid>
             <Grid size={{ xs: 6, md: 3 }}>
-              <Paper sx={{ p: 2, textAlign: 'center', bgcolor: '#fce4ec', borderLeft: '4px solid #c62828' }}>
+              <Paper sx={{ p: 2, textAlign: 'center', bgcolor: '#F6DAD7', borderLeft: '4px solid #c62828' }}>
                 <Typography variant="body2" color="text.secondary">
                   Noter Satış
                 </Typography>
@@ -249,7 +249,7 @@ const MotorDetay = () => {
               </Paper>
             </Grid>
             <Grid size={{ xs: 6, md: 4 }}>
-              <Paper sx={{ p: 2, textAlign: 'center', bgcolor: '#ffebee', borderLeft: '4px solid #C62828' }}>
+              <Paper sx={{ p: 2, textAlign: 'center', bgcolor: '#F6DAD7', borderLeft: '4px solid #C62828' }}>
                 <Typography variant="body2" color="text.secondary">
                   Masraflar (Tamir, Bakım vb.)
                 </Typography>
@@ -259,7 +259,7 @@ const MotorDetay = () => {
               </Paper>
             </Grid>
             <Grid size={{ xs: 6, md: 4 }}>
-              <Paper sx={{ p: 2, textAlign: 'center', bgcolor: '#ffebee', borderLeft: '4px solid #C62828' }}>
+              <Paper sx={{ p: 2, textAlign: 'center', bgcolor: '#F6DAD7', borderLeft: '4px solid #C62828' }}>
                 <Typography variant="body2" color="text.secondary">
                   Toplam Maliyet
                 </Typography>
@@ -274,12 +274,12 @@ const MotorDetay = () => {
             {karGor && (
               <Grid size={{ xs: 12, md: 4 }}>
                 <Paper
-                  sx={{ p: 2, textAlign: 'center', bgcolor: kar >= 0 ? '#e8f5e9' : '#ffebee', borderLeft: `4px solid ${kar >= 0 ? '#2e7d32' : '#C62828'}` }}
+                  sx={{ p: 2, textAlign: 'center', bgcolor: kar >= 0 ? '#D8EBDD' : '#F6DAD7', borderLeft: `4px solid ${kar >= 0 ? '#1D6A3B' : '#C62828'}` }}
                 >
                   <Typography variant="body2" color="text.secondary">
                     NET KÂR
                   </Typography>
-                  <Typography variant="h5" fontWeight="bold" sx={{ color: kar >= 0 ? '#2e7d32' : '#C62828' }}>
+                  <Typography variant="h5" fontWeight="bold" sx={{ color: kar >= 0 ? '#1D6A3B' : '#C62828' }}>
                     ₺{formatTL(kar)}
                   </Typography>
                   <Typography variant="caption" color="text.secondary">

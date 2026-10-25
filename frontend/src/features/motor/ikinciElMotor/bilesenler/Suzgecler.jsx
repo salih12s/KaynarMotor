@@ -1,52 +1,62 @@
 import React from 'react';
-import { Paper, TextField, Grid, InputAdornment } from '@mui/material';
+import { Box, Button, TextField, InputAdornment } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
+import AddIcon from '@mui/icons-material/Add';
+import FileDownloadIcon from '@mui/icons-material/FileDownload';
+import { RENK } from '../../../../app/tokenlar';
 
-// Arama kutusu ve satış/alım tarihi aralığı.
-const Suzgecler = ({ search, setSearch, tarihBaslangic, setTarihBaslangic, tarihBitis, setTarihBitis }) => {
+// Arama kutusu, satış/alım tarihi aralığı; sağda "Excel'e Aktar" ve "Motor Satış" düğmeleri.
+const Suzgecler = ({ search, setSearch, tarihBaslangic, setTarihBaslangic, tarihBitis, setTarihBitis, salt, onExcel, onYeni }) => {
   return (
-    <Paper sx={{ p: 2, mb: 2 }}>
-      <Grid container spacing={2} alignItems="center">
-        <Grid size={{ xs: 12, sm: 6 }}>
-          <TextField
-            size="small"
-            fullWidth
-            placeholder="Plaka, marka, model veya satıcı adı ile ara..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon />
-                </InputAdornment>
-              ),
-            }}
-          />
-        </Grid>
-        <Grid size={{ xs: 6, sm: 3 }}>
-          <TextField
-            size="small"
-            fullWidth
-            label="Başlangıç"
-            type="date"
-            value={tarihBaslangic}
-            onChange={(e) => setTarihBaslangic(e.target.value)}
-            InputLabelProps={{ shrink: true }}
-          />
-        </Grid>
-        <Grid size={{ xs: 6, sm: 3 }}>
-          <TextField
-            size="small"
-            fullWidth
-            label="Bitiş"
-            type="date"
-            value={tarihBitis}
-            onChange={(e) => setTarihBitis(e.target.value)}
-            InputLabelProps={{ shrink: true }}
-          />
-        </Grid>
-      </Grid>
-    </Paper>
+    <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap', alignItems: 'flex-end', mb: 2 }}>
+      <TextField
+        size="small"
+        placeholder="Plaka, marka, model veya satıcı adı ile ara..."
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        InputProps={{
+          startAdornment: (
+            <InputAdornment position="start">
+              <SearchIcon />
+            </InputAdornment>
+          ),
+        }}
+        sx={{ flex: { xs: '1 1 100%', md: '1 1 340px' }, maxWidth: { md: 520 } }}
+      />
+      <TextField
+        size="small"
+        label="Başlangıç"
+        type="date"
+        value={tarihBaslangic}
+        onChange={(e) => setTarihBaslangic(e.target.value)}
+        InputLabelProps={{ shrink: true }}
+        sx={{ flex: { xs: 1, md: 'none' } }}
+      />
+      <TextField
+        size="small"
+        label="Bitiş"
+        type="date"
+        value={tarihBitis}
+        onChange={(e) => setTarihBitis(e.target.value)}
+        InputLabelProps={{ shrink: true }}
+        sx={{ flex: { xs: 1, md: 'none' } }}
+      />
+      <Box sx={{ flexGrow: 1 }} />
+      <Button
+        variant="outlined"
+        size="large"
+        startIcon={<FileDownloadIcon />}
+        onClick={onExcel}
+        sx={{ color: RENK.yesil, borderColor: RENK.yesil, '&:hover': { borderColor: RENK.yesil, bgcolor: '#D8EBDD' }, flex: { xs: 1, md: 'none' } }}
+      >
+        Excel'e Aktar
+      </Button>
+      {!salt && (
+        <Button variant="contained" size="large" startIcon={<AddIcon />} onClick={onYeni} sx={{ flex: { xs: 1, md: 'none' } }}>
+          Motor Satış
+        </Button>
+      )}
+    </Box>
   );
 };
 

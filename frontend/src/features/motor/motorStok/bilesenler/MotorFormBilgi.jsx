@@ -35,13 +35,13 @@ const MotorFormBilgi = ({ f, setFormData, dialog, canAlis, canListe }) => {
               '& .MuiInputBase-root': {
                 bgcolor:
                   f.durum === 'kapora'
-                    ? '#FFFDE7'
+                    ? '#F7E7C4'
                     : f.durum === 'devir_bekliyor'
-                      ? '#F3E5F5'
+                      ? '#E7DFF3'
                       : f.durum === 'depo_serviste'
-                        ? '#FFF3E0'
+                        ? '#F7E7C4'
                         : f.durum === 'tamamlandi'
-                          ? '#E0F2F1'
+                          ? '#D5EAE6'
                           : 'inherit',
               },
             }}
@@ -62,7 +62,7 @@ const MotorFormBilgi = ({ f, setFormData, dialog, canAlis, canListe }) => {
               label="Stok Tipi"
               value={f.stok_tipi}
               onChange={(e) => setFormData({ ...f, stok_tipi: e.target.value })}
-              sx={{ '& .MuiInputBase-root': { bgcolor: f.stok_tipi === 'konsinye' ? '#e3f2fd' : '#fff3e0' } }}
+              sx={{ '& .MuiInputBase-root': { bgcolor: f.stok_tipi === 'konsinye' ? '#DCE6F4' : '#F7E7C4' } }}
             >
               <MenuItem value="sahip">Benim Olanlar</MenuItem>
               <MenuItem value="konsinye">Konsinye</MenuItem>
@@ -86,7 +86,7 @@ const MotorFormBilgi = ({ f, setFormData, dialog, canAlis, canListe }) => {
             label="Fatura Durumu"
             value={f.fatura_kesildi ? 'true' : 'false'}
             onChange={(e) => setFormData({ ...f, fatura_kesildi: e.target.value === 'true' })}
-            sx={{ '& .MuiInputBase-root': { bgcolor: f.fatura_kesildi ? '#e8f5e9' : '#ffebee' } }}
+            sx={{ '& .MuiInputBase-root': { bgcolor: f.fatura_kesildi ? '#D8EBDD' : '#F6DAD7' } }}
           >
             <MenuItem value="false">Fatura Kesilmedi</MenuItem>
             <MenuItem value="true">Fatura Kesildi</MenuItem>
@@ -133,7 +133,7 @@ const MotorFormBilgi = ({ f, setFormData, dialog, canAlis, canListe }) => {
               type="number"
               value={f.liste_fiyati}
               onChange={(e) => setFormData({ ...f, liste_fiyati: e.target.value })}
-              sx={{ '& .MuiInputBase-root': { bgcolor: '#e3f2fd' } }}
+              sx={{ '& .MuiInputBase-root': { bgcolor: '#DCE6F4' } }}
             />
           </Grid>
         )}

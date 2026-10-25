@@ -33,7 +33,7 @@ const SatisFormModal = ({ form, stokMotorlar, yatirimciMap, canAlis, canKar, isM
           </Alert>
         )}
         {f.yatirimci_id && (
-          <Alert severity="info" icon={false} sx={{ mb: 2, bgcolor: '#e3f2fd', border: '1px solid #90caf9' }}>
+          <Alert severity="info" icon={false} sx={{ mb: 2, bgcolor: '#DCE6F4', border: '1px solid #90caf9' }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
               <Chip label="YATIRIMCI MOTORU" color="primary" size="small" sx={{ fontWeight: 700 }} />
               <Typography variant="body2" sx={{ fontWeight: 600 }}>

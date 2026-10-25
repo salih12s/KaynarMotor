@@ -1,8 +1,9 @@
 import React from 'react';
-import { Box, Button, Chip } from '@mui/material';
+import { Box, Button } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import { TON } from '../../../../app/tokenlar';
 
-// Üst durum çipleri (süzgeç olarak çalışır), ikincil fatura/devir/ödeme çipleri ve "Motor Ekle" düğmesi.
+// Üst durum çipleri (süzgeç olarak çalışır), ikincil fatura/devir/ödeme sayaçları ve "Motor Ekle" düğmesi.
 const IstatistikCipleri = ({ motorlar, isYatirimci, canEdit, activeFilter, setActiveFilter, secondaryFilter, setSecondaryFilter, onYeni }) => {
   const stoktaSahip = motorlar.filter((m) => m.durum === 'stokta' && m.stok_tipi !== 'konsinye');
   const stoktaKonsinye = motorlar.filter((m) => m.durum === 'stokta' && m.stok_tipi === 'konsinye');
@@ -13,47 +14,60 @@ const IstatistikCipleri = ({ motorlar, isYatirimci, canEdit, activeFilter, setAc
   const perteler = motorlar.filter((m) => m.durum === 'perte');
 
   const statChips = [
-    { label: `Toplam: ${isYatirimci ? motorlar.length - tamamlananlar.length : motorlar.length}`, color: '#C62828', bg: '#ffebee', filter: null },
-    { label: `Stokta: ${stoktaSahip.length}`, color: '#2e7d32', bg: '#e8f5e9', filter: 'stokta' },
-    { label: `Konsinye: ${stoktaKonsinye.length}`, color: '#1565C0', bg: '#e3f2fd', filter: 'konsinye' },
-    { label: `Kapora: ${kaporalar.length}`, color: '#F9A825', bg: '#FFFDE7', filter: 'kapora' },
-    { label: `Depo/Serviste: ${depoServiste.length}`, color: '#EF6C00', bg: '#FFF3E0', filter: 'depo_serviste' },
-    { label: `Devir Bekliyor: ${devirBekleyen.length}`, color: '#7B1FA2', bg: '#F3E5F5', filter: 'devir_bekliyor' },
-    { label: `Perte: ${perteler.length}`, color: '#d32f2f', bg: '#ffcdd2', filter: 'perte' },
+    { label: `Toplam: ${isYatirimci ? motorlar.length - tamamlananlar.length : motorlar.length}`, ton: 'gri', filter: null },
+    { label: `Stokta: ${stoktaSahip.length}`, ton: 'yesil', filter: 'stokta' },
+    { label: `Konsinye: ${stoktaKonsinye.length}`, ton: 'bekle', filter: 'konsinye' },
+    { label: `Kapora: ${kaporalar.length}`, ton: 'mavi', filter: 'kapora' },
+    { label: `Depo/Serviste: ${depoServiste.length}`, ton: 'turuncu', filter: 'depo_serviste' },
+    { label: `Devir Bekliyor: ${devirBekleyen.length}`, ton: 'mor', filter: 'devir_bekliyor' },
+    { label: `Perte: ${perteler.length}`, ton: 'kirmizi', filter: 'perte' },
     // Satılan kutusu herkese gösterilir; yatırımcı tıklayınca satılanları (kârıyla) görür
-    { label: `Satılan: ${tamamlananlar.length}`, color: '#00695C', bg: '#E0F2F1', filter: 'tamamlandi' },
+    { label: `Satılan: ${tamamlananlar.length}`, ton: 'gri', filter: 'tamamlandi' },
   ];
 
+  const ikincilTon = (iyi) => (iyi ? 'yesil' : 'kirmizi');
   const secondaryChips = [
-    { label: `Fatura ✓ ${motorlar.filter((m) => m.fatura_kesildi).length}`, filter: 'fatura_kesildi', color: '#2e7d32', bg: '#e8f5e9' },
-    { label: `Fatura ✗ ${motorlar.filter((m) => !m.fatura_kesildi).length}`, filter: 'fatura_kesilmedi', color: '#d32f2f', bg: '#ffebee' },
-    { label: `Devir ✓ ${tamamlananlar.length}`, filter: 'devir_verildi', color: '#2e7d32', bg: '#e8f5e9' },
-    { label: `Devir ✗ ${devirBekleyen.length}`, filter: 'devir_verilmedi', color: '#d32f2f', bg: '#ffebee' },
-    { label: `Ödeme ✓ ${motorlar.filter((m) => !(parseFloat(m.kalan_odeme || 0) > 0)).length}`, filter: 'odeme_tamam', color: '#2e7d32', bg: '#e8f5e9' },
-    { label: `Ödeme ✗ ${motorlar.filter((m) => parseFloat(m.kalan_odeme || 0) > 0).length}`, filter: 'odeme_bekliyor', color: '#d32f2f', bg: '#ffebee' },
+    { label: `Fatura ✓ ${motorlar.filter((m) => m.fatura_kesildi).length}`, filter: 'fatura_kesildi', ton: ikincilTon(true) },
+    { label: `Fatura ✗ ${motorlar.filter((m) => !m.fatura_kesildi).length}`, filter: 'fatura_kesilmedi', ton: ikincilTon(false) },
+    { label: `Devir ✓ ${tamamlananlar.length}`, filter: 'devir_verildi', ton: ikincilTon(true) },
+    { label: `Devir ✗ ${devirBekleyen.length}`, filter: 'devir_verilmedi', ton: ikincilTon(false) },
+    { label: `Ödeme ✓ ${motorlar.filter((m) => !(parseFloat(m.kalan_odeme || 0) > 0)).length}`, filter: 'odeme_tamam', ton: ikincilTon(true) },
+    { label: `Ödeme ✗ ${motorlar.filter((m) => parseFloat(m.kalan_odeme || 0) > 0).length}`, filter: 'odeme_bekliyor', ton: ikincilTon(false) },
   ];
   return (
     <>
       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2, alignItems: 'center' }}>
-        {statChips.map((c, i) => (
-          <Chip
-            key={i}
-            label={c.label}
-            onClick={() => setActiveFilter(activeFilter === c.filter ? null : c.filter)}
-            sx={{
-              bgcolor: activeFilter === c.filter ? c.color : c.bg,
-              color: activeFilter === c.filter ? 'white' : c.color,
-              fontWeight: 'bold',
-              fontSize: '0.8rem',
-              borderLeft: `4px solid ${c.color}`,
-              cursor: 'pointer',
-              '&:hover': { opacity: 0.85 },
-            }}
-          />
-        ))}
+        {statChips.map((c) => {
+          const { fg, bg } = TON[c.ton];
+          const secili = activeFilter === c.filter;
+          return (
+            <Box
+              key={c.label}
+              component="button"
+              type="button"
+              onClick={() => setActiveFilter(secili ? null : c.filter)}
+              aria-pressed={secili}
+              sx={{
+                height: 32,
+                px: 1.5,
+                border: `1.5px solid ${fg}`,
+                borderRadius: '4px',
+                bgcolor: secili ? fg : bg,
+                color: secili ? '#fff' : fg,
+                font: 'inherit',
+                fontSize: 14,
+                fontWeight: 700,
+                cursor: 'pointer',
+                '&:hover': { filter: 'brightness(0.96)' },
+              }}
+            >
+              {c.label}
+            </Box>
+          );
+        })}
         <Box sx={{ flexGrow: 1 }} />
         {canEdit && (
-          <Button variant="contained" size="large" startIcon={<AddIcon />} onClick={onYeni} sx={{ bgcolor: '#C62828', '&:hover': { bgcolor: '#b71c1c' } }}>
+          <Button variant="contained" size="large" startIcon={<AddIcon />} onClick={onYeni}>
             Motor Ekle
           </Button>
         )}
@@ -61,23 +75,34 @@ const IstatistikCipleri = ({ motorlar, isYatirimci, canEdit, activeFilter, setAc
 
       {/* Operasyonel sayaçlar (fatura/devir/ödeme) yatırımcıya gösterilmez */}
       {!isYatirimci && (
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
-          {secondaryChips.map((c, i) => (
-            <Chip
-              key={i}
-              label={c.label}
-              size="small"
-              onClick={() => setSecondaryFilter(secondaryFilter === c.filter ? null : c.filter)}
-              sx={{
-                bgcolor: secondaryFilter === c.filter ? c.color : c.bg,
-                color: secondaryFilter === c.filter ? 'white' : c.color,
-                fontWeight: 'bold',
-                fontSize: '0.75rem',
-                cursor: 'pointer',
-                '&:hover': { opacity: 0.85 },
-              }}
-            />
-          ))}
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2.5, mb: 2 }}>
+          {secondaryChips.map((c) => {
+            const { fg } = TON[c.ton];
+            const secili = secondaryFilter === c.filter;
+            return (
+              <Box
+                key={c.label}
+                component="button"
+                type="button"
+                onClick={() => setSecondaryFilter(secili ? null : c.filter)}
+                aria-pressed={secili}
+                sx={{
+                  p: 0,
+                  border: 0,
+                  bgcolor: 'transparent',
+                  color: fg,
+                  font: 'inherit',
+                  fontSize: 15,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  borderBottom: secili ? `2px solid ${fg}` : '2px solid transparent',
+                  '&:hover': { borderBottomColor: fg },
+                }}
+              >
+                {c.label}
+              </Box>
+            );
+          })}
         </Box>
       )}
     </>

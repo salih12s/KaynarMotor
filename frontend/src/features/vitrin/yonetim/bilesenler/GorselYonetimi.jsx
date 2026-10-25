@@ -31,7 +31,7 @@ const GorselYonetimi = ({ f }) => {
               onDrop={() => handleGorselDrop(i)}
               sx={{
                 position: 'relative',
-                border: i === 0 ? '2px solid #C62828' : '1px solid #ddd',
+                border: i === 0 ? '2px solid #C62828' : '1px solid #D2D3CA',
                 borderRadius: 1,
                 overflow: 'hidden',
                 cursor: 'grab',

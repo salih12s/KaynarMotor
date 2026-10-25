@@ -56,7 +56,7 @@ const PlatformFormModal = ({ e, isMobile }) => {
       </DialogContent>
       <DialogActions>
         <Button onClick={kapat}>İptal</Button>
-        <Button variant="contained" onClick={handlePlatformSave} sx={{ bgcolor: '#C62828', '&:hover': { bgcolor: '#b71c1c' } }}>
+        <Button variant="contained" onClick={handlePlatformSave} sx={{ bgcolor: '#C62828', '&:hover': { bgcolor: '#A61F1F' } }}>
           {platformDialog.data ? 'Güncelle' : 'Kaydet'}
         </Button>
       </DialogActions>

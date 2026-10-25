@@ -71,13 +71,13 @@ const MotorBilgileriBolumu = ({ f, setFormData, stokMotorlar, setSelectedStokId 
               '& .MuiInputBase-root': {
                 bgcolor:
                   f.durum === 'tamamlandi'
-                    ? '#e8f5e9'
+                    ? '#D8EBDD'
                     : f.durum === 'kapora'
-                      ? '#fff3e0'
+                      ? '#F7E7C4'
                       : f.durum === 'devir_bekliyor'
-                        ? '#f3e5f5'
+                        ? '#E7DFF3'
                         : f.durum === 'perte'
-                          ? '#ffebee'
+                          ? '#F6DAD7'
                           : 'inherit',
               },
             }}

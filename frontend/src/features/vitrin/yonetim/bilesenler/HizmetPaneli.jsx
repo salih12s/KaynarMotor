@@ -7,7 +7,7 @@ import { vitrinService } from '../../vitrinApi';
 const HizmetPaneli = ({ curIletisim, kategori, aktifKategori, onDuzenle }) => {
   return (
     <Paper sx={{ mb: 2, overflow: 'hidden' }}>
-      <Box sx={{ bgcolor: '#f0f0f0' }}>
+      <Box sx={{ bgcolor: '#F3F3EE' }}>
         {curIletisim?.gorsel_var ? (
           <Box
             component="img"

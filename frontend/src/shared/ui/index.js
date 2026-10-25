@@ -6,3 +6,4 @@ export { default as DialogBasligi } from './DialogBasligi';
 export { default as BolumBasligi } from './BolumBasligi';
 export { BilgiKarti, SayiKutusu, Not } from './BilgiKartlari';
 export { plakaBicim } from './plakaBicim';
+export { OnayProvider, useOnay } from './Onay';

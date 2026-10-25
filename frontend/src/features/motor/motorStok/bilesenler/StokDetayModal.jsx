@@ -39,7 +39,7 @@ const StokDetayModal = ({ open, data, onClose, printRef, isMobile, perms = {} })
           variant="contained"
           size="small"
           onClick={handlePrint}
-          sx={{ bgcolor: '#C62828', '&:hover': { bgcolor: '#b71c1c' }, mr: 1 }}
+          sx={{ bgcolor: '#C62828', '&:hover': { bgcolor: '#A61F1F' }, mr: 1 }}
         >
           Yazdır
         </Button>
@@ -52,7 +52,7 @@ const StokDetayModal = ({ open, data, onClose, printRef, isMobile, perms = {} })
           <Grid container spacing={3} sx={{ mb: 3 }}>
             <Grid size={{ xs: 12, md: 6 }}>
               <Typography variant="subtitle1" fontWeight="bold" color="primary" gutterBottom>
-                🏍️ Motor Bilgileri
+                Motor Bilgileri
               </Typography>
               <Divider sx={{ mb: 1 }} />
               <InfoRow label="Plaka" value={data.plaka} />
@@ -68,7 +68,7 @@ const StokDetayModal = ({ open, data, onClose, printRef, isMobile, perms = {} })
             {canMusteri && (
               <Grid size={{ xs: 12, md: 6 }}>
                 <Typography variant="subtitle1" fontWeight="bold" color="primary" gutterBottom>
-                  🏪 Satıcı Bilgileri
+                  Satıcı Bilgileri
                 </Typography>
                 <Divider sx={{ mb: 1 }} />
                 <InfoRow label="İsim Soyisim" value={data.satici_adi} />
@@ -80,13 +80,13 @@ const StokDetayModal = ({ open, data, onClose, printRef, isMobile, perms = {} })
           {(canAlis || canKar) && (
             <>
               <Typography variant="subtitle1" fontWeight="bold" color="primary" gutterBottom>
-                💰 Fiyat Bilgileri
+                Fiyat Bilgileri
               </Typography>
               <Divider sx={{ mb: 2 }} />
               <Grid container spacing={2} sx={{ mb: 2 }}>
                 {canAlis && (
                   <Grid size={{ xs: 6, md: 4 }}>
-                    <Paper sx={{ p: 1.5, textAlign: 'center', bgcolor: '#ffebee', borderLeft: '4px solid #C62828' }}>
+                    <Paper sx={{ p: 1.5, textAlign: 'center', bgcolor: '#F6DAD7', borderLeft: '4px solid #C62828' }}>
                       <Typography variant="caption" color="text.secondary">
                         Alım
                       </Typography>
@@ -98,7 +98,7 @@ const StokDetayModal = ({ open, data, onClose, printRef, isMobile, perms = {} })
                 )}
                 {canAlis && (
                   <Grid size={{ xs: 6, md: 4 }}>
-                    <Paper sx={{ p: 1.5, textAlign: 'center', bgcolor: '#fce4ec', borderLeft: '4px solid #c62828' }}>
+                    <Paper sx={{ p: 1.5, textAlign: 'center', bgcolor: '#F6DAD7', borderLeft: '4px solid #c62828' }}>
                       <Typography variant="caption" color="text.secondary">
                         Alış Bedeli (Noter)
                       </Typography>
@@ -109,11 +109,11 @@ const StokDetayModal = ({ open, data, onClose, printRef, isMobile, perms = {} })
                   </Grid>
                 )}
                 <Grid size={{ xs: 6, md: 4 }}>
-                  <Paper sx={{ p: 1.5, textAlign: 'center', bgcolor: '#fff3e0', borderLeft: '4px solid #ef6c00' }}>
+                  <Paper sx={{ p: 1.5, textAlign: 'center', bgcolor: '#F7E7C4', borderLeft: '4px solid #A5530F' }}>
                     <Typography variant="caption" color="text.secondary">
                       Masraflar
                     </Typography>
-                    <Typography fontWeight="bold" sx={{ color: '#ef6c00' }}>
+                    <Typography fontWeight="bold" sx={{ color: '#A5530F' }}>
                       ₺{formatTL(data.masraflar)}
                     </Typography>
                   </Paper>
@@ -122,21 +122,21 @@ const StokDetayModal = ({ open, data, onClose, printRef, isMobile, perms = {} })
               {data.yatirimci_id && canKar && (
                 <Grid container spacing={2} sx={{ mb: 2 }}>
                   <Grid size={{ xs: 6, md: 6 }}>
-                    <Paper sx={{ p: 1.5, textAlign: 'center', bgcolor: '#e3f2fd', borderLeft: '4px solid #1565C0' }}>
+                    <Paper sx={{ p: 1.5, textAlign: 'center', bgcolor: '#DCE6F4', borderLeft: '4px solid #1E4A86' }}>
                       <Typography variant="caption" color="text.secondary">
                         Yatırımcı Kârı
                       </Typography>
-                      <Typography fontWeight="bold" sx={{ color: '#1565C0' }}>
+                      <Typography fontWeight="bold" sx={{ color: '#1E4A86' }}>
                         ₺{formatTL(data.yatirimci_kar)}
                       </Typography>
                     </Paper>
                   </Grid>
                   <Grid size={{ xs: 6, md: 6 }}>
-                    <Paper sx={{ p: 1.5, textAlign: 'center', bgcolor: '#e8f5e9', borderLeft: '4px solid #2e7d32' }}>
+                    <Paper sx={{ p: 1.5, textAlign: 'center', bgcolor: '#D8EBDD', borderLeft: '4px solid #1D6A3B' }}>
                       <Typography variant="caption" color="text.secondary">
                         İşletme Kârı
                       </Typography>
-                      <Typography fontWeight="bold" sx={{ color: '#2e7d32' }}>
+                      <Typography fontWeight="bold" sx={{ color: '#1D6A3B' }}>
                         ₺{formatTL(parseFloat(data.kar || 0) - parseFloat(data.yatirimci_kar || 0))}
                       </Typography>
                     </Paper>
@@ -146,11 +146,11 @@ const StokDetayModal = ({ open, data, onClose, printRef, isMobile, perms = {} })
               {isYatirimci && data.durum === 'tamamlandi' && (
                 <Grid container spacing={2} sx={{ mb: 2 }}>
                   <Grid size={{ xs: 12 }}>
-                    <Paper sx={{ p: 1.5, textAlign: 'center', bgcolor: '#e8f5e9', borderLeft: '4px solid #2e7d32' }}>
+                    <Paper sx={{ p: 1.5, textAlign: 'center', bgcolor: '#D8EBDD', borderLeft: '4px solid #1D6A3B' }}>
                       <Typography variant="caption" color="text.secondary">
                         Kazancım
                       </Typography>
-                      <Typography fontWeight="bold" sx={{ color: '#2e7d32' }}>
+                      <Typography fontWeight="bold" sx={{ color: '#1D6A3B' }}>
                         ₺{formatTL(data.yatirimci_kar)}
                       </Typography>
                     </Paper>
@@ -167,14 +167,14 @@ const StokDetayModal = ({ open, data, onClose, printRef, isMobile, perms = {} })
             return (
               <>
                 <Typography variant="subtitle1" fontWeight="bold" color="primary" gutterBottom>
-                  💳 Ödeme Dağılımı
+                  Ödeme Dağılımı
                 </Typography>
                 <Divider sx={{ mb: 1 }} />
                 {data.satis_fiyati ? <InfoRow label="Toplam Satış" value={`₺${formatTL(data.satis_fiyati)}`} /> : null}
                 {odemeler.map((o, i) => (
                   <InfoRow key={i} label={o.tip} value={`₺${sayiYaz(o.tutar)}`} />
                 ))}
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', pt: 0.5, mt: 0.5, borderTop: '1px solid #eee' }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', pt: 0.5, mt: 0.5, borderTop: '1px solid #E1E2DA' }}>
                   <Typography variant="body2" fontWeight="bold">
                     Toplam Ödeme
                   </Typography>
@@ -184,10 +184,10 @@ const StokDetayModal = ({ open, data, onClose, printRef, isMobile, perms = {} })
                 </Box>
                 {parseFloat(data.kalan_odeme || 0) > 0 && (
                   <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <Typography variant="body2" sx={{ color: '#ef6c00' }}>
+                    <Typography variant="body2" sx={{ color: '#A5530F' }}>
                       Kalan
                     </Typography>
-                    <Typography variant="body2" fontWeight="bold" sx={{ color: '#ef6c00' }}>
+                    <Typography variant="body2" fontWeight="bold" sx={{ color: '#A5530F' }}>
                       ₺{formatTL(data.kalan_odeme)}
                     </Typography>
                   </Box>
@@ -200,7 +200,7 @@ const StokDetayModal = ({ open, data, onClose, printRef, isMobile, perms = {} })
           {data.aciklama && (
             <>
               <Typography variant="subtitle1" fontWeight="bold" color="primary" gutterBottom>
-                📝 Açıklama
+                Açıklama
               </Typography>
               <Divider sx={{ mb: 1 }} />
               <Typography>{data.aciklama}</Typography>

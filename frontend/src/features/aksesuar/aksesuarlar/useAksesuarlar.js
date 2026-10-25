@@ -1,3 +1,4 @@
+import { useOnay } from '../../../shared/ui';
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { sonIstek } from '../../../shared/utils/sonIstek';
@@ -22,6 +23,7 @@ const sonAra = sonIstek();
 // Aksesuar satış sayfasının sunucu verisi ve pencere durumları: satışlar, istatistik, stok listesi, ekle/düzenle/sil, ürün satırları,
 // barkod okutma, toplam/indirim/kâr hesabı. Başka sayfadan `state.openDetailId` ile gelinirse detay otomatik açılır.
 export const useAksesuarlar = () => {
+  const onay = useOnay();
   const location = useLocation();
   const navigate = useNavigate();
   const [satislar, setSatislar] = useState([]);
@@ -154,7 +156,7 @@ export const useAksesuarlar = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Silmek istediğinizden emin misiniz?')) return;
+    if (!(await onay('Silmek istediğinizden emin misiniz?'))) return;
     try {
       await aksesuarService.delete(id);
       loadData();

@@ -32,7 +32,8 @@ export const printServisQr = async (plaka) => {
         .qr img { width: 30mm; height: 30mm; display: block; }
         .info { text-align: center; }
         .marka { font-size: 11px; font-weight: bold; letter-spacing: 0.5px; }
-        .plaka { font-size: 16px; font-weight: bold; margin: 3px 0; border: 1.5px solid #000; border-radius: 4px; padding: 2px 6px; display: inline-block; }
+        .plaka { position: relative; font-size: 16px; font-weight: bold; letter-spacing: 1px; margin: 3px 0; border: 1.5px solid #000; border-radius: 4px; padding: 2px 6px 2px 16px; display: inline-block; }
+        .plaka::before { content: 'TR'; position: absolute; left: 0; top: 0; bottom: 0; width: 10px; background: #1F4FA0; color: #fff; font-size: 5px; letter-spacing: 0; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 1px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         .not { font-size: 8.5px; line-height: 1.25; }
       </style></head><body>
         <div class="qr"><img src="${dataUrl}" alt="QR" /></div>

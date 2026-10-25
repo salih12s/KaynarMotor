@@ -109,11 +109,11 @@ const YatirimciRapor = ({ isMobile }) => {
           <Grid container spacing={2} sx={{ mb: 3 }}>
             {[
               { label: 'Stoktaki Motor', value: o.stok_adet || 0, color: '#C62828' },
-              { label: 'Satılan Motor', value: o.satilan_adet || 0, color: '#1565C0' },
-              { label: 'Stok Değeri', value: `₺${formatTL(o.stok_degeri)}`, color: '#E65100' },
-              { label: 'Toplam Kazancım', value: `₺${formatTL(o.toplam_yatirimci_kar)}`, color: '#2e7d32' },
+              { label: 'Satılan Motor', value: o.satilan_adet || 0, color: '#1E4A86' },
+              { label: 'Stok Değeri', value: `₺${formatTL(o.stok_degeri)}`, color: '#A5530F' },
+              { label: 'Toplam Kazancım', value: `₺${formatTL(o.toplam_yatirimci_kar)}`, color: '#1D6A3B' },
             ].map((k, i) => {
-              const bgMap = { '#C62828': '#ffebee', '#1565C0': '#e3f2fd', '#E65100': '#fff3e0', '#2e7d32': '#e8f5e9' };
+              const bgMap = { '#C62828': '#F6DAD7', '#1E4A86': '#DCE6F4', '#A5530F': '#F7E7C4', '#1D6A3B': '#D8EBDD' };
               return (
                 <Grid size={{ xs: 6, md: 3 }} key={i}>
                   <Paper sx={{ p: 2, textAlign: 'center', bgcolor: bgMap[k.color], borderLeft: `4px solid ${k.color}` }}>
@@ -161,7 +161,7 @@ const YatirimciRapor = ({ isMobile }) => {
             <TableContainer component={Paper} sx={{ mb: 3, overflowX: 'auto' }}>
               <Table size="small">
                 <TableHead>
-                  <TableRow sx={{ bgcolor: '#C62828' }}>
+                  <TableRow>
                     {['Tarih', 'Plaka', 'Marka/Model', 'Yıl', 'Alış', 'İlan Fiyatı'].map((h) => (
                       <TableCell key={h} sx={headerSx}>
                         {h}
@@ -206,7 +206,7 @@ const YatirimciRapor = ({ isMobile }) => {
                     <Typography variant="body2">
                       Satış: <strong>{formatTL(m.satis_fiyati)} ₺</strong>
                     </Typography>
-                    <Typography variant="body2" sx={{ color: '#2e7d32' }}>
+                    <Typography variant="body2" sx={{ color: '#1D6A3B' }}>
                       Kazancım: <strong>{formatTL(m.yatirimci_kar)} ₺</strong>
                     </Typography>
                   </Box>
@@ -217,7 +217,7 @@ const YatirimciRapor = ({ isMobile }) => {
             <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
               <Table size="small">
                 <TableHead>
-                  <TableRow sx={{ bgcolor: '#C62828' }}>
+                  <TableRow>
                     {['Satış Tarihi', 'Plaka', 'Marka/Model', 'Satış Fiyatı', 'Kazancım'].map((h) => (
                       <TableCell key={h} sx={headerSx}>
                         {h}
@@ -234,7 +234,7 @@ const YatirimciRapor = ({ isMobile }) => {
                         {m.marka} {m.model}
                       </TableCell>
                       <TableCell>{formatTL(m.satis_fiyati)} ₺</TableCell>
-                      <TableCell sx={{ color: '#2e7d32', fontWeight: 'bold' }}>{formatTL(m.yatirimci_kar)} ₺</TableCell>
+                      <TableCell sx={{ color: '#1D6A3B', fontWeight: 'bold' }}>{formatTL(m.yatirimci_kar)} ₺</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

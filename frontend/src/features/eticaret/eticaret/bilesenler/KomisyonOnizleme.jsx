@@ -18,35 +18,35 @@ const KomisyonOnizleme = ({ sf, canliPlatformTipi, canliHesap, karGor }) => {
           let cards = [];
           if (canliPlatformTipi === 'hepsiburada') {
             cards = [
-              { label: 'Komisyon', value: `${formatTL(canliHesap.komisyonTutari)} ₺`, color: '#e65100', bg: '#fff3e0' },
-              { label: 'Yat. Geri Dönüş Oranı', value: `%${canliHesap.yatirimGeriDonus}`, color: '#1565c0', bg: '#e3f2fd' },
-              { label: 'Ödeme Bedeli', value: `${formatTL(canliHesap.odemeBedeli)} ₺`, color: '#555', bg: '#f5f5f5' },
-              { label: 'İşlem Bedeli', value: `${formatTL(canliHesap.islemBedeli)} ₺`, color: '#555', bg: '#f5f5f5' },
-              { label: 'Stopaj Bedeli', value: `${formatTL(canliHesap.stopaj)} ₺`, color: '#555', bg: '#f5f5f5' },
-              { label: 'Kâr Oranı', value: `%${canliHesap.karOrani}`, color: '#2e7d32', bg: '#e8f5e9' },
-              { label: 'KDV', value: `${formatTL(canliHesap.odenecekKDV)} ₺`, color: '#f57f17', bg: '#fff8e1' },
+              { label: 'Komisyon', value: `${formatTL(canliHesap.komisyonTutari)} ₺`, color: '#A5530F', bg: '#F7E7C4' },
+              { label: 'Yat. Geri Dönüş Oranı', value: `%${canliHesap.yatirimGeriDonus}`, color: '#1E4A86', bg: '#DCE6F4' },
+              { label: 'Ödeme Bedeli', value: `${formatTL(canliHesap.odemeBedeli)} ₺`, color: '#555', bg: '#F3F3EE' },
+              { label: 'İşlem Bedeli', value: `${formatTL(canliHesap.islemBedeli)} ₺`, color: '#555', bg: '#F3F3EE' },
+              { label: 'Stopaj Bedeli', value: `${formatTL(canliHesap.stopaj)} ₺`, color: '#555', bg: '#F3F3EE' },
+              { label: 'Kâr Oranı', value: `%${canliHesap.karOrani}`, color: '#1D6A3B', bg: '#D8EBDD' },
+              { label: 'KDV', value: `${formatTL(canliHesap.odenecekKDV)} ₺`, color: '#8A5300', bg: '#F7E7C4' },
             ];
           } else if (canliPlatformTipi === 'n11') {
             cards = [
-              { label: 'Komisyon', value: `${formatTL(canliHesap.komisyonTutari)} ₺`, color: '#e65100', bg: '#fff3e0' },
-              { label: 'Yat. Geri Dönüş Oranı', value: `%${canliHesap.yatirimGeriDonus}`, color: '#1565c0', bg: '#e3f2fd' },
-              { label: 'S. Pazarlama ve Hizmet', value: `${formatTL(canliHesap.pazarlamaHizmet)} ₺`, color: '#555', bg: '#f5f5f5' },
-              { label: 'Stopaj Bedeli', value: `${formatTL(canliHesap.stopaj)} ₺`, color: '#555', bg: '#f5f5f5' },
-              { label: 'Kâr Oranı', value: `%${canliHesap.karOrani}`, color: '#2e7d32', bg: '#e8f5e9' },
-              { label: 'KDV', value: `${formatTL(canliHesap.odenecekKDV)} ₺`, color: '#f57f17', bg: '#fff8e1' },
+              { label: 'Komisyon', value: `${formatTL(canliHesap.komisyonTutari)} ₺`, color: '#A5530F', bg: '#F7E7C4' },
+              { label: 'Yat. Geri Dönüş Oranı', value: `%${canliHesap.yatirimGeriDonus}`, color: '#1E4A86', bg: '#DCE6F4' },
+              { label: 'S. Pazarlama ve Hizmet', value: `${formatTL(canliHesap.pazarlamaHizmet)} ₺`, color: '#555', bg: '#F3F3EE' },
+              { label: 'Stopaj Bedeli', value: `${formatTL(canliHesap.stopaj)} ₺`, color: '#555', bg: '#F3F3EE' },
+              { label: 'Kâr Oranı', value: `%${canliHesap.karOrani}`, color: '#1D6A3B', bg: '#D8EBDD' },
+              { label: 'KDV', value: `${formatTL(canliHesap.odenecekKDV)} ₺`, color: '#8A5300', bg: '#F7E7C4' },
             ];
           } else {
             cards = [
               {
                 label: 'Komisyon (Toplam)',
                 value: `${formatTL(canliHesap.toplamKomisyon)} ₺`,
-                color: '#e65100',
-                bg: '#fff3e0',
+                color: '#A5530F',
+                bg: '#F7E7C4',
                 sub: `Komisyon: ${formatTL(canliHesap.komisyonTutari)}₺ + Hizmet: ${formatTL(canliHesap.hizmetBedeli)}₺ + Stopaj: ${formatTL(canliHesap.stopaj)}₺`,
               },
-              { label: 'Yat. Geri Dönüş Oranı', value: `%${canliHesap.yatirimGeriDonus}`, color: '#1565c0', bg: '#e3f2fd' },
-              { label: 'Kâr Oranı', value: `%${canliHesap.karOrani}`, color: '#2e7d32', bg: '#e8f5e9' },
-              { label: 'KDV', value: `${formatTL(canliHesap.odenecekKDV)} ₺`, color: '#f57f17', bg: '#fff8e1' },
+              { label: 'Yat. Geri Dönüş Oranı', value: `%${canliHesap.yatirimGeriDonus}`, color: '#1E4A86', bg: '#DCE6F4' },
+              { label: 'Kâr Oranı', value: `%${canliHesap.karOrani}`, color: '#1D6A3B', bg: '#D8EBDD' },
+              { label: 'KDV', value: `${formatTL(canliHesap.odenecekKDV)} ₺`, color: '#8A5300', bg: '#F7E7C4' },
             ];
           }
           return cards
@@ -70,7 +70,7 @@ const KomisyonOnizleme = ({ sf, canliPlatformTipi, canliHesap, karGor }) => {
       </Box>
 
       {/* KDV detayları - Platform bazlı */}
-      <Paper sx={{ p: 1.5, bgcolor: '#fafafa', mb: 2 }}>
+      <Paper sx={{ p: 1.5, bgcolor: '#FBFBF8', mb: 2 }}>
         <Typography variant="caption" fontWeight="bold" color="text.secondary" gutterBottom>
           KDV Detayları
         </Typography>
@@ -110,15 +110,15 @@ const KomisyonOnizleme = ({ sf, canliPlatformTipi, canliHesap, karGor }) => {
           sx={{
             p: 2,
             textAlign: 'center',
-            bgcolor: canliHesap.netKar >= 0 ? '#e8f5e9' : '#ffebee',
+            bgcolor: canliHesap.netKar >= 0 ? '#D8EBDD' : '#F6DAD7',
             borderRadius: 2,
-            border: `2px solid ${canliHesap.netKar >= 0 ? '#2e7d32' : '#c62828'}`,
+            border: `2px solid ${canliHesap.netKar >= 0 ? '#1D6A3B' : '#c62828'}`,
           }}
         >
           <Typography variant="body2" color="text.secondary">
             Net Kâr ({canliHesap.miktar} adet)
           </Typography>
-          <Typography variant="h4" fontWeight="bold" sx={{ color: canliHesap.netKar >= 0 ? '#2e7d32' : '#c62828' }}>
+          <Typography variant="h4" fontWeight="bold" sx={{ color: canliHesap.netKar >= 0 ? '#1D6A3B' : '#c62828' }}>
             {formatTL(canliHesap.netKar)} ₺
           </Typography>
         </Paper>

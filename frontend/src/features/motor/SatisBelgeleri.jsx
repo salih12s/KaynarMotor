@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Button, IconButton, Alert, CircularProgress, Divider } from '@mui/material';
-import ViewIcon from '@mui/icons-material/Visibility';
-import DeleteIcon from '@mui/icons-material/Delete';
-import FileDownloadIcon from '@mui/icons-material/FileDownload';
+import { IslemDugmesi } from '../../shared/ui';
+import { useOnay } from '../../shared/ui';
+import { Box, Typography, Button, Alert, CircularProgress, Divider } from '@mui/material';
+
 import AttachFileIcon from '@mui/icons-material/AttachFile';
 import DescriptionIcon from '@mui/icons-material/Description';
 import { satisBelgeService } from './motorApi';
@@ -41,6 +41,7 @@ export const belgeAc = async (b, goster) => {
 // Satışa sözleşme vb. dosya ekleme (PDF/Word/Excel/görsel). Zorunlu değil, etiket yok: ad + yüklenme tarihi.
 // Kayıtlı bir satış için kullanılır: dosya seçildiği anda yüklenir.
 export const BelgeBolumu = ({ motorId }) => {
+  const onay = useOnay();
   const [belgeler, setBelgeler] = useState([]);
   const [yukleniyor, setYukleniyor] = useState(false);
   const [islemId, setIslemId] = useState(null);
@@ -107,7 +108,7 @@ export const BelgeBolumu = ({ motorId }) => {
   };
 
   const sil = async (b) => {
-    if (!window.confirm(`"${b.dosya_adi}" silinsin mi?`)) return;
+    if (!(await onay(`"${b.dosya_adi}" silinsin mi?`))) return;
     setIslemId(b.id);
     try {
       await satisBelgeService.delete(b.id);
@@ -122,7 +123,7 @@ export const BelgeBolumu = ({ motorId }) => {
     <Box sx={{ mt: 3 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
         <Typography variant="subtitle1" fontWeight="bold" color="primary" sx={{ flexGrow: 1 }}>
-          📎 Belgeler ({belgeler.length})
+          Belgeler ({belgeler.length})
         </Typography>
         <Button
           size="small"
@@ -162,17 +163,9 @@ export const BelgeBolumu = ({ motorId }) => {
               <CircularProgress size={20} />
             ) : (
               <>
-                {belgeOnizlenebilir(b) && (
-                  <IconButton size="small" onClick={() => ac(b, true)} title="Görüntüle">
-                    <ViewIcon fontSize="small" />
-                  </IconButton>
-                )}
-                <IconButton size="small" onClick={() => ac(b, false)} title="İndir">
-                  <FileDownloadIcon fontSize="small" />
-                </IconButton>
-                <IconButton size="small" color="error" onClick={() => sil(b)} title="Sil">
-                  <DeleteIcon fontSize="small" />
-                </IconButton>
+                {belgeOnizlenebilir(b) && <IslemDugmesi tur="goz" onClick={() => ac(b, true)} title="Görüntüle" />}
+                <IslemDugmesi tur="indir" onClick={() => ac(b, false)} title="İndir" />
+                <IslemDugmesi tur="sil" onClick={() => sil(b)} title="Sil" />
               </>
             )}
           </Box>
@@ -201,7 +194,7 @@ export const BekleyenBelgeler = ({ dosyalar, setDosyalar, disabled }) => {
     <Box sx={{ mt: 3 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
         <Typography variant="subtitle1" fontWeight="bold" color="primary" sx={{ flexGrow: 1 }}>
-          📎 Belgeler ({dosyalar.length})
+          Belgeler ({dosyalar.length})
         </Typography>
         <Button size="small" variant="outlined" component="label" disabled={disabled} startIcon={<AttachFileIcon />}>
           Belge Ekle
@@ -234,15 +227,7 @@ export const BekleyenBelgeler = ({ dosyalar, setDosyalar, disabled }) => {
                   {boyutYaz(f.size)}
                 </Typography>
               </Box>
-              <IconButton
-                size="small"
-                color="error"
-                disabled={disabled}
-                title="Listeden çıkar"
-                onClick={() => setDosyalar(dosyalar.filter((_, idx) => idx !== i))}
-              >
-                <DeleteIcon fontSize="small" />
-              </IconButton>
+              <IslemDugmesi tur="sil" disabled={disabled} title="Listeden çıkar" onClick={() => setDosyalar(dosyalar.filter((_, idx) => idx !== i))} />
             </Box>
           ))}
           <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.75 }}>

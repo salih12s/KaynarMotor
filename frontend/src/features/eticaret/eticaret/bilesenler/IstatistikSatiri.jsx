@@ -1,36 +1,33 @@
 import React from 'react';
-import { Box, Button, Chip } from '@mui/material';
+import { Box, Button } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { sayiYaz, paraYaz } from '../../../../shared/utils/bicim';
+import { OzetSeridi } from '../../../../shared/ui';
 
-// Üst çipler (satış sayısı, gelir, komisyon, e-ticaret yetkilisi için kâr) ve sekmeye göre "Yeni Satış" / "Yeni Platform" (yalnız admin) düğmesi.
+// Özet şeridi (satış sayısı, gelir, komisyon, e-ticaret yetkilisi için kâr) ve sekmeye göre "Yeni Satış" / "Yeni Platform" (yalnız admin) düğmesi.
 const IstatistikSatiri = ({ stats, hesaplananToplamKar, karGor, isAdmin, tab, onYeniSatis, onYeniPlatform }) => {
+  const ogeler = [
+    { etiket: 'Satış', deger: stats.toplam_satis || 0 },
+    { etiket: 'Gelir', deger: `₺${sayiYaz(stats.toplam_gelir)}` },
+    { etiket: 'Komisyon', deger: `₺${sayiYaz(stats.toplam_komisyon)}`, ton: 'bekle' },
+    ...(karGor ? [{ etiket: 'Kâr', deger: `₺${paraYaz(hesaplananToplamKar)}`, ton: 'yesil' }] : []),
+  ];
   return (
-    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2, alignItems: 'center' }}>
-      {[
-        { label: `Satış: ${stats.toplam_satis || 0}`, color: '#C62828', bg: '#ffebee' },
-        { label: `Gelir: ₺${sayiYaz(stats.toplam_gelir)}`, color: '#C62828', bg: '#ffebee' },
-        { label: `Komisyon: ₺${sayiYaz(stats.toplam_komisyon)}`, color: '#C62828', bg: '#ffebee' },
-        ...(karGor ? [{ label: `Kâr: ₺${paraYaz(hesaplananToplamKar)}`, color: '#C62828', bg: '#ffebee' }] : []),
-      ].map((c, i) => (
-        <Chip key={i} label={c.label} sx={{ bgcolor: c.bg, color: c.color, fontWeight: 'bold', fontSize: '0.8rem', borderLeft: `4px solid ${c.color}` }} />
-      ))}
-      <Box sx={{ flexGrow: 1 }} />
-      {tab === 0 && (
-        <Button variant="contained" size="large" startIcon={<AddIcon />} onClick={onYeniSatis} sx={{ bgcolor: '#C62828', '&:hover': { bgcolor: '#b71c1c' } }}>
-          Yeni Satış
-        </Button>
-      )}
-      {tab === 1 && isAdmin && (
-        <Button
-          variant="contained"
-          size="large"
-          startIcon={<AddIcon />}
-          onClick={onYeniPlatform}
-          sx={{ bgcolor: '#C62828', '&:hover': { bgcolor: '#b71c1c' } }}
-        >
-          Yeni Platform
-        </Button>
+    <Box sx={{ mb: 2 }}>
+      <OzetSeridi ogeler={ogeler} />
+      {(tab === 0 || (tab === 1 && isAdmin)) && (
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1.5 }}>
+          {tab === 0 && (
+            <Button variant="contained" size="large" startIcon={<AddIcon />} onClick={onYeniSatis}>
+              Yeni Satış
+            </Button>
+          )}
+          {tab === 1 && isAdmin && (
+            <Button variant="contained" size="large" startIcon={<AddIcon />} onClick={onYeniPlatform}>
+              Yeni Platform
+            </Button>
+          )}
+        </Box>
       )}
     </Box>
   );

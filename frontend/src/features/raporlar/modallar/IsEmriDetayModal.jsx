@@ -1,4 +1,5 @@
 import React from 'react';
+import { DialogBasligi } from '../../../shared/ui';
 import {
   Box,
   Paper,
@@ -11,7 +12,6 @@ import {
   TableHead,
   TableRow,
   Dialog,
-  DialogTitle,
   DialogContent,
   DialogActions,
   Button,
@@ -30,13 +30,18 @@ const IsEmriDetayModal = ({ open, data, onClose, isMobile }) => {
   const kar = toplamFiyat - toplamMaliyet;
   return (
     <Dialog {...dialogProps}>
-      <DialogTitle sx={{ bgcolor: '#C62828', color: 'white', py: 1.5 }}>
-        İş Emri #{d.fis_no} - {d.musteri_ad_soyad}
-      </DialogTitle>
+      <DialogBasligi
+        baslik={
+          <>
+            İş Emri #{d.fis_no} - {d.musteri_ad_soyad}
+          </>
+        }
+        onKapat={onClose}
+      />
       <DialogContent dividers>
         <Grid container spacing={2} sx={{ mb: 2, mt: 0.5 }}>
           <Grid size={{ xs: 12, md: 4 }}>
-            <Paper sx={{ p: 1.5, bgcolor: '#fafafa' }}>
+            <Paper sx={{ p: 1.5, bgcolor: '#FBFBF8' }}>
               <Typography variant="subtitle2" color="#C62828" fontWeight="bold" gutterBottom>
                 Müşteri Bilgileri
               </Typography>
@@ -52,7 +57,7 @@ const IsEmriDetayModal = ({ open, data, onClose, isMobile }) => {
             </Paper>
           </Grid>
           <Grid size={{ xs: 12, md: 4 }}>
-            <Paper sx={{ p: 1.5, bgcolor: '#fafafa' }}>
+            <Paper sx={{ p: 1.5, bgcolor: '#FBFBF8' }}>
               <Typography variant="subtitle2" color="#C62828" fontWeight="bold" gutterBottom>
                 Araç Bilgileri
               </Typography>
@@ -68,7 +73,7 @@ const IsEmriDetayModal = ({ open, data, onClose, isMobile }) => {
             </Paper>
           </Grid>
           <Grid size={{ xs: 12, md: 4 }}>
-            <Paper sx={{ p: 1.5, bgcolor: '#fafafa' }}>
+            <Paper sx={{ p: 1.5, bgcolor: '#FBFBF8' }}>
               <Typography variant="subtitle2" color="#C62828" fontWeight="bold" gutterBottom>
                 İş Emri Bilgileri
               </Typography>
@@ -85,16 +90,16 @@ const IsEmriDetayModal = ({ open, data, onClose, isMobile }) => {
           </Grid>
         </Grid>
         {d.ariza_sikayetler && (
-          <Paper sx={{ p: 1.5, mb: 2, bgcolor: '#fff3e0', borderLeft: '3px solid #ed6c02' }}>
-            <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#ed6c02' }}>
+          <Paper sx={{ p: 1.5, mb: 2, bgcolor: '#F7E7C4', borderLeft: '3px solid #A5530F' }}>
+            <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#A5530F' }}>
               Arıza / Şikayetler
             </Typography>
             <Typography variant="body2">{d.ariza_sikayetler}</Typography>
           </Paper>
         )}
         {d.aciklama && (
-          <Paper sx={{ p: 1.5, mb: 2, bgcolor: '#e3f2fd', borderLeft: '3px solid #1565C0' }}>
-            <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#1565C0' }}>
+          <Paper sx={{ p: 1.5, mb: 2, bgcolor: '#DCE6F4', borderLeft: '3px solid #1E4A86' }}>
+            <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#1E4A86' }}>
               Açıklama
             </Typography>
             <Typography variant="body2">{d.aciklama}</Typography>
@@ -120,7 +125,7 @@ const IsEmriDetayModal = ({ open, data, onClose, isMobile }) => {
                     </Typography>
                     <Typography variant="caption" sx={{ display: 'block' }}>
                       Maliyet: ₺{sayiYaz(pMaliyet)} •{' '}
-                      <span style={{ color: pKar >= 0 ? '#2e7d32' : '#c62828', fontWeight: 'bold' }}>Kâr: ₺{sayiYaz(pKar)}</span>
+                      <span style={{ color: pKar >= 0 ? '#1D6A3B' : '#c62828', fontWeight: 'bold' }}>Kâr: ₺{sayiYaz(pKar)}</span>
                     </Typography>
                   </Paper>
                 );
@@ -130,7 +135,7 @@ const IsEmriDetayModal = ({ open, data, onClose, isMobile }) => {
             <TableContainer component={Paper} variant="outlined" sx={{ overflowX: 'auto' }}>
               <Table size="small">
                 <TableHead>
-                  <TableRow sx={{ bgcolor: '#f5f5f5' }}>
+                  <TableRow sx={{ bgcolor: '#F3F3EE' }}>
                     {['Takılan Parça', 'Adet', 'Birim Fiyat', 'Toplam', 'Maliyet', 'Kâr'].map((h) => (
                       <TableCell key={h} sx={{ fontWeight: 'bold' }}>
                         {h}
@@ -150,7 +155,7 @@ const IsEmriDetayModal = ({ open, data, onClose, isMobile }) => {
                         <TableCell>₺{sayiYaz(p.birim_fiyat)}</TableCell>
                         <TableCell sx={{ fontWeight: 'bold' }}>₺{sayiYaz(pSatis)}</TableCell>
                         <TableCell>₺{sayiYaz(pMaliyet)}</TableCell>
-                        <TableCell sx={{ color: pKar >= 0 ? '#2e7d32' : '#c62828', fontWeight: 'bold' }}>₺{sayiYaz(pKar)}</TableCell>
+                        <TableCell sx={{ color: pKar >= 0 ? '#1D6A3B' : '#c62828', fontWeight: 'bold' }}>₺{sayiYaz(pKar)}</TableCell>
                       </TableRow>
                     );
                   })}
@@ -164,25 +169,25 @@ const IsEmriDetayModal = ({ open, data, onClose, isMobile }) => {
           </Typography>
         )}
         <Box sx={{ mt: 2, display: 'flex', gap: 2, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
-          <Paper sx={{ px: 2, py: 1, bgcolor: '#ffebee' }}>
+          <Paper sx={{ px: 2, py: 1, bgcolor: '#F6DAD7' }}>
             <Typography variant="body2">
               Toplam: <strong>₺{sayiYaz(toplamFiyat)}</strong>
             </Typography>
           </Paper>
-          <Paper sx={{ px: 2, py: 1, bgcolor: '#fff3e0' }}>
+          <Paper sx={{ px: 2, py: 1, bgcolor: '#F7E7C4' }}>
             <Typography variant="body2">
               Maliyet: <strong>₺{sayiYaz(toplamMaliyet)}</strong>
             </Typography>
           </Paper>
-          <Paper sx={{ px: 2, py: 1, bgcolor: '#e8f5e9' }}>
+          <Paper sx={{ px: 2, py: 1, bgcolor: '#D8EBDD' }}>
             <Typography variant="body2">
-              Kâr: <strong style={{ color: kar >= 0 ? '#2e7d32' : '#c62828' }}>₺{sayiYaz(kar)}</strong>
+              Kâr: <strong style={{ color: kar >= 0 ? '#1D6A3B' : '#c62828' }}>₺{sayiYaz(kar)}</strong>
             </Typography>
           </Paper>
         </Box>
         {d.odeme_detaylari && (
-          <Paper sx={{ p: 1.5, mt: 2, bgcolor: '#f3e5f5', borderLeft: '3px solid #9c27b0' }}>
-            <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#9c27b0' }}>
+          <Paper sx={{ p: 1.5, mt: 2, bgcolor: '#E7DFF3', borderLeft: '3px solid #5B3A8C' }}>
+            <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#5B3A8C' }}>
               Ödeme Detayları
             </Typography>
             <Typography variant="body2">{d.odeme_detaylari}</Typography>

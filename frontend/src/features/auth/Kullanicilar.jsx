@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { IslemDugmesi } from '../../shared/ui';
 import {
   Box,
   Paper,
@@ -11,7 +12,6 @@ import {
   TableRow,
   Button,
   Chip,
-  IconButton,
   Alert,
   Dialog,
   DialogTitle,
@@ -23,11 +23,9 @@ import {
   useTheme,
   useMediaQuery,
 } from '@mui/material';
-import DeleteIcon from '@mui/icons-material/Delete';
-import CheckIcon from '@mui/icons-material/Check';
-import CloseIcon from '@mui/icons-material/Close';
+
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
-import LockResetIcon from '@mui/icons-material/LockReset';
+
 import { authService } from './authApi';
 
 const Kullanicilar = () => {
@@ -136,7 +134,7 @@ const Kullanicilar = () => {
             setError('');
             setCreateDialog(true);
           }}
-          sx={{ bgcolor: '#C62828', '&:hover': { bgcolor: '#b71c1c' } }}
+          sx={{ bgcolor: '#C62828', '&:hover': { bgcolor: '#A61F1F' } }}
         >
           Kullanıcı / Yatırımcı Ekle
         </Button>
@@ -174,30 +172,19 @@ const Kullanicilar = () => {
               <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 0.5 }}>
                 {user.onay_durumu === 'beklemede' && (
                   <>
-                    <IconButton color="success" size="small" onClick={() => handleApprove(user.id)}>
-                      <CheckIcon />
-                    </IconButton>
-                    <IconButton color="error" size="small" onClick={() => handleReject(user.id)}>
-                      <CloseIcon />
-                    </IconButton>
+                    <IslemDugmesi tur="onay" onClick={() => handleApprove(user.id)} />
+                    <IslemDugmesi tur="carpi" onClick={() => handleReject(user.id)} />
                   </>
                 )}
-                <IconButton
-                  size="small"
-                  title="Şifre sıfırla"
+                <IslemDugmesi
+                  tur="kilit"
                   onClick={() => {
                     setError('');
                     setBilgi('');
                     setSifreDialog({ open: true, user, sifre: '' });
                   }}
-                >
-                  <LockResetIcon />
-                </IconButton>
-                {user.rol !== 'admin' && (
-                  <IconButton color="error" size="small" onClick={() => setDeleteDialog({ open: true, user })}>
-                    <DeleteIcon />
-                  </IconButton>
-                )}
+                />
+                {user.rol !== 'admin' && <IslemDugmesi tur="sil" onClick={() => setDeleteDialog({ open: true, user })} />}
               </Box>
             </Paper>
           ))}
@@ -206,9 +193,9 @@ const Kullanicilar = () => {
         <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
           <Table>
             <TableHead>
-              <TableRow sx={{ bgcolor: 'primary.main' }}>
+              <TableRow>
                 {['Ad Soyad', 'Kullanıcı Adı', 'Rol', 'Durum', 'İşlemler'].map((h) => (
-                  <TableCell key={h} sx={{ color: 'white', fontWeight: 'bold', whiteSpace: 'nowrap', px: 1 }}>
+                  <TableCell key={h} sx={{ whiteSpace: 'nowrap', px: 1 }}>
                     {h}
                   </TableCell>
                 ))}
@@ -228,30 +215,19 @@ const Kullanicilar = () => {
                   <TableCell>
                     {user.onay_durumu === 'beklemede' && (
                       <>
-                        <IconButton color="success" size="small" onClick={() => handleApprove(user.id)}>
-                          <CheckIcon />
-                        </IconButton>
-                        <IconButton color="error" size="small" onClick={() => handleReject(user.id)}>
-                          <CloseIcon />
-                        </IconButton>
+                        <IslemDugmesi tur="onay" onClick={() => handleApprove(user.id)} />
+                        <IslemDugmesi tur="carpi" onClick={() => handleReject(user.id)} />
                       </>
                     )}
-                    <IconButton
-                      size="small"
-                      title="Şifre sıfırla"
+                    <IslemDugmesi
+                      tur="kilit"
                       onClick={() => {
                         setError('');
                         setBilgi('');
                         setSifreDialog({ open: true, user, sifre: '' });
                       }}
-                    >
-                      <LockResetIcon />
-                    </IconButton>
-                    {user.rol !== 'admin' && (
-                      <IconButton color="error" size="small" onClick={() => setDeleteDialog({ open: true, user })}>
-                        <DeleteIcon />
-                      </IconButton>
-                    )}
+                    />
+                    {user.rol !== 'admin' && <IslemDugmesi tur="sil" onClick={() => setDeleteDialog({ open: true, user })} />}
                   </TableCell>
                 </TableRow>
               ))}
