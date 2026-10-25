@@ -97,27 +97,33 @@ describe('#6 düz metin şifre yok; admin şifre sıfırlar', () => {
       ad2 = benzersiz('f3_dz2_');
     await api('POST', '/api/auth/users', { kullanici_adi: ad1, sifre: 'gizli-sifre-1', ad_soyad: ad1, rol: 'personel' }, admin);
     await api('POST', '/api/auth/register', { kullanici_adi: ad2, sifre: 'gizli-sifre-2', ad_soyad: ad2 });
-    const satirlar = await sql('SELECT kullanici_adi, plain_sifre, sifre FROM kullanicilar WHERE kullanici_adi IN ($1, $2)', [ad1, ad2]);
+    const satirlar = await sql('SELECT kullanici_adi, sifre FROM kullanicilar WHERE kullanici_adi IN ($1, $2)', [ad1, ad2]);
     assert.equal(satirlar.length, 2);
     for (const k of satirlar) {
-      assert.equal(k.plain_sifre, null);
       assert.ok(k.sifre.startsWith('$2')); // bcrypt özeti
+      assert.ok(!k.sifre.includes('gizli-sifre')); // düz metin değil
     }
   });
 
-  it('sunucu açılışında önceden kalmış düz metin şifreler temizlenir', async () => {
-    const ad = benzersiz('f3_eski_');
-    const u = await kullaniciOlustur(api, admin, ad, 'personel');
-    await pool.query('UPDATE kullanicilar SET plain_sifre = $1 WHERE id = $2', ['eski-acik-sifre', u.id]);
+  const plainSifreKolonuVarMi = async () =>
+    (await sql("SELECT COUNT(*) AS n FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'kullanicilar' AND column_name = 'plain_sifre'"))[0].n;
+
+  it('düz metin şifre kolonu şemada yok', async () => {
+    assert.equal(Number(await plainSifreKolonuVarMi()), 0);
+  });
+
+  it('eski kolon geri gelmişse sunucu açılışında kaldırılır', async () => {
+    await pool.query('ALTER TABLE kullanicilar ADD COLUMN plain_sifre VARCHAR(255) NULL');
+    assert.equal(Number(await plainSifreKolonuVarMi()), 1);
     const ikinci = await sunucuBaslat(); // açılışta migration çalışır
     try {
-      // Sunucu dinlemeye şemadan önce başlar (DB init arka planda): temizlik bitene kadar en fazla 15 sn bekle
-      let deger = 'eski-acik-sifre';
-      for (let i = 0; i < 30 && deger !== null; i++) {
-        deger = (await sql('SELECT plain_sifre FROM kullanicilar WHERE id = $1', [u.id]))[0].plain_sifre;
-        if (deger !== null) await new Promise((c) => setTimeout(c, 500));
+      // Sunucu dinlemeye şemadan önce başlar (DB init arka planda): kolon kalkana kadar en fazla 15 sn bekle
+      let n = 1;
+      for (let i = 0; i < 30 && n !== 0; i++) {
+        n = Number(await plainSifreKolonuVarMi());
+        if (n !== 0) await new Promise((c) => setTimeout(c, 500));
       }
-      assert.equal(deger, null);
+      assert.equal(n, 0);
     } finally {
       ikinci.durdur();
     }

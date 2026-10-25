@@ -98,7 +98,9 @@ Geçiş sırasında kullanılan veri taşıma ve eski-yeni karşılaştırma ara
 
 ## 6. Bilinen açık konular
 
-- `kullanicilar.plain_sifre` kolonu eski tasarımdan kaldı. Düz metin parolalar **artık saklanmıyor ve gösterilmiyor**: `initDb.ts` her açılışta
-  kolonu `NULL`'a çeker ve hiçbir iş kodu ona yazmaz/okumaz. Kolonun `DROP COLUMN` ile kaldırılması geri alınamaz bir şema değişikliğidir ve ayrı karar bekler.
+- `kullanicilar.plain_sifre` kolonu **kaldırıldı** (2026-10-26): hiçbir iş kodu ona yazmıyor/okumuyordu, içi her açılışta boşaltılıyordu. `initDb.ts` migration'ı
+  `ALTER TABLE kullanicilar DROP COLUMN IF EXISTS plain_sifre` ile ilk açılışta kaldırır (geri alınamaz; içinde veri yoktu, yine de çıkıştan önce DB yedeği al).
+  **Geri dönüş uyarısı:** bu sürümden ESKİ bir pakete dönülürse eski `initDb.ts` açılışta `UPDATE kullanicilar SET plain_sifre = NULL` çalıştırır ve kolon yok diye hata verir.
+  Geri dönmek gerekirse önce kolonu geri ekle: `ALTER TABLE kullanicilar ADD COLUMN plain_sifre VARCHAR(255) NULL`.
 - Eski kaynaklardan kalma yerel yedekler (düz parola ve müşteri bilgisi içerebilir) depo dışında durur; şifreli arşive alınmalı ya da silinmelidir.
 - `demo` dalı (Postgres/Supabase) bu işten etkilenmez.

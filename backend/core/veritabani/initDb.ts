@@ -91,7 +91,6 @@ CREATE TABLE IF NOT EXISTS kullanicilar (
   id INT NOT NULL AUTO_INCREMENT,
   kullanici_adi VARCHAR(50) NOT NULL,
   sifre VARCHAR(255) NOT NULL,
-  plain_sifre VARCHAR(255),
   ad_soyad VARCHAR(100) NOT NULL,
   rol VARCHAR(20) DEFAULT 'personel',
   onay_durumu VARCHAR(20) DEFAULT 'beklemede',
@@ -439,8 +438,8 @@ const MIGRATIONS = [
   // Aksesuar satış satırı stok kaydına ID ile bağlanır (stok yeniden adlandırılsa da iade doğru stoğa gider)
   'ALTER TABLE aksesuar_parcalar ADD COLUMN IF NOT EXISTS stok_id INT NULL',
   'ALTER TABLE aksesuar_parcalar ADD CONSTRAINT aksesuar_parcalar_stok_fk FOREIGN KEY IF NOT EXISTS (stok_id) REFERENCES aksesuar_stok(id) ON DELETE SET NULL',
-  // Düz metin şifreler artık saklanmıyor/gösterilmiyor: önceden kalmış olanları temizle (kolon geri dönüş için duruyor)
-  'UPDATE kullanicilar SET plain_sifre = NULL WHERE plain_sifre IS NOT NULL',
+  // Düz metin şifre kolonu eski tasarımdan kalmıştı; hiçbir kod yazmıyor/okumuyordu ve içi her açılışta boşaltılıyordu: kaldırıldı
+  'ALTER TABLE kullanicilar DROP COLUMN IF EXISTS plain_sifre',
   // Muhasebeci için "Motor Satış sayfasını salt-okunur görebilir" anahtarı (admin Yetkilendirme'den açar)
   'ALTER TABLE kullanicilar ADD COLUMN IF NOT EXISTS motor_satis_gor BOOLEAN DEFAULT FALSE',
 ];

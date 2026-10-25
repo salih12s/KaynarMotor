@@ -55,17 +55,8 @@ const allowedOrigins = [
   'http://localhost:3100',
   'http://localhost:5000',
   'http://localhost:5100',
-  // Hostinger prova adresi (kaynarmotor.com.tr'ye geçişten önce denenir)
-  'https://yeni.kaynarmotor.com.tr',
   'https://kaynarmotor.com.tr',
   'https://www.kaynarmotor.com.tr',
-  'http://kaynarmotor.com.tr',
-  'http://www.kaynarmotor.com.tr',
-  // Eski domain (geriye dönük uyumluluk)
-  'https://kaynarmotorservis.com',
-  'https://www.kaynarmotorservis.com',
-  'http://kaynarmotorservis.com',
-  'http://www.kaynarmotorservis.com',
   process.env.FRONTEND_URL,
 ].filter(Boolean) as string[];
 
