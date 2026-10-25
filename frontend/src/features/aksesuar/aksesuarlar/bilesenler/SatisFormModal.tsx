@@ -6,9 +6,10 @@ import MusteriSatisAlanlari from './MusteriSatisAlanlari';
 import UrunlerBolumu from './UrunlerBolumu';
 import ToplamOzeti from './ToplamOzeti';
 import KalanOdemeKutusu from './KalanOdemeKutusu';
+import type { AksesuarlarDurumu } from '../useAksesuarlar';
 
 // Aksesuar satışı ekleme / düzenleme penceresi. Durum ve işlemler useAksesuarlar hook'undan gelir (a).
-const SatisFormModal = ({ a, isMobile, karGor }) => {
+const SatisFormModal = ({ a, isMobile, karGor }: { a: AksesuarlarDurumu; isMobile: boolean; karGor: boolean }) => {
   const { dialog, setDialog, error, formData, setFormData, musteriOptions, searchMusteri, handleSave } = a;
   const kapat = () => setDialog({ open: false, data: null });
   return (

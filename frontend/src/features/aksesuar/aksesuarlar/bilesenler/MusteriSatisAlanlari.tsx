@@ -1,9 +1,15 @@
 import React from 'react';
 import { TextField, Grid, MenuItem, Autocomplete } from '@mui/material';
 import { musteriService } from '../../../musteriler/musteriApi';
+import type { AksesuarlarDurumu } from '../useAksesuarlar';
 
 // Satış formu: müşteri (ad önerisi, telefondan eşleştirme), durum, ödeme şekli, tarih ve açıklama.
-const MusteriSatisAlanlari = ({ formData, setFormData, musteriOptions, searchMusteri }) => {
+const MusteriSatisAlanlari = ({
+  formData,
+  setFormData,
+  musteriOptions,
+  searchMusteri,
+}: Pick<AksesuarlarDurumu, 'formData' | 'setFormData' | 'musteriOptions' | 'searchMusteri'>) => {
   return (
     <>
       <Grid container spacing={2} sx={{ mt: 1 }}>
@@ -11,7 +17,7 @@ const MusteriSatisAlanlari = ({ formData, setFormData, musteriOptions, searchMus
           <Autocomplete
             freeSolo
             options={musteriOptions}
-            getOptionLabel={(o) => (typeof o === 'string' ? o : o.ad_soyad)}
+            getOptionLabel={(o) => (typeof o === 'string' ? o : o.ad_soyad || '')}
             inputValue={formData.ad_soyad}
             onInputChange={(e, val) => {
               setFormData({ ...formData, ad_soyad: val });
@@ -19,7 +25,7 @@ const MusteriSatisAlanlari = ({ formData, setFormData, musteriOptions, searchMus
             }}
             onChange={(e, val) => {
               if (val && typeof val === 'object') {
-                setFormData({ ...formData, ad_soyad: val.ad_soyad, telefon: val.telefon || formData.telefon });
+                setFormData({ ...formData, ad_soyad: val.ad_soyad || '', telefon: val.telefon || formData.telefon });
               }
             }}
             renderInput={(params) => <TextField {...params} fullWidth label="Ad Soyad" required />}

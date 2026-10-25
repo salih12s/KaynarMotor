@@ -1,8 +1,9 @@
 import { useOnay } from '../../../shared/ui';
 import { hataMesaji } from '../../../shared/api/istemci';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, type KeyboardEvent } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { sonIstek } from '../../../shared/utils/sonIstek';
+import type { AksesuarIstatistik, AksesuarSatis, AksesuarStok, Musteri } from '../../../shared/tipler';
 import { aksesuarService, aksesuarStokService } from '../aksesuarApi';
 import { musteriService } from '../../musteriler/musteriApi';
 import {
@@ -16,10 +17,18 @@ import {
   parcaSil,
   stokDegeri as stokDegeriBul,
   hesapla,
+  type AksesuarSatisFormu,
+  type FormParca,
+  type SatirStogu,
 } from './aksesuarVeri';
 
 // Hızlı yazarken eski aramanın yanıtı yeniyi ezmesin
 const sonAra = sonIstek();
+
+interface SatisDialogDurumu {
+  open: boolean;
+  data: AksesuarSatis | null;
+}
 
 // Aksesuar satış sayfasının sunucu verisi ve pencere durumları: satışlar, istatistik, stok listesi, ekle/düzenle/sil, ürün satırları,
 // barkod okutma, toplam/indirim/kâr hesabı. Başka sayfadan `state.openDetailId` ile gelinirse detay otomatik açılır.
@@ -27,18 +36,18 @@ export const useAksesuarlar = () => {
   const onay = useOnay();
   const location = useLocation();
   const navigate = useNavigate();
-  const [satislar, setSatislar] = useState([]);
-  const [dialog, setDialog] = useState({ open: false, data: null });
-  const [formData, setFormData] = useState(ilkForm());
-  const [parcalar, setParcalar] = useState([]);
-  const [stokOptions, setStokOptions] = useState([]);
+  const [satislar, setSatislar] = useState<AksesuarSatis[]>([]);
+  const [dialog, setDialog] = useState<SatisDialogDurumu>({ open: false, data: null });
+  const [formData, setFormData] = useState<AksesuarSatisFormu>(ilkForm());
+  const [parcalar, setParcalar] = useState<FormParca[]>([]);
+  const [stokOptions, setStokOptions] = useState<AksesuarStok[]>([]);
   const [error, setError] = useState('');
-  const [stats, setStats] = useState({});
-  const [detayDialog, setDetayDialog] = useState({ open: false, data: null });
-  const [musteriOptions, setMusteriOptions] = useState([]);
+  const [stats, setStats] = useState<AksesuarIstatistik>({});
+  const [detayDialog, setDetayDialog] = useState<SatisDialogDurumu>({ open: false, data: null });
+  const [musteriOptions, setMusteriOptions] = useState<Musteri[]>([]);
   const [barkodInput, setBarkodInput] = useState('');
 
-  const searchMusteri = async (query) => {
+  const searchMusteri = async (query: string) => {
     if (!query || query.length < 2) {
       setMusteriOptions([]);
       return;
@@ -51,28 +60,28 @@ export const useAksesuarlar = () => {
     }
   };
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       const [satisRes, statsRes] = await Promise.all([aksesuarService.getAll(), aksesuarService.getStats()]);
       setSatislar(satisRes.data);
       setStats(statsRes.data);
     } catch {}
-  };
+  }, []);
 
-  const loadStok = async () => {
+  const loadStok = useCallback(async () => {
     try {
       const res = await aksesuarStokService.getAll();
       setStokOptions(res.data);
     } catch {}
-  };
+  }, []);
 
   useEffect(() => {
     loadData();
     loadStok();
-  }, []);
+  }, [loadData, loadStok]);
 
   useEffect(() => {
-    const id = location.state?.openDetailId;
+    const id = (location.state as { openDetailId?: number } | null)?.openDetailId;
     if (!id) return;
     (async () => {
       try {
@@ -81,16 +90,16 @@ export const useAksesuarlar = () => {
       } catch {}
     })();
     navigate(location.pathname, { replace: true, state: {} });
-  }, [location.state]);
+  }, [location.state, location.pathname, navigate]);
 
-  const detayAc = async (id) => {
+  const detayAc = async (id: number) => {
     try {
       const res = await aksesuarService.getById(id);
       setDetayDialog({ open: true, data: res.data });
     } catch {}
   };
 
-  const openDialog = async (satis = null) => {
+  const openDialog = async (satis: AksesuarSatis | null = null) => {
     setError('');
     if (satis) {
       try {
@@ -110,39 +119,41 @@ export const useAksesuarlar = () => {
 
   const addParca = () => setParcalar(parcaEkle);
 
-  const handleBarkodScan = async (e) => {
+  const handleBarkodScan = async (e: KeyboardEvent) => {
     if (e.key !== 'Enter') return;
     e.preventDefault();
     const kod = barkodInput.trim();
     if (!kod) return;
     setError('');
-    let stok = stokOptions.find((s) => String(s.stok_kodu || '').trim() === kod);
-    if (!stok) {
+    let bulunan: AksesuarStok | undefined = stokOptions.find((s) => String(s.stok_kodu || '').trim() === kod);
+    if (!bulunan) {
       try {
         const res = await aksesuarStokService.getByBarkod(kod);
-        stok = res.data;
+        bulunan = res.data;
       } catch {
         setError(`Barkod bulunamadı: ${kod}`);
         setBarkodInput('');
         return;
       }
     }
+    const stok: AksesuarStok = bulunan;
     setParcalar((prev) => stoktanEkleVeyaArtir(prev, stok));
     setBarkodInput('');
   };
 
-  const updateParca = (i, field, value) => setParcalar((prev) => parcaGuncelle(prev, i, field, value));
-  const secStok = (i, stok) => setParcalar((prev) => parcaStokSec(prev, i, stok));
-  const stokDegeri = (p) => stokDegeriBul(stokOptions, p);
-  const removeParca = (i) => setParcalar((prev) => parcaSil(prev, i));
+  const updateParca = <K extends keyof FormParca>(i: number, field: K, value: FormParca[K]) => setParcalar((prev) => parcaGuncelle(prev, i, field, value));
+  const secStok = (i: number, stok: SatirStogu | null) => setParcalar((prev) => parcaStokSec(prev, i, stok));
+  const stokDegeri = (p: FormParca) => stokDegeriBul(stokOptions, p);
+  const removeParca = (i: number) => setParcalar((prev) => parcaSil(prev, i));
 
   const { toplamSatis, toplamMaliyet, indirim, netToplam, kar } = hesapla(parcalar, formData.indirim);
 
   const handleSave = async () => {
     setError('');
     try {
-      const payload = { ...formData, parcalar, kalan_odeme: formData.odeme_tamamlandi ? 0 : formData.kalan_odeme || 0 };
-      delete payload.odeme_tamamlandi;
+      // `odeme_tamamlandi` yalnızca ekran içindir; sunucuya kalan ödeme olarak gider
+      const { odeme_tamamlandi, ...alanlar } = formData;
+      const payload = { ...alanlar, parcalar, kalan_odeme: odeme_tamamlandi ? 0 : formData.kalan_odeme || 0 };
       if (dialog.data) {
         await aksesuarService.update(dialog.data.id, payload);
       } else {
@@ -156,7 +167,7 @@ export const useAksesuarlar = () => {
     }
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (id: number) => {
     if (!(await onay('Silmek istediğinizden emin misiniz?'))) return;
     try {
       await aksesuarService.delete(id);
@@ -200,3 +211,5 @@ export const useAksesuarlar = () => {
     handleDelete,
   };
 };
+
+export type AksesuarlarDurumu = ReturnType<typeof useAksesuarlar>;

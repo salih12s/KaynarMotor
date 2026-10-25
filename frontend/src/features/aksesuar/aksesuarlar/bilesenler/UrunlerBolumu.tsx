@@ -20,9 +20,10 @@ import AddIcon from '@mui/icons-material/Add';
 
 import ScannerIcon from '@mui/icons-material/QrCodeScanner';
 import { sayiYaz } from '../../../../shared/utils/bicim';
+import type { AksesuarlarDurumu } from '../useAksesuarlar';
 
 // Satış formu: ürün satırları (stoktan seçim, adet/maliyet/satış), barkod okutma; dar ekranda kartlar, geniş ekranda tablo.
-const UrunlerBolumu = ({ a, isMobile }) => {
+const UrunlerBolumu = ({ a, isMobile }: { a: AksesuarlarDurumu; isMobile: boolean }) => {
   const { addParca, barkodInput, setBarkodInput, handleBarkodScan, parcalar, stokOptions, stokDegeri, secStok, updateParca, removeParca } = a;
   return (
     <>

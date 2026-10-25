@@ -1,7 +1,7 @@
 import { useOnay } from '../../../shared/ui';
 import { useState } from 'react';
 import { useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query';
-import { hataMesaji, type Govde } from '../../../shared/api/istemci';
+import { hataMesaji } from '../../../shared/api/istemci';
 import { isEmriService } from '../servisApi';
 import { authService } from '../../auth/authApi';
 
@@ -24,7 +24,7 @@ export const useIsEmirleri = () => {
   const liste = useQuery({
     queryKey: isEmriAnahtari.liste(durumFilter),
     queryFn: async () => {
-      const params: Govde = {};
+      const params: Record<string, unknown> = {};
       if (durumFilter) params.durum = durumFilter;
       try {
         return (await isEmriService.getAll(params)).data;

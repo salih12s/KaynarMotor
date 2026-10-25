@@ -4,7 +4,17 @@ import SearchIcon from '@mui/icons-material/Search';
 import AddIcon from '@mui/icons-material/Add';
 
 // Ad/telefon arama kutusu, satış tarihi aralığı ve sağda "Yeni Satış".
-const Suzgecler = ({ aksSearch, setAksSearch, aksStart, setAksStart, aksEnd, setAksEnd, onYeni }) => {
+interface SuzgeclerProps {
+  aksSearch: string;
+  setAksSearch: (v: string) => void;
+  aksStart: string;
+  setAksStart: (v: string) => void;
+  aksEnd: string;
+  setAksEnd: (v: string) => void;
+  onYeni: () => void;
+}
+
+const Suzgecler = ({ aksSearch, setAksSearch, aksStart, setAksStart, aksEnd, setAksEnd, onYeni }: SuzgeclerProps) => {
   return (
     <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap', alignItems: 'flex-end', mb: 2 }}>
       <TextField

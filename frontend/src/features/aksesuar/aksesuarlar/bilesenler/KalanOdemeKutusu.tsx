@@ -1,8 +1,9 @@
 import React from 'react';
 import { Box, Typography, TextField, Grid, Checkbox, FormControlLabel } from '@mui/material';
+import type { AksesuarlarDurumu } from '../useAksesuarlar';
 
 // Satış formu: kalan ödeme (veresiye) işareti ve tutarı.
-const KalanOdemeKutusu = ({ formData, setFormData }) => {
+const KalanOdemeKutusu = ({ formData, setFormData }: Pick<AksesuarlarDurumu, 'formData' | 'setFormData'>) => {
   return (
     <>
       <Box sx={{ mt: 3, p: 2, border: '1px solid #D2D3CA', borderRadius: 1 }}>

@@ -4,10 +4,23 @@ import { Box, Paper, Typography, Table, TableBody, TableCell, TableContainer, Ta
 
 import { filtrele } from '../aksesuarVeri';
 import { sayiYaz, tarihYaz, sayiDegeri } from '../../../../shared/utils/bicim';
+import type { AksesuarSatis } from '../../../../shared/tipler';
 
 // Satış listesi: dar ekranda kartlar (süzgeç sonucu boşsa bilgi kutusu), geniş ekranda tablo; kâr yalnızca kâr yetkisi olana.
-const SatisListesi = ({ satislar, aksSearch, aksStart, aksEnd, isMobile, karGor, onDetay, onDuzenle, onSil }) => {
-  const durumRenk = (d) => (d === 'tamamlandi' ? 'success' : 'warning');
+interface SatisListesiProps {
+  satislar: AksesuarSatis[];
+  aksSearch: string;
+  aksStart: string;
+  aksEnd: string;
+  isMobile: boolean;
+  karGor: boolean;
+  onDetay: (id: number) => void;
+  onDuzenle: (satis: AksesuarSatis) => void;
+  onSil: (id: number) => void;
+}
+
+const SatisListesi = ({ satislar, aksSearch, aksStart, aksEnd, isMobile, karGor, onDetay, onDuzenle, onSil }: SatisListesiProps) => {
+  const durumRenk = (d: string) => (d === 'tamamlandi' ? 'success' : 'warning');
   return isMobile ? (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
       {(() => {

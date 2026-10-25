@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { hataMesaji } from '../../shared/api/istemci';
 import { stokEtiketiYazdir } from '../../shared/utils/stokEtiketi';
 import InventoryIcon from '@mui/icons-material/Inventory2Outlined';
@@ -34,6 +34,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import PrintIcon from '@mui/icons-material/Print';
 import { aksesuarStokService } from './aksesuarApi';
 import { sayiYaz, sayiDegeri } from '../../shared/utils/bicim';
+import type { AksesuarStok as AksesuarStokKaydi } from '../../shared/tipler';
 
 // Hızlı yazarken eski aramanın yanıtı yeniyi ezmesin
 const sonAra = sonIstek();
@@ -41,14 +42,28 @@ const sonAra = sonIstek();
 const BEDEN_OPTIONS = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
 const KATEGORI_OPTIONS = ['Aksesuar', 'Demir', 'Tank Ped', 'Yedek Parça', 'Ekipman', 'Sticker'];
 
+/** Stok ekleme/düzenleme formu: sayısal alanlar yazılırken metin, kayıttan gelirken sayı olabilir. */
+interface StokFormu {
+  stok_kodu: string;
+  stok_adi: string;
+  marka: string;
+  alis_fiyati: string | number;
+  satis_fiyati: string | number;
+  giren_miktar: string | number;
+  platform: string;
+  beden: string;
+  renk: string;
+  kategori: string;
+}
+
 const AksesuarStok = () => {
   const onay = useOnay();
   const isMobile = useMediaQuery(useTheme().breakpoints.down('sm'));
-  const [stoklar, setStoklar] = useState([]);
-  const [dialog, setDialog] = useState({ open: false, data: null });
+  const [stoklar, setStoklar] = useState<AksesuarStokKaydi[]>([]);
+  const [dialog, setDialog] = useState<{ open: boolean; data: AksesuarStokKaydi | null }>({ open: false, data: null });
   const [importDialog, setImportDialog] = useState(false);
   const [importText, setImportText] = useState('');
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<StokFormu>({
     stok_kodu: '',
     stok_adi: '',
     marka: '',
@@ -65,18 +80,18 @@ const AksesuarStok = () => {
   const [kategoriFilter, setKategoriFilter] = useState('');
   const [stokFilter, setStokFilter] = useState('');
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       const res = await aksesuarStokService.getAll();
       setStoklar(res.data);
     } catch {}
-  };
+  }, []);
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [loadData]);
 
-  const handleSearch = async () => {
+  const handleSearch = useCallback(async () => {
     if (!search.trim()) {
       sonAra.iptal();
       return loadData();
@@ -85,14 +100,14 @@ const AksesuarStok = () => {
       const res = await sonAra(aksesuarStokService.search(search));
       if (res) setStoklar(res.data);
     } catch {}
-  };
+  }, [search, loadData]);
 
   useEffect(() => {
     const t = setTimeout(handleSearch, 300);
     return () => clearTimeout(t);
-  }, [search]);
+  }, [handleSearch]);
 
-  const openDialog = async (stok = null) => {
+  const openDialog = async (stok: AksesuarStokKaydi | null = null) => {
     setError('');
     if (stok) {
       setFormData({
@@ -144,7 +159,7 @@ const AksesuarStok = () => {
     }
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (id: number) => {
     if (!(await onay('Bu stok kaydını silmek istediğinizden emin misiniz?', { baslik: 'Stok kaydını sil' }))) return;
     try {
       await aksesuarStokService.delete(id);
@@ -175,7 +190,7 @@ const AksesuarStok = () => {
   };
 
   const totalUrun = stoklar.length;
-  const envanter = stoklar.reduce((acc, s) => acc + sayiDegeri(s.alis_fiyati) * parseInt(s.mevcut || 0), 0);
+  const envanter = stoklar.reduce((acc, s) => acc + sayiDegeri(s.alis_fiyati) * parseInt(String(s.mevcut || 0)), 0);
 
   const filteredStoklar = stoklar.filter((s) => {
     const matchKategori = !kategoriFilter || (s.kategori || '').toLowerCase() === kategoriFilter.toLowerCase();

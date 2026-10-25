@@ -1,9 +1,10 @@
 import React from 'react';
 import { Box, Typography, TextField, InputAdornment } from '@mui/material';
 import { sayiYaz } from '../../../../shared/utils/bicim';
+import type { AksesuarlarDurumu } from '../useAksesuarlar';
 
 // Satış formu: ara toplam, indirim girişi, toplam ve (kâr yetkisi olana) kâr.
-const ToplamOzeti = ({ a, karGor }) => {
+const ToplamOzeti = ({ a, karGor }: { a: AksesuarlarDurumu; karGor: boolean }) => {
   const { toplamSatis, indirim, netToplam, kar, formData, setFormData } = a;
   return (
     <>

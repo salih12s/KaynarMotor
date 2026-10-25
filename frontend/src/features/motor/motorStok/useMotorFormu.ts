@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { hataMesaji, type Govde } from '../../../shared/api/istemci';
+import { hataMesaji } from '../../../shared/api/istemci';
 import type { Motor } from '../../../shared/tipler';
 import { ikinciElMotorService } from '../motorApi';
 import { bekleyenBelgeleriYukle } from '../SatisBelgeleri';
@@ -30,7 +30,7 @@ export const useMotorFormu = ({ yenile }: { yenile: () => void }) => {
   const handleSave = async () => {
     setError('');
     try {
-      const payload: Govde = { ...formData };
+      const payload: Record<string, unknown> = { ...formData };
       if (!payload.yatirimci) {
         payload.yatirimci_id = null;
         payload.yatirimci_kar_orani = 0;

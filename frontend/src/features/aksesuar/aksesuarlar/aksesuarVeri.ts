@@ -81,13 +81,13 @@ export const filtrele = (satislar: AksesuarSatis[], { aksSearch, aksStart, aksEn
 
 // ---- Ürün satırları ----------------------------------------------------------------------------------------------
 
-/** Formdaki bir ürün satırı. */
+/** Formdaki bir ürün satırı (kayıtlı satışın satırları da aynı şekildedir: sunucudan boş alanlar null gelebilir). */
 export interface FormParca {
-  stok_id: number | null;
-  urun_adi: string;
-  adet: FormSayisi;
-  maliyet: FormSayisi;
-  satis_fiyati: FormSayisi;
+  stok_id?: number | null;
+  urun_adi: string | null;
+  adet: FormSayisi | null;
+  maliyet: Sayi;
+  satis_fiyati: Sayi;
 }
 
 /** Satırın bağlanabileceği stok kaydı (aksesuar stoğu). */

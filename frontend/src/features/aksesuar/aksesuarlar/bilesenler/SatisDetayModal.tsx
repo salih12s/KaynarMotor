@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { type ReactNode } from 'react';
 import { BilgiKarti, BolumBasligi, DialogBasligi, Damga, Not, SayiKutusu } from '../../../../shared/ui';
 import {
   Box,
@@ -14,17 +14,29 @@ import {
   Dialog,
   DialogContent,
   DialogActions,
+  type DialogProps,
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 
-import { sayiYaz, tarihYaz, sayiDegeri } from '../../../../shared/utils/bicim';
+import { sayiYaz, tarihYaz, sayiDegeri, type Sayi } from '../../../../shared/utils/bicim';
 import { RENK } from '../../../../app/tokenlar';
+import type { AksesuarSatis, AksesuarStok } from '../../../../shared/tipler';
 
 const SUTUN_3 = { display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' }, gap: 2, mb: 2 };
 
 // Satış detay penceresi: müşteri/satış/kayıt bilgisi, ürünler (stoktan marka/beden/renk), indirimli toplamlar ve kalan ödeme.
-const SatisDetayModal = ({ open, data, onClose, onDuzenle, stokOptions, karGor, isMobile }) => {
-  const dialogProps = { open, onClose, maxWidth: 'md', fullWidth: true, fullScreen: isMobile };
+interface SatisDetayModalProps {
+  open: boolean;
+  data: AksesuarSatis | null;
+  onClose: () => void;
+  onDuzenle: (satis: AksesuarSatis) => void;
+  stokOptions: AksesuarStok[];
+  karGor: boolean;
+  isMobile: boolean;
+}
+
+const SatisDetayModal = ({ open, data, onClose, onDuzenle, stokOptions, karGor, isMobile }: SatisDetayModalProps) => {
+  const dialogProps: DialogProps = { open, onClose, maxWidth: 'md', fullWidth: true, fullScreen: isMobile };
   if (!data) return <Dialog {...dialogProps} />;
   const d = data;
   const dp = d.parcalar || [];
@@ -39,13 +51,13 @@ const SatisDetayModal = ({ open, data, onClose, onDuzenle, stokOptions, karGor, 
   const dNetSatis = dBrutSatis - dIndirim;
   const dKar = dNetSatis - dToplamMaliyet;
   const kalan = sayiDegeri(d.kalan_odeme);
-  const kayitSatirlari = [
+  const kayitSatirlari: Array<[string, ReactNode]> = [
     ['Oluşturan', d.olusturan_kisi || '-'],
     ['Oluşturma', tarihYaz(d.created_at)],
   ];
   if (d.tamamlama_tarihi) kayitSatirlari.push(['Tamamlanma', tarihYaz(d.tamamlama_tarihi)]);
-  const para = (v) => `₺${sayiYaz(v)}`;
-  const karRengi = (v) => (v >= 0 ? RENK.yesil : RENK.kirmizi);
+  const para = (v: Sayi) => `₺${sayiYaz(v)}`;
+  const karRengi = (v: number) => (v >= 0 ? RENK.yesil : RENK.kirmizi);
   return (
     <Dialog {...dialogProps}>
       <DialogBasligi baslik="Aksesuar Satış Detayı" onKapat={onClose} />

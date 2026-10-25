@@ -2,8 +2,8 @@ import axios from 'axios';
 
 export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5100/api';
 
-/** İstek gövdesi: sunucu zod ile doğrular; ekran formları serbest alanlı nesne gönderir. */
-export type Govde = Record<string, unknown>;
+/** İstek gövdesi / sorgu parametreleri: sunucu zod ile doğrular; ekran formları serbest alanlı bir nesne gönderir (her arayüz/nesne kabul edilir). */
+export type Govde = object;
 
 const api = axios.create({
   baseURL: API_URL,
