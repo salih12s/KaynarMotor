@@ -165,7 +165,18 @@ export const temaOlustur = ({ primary = RENK.kirmizi, secondary = RENK.murekkep 
       },
       MuiDialog: { styleOverrides: { paper: { borderRadius: 8, boxShadow: '0 24px 60px rgba(10,12,16,.35)' } } },
       MuiDialogTitle: { styleOverrides: { root: { fontFamily: FONT.baslik, fontWeight: 700, fontSize: '1.65rem', lineHeight: 1.15, padding: '16px 24px' } } },
-      MuiDialogActions: { styleOverrides: { root: { backgroundColor: RENK.yuzeyKoyu, borderTop: `1px solid ${RENK.cizgi}`, padding: '12px 24px', gap: 8 } } },
+      MuiDialogContent: { styleOverrides: { root: { '.MuiDialogTitle-root + &': { paddingTop: 20 } } } },
+      MuiDialogActions: {
+        styleOverrides: {
+          root: {
+            backgroundColor: RENK.yuzeyKoyu,
+            borderTop: `1px solid ${RENK.cizgi}`,
+            padding: '12px 24px',
+            gap: 8,
+            '& .MuiButton-text': { border: `1px solid ${RENK.kirmizi}`, backgroundColor: RENK.yuzey, '&:hover': { backgroundColor: '#FBEAE7' } },
+          },
+        },
+      },
       MuiTooltip: { styleOverrides: { tooltip: { backgroundColor: RENK.murekkep, fontSize: 12.5 } } },
       MuiDivider: { styleOverrides: { root: { borderColor: RENK.cizgi } } },
     },

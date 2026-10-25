@@ -1,11 +1,10 @@
 import React from 'react';
-import { Box, Button } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
+import { Box } from '@mui/material';
 import { sayiYaz, paraYaz } from '../../../../shared/utils/bicim';
 import { OzetSeridi } from '../../../../shared/ui';
 
-// Özet şeridi (satış sayısı, gelir, komisyon, e-ticaret yetkilisi için kâr) ve sekmeye göre "Yeni Satış" / "Yeni Platform" (yalnız admin) düğmesi.
-const IstatistikSatiri = ({ stats, hesaplananToplamKar, karGor, isAdmin, tab, onYeniSatis, onYeniPlatform }) => {
+// Özet şeridi: satış sayısı, gelir, komisyon ve (e-ticaret yetkilisi için) kâr.
+const IstatistikSatiri = ({ stats, hesaplananToplamKar, karGor }) => {
   const ogeler = [
     { etiket: 'Satış', deger: stats.toplam_satis || 0 },
     { etiket: 'Gelir', deger: `₺${sayiYaz(stats.toplam_gelir)}` },
@@ -15,20 +14,6 @@ const IstatistikSatiri = ({ stats, hesaplananToplamKar, karGor, isAdmin, tab, on
   return (
     <Box sx={{ mb: 2 }}>
       <OzetSeridi ogeler={ogeler} />
-      {(tab === 0 || (tab === 1 && isAdmin)) && (
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1.5 }}>
-          {tab === 0 && (
-            <Button variant="contained" size="large" startIcon={<AddIcon />} onClick={onYeniSatis}>
-              Yeni Satış
-            </Button>
-          )}
-          {tab === 1 && isAdmin && (
-            <Button variant="contained" size="large" startIcon={<AddIcon />} onClick={onYeniPlatform}>
-              Yeni Platform
-            </Button>
-          )}
-        </Box>
-      )}
     </Box>
   );
 };

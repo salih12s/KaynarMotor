@@ -1,5 +1,6 @@
 import React from 'react';
-import { IslemDugmesi } from '../../../../shared/ui';
+import { IslemDugmesi, sagaSutunlar } from '../../../../shared/ui';
+import { RENK } from '../../../../app/tokenlar';
 import { Box, Paper, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Alert, Chip } from '@mui/material';
 
 import { hesaplaKomisyon, detectPlatform } from '../../komisyon';
@@ -49,7 +50,7 @@ const SatisListesi = ({ satislar, platformFiltre, isMobile, karGor, onDetay, onD
     </Box>
   ) : (
     <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
-      <Table size="small">
+      <Table sx={sagaSutunlar(...(karGor ? [3, 4, 5, 6, 7, 8, 9] : [3, 4, 5, 6, 7, 8]))}>
         <TableHead>
           <TableRow>
             {[
@@ -75,16 +76,16 @@ const SatisListesi = ({ satislar, platformFiltre, isMobile, karGor, onDetay, onD
             const sHesap = hesaplaKomisyon(s.satis_fiyati, s.alis_fiyati, s.komisyon_orani, s.kdv_orani || 20, s.kargo_ucreti || 0, s.adet, sPlatformTipi);
             return (
               <TableRow key={s.id} hover>
-                <TableCell>{s.urun_adi}</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>{s.urun_adi}</TableCell>
                 <TableCell>{s.platform_adi || '-'}</TableCell>
                 <TableCell>{s.adet}</TableCell>
                 <TableCell>{formatTL(s.alis_fiyati)}</TableCell>
-                <TableCell>{formatTL(s.satis_fiyati)}</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>{formatTL(s.satis_fiyati)}</TableCell>
                 <TableCell>%{parseFloat(s.komisyon_orani || 0).toFixed(2)}</TableCell>
                 <TableCell>%{parseFloat(s.kdv_orani || 20).toFixed(0)}</TableCell>
                 <TableCell>{formatTL(sHesap.komisyonTutari)}</TableCell>
-                {karGor && <TableCell sx={{ color: sHesap.netKar >= 0 ? 'green' : 'red', fontWeight: 'bold' }}>{formatTL(sHesap.netKar)}</TableCell>}
-                <TableCell>{tarihYaz(s.tarih)}</TableCell>
+                {karGor && <TableCell sx={{ color: sHesap.netKar >= 0 ? RENK.yesil : RENK.kirmizi, fontWeight: 'bold' }}>{formatTL(sHesap.netKar)}</TableCell>}
+                <TableCell sx={{ color: RENK.soluk, whiteSpace: 'nowrap' }}>{tarihYaz(s.tarih)}</TableCell>
                 <TableCell sx={{ whiteSpace: 'nowrap' }}>
                   <IslemDugmesi tur="goz" onClick={() => onDetay(s)} />
                   <IslemDugmesi tur="duz" onClick={() => onDuzenle(s)} />

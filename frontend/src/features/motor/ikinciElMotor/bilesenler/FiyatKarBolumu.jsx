@@ -1,4 +1,7 @@
 import React from 'react';
+import PaymentsIcon from '@mui/icons-material/PaymentsOutlined';
+import { BolumBasligi } from '../../../../shared/ui';
+import { RENK } from '../../../../app/tokenlar';
 import { Box, Paper, Typography, TextField, Grid, InputAdornment } from '@mui/material';
 import { sayiYaz } from '../../../../shared/utils/bicim';
 
@@ -6,9 +9,9 @@ import { sayiYaz } from '../../../../shared/utils/bicim';
 const FiyatKarBolumu = ({ f, setFormData, canAlis, canKar, canliKar }) => {
   return (
     <>
-      <Typography variant="subtitle1" fontWeight="bold" sx={{ mt: 3, mb: 1 }}>
+      <BolumBasligi ikon={<PaymentsIcon />} renk={RENK.mavi} sx={{ mt: 3 }}>
         Fiyat Bilgileri
-      </Typography>
+      </BolumBasligi>
       <Grid container spacing={2}>
         {canAlis && (
           <Grid size={{ xs: 12, md: 4 }}>

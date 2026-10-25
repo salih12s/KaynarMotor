@@ -1,13 +1,16 @@
 import React from 'react';
+import PersonIcon from '@mui/icons-material/PersonOutline';
+import { BolumBasligi } from '../../../../shared/ui';
+import { RENK } from '../../../../app/tokenlar';
 import { Typography, TextField, Grid, Autocomplete } from '@mui/material';
 
 // Satış formu: satıcı, alıcı (telefondan otomatik eşleştirme) ve komisyoncu bilgileri.
 const TaraflarBolumu = ({ f, setFormData, musteriOptions, searchMusteri, autofillByPhone }) => {
   return (
     <>
-      <Typography variant="subtitle1" fontWeight="bold" sx={{ mt: 3, mb: 1 }}>
+      <BolumBasligi ikon={<PersonIcon />} renk={RENK.mavi} sx={{ mt: 3 }}>
         Satıcı Bilgileri
-      </Typography>
+      </BolumBasligi>
       <Grid container spacing={2}>
         <Grid size={{ xs: 12, md: 6 }}>
           <Autocomplete
@@ -32,9 +35,9 @@ const TaraflarBolumu = ({ f, setFormData, musteriOptions, searchMusteri, autofil
         </Grid>
       </Grid>
 
-      <Typography variant="subtitle1" fontWeight="bold" sx={{ mt: 3, mb: 1 }}>
+      <BolumBasligi ikon={<PersonIcon />} renk={RENK.mavi} sx={{ mt: 3 }}>
         Alıcı Bilgileri
-      </Typography>
+      </BolumBasligi>
       <Grid container spacing={2}>
         <Grid size={{ xs: 12, md: 3 }}>
           <Autocomplete

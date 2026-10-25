@@ -1,18 +1,23 @@
 import React from 'react';
 import { Box, Paper, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
 import { formatTL, karColor, headerSx } from '../bicim';
-import { FONT, RENK } from '../../../app/tokenlar';
+import { FONT, RENK, TON } from '../../../app/tokenlar';
 
 const SEKME_NO = { 'Motor Satışları': 1, 'İş Emirleri (Servis)': 2, 'Aksesuar Satışları': 3, 'E-Ticaret': 4, 'Yedek Parça (Envanter)': 5 };
 const oranYaz = (kar, gelir) => (parseFloat(gelir || 0) > 0 ? ((parseFloat(kar || 0) / parseFloat(gelir || 1)) * 100).toFixed(1) : '0.0');
 
-// Üst sıradaki büyük rakam kartı: kâğıt zemin, üstte küçük etiket, altında başlık yazı tipiyle rakam.
-const RakamKarti = ({ etiket, deger, renk = RENK.murekkep }) => (
-  <Paper sx={{ px: 2.25, py: 1.75, bgcolor: RENK.yuzey }}>
-    <Typography sx={{ fontSize: 14, color: RENK.soluk }}>{etiket}</Typography>
-    <Typography sx={{ fontFamily: FONT.baslik, fontWeight: 700, fontSize: 32, lineHeight: 1.25, color: renk, whiteSpace: 'nowrap' }}>{deger}</Typography>
-  </Paper>
-);
+// Üst sıradaki büyük rakam kartı: geniş ekranda kâğıt zemin ve solda yazı; telefonda tonlu zemin ve ortalı yazı.
+const RakamKarti = ({ etiket, deger, renk = RENK.murekkep, ton }) => {
+  const t = TON[ton];
+  return (
+    <Paper sx={{ px: 2.25, py: 1.75, bgcolor: { xs: t.bg, lg: RENK.yuzey }, textAlign: { xs: 'center', lg: 'left' } }}>
+      <Typography sx={{ fontSize: 14, color: RENK.soluk }}>{etiket}</Typography>
+      <Typography sx={{ fontFamily: FONT.baslik, fontWeight: 700, fontSize: 32, lineHeight: 1.25, color: { xs: t.fg, lg: renk }, whiteSpace: 'nowrap' }}>
+        {deger}
+      </Typography>
+    </Paper>
+  );
+};
 
 // Gelir payı: gelirin toplam içindeki yüzdesi, ince çubuk + yüzde yazısı.
 const PayCubugu = ({ pay }) => (
@@ -51,11 +56,11 @@ const GenelOzet = ({ rapor, toplamlar, isMobile, onSekmeAc }) => {
   return (
     <>
       <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(5, 1fr)' }, gap: 2, mb: 3 }}>
-        <RakamKarti etiket="Toplam gelir" deger={`₺${formatTL(duzeltilmisTotalGelir)}`} />
-        <RakamKarti etiket="Toplam maliyet" deger={`₺${formatTL(duzeltilmisTotalMaliyet)}`} />
-        <RakamKarti etiket="Toplam kâr" deger={`₺${formatTL(duzeltilmisTotalKar)}`} renk={karColor(duzeltilmisTotalKar)} />
-        <RakamKarti etiket="Toplam işlem" deger={toplamIslem} />
-        <RakamKarti etiket="Motor stok değeri" deger={`₺${formatTL(rapor.motorStokToplam)}`} />
+        <RakamKarti etiket="Toplam gelir" deger={`₺${formatTL(duzeltilmisTotalGelir)}`} ton="kirmizi" />
+        <RakamKarti etiket="Toplam maliyet" deger={`₺${formatTL(duzeltilmisTotalMaliyet)}`} ton="mavi" />
+        <RakamKarti etiket="Toplam kâr" deger={`₺${formatTL(duzeltilmisTotalKar)}`} renk={karColor(duzeltilmisTotalKar)} ton="yesil" />
+        <RakamKarti etiket="Toplam işlem" deger={toplamIslem} ton="turuncu" />
+        <RakamKarti etiket="Motor stok değeri" deger={`₺${formatTL(rapor.motorStokToplam)}`} ton="mor" />
       </Box>
 
       {isMobile ? (

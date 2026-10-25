@@ -1,5 +1,7 @@
 import React from 'react';
-import { Button, TextField, Dialog, DialogTitle, DialogContent, DialogActions, Alert, Grid } from '@mui/material';
+import StoreIcon from '@mui/icons-material/StorefrontOutlined';
+import { DialogBasligi } from '../../../../shared/ui';
+import { Button, TextField, Dialog, DialogContent, DialogActions, Alert, Grid } from '@mui/material';
 
 // Platform ekleme / düzenleme penceresi (yalnızca admin).
 const PlatformFormModal = ({ e, isMobile }) => {
@@ -7,7 +9,7 @@ const PlatformFormModal = ({ e, isMobile }) => {
   const kapat = () => setPlatformDialog({ open: false, data: null });
   return (
     <Dialog open={platformDialog.open} onClose={kapat} maxWidth="xs" fullWidth fullScreen={isMobile}>
-      <DialogTitle>{platformDialog.data ? 'Platform Düzenle' : 'Yeni Platform'}</DialogTitle>
+      <DialogBasligi ikon={<StoreIcon />} baslik={platformDialog.data ? 'Platform Düzenle' : 'Yeni Platform'} />
       <DialogContent>
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>

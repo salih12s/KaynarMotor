@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { IslemDugmesi, OzetSeridi } from '../../shared/ui';
+import { stokEtiketiYazdir } from '../../shared/utils/stokEtiketi';
+import AyarIkon from '@mui/icons-material/SettingsOutlined';
+import { IslemDugmesi, OzetSeridi, DialogBasligi } from '../../shared/ui';
 import { useOnay } from '../../shared/ui';
 import { sonIstek } from '../../shared/utils/sonIstek';
 import {
@@ -15,7 +17,6 @@ import {
   Button,
   TextField,
   Dialog,
-  DialogTitle,
   DialogContent,
   DialogActions,
   Alert,
@@ -31,51 +32,10 @@ import UploadIcon from '@mui/icons-material/Upload';
 import SearchIcon from '@mui/icons-material/Search';
 import PrintIcon from '@mui/icons-material/Print';
 import { yedekParcaStokService } from './yedekParcaApi';
-import JsBarcode from 'jsbarcode';
-import { sayiYaz, paraYaz } from '../../shared/utils/bicim';
+import { sayiYaz } from '../../shared/utils/bicim';
 
 // Hızlı yazarken eski aramanın yanıtı yeniyi ezmesin
 const sonAra = sonIstek();
-
-const escapeHtml = (str) => String(str ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
-
-// Ürün etiketi yazdır: ÜRÜN ADI / FİYAT / BARKOD
-const printYedekParcaLabel = (stok) => {
-  const kod = String(stok.stok_kodu || '').trim();
-  if (!kod) {
-    alert('Bu ürünün stok kodu (barkod) yok. Lütfen önce stok kodu girin.');
-    return;
-  }
-  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  try {
-    JsBarcode(svg, kod, { format: 'CODE128', displayValue: true, fontSize: 16, height: 55, margin: 4, width: 2 });
-  } catch (e) {
-    alert('Barkod oluşturulamadı: ' + e.message);
-    return;
-  }
-  const svgStr = new XMLSerializer().serializeToString(svg);
-  const fiyat = paraYaz(stok.satis_fiyati) + ' ₺';
-  const win = window.open('', '_blank', 'width=420,height=320');
-  if (!win) {
-    alert('Yazdırma penceresi açılamadı. Tarayıcı pop-up engelleyicisini kapatın.');
-    return;
-  }
-  win.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Etiket - ${escapeHtml(stok.stok_adi)}</title>
-    <style>
-      @page { size: 58mm 40mm; margin: 1mm; }
-      * { box-sizing: border-box; }
-      body { font-family: Arial, Helvetica, sans-serif; text-align: center; margin: 0; padding: 6px; }
-      .urun { font-size: 15px; font-weight: bold; line-height: 1.2; margin-bottom: 2px; word-break: break-word; }
-      .fiyat { font-size: 20px; font-weight: bold; margin-bottom: 4px; }
-      .barcode svg { max-width: 100%; height: auto; }
-    </style></head><body>
-      <div class="urun">${escapeHtml(stok.stok_adi)}</div>
-      <div class="fiyat">${escapeHtml(fiyat)}</div>
-      <div class="barcode">${svgStr}</div>
-      <script>window.onload=function(){window.focus();window.print();window.onafterprint=function(){window.close();};setTimeout(function(){window.close();},800);};</script>
-    </body></html>`);
-  win.document.close();
-};
 
 const YedekParcaStok = () => {
   const onay = useOnay();
@@ -258,7 +218,7 @@ const YedekParcaStok = () => {
                 </Typography>
               </Box>
               <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 0.5 }}>
-                <IslemDugmesi tur="yaz" onClick={() => printYedekParcaLabel(s)} title="Etiket Yazdır" />
+                <IslemDugmesi tur="yaz" onClick={() => stokEtiketiYazdir(s)} title="Etiket Yazdır" />
                 <IslemDugmesi tur="duz" onClick={() => openDialog(s)} />
                 <IslemDugmesi tur="sil" onClick={() => handleDelete(s.id)} />
               </Box>
@@ -285,7 +245,7 @@ const YedekParcaStok = () => {
                   <TableCell>{sayiYaz(s.satis_fiyati)}</TableCell>
                   <TableCell sx={{ fontWeight: 'bold', color: (s.mevcut || 0) <= 0 ? 'red' : 'green' }}>{s.mevcut || 0}</TableCell>
                   <TableCell>
-                    <IslemDugmesi tur="yaz" onClick={() => printYedekParcaLabel(s)} title="Etiket Yazdır" />
+                    <IslemDugmesi tur="yaz" onClick={() => stokEtiketiYazdir(s)} title="Etiket Yazdır" />
                     <IslemDugmesi tur="duz" onClick={() => openDialog(s)} />
                     <IslemDugmesi tur="sil" onClick={() => handleDelete(s.id)} />
                   </TableCell>
@@ -305,7 +265,7 @@ const YedekParcaStok = () => {
 
       {/* Stok Ekle/Düzenle Dialog */}
       <Dialog open={dialog.open} onClose={() => setDialog({ open: false, data: null })} maxWidth="sm" fullWidth fullScreen={isMobile}>
-        <DialogTitle>{dialog.data ? 'Stok Düzenle' : 'Yeni Yedek Parça Stoğu'}</DialogTitle>
+        <DialogBasligi ikon={<AyarIkon />} baslik={dialog.data ? 'Stok Düzenle' : 'Yeni Yedek Parça Stoğu'} />
         <DialogContent>
           {error && (
             <Alert severity="error" sx={{ mb: 2 }}>
@@ -364,7 +324,7 @@ const YedekParcaStok = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDialog({ open: false, data: null })}>İptal</Button>
-          <Button startIcon={<PrintIcon />} onClick={() => printYedekParcaLabel(formData)} disabled={!formData.stok_kodu}>
+          <Button startIcon={<PrintIcon />} onClick={() => stokEtiketiYazdir(formData)} disabled={!formData.stok_kodu}>
             Etiket Yazdır
           </Button>
           <Button variant="contained" onClick={handleSave}>
@@ -375,7 +335,7 @@ const YedekParcaStok = () => {
 
       {/* Toplu İçe Aktarma */}
       <Dialog open={importDialog} onClose={() => setImportDialog(false)} maxWidth="md" fullWidth fullScreen={isMobile}>
-        <DialogTitle>Toplu Stok İçe Aktar</DialogTitle>
+        <DialogBasligi ikon={<UploadIcon />} baslik={'Toplu Stok İçe Aktar'} />
         <DialogContent>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
             Her satıra bir ürün girin (Tab ile ayırın): Stok Kodu, Ürün Adı, Alış Fiyatı, Satış Fiyatı, Miktar

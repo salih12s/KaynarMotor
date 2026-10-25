@@ -97,7 +97,7 @@ const Veresiye = () => {
         {ozetCards.map((c) => (
           <Paper key={c.key} sx={{ px: 2.25, py: 1.5, bgcolor: c.bg }}>
             <Typography sx={{ fontSize: 14, color: RENK.soluk }}>{c.label}</Typography>
-            <Typography sx={{ fontFamily: FONT.baslik, fontWeight: 700, fontSize: 34, lineHeight: 1.2, color: c.color, whiteSpace: 'nowrap' }}>
+            <Typography sx={{ fontFamily: FONT.baslik, fontWeight: 700, fontSize: { xs: 28, md: 34 }, lineHeight: 1.2, color: c.color, whiteSpace: 'nowrap' }}>
               {fmtTL(c.value)}
             </Typography>
           </Paper>

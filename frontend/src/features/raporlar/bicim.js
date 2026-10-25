@@ -6,9 +6,7 @@ export const formatDate = (d) => tarihYaz(d);
 // Tablo başlık hücresi stili (renk ve ağırlık temadan gelir)
 export const headerSx = { whiteSpace: 'nowrap' };
 
-// Tablonun verilen (1'den başlayan) sütunlarını sağa yaslar: başlık ve hücreler birlikte, tek yerden
-export const sagaSutunlar = (...sutunlar) =>
-  Object.fromEntries(sutunlar.map((n) => [`& th:nth-of-type(${n}), & td:nth-of-type(${n})`, { textAlign: 'right', whiteSpace: 'nowrap' }]));
+export { sagaSutunlar } from '../../shared/ui/sagaSutunlar';
 
 export const karColor = (v) => (parseFloat(v || 0) >= 0 ? '#1D6A3B' : '#C62828');
 

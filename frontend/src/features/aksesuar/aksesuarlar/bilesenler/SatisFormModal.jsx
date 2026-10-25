@@ -1,5 +1,7 @@
 import React from 'react';
-import { Button, Dialog, DialogTitle, DialogContent, DialogActions, Alert } from '@mui/material';
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCartOutlined';
+import { DialogBasligi } from '../../../../shared/ui';
+import { Button, Dialog, DialogContent, DialogActions, Alert } from '@mui/material';
 import MusteriSatisAlanlari from './MusteriSatisAlanlari';
 import UrunlerBolumu from './UrunlerBolumu';
 import ToplamOzeti from './ToplamOzeti';
@@ -11,7 +13,7 @@ const SatisFormModal = ({ a, isMobile, karGor }) => {
   const kapat = () => setDialog({ open: false, data: null });
   return (
     <Dialog open={dialog.open} onClose={kapat} maxWidth="md" fullWidth fullScreen={isMobile}>
-      <DialogTitle>{dialog.data ? 'Satış Düzenle' : 'Yeni Aksesuar Satışı'}</DialogTitle>
+      <DialogBasligi ikon={<ShoppingCartIcon />} baslik={dialog.data ? 'Satış Düzenle' : 'Yeni Aksesuar Satışı'} />
       <DialogContent>
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>

@@ -1,13 +1,16 @@
 import React from 'react';
-import { Typography, TextField, Grid, MenuItem, Checkbox, FormControlLabel, Autocomplete } from '@mui/material';
+import TwoWheelerIcon from '@mui/icons-material/TwoWheelerOutlined';
+import { BolumBasligi } from '../../../../shared/ui';
+import { MENU_RENK } from '../../../../app/tokenlar';
+import { TextField, Grid, MenuItem, Checkbox, FormControlLabel, Autocomplete } from '@mui/material';
 
 // Satış formu: motor bilgileri (plaka stoktan seçilebilir), durum, ödeme şekli, tarihler, yevmiye ve fatura.
 const MotorBilgileriBolumu = ({ f, setFormData, stokMotorlar, setSelectedStokId }) => {
   return (
     <>
-      <Typography variant="subtitle1" fontWeight="bold" sx={{ mt: 2, mb: 1 }}>
+      <BolumBasligi ikon={<TwoWheelerIcon />} renk={MENU_RENK.motor} sx={{ mt: 2 }}>
         Motor Bilgileri
-      </Typography>
+      </BolumBasligi>
       <Grid container spacing={2}>
         <Grid size={{ xs: 12, md: 4 }}>
           <Autocomplete

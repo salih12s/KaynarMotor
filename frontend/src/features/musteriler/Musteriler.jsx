@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import KisiIkon from '@mui/icons-material/PersonOutlined';
 import { IslemDugmesi } from '../../shared/ui';
 import { useOnay } from '../../shared/ui';
 import { DialogBasligi } from '../../shared/ui';
@@ -16,7 +17,6 @@ import {
   Button,
   TextField,
   Dialog,
-  DialogTitle,
   DialogContent,
   DialogActions,
   Alert,
@@ -117,13 +117,13 @@ const Musteriler = () => {
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2, flexWrap: 'wrap' }}>
+      <Box sx={{ display: 'flex', alignItems: { xs: 'stretch', md: 'center' }, flexDirection: { xs: 'column', md: 'row' }, gap: 1.5, mb: 2 }}>
         <TextField
           size="small"
           placeholder="Müşteri ara (ad, telefon)"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          sx={{ flex: '1 1 260px', maxWidth: 560 }}
+          sx={{ flex: { md: '1 1 260px' }, maxWidth: { md: 560 }, order: { xs: 3, md: 0 } }}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
@@ -132,10 +132,12 @@ const Musteriler = () => {
             ),
           }}
         />
-        <Box sx={{ flex: 1, display: { xs: 'none', md: 'block' } }} />
+        <Box sx={{ flex: { md: 1 }, display: { xs: 'none', md: 'block' } }} />
         <Box
           component="span"
           sx={{
+            order: { xs: 1, md: 0 },
+            alignSelf: { xs: 'flex-start', md: 'center' },
             display: 'inline-flex',
             height: 36,
             alignItems: 'center',
@@ -150,7 +152,7 @@ const Musteriler = () => {
         >
           Toplam: {musteriler.length} müşteri
         </Box>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={() => openDialog()}>
+        <Button variant="contained" startIcon={<AddIcon />} onClick={() => openDialog()} sx={{ order: { xs: 2, md: 0 } }}>
           Yeni Müşteri
         </Button>
       </Box>
@@ -160,30 +162,30 @@ const Musteriler = () => {
           {musteriler.length === 0 && <Alert severity="info">Kayıt bulunamadı</Alert>}
           {musteriler.map((m) => (
             <Paper key={m.id} sx={{ p: 1.5 }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Typography variant="subtitle2" fontWeight="bold">
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 1 }}>
+                <Typography variant="subtitle1" fontWeight="bold">
                   {m.ad_soyad}
                 </Typography>
-                <Box>
-                  <IslemDugmesi
-                    tur="goz"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      openDetay(m);
-                    }}
-                  />
-                  <IslemDugmesi tur="duz" onClick={() => openDialog(m)} />
-                  <IslemDugmesi tur="sil" onClick={() => handleDelete(m.id)} />
-                </Box>
+                <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>
+                  {m.telefon || '-'}
+                </Typography>
               </Box>
-              <Typography variant="body2" color="text.secondary">
-                {m.telefon || '-'}
-              </Typography>
               {m.adres && (
                 <Typography variant="body2" color="text.secondary">
                   {m.adres}
                 </Typography>
               )}
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
+                <IslemDugmesi
+                  tur="goz"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openDetay(m);
+                  }}
+                />
+                <IslemDugmesi tur="duz" onClick={() => openDialog(m)} />
+                <IslemDugmesi tur="sil" onClick={() => handleDelete(m.id)} />
+              </Box>
             </Paper>
           ))}
         </Box>
@@ -223,7 +225,7 @@ const Musteriler = () => {
       )}
 
       <Dialog open={dialog.open} onClose={() => setDialog({ open: false, data: null })} maxWidth="sm" fullWidth fullScreen={isMobile}>
-        <DialogTitle>{dialog.data ? 'Müşteri Düzenle' : 'Yeni Müşteri'}</DialogTitle>
+        <DialogBasligi ikon={<KisiIkon />} baslik={dialog.data ? 'Müşteri Düzenle' : 'Yeni Müşteri'} />
         <DialogContent>
           {error && (
             <Alert severity="error" sx={{ mb: 2 }}>

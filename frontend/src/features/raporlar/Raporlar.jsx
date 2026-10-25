@@ -72,7 +72,7 @@ const Raporlar = () => {
             select
             value={seciliPersonel}
             onChange={(e) => setSeciliPersonel(e.target.value)}
-            SelectProps={{ displayEmpty: true, renderValue: (v) => v || 'Personel' }}
+            SelectProps={{ displayEmpty: true, renderValue: (v) => v || 'Personel', SelectDisplayProps: { 'aria-label': 'Personel' } }}
             inputProps={{ 'aria-label': 'Personel' }}
             sx={{ minWidth: { xs: '100%', sm: 220 } }}
           >

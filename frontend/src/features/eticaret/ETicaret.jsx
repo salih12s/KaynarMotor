@@ -25,17 +25,18 @@ const ETicaret = () => {
 
   return (
     <Box>
-      <IstatistikSatiri
-        stats={e.stats}
-        hesaplananToplamKar={e.hesaplananToplamKar}
-        karGor={karGor}
-        isAdmin={isAdmin}
+      <IstatistikSatiri stats={e.stats} hesaplananToplamKar={e.hesaplananToplamKar} karGor={karGor} />
+
+      <Sekmeler
         tab={tab}
+        setTab={setTab}
+        platformFiltre={platformFiltre}
+        setPlatformFiltre={setPlatformFiltre}
+        platformlar={e.platformlar}
+        isAdmin={isAdmin}
         onYeniSatis={() => e.openSatisDialog()}
         onYeniPlatform={() => e.openPlatformDialog()}
       />
-
-      <Sekmeler tab={tab} setTab={setTab} platformFiltre={platformFiltre} setPlatformFiltre={setPlatformFiltre} platformlar={e.platformlar} />
 
       {/* Satışlar Tab */}
       {tab === 0 && (

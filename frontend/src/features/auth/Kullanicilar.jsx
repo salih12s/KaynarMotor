@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Damga, IslemDugmesi } from '../../shared/ui';
+import LockIcon from '@mui/icons-material/LockOutlined';
+import PersonAddIcon2 from '@mui/icons-material/PersonAddAltOutlined';
+import { Damga, IslemDugmesi, DialogBasligi } from '../../shared/ui';
 import { FONT, TON } from '../../app/tokenlar';
 import {
   Box,
@@ -267,7 +269,7 @@ const Kullanicilar = () => {
       </Dialog>
 
       <Dialog open={sifreDialog.open} onClose={() => setSifreDialog({ open: false, user: null, sifre: '' })} maxWidth="xs" fullWidth fullScreen={isMobile}>
-        <DialogTitle>Şifre Sıfırla</DialogTitle>
+        <DialogBasligi ikon={<LockIcon />} baslik={'Şifre Sıfırla'} />
         <DialogContent>
           {error && (
             <Alert severity="error" sx={{ mb: 2 }}>
@@ -295,7 +297,7 @@ const Kullanicilar = () => {
       </Dialog>
 
       <Dialog open={createDialog} onClose={() => setCreateDialog(false)} maxWidth="sm" fullWidth fullScreen={isMobile}>
-        <DialogTitle>Yeni Kullanıcı / Yatırımcı Ekle</DialogTitle>
+        <DialogBasligi ikon={<PersonAddIcon2 />} baslik={'Yeni Kullanıcı / Yatırımcı Ekle'} />
         <DialogContent>
           {error && (
             <Alert severity="error" sx={{ mb: 2 }}>

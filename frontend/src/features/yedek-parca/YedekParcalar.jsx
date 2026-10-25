@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { IslemDugmesi, OzetSeridi } from '../../shared/ui';
+import AyarIkon from '@mui/icons-material/SettingsOutlined';
+import { IslemDugmesi, OzetSeridi, DialogBasligi } from '../../shared/ui';
 import { useOnay } from '../../shared/ui';
 import { sonIstek } from '../../shared/utils/sonIstek';
 import {
@@ -15,7 +16,6 @@ import {
   Button,
   TextField,
   Dialog,
-  DialogTitle,
   DialogContent,
   DialogActions,
   Alert,
@@ -367,7 +367,7 @@ const YedekParcalar = () => {
       )}
 
       <Dialog open={dialog.open} onClose={() => setDialog({ open: false, data: null })} maxWidth="sm" fullWidth fullScreen={isMobile}>
-        <DialogTitle>{dialog.data ? 'Parça Düzenle' : 'Yeni Yedek Parça'}</DialogTitle>
+        <DialogBasligi ikon={<AyarIkon />} baslik={dialog.data ? 'Parça Düzenle' : 'Yeni Yedek Parça'} />
         <DialogContent>
           {error && (
             <Alert severity="error" sx={{ mb: 2 }}>

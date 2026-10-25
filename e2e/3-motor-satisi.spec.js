@@ -7,6 +7,9 @@
 const { test, expect } = require('@playwright/test');
 const { plakaUret, benzersiz, adminJetonu, stokMotoruEkle, motorGetir, adminGirisi } = require('./yardimci');
 
+// Listelerde plaka rozeti boşluklu yazılır: 34TST1337 -> 34 TST 1337
+const gorunen = (plaka) => plaka.replace(/^(\d{2})([A-Z]+)(\d+)$/, '$1 $2 $3');
+
 // Satış penceresini açar ve plakayı öneri listesinden seçer. `yazilan`: plakadan klavyeyle girilen kısım.
 const plakayiSec = async (page, plaka, yazilan) => {
   await page.getByRole('button', { name: 'Motor Satış' }).click();
@@ -40,7 +43,7 @@ test('stoktaki motor satılır: satış listesinde görünür ve veritabanında 
 
   // --- Ekranda ---
   await expect(pencere).toBeHidden();
-  const satir = page.getByRole('row').filter({ hasText: plaka });
+  const satir = page.getByRole('row').filter({ hasText: gorunen(plaka) });
   await expect(satir).toBeVisible();
   await expect(satir).toContainText('Honda');
   await expect(satir).toContainText(alici);
@@ -59,7 +62,7 @@ test('satıştan sonra Motor Stok: motor "Stokta" çipinden çıkar, "Satılan" 
   const motor = await stokMotoruEkle(jeton, plaka);
   const stoktaCipi = () => page.getByText(/^Stokta: \d+$/);
   const satilanCipi = () => page.getByText(/^Satılan: \d+$/);
-  const satir = () => page.getByRole('row').filter({ hasText: plaka });
+  const satir = () => page.getByRole('row').filter({ hasText: gorunen(plaka) });
 
   await adminGirisi(page);
   await page.goto('/motor-stok');

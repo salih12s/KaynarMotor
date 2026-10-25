@@ -1,14 +1,17 @@
 import React from 'react';
-import { Typography, TextField, Grid, Checkbox, FormControlLabel } from '@mui/material';
+import ReceiptIcon from '@mui/icons-material/ReceiptLongOutlined';
+import { BolumBasligi } from '../../../../shared/ui';
+import { MENU_RENK } from '../../../../app/tokenlar';
+import { TextField, Grid, Checkbox, FormControlLabel } from '@mui/material';
 import { BelgeBolumu, BekleyenBelgeler } from '../../SatisBelgeleri';
 
 // Satış formu: kalan ödeme, açıklama ve belgeler (kayıtlı satışta anında, yenide kayıttan sonra).
 const KalanOdemeBelgeBolumu = ({ f, setFormData, dialog, bekleyenBelgeler, setBekleyenBelgeler, kaydediliyor }) => {
   return (
     <>
-      <Typography variant="subtitle1" fontWeight="bold" sx={{ mt: 3, mb: 1 }}>
+      <BolumBasligi ikon={<ReceiptIcon />} renk={MENU_RENK.veresiye} sx={{ mt: 3 }}>
         Kalan Ödeme
-      </Typography>
+      </BolumBasligi>
       <Grid container spacing={2} alignItems="center">
         <Grid size={{ xs: 12, md: 4 }}>
           <FormControlLabel

@@ -1,5 +1,7 @@
 import React from 'react';
-import { Box, Typography, Button, Dialog, DialogTitle, DialogContent, DialogActions, Alert, Chip } from '@mui/material';
+import MotorIkon from '@mui/icons-material/TwoWheelerOutlined';
+import { DialogBasligi } from '../../../../shared/ui';
+import { Box, Typography, Button, Dialog, DialogContent, DialogActions, Alert, Chip } from '@mui/material';
 import MotorBilgileriBolumu from './MotorBilgileriBolumu';
 import FiyatKarBolumu from './FiyatKarBolumu';
 import TaraflarBolumu from './TaraflarBolumu';
@@ -24,8 +26,8 @@ const SatisFormModal = ({ form, stokMotorlar, yatirimciMap, canAlis, canKar, isM
     canliKar,
   } = form;
   return (
-    <Dialog open={dialog.open} onClose={kapat} maxWidth="md" fullWidth fullScreen={isMobile}>
-      <DialogTitle>{dialog.data ? 'Motor Düzenle' : 'Yeni Motor Satış'}</DialogTitle>
+    <Dialog open={dialog.open} onClose={kapat} maxWidth="lg" fullWidth fullScreen={isMobile}>
+      <DialogBasligi ikon={<MotorIkon />} baslik={dialog.data ? 'Motor Düzenle' : 'Yeni Motor Satış'} />
       <DialogContent>
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>

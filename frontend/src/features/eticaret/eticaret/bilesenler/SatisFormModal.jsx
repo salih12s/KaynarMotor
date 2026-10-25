@@ -1,5 +1,7 @@
 import React from 'react';
-import { Button, TextField, Dialog, DialogTitle, DialogContent, DialogActions, Alert, Grid, MenuItem } from '@mui/material';
+import StoreIcon from '@mui/icons-material/StorefrontOutlined';
+import { DialogBasligi } from '../../../../shared/ui';
+import { Button, TextField, Dialog, DialogContent, DialogActions, Alert, Grid, MenuItem } from '@mui/material';
 import KomisyonOnizleme from './KomisyonOnizleme';
 
 // Satış ekleme / düzenleme penceresi: stok ve platform seçimiyle otomatik doldurma + canlı komisyon önizlemesi.
@@ -8,7 +10,7 @@ const SatisFormModal = ({ e, stokOptions, platformlar, karGor, isMobile }) => {
   const kapat = () => setSatisDialog({ open: false, data: null });
   return (
     <Dialog open={satisDialog.open} onClose={kapat} maxWidth="md" fullWidth fullScreen={isMobile}>
-      <DialogTitle>{satisDialog.data ? 'Satış Düzenle' : 'Yeni E-Ticaret Satışı'}</DialogTitle>
+      <DialogBasligi ikon={<StoreIcon />} baslik={satisDialog.data ? 'Satış Düzenle' : 'Yeni E-Ticaret Satışı'} />
       <DialogContent>
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>

@@ -42,6 +42,11 @@ Her dosya: önce karakterizasyon testi, testi bozarak sına, betikle taşı, esk
 - Backend: `scripts/` ve `tests/` hâlâ JS (tsx ile çalışır).
 
 ## D. Tasarım gözden geçirme (arayüz işlerinde tasarım skill'leri kullanılır)
+**Tasarım A "Servis Defteri" uygulanıyor (`tasarim-a` dalı, 2026-10-25, canlıya çıkmadı).** Yapıldı: tokenlar/tema (anahtarlar, pencere başlığı/altı), ortak parçalar
+(`shared/ui`: Plaka, Damga, IslemDugmesi, OzetSeridi, DialogBasligi, BolumBasligi, BilgiKarti/SayiKutusu/Not, Onay, `sagaSutunlar`), yan menü + alt gezinme, Servis, giriş/kayıt, Müşteriler,
+Raporlar (tüm sekmeler + detay pencereleri), Kullanıcılar, Yetkilendirme, Veresiye, Belge Arşivi, Taksit (yönetim), Vitrin yönetimi, E-Ticaret, motor/aksesuar/yedek parça listeleri, form
+başlıkları (simgeli), stok etiketi (`shared/utils/stokEtiketi.js`). Kapsam kuralı: müşterinin gördüğü sayfalara (`/site`, `/ilan`, `/taksit/:fiyat`, `/s/:token`) dokunulmadı.
+Kalan cilalar: Platform/Aksesuar/Yedek parça form pencerelerini tasarımın sıkı 4 sütunlu düzenine getirmek, Kaydet düğmelerine onay simgesi, iş emri fişi yazdırma çıktısı.
 - Ayrık sol/sağ bölünmüş sayfa düzeni yok; ürünün kendi diline ait dokunuşlar (plaka, fiş, damga); açık tema ana tema, koyu tema kendi kimliğiyle.
 - Gözden geçir: vitrin (ana sayfa ve ilan sayfası), mobil görünüm, erişilebilirlik (odak, kontrast, klavye), tutarlı boşluk/renk (şimdi kırmızı `#C62828` değerleri
   dosyalara dağınık: tek tema belirteci olmalı).

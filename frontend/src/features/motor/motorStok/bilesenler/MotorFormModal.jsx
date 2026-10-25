@@ -1,5 +1,7 @@
 import React from 'react';
-import { Button, Dialog, DialogTitle, DialogContent, DialogActions, Alert } from '@mui/material';
+import MotorIkon from '@mui/icons-material/TwoWheelerOutlined';
+import { DialogBasligi } from '../../../../shared/ui';
+import { Button, Dialog, DialogContent, DialogActions, Alert } from '@mui/material';
 import MotorFormBilgi from './MotorFormBilgi';
 import MotorFormYatirimciSatici from './MotorFormYatirimciSatici';
 import MotorFormVitrinBelge from './MotorFormVitrinBelge';
@@ -11,7 +13,7 @@ const MotorFormModal = ({ form, perms, yatirimcilar, musteri, isMobile }) => {
   const { musteriOptions, searchMusteri } = musteri;
   return (
     <Dialog open={dialog.open} onClose={kapat} maxWidth="md" fullWidth fullScreen={isMobile}>
-      <DialogTitle>{dialog.data ? 'Motor Düzenle' : 'Yeni Motor Ekle'}</DialogTitle>
+      <DialogBasligi ikon={<MotorIkon />} baslik={dialog.data ? 'Motor Düzenle' : 'Yeni Motor Ekle'} />
       <DialogContent>
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
