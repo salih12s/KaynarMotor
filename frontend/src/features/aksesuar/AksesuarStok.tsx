@@ -1,10 +1,9 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { hataMesaji } from '../../shared/api/istemci';
+import React, { useState } from 'react';
 import { stokEtiketiYazdir } from '../../shared/utils/stokEtiketi';
 import InventoryIcon from '@mui/icons-material/Inventory2Outlined';
 import { IslemDugmesi, OzetSeridi, DialogBasligi, MevcutStok } from '../../shared/ui';
-import { useOnay } from '../../shared/ui';
-import { sonIstek } from '../../shared/utils/sonIstek';
+import { useStokYonetimi } from '../../shared/stok/useStokYonetimi';
+import StokIceAktarPenceresi from '../../shared/stok/StokIceAktarPenceresi';
 import {
   Box,
   Paper,
@@ -33,11 +32,8 @@ import UploadIcon from '@mui/icons-material/Upload';
 import SearchIcon from '@mui/icons-material/Search';
 import PrintIcon from '@mui/icons-material/Print';
 import { aksesuarStokService } from './aksesuarApi';
-import { sayiYaz, sayiDegeri } from '../../shared/utils/bicim';
+import { sayiYaz } from '../../shared/utils/bicim';
 import type { AksesuarStok as AksesuarStokKaydi } from '../../shared/tipler';
-
-// Hızlı yazarken eski aramanın yanıtı yeniyi ezmesin
-const sonAra = sonIstek();
 
 const BEDEN_OPTIONS = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
 const KATEGORI_OPTIONS = ['Aksesuar', 'Demir', 'Tank Ped', 'Yedek Parça', 'Ekipman', 'Sticker'];
@@ -56,146 +52,63 @@ interface StokFormu {
   kategori: string;
 }
 
+// Kayıtlı stoktan düzenleme formu
+const kayittanForm = (stok: AksesuarStokKaydi): StokFormu => ({
+  stok_kodu: stok.stok_kodu || '',
+  stok_adi: stok.stok_adi || '',
+  marka: stok.marka || '',
+  alis_fiyati: stok.alis_fiyati || '',
+  satis_fiyati: stok.satis_fiyati || '',
+  giren_miktar: stok.giren_miktar || 0,
+  platform: stok.platform || '',
+  beden: stok.beden || '',
+  renk: stok.renk || '',
+  kategori: stok.kategori || '',
+});
+
+// Yeni stok formu (stok kodu sunucudan önerilir)
+const yeniForm = (stokKodu: string): StokFormu => ({
+  stok_kodu: stokKodu,
+  stok_adi: '',
+  marka: '',
+  alis_fiyati: '',
+  satis_fiyati: '',
+  giren_miktar: 0,
+  platform: '',
+  beden: '',
+  renk: '',
+  kategori: '',
+});
+
 const AksesuarStok = () => {
-  const onay = useOnay();
   const isMobile = useMediaQuery(useTheme().breakpoints.down('sm'));
-  const [stoklar, setStoklar] = useState<AksesuarStokKaydi[]>([]);
-  const [dialog, setDialog] = useState<{ open: boolean; data: AksesuarStokKaydi | null }>({ open: false, data: null });
-  const [importDialog, setImportDialog] = useState(false);
-  const [importText, setImportText] = useState('');
-  const [formData, setFormData] = useState<StokFormu>({
-    stok_kodu: '',
-    stok_adi: '',
-    marka: '',
-    alis_fiyati: '',
-    satis_fiyati: '',
-    giren_miktar: '',
-    platform: '',
-    beden: '',
-    renk: '',
-    kategori: '',
-  });
-  const [error, setError] = useState('');
-  const [search, setSearch] = useState('');
   const [kategoriFilter, setKategoriFilter] = useState('');
-  const [stokFilter, setStokFilter] = useState('');
-
-  const loadData = useCallback(async () => {
-    try {
-      const res = await aksesuarStokService.getAll();
-      setStoklar(res.data);
-    } catch {}
-  }, []);
-
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
-
-  const handleSearch = useCallback(async () => {
-    if (!search.trim()) {
-      sonAra.iptal();
-      return loadData();
-    }
-    try {
-      const res = await sonAra(aksesuarStokService.search(search));
-      if (res) setStoklar(res.data);
-    } catch {}
-  }, [search, loadData]);
-
-  useEffect(() => {
-    const t = setTimeout(() => void handleSearch(), 300);
-    return () => clearTimeout(t);
-  }, [handleSearch]);
-
-  const openDialog = async (stok: AksesuarStokKaydi | null = null) => {
-    setError('');
-    if (stok) {
-      setFormData({
-        stok_kodu: stok.stok_kodu || '',
-        stok_adi: stok.stok_adi || '',
-        marka: stok.marka || '',
-        alis_fiyati: stok.alis_fiyati || '',
-        satis_fiyati: stok.satis_fiyati || '',
-        giren_miktar: stok.giren_miktar || 0,
-        platform: stok.platform || '',
-        beden: stok.beden || '',
-        renk: stok.renk || '',
-        kategori: stok.kategori || '',
-      });
-    } else {
-      let nextKodu = '';
-      try {
-        const res = await aksesuarStokService.getNextStokKodu();
-        nextKodu = res.data.nextStokKodu;
-      } catch {}
-      setFormData({
-        stok_kodu: nextKodu,
-        stok_adi: '',
-        marka: '',
-        alis_fiyati: '',
-        satis_fiyati: '',
-        giren_miktar: 0,
-        platform: '',
-        beden: '',
-        renk: '',
-        kategori: '',
-      });
-    }
-    setDialog({ open: true, data: stok });
-  };
-
-  const handleSave = async () => {
-    setError('');
-    try {
-      if (dialog.data) {
-        await aksesuarStokService.update(dialog.data.id, formData);
-      } else {
-        await aksesuarStokService.create(formData);
-      }
-      setDialog({ open: false, data: null });
-      loadData();
-    } catch (err) {
-      setError(hataMesaji(err, 'Hata'));
-    }
-  };
-
-  const handleDelete = async (id: number) => {
-    if (!(await onay('Bu stok kaydını silmek istediğinizden emin misiniz?', { baslik: 'Stok kaydını sil' }))) return;
-    try {
-      await aksesuarStokService.delete(id);
-      loadData();
-    } catch (err) {
-      alert(hataMesaji(err, 'Hata'));
-    }
-  };
-
-  const handleImport = async () => {
-    setError('');
-    try {
-      const lines = importText
-        .trim()
-        .split('\n')
-        .filter((l) => l.trim());
-      const items = lines.map((line) => {
-        const parts = line.split('\t').map((p) => p.trim());
-        return { stok_kodu: parts[0] || '', stok_adi: parts[1] || '', alis_fiyati: parts[2] || 0, satis_fiyati: parts[3] || 0, giren_miktar: parts[4] || 0 };
-      });
-      await aksesuarStokService.topluEkle(items);
-      setImportDialog(false);
-      setImportText('');
-      loadData();
-    } catch (err) {
-      setError(hataMesaji(err, 'İçe aktarma hatası'));
-    }
-  };
-
-  const totalUrun = stoklar.length;
-  const envanter = stoklar.reduce((acc, s) => acc + sayiDegeri(s.alis_fiyati) * parseInt(String(s.mevcut || 0)), 0);
-
-  const filteredStoklar = stoklar.filter((s) => {
-    const matchKategori = !kategoriFilter || (s.kategori || '').toLowerCase() === kategoriFilter.toLowerCase();
-    const matchStok = !stokFilter || (stokFilter === 'biten' ? (s.mevcut || 0) <= 0 : (s.mevcut || 0) > 0);
-    return matchKategori && matchStok;
+  const {
+    filteredStoklar,
+    totalUrun,
+    envanter,
+    dialog,
+    openDialog,
+    closeDialog,
+    formData,
+    setFormData,
+    handleSave,
+    handleDelete,
+    importDialog,
+    setImportDialog,
+    importText,
+    setImportText,
+    handleImport,
+    error,
+    search,
+    setSearch,
+    stokFilter,
+    setStokFilter,
+  } = useStokYonetimi<AksesuarStokKaydi, StokFormu>({
+    servis: aksesuarStokService,
+    kayittanForm,
+    yeniForm,
+    ekSuzgec: (s) => !kategoriFilter || (s.kategori || '').toLowerCase() === kategoriFilter.toLowerCase(),
   });
 
   return (
@@ -328,7 +241,7 @@ const AksesuarStok = () => {
       )}
 
       {/* Stok Ekle/Düzenle Dialog */}
-      <Dialog open={dialog.open} onClose={() => setDialog({ open: false, data: null })} maxWidth="sm" fullWidth fullScreen={isMobile}>
+      <Dialog open={dialog.open} onClose={closeDialog} maxWidth="sm" fullWidth fullScreen={isMobile}>
         <DialogBasligi ikon={<InventoryIcon />} baslik={dialog.data ? 'Stok Düzenle' : 'Yeni Stok'} />
         <DialogContent>
           {error && (
@@ -420,7 +333,7 @@ const AksesuarStok = () => {
           </Grid>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDialog({ open: false, data: null })}>İptal</Button>
+          <Button onClick={closeDialog}>İptal</Button>
           <Button startIcon={<PrintIcon />} onClick={() => stokEtiketiYazdir(formData)} disabled={!formData.stok_kodu}>
             Etiket Yazdır
           </Button>
@@ -430,27 +343,17 @@ const AksesuarStok = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Toplu İçe Aktarma */}
-      <Dialog open={importDialog} onClose={() => setImportDialog(false)} maxWidth="md" fullWidth fullScreen={isMobile}>
-        <DialogBasligi ikon={<UploadIcon />} baslik={'Toplu Stok İçe Aktar'} />
-        <DialogContent>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Her satıra bir ürün girin (Tab ile ayırın): Stok Kodu, Stok Adı, Alış Fiyatı, Satış Fiyatı, Miktar
-          </Typography>
-          {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {error}
-            </Alert>
-          )}
-          <TextField fullWidth multiline rows={10} value={importText} onChange={(e) => setImportText(e.target.value)} placeholder="AKS001	Ayna	50	100	20" />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setImportDialog(false)}>İptal</Button>
-          <Button variant="contained" onClick={handleImport}>
-            İçe Aktar
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <StokIceAktarPenceresi
+        acik={importDialog}
+        kapat={() => setImportDialog(false)}
+        metin={importText}
+        setMetin={setImportText}
+        hata={error}
+        aktar={handleImport}
+        isMobile={isMobile}
+        ornekSatir={'AKS001\tAyna\t50\t100\t20'}
+        sutunlar="Stok Kodu, Stok Adı, Alış Fiyatı, Satış Fiyatı, Miktar"
+      />
     </Box>
   );
 };

@@ -147,6 +147,24 @@ describe('Yedek Parça Stok: arama', () => {
     expect(yedekParcaStokService.search).not.toHaveBeenCalled();
   });
 
+  // Regression kalıbı: yazıp hemen silince bekleyen eski aramanın yanıtı, yeniden yüklenen tam listeyi ezmemeli
+  test('kutu boşaltılınca bekleyen eski aramanın geç gelen yanıtı tam listeyi bozmaz', async () => {
+    const user = await ekranAc();
+    let eskiyiBitir: (yanit: unknown) => void = () => {};
+    const eski = new Promise((coz) => {
+      eskiyiBitir = coz;
+    });
+    vi.mocked(yedekParcaStokService.search).mockImplementationOnce(() => eski as never);
+    await user.type(screen.getByPlaceholderText(ARAMA), 'fr');
+    await waitFor(() => expect(yedekParcaStokService.search).toHaveBeenCalledTimes(1));
+    const getAllSayisi = vi.mocked(yedekParcaStokService.getAll).mock.calls.length;
+    await user.clear(screen.getByPlaceholderText(ARAMA));
+    await waitFor(() => expect(vi.mocked(yedekParcaStokService.getAll).mock.calls.length).toBeGreaterThan(getAllSayisi)); // tam liste yeniden istendi
+    eskiyiBitir({ data: [FILTRE] }); // eski yanıt şimdi geliyor
+    await new Promise((c) => setTimeout(c, 50));
+    expect(screen.getByText('Zincir Seti')).toBeInTheDocument(); // tam liste bozulmadı
+  });
+
   test('hızlı yazarken eski aramanın geç gelen yanıtı yenisinin üzerine yazmaz', async () => {
     const user = await ekranAc();
     let eskiyiBitir: (yanit: unknown) => void = () => {};
