@@ -1,10 +1,11 @@
 import React from 'react';
+import type { ETicaretDurumu } from '../useETicaret';
 import StoreIcon from '@mui/icons-material/StorefrontOutlined';
 import { DialogBasligi } from '../../../../shared/ui';
 import { Button, TextField, Dialog, DialogContent, DialogActions, Alert, Grid } from '@mui/material';
 
 // Platform ekleme / düzenleme penceresi (yalnızca admin).
-const PlatformFormModal = ({ e, isMobile }) => {
+const PlatformFormModal = ({ e, isMobile }: { e: ETicaretDurumu; isMobile: boolean }) => {
   const { platformDialog, setPlatformDialog, error, platformForm, setPlatformForm, handlePlatformSave } = e;
   const kapat = () => setPlatformDialog({ open: false, data: null });
   return (

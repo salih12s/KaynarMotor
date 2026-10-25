@@ -1,25 +1,36 @@
 import { useOnay } from '../../../shared/ui';
 import { sayiDegeri } from '../../../shared/utils/bicim';
 import { hataMesaji } from '../../../shared/api/istemci';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import type { AksesuarStok, EticaretIstatistik, EticaretSatis, Platform } from '../../../shared/tipler';
 import { eticaretService } from '../eticaretApi';
 import { aksesuarStokService } from '../../aksesuar/aksesuarApi';
 import { detectPlatform, hesaplaKomisyon } from '../komisyon';
-import { bosSatisForm, satistanForm, bosPlatformForm, platformdanForm, hesaplaToplamKar } from './eticaretVeri';
+import { bosSatisForm, satistanForm, bosPlatformForm, platformdanForm, hesaplaToplamKar, type EticaretSatisFormu, type PlatformFormu } from './eticaretVeri';
+
+interface SatisDialogDurumu {
+  open: boolean;
+  data: EticaretSatis | null;
+}
+
+interface PlatformDialogDurumu {
+  open: boolean;
+  data: Platform | null;
+}
 
 // E-Ticaret sayfasının sunucu verisi ve pencere durumları: satışlar, platformlar, istatistik, stok listesi; satış/platform ekle-düzenle-sil;
 // seçili platforma göre canlı komisyon hesabı.
 export const useETicaret = () => {
   const onay = useOnay();
-  const [satislar, setSatislar] = useState([]);
-  const [platformlar, setPlatformlar] = useState([]);
-  const [stokOptions, setStokOptions] = useState([]);
-  const [stats, setStats] = useState({});
+  const [satislar, setSatislar] = useState<EticaretSatis[]>([]);
+  const [platformlar, setPlatformlar] = useState<Platform[]>([]);
+  const [stokOptions, setStokOptions] = useState<AksesuarStok[]>([]);
+  const [stats, setStats] = useState<EticaretIstatistik>({});
   const [error, setError] = useState('');
 
   // Satış dialog
-  const [satisDialog, setSatisDialog] = useState({ open: false, data: null });
-  const [satisForm, setSatisForm] = useState({
+  const [satisDialog, setSatisDialog] = useState<SatisDialogDurumu>({ open: false, data: null });
+  const [satisForm, setSatisForm] = useState<EticaretSatisFormu>({
     stok_id: '',
     platform_id: '',
     urun_adi: '',
@@ -33,13 +44,13 @@ export const useETicaret = () => {
   });
 
   // Platform dialog
-  const [platformDialog, setPlatformDialog] = useState({ open: false, data: null });
-  const [platformForm, setPlatformForm] = useState({ platform_adi: '', komisyon_orani: '', kdv_orani: '20', kargo_ucreti: '0' });
+  const [platformDialog, setPlatformDialog] = useState<PlatformDialogDurumu>({ open: false, data: null });
+  const [platformForm, setPlatformForm] = useState<PlatformFormu>({ platform_adi: '', komisyon_orani: '', kdv_orani: '20', kargo_ucreti: '0' });
 
   // Detay dialog
-  const [detayDialog, setDetayDialog] = useState({ open: false, data: null });
+  const [detayDialog, setDetayDialog] = useState<SatisDialogDurumu>({ open: false, data: null });
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       const [satisRes, platformRes, statsRes, stokRes] = await Promise.all([
         eticaretService.getSales(),
@@ -52,20 +63,20 @@ export const useETicaret = () => {
       setStats(statsRes.data);
       setStokOptions(stokRes.data);
     } catch {}
-  };
+  }, []);
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [loadData]);
 
   // ===== Satış İşlemleri =====
-  const openSatisDialog = (satis = null) => {
+  const openSatisDialog = (satis: EticaretSatis | null = null) => {
     setError('');
     setSatisForm(satis ? satistanForm(satis) : bosSatisForm());
     setSatisDialog({ open: true, data: satis });
   };
 
-  const handleStokSelect = (stokId) => {
+  const handleStokSelect = (stokId: string | number) => {
     const found = stokOptions.find((s) => s.id === Number(stokId));
     if (found) {
       setSatisForm((prev) => ({ ...prev, stok_id: stokId, urun_adi: found.stok_adi, alis_fiyati: sayiDegeri(found.alis_fiyati) }));
@@ -74,7 +85,7 @@ export const useETicaret = () => {
     }
   };
 
-  const handlePlatformSelect = (platformId) => {
+  const handlePlatformSelect = (platformId: string | number) => {
     const found = platformlar.find((p) => p.id === Number(platformId));
     if (found) {
       setSatisForm((prev) => ({
@@ -109,7 +120,7 @@ export const useETicaret = () => {
     }
   };
 
-  const handleSatisDelete = async (id) => {
+  const handleSatisDelete = async (id: number) => {
     if (!(await onay('Bu satışı silmek istediğinizden emin misiniz?'))) return;
     try {
       await eticaretService.deleteSale(id);
@@ -120,7 +131,7 @@ export const useETicaret = () => {
   };
 
   // ===== Platform İşlemleri =====
-  const openPlatformDialog = (p = null) => {
+  const openPlatformDialog = (p: Platform | null = null) => {
     setError('');
     setPlatformForm(p ? platformdanForm(p) : bosPlatformForm());
     setPlatformDialog({ open: true, data: p });
@@ -141,7 +152,7 @@ export const useETicaret = () => {
     }
   };
 
-  const handlePlatformDelete = async (id) => {
+  const handlePlatformDelete = async (id: number) => {
     if (!(await onay('Bu platformu silmek istediğinizden emin misiniz?'))) return;
     try {
       await eticaretService.deletePlatform(id);
@@ -183,3 +194,5 @@ export const useETicaret = () => {
     hesaplananToplamKar,
   };
 };
+
+export type ETicaretDurumu = ReturnType<typeof useETicaret>;

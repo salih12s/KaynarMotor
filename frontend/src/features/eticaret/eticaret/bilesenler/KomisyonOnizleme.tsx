@@ -1,9 +1,12 @@
 import React from 'react';
+import type { ETicaretDurumu } from '../useETicaret';
 import { Box, Paper, Typography, Divider } from '@mui/material';
 import { karEtiketi, formatTL } from '../eticaretVeri';
 
 // Satış formu: platforma göre canlı komisyon, KDV ve (yalnızca e-ticaret yetkisi olanlar) net kâr önizlemesi; satış fiyatı girilince görünür.
-const KomisyonOnizleme = ({ sf, canliPlatformTipi, canliHesap, karGor }) => {
+type KomisyonOnizlemeProps = Pick<ETicaretDurumu, 'sf' | 'canliPlatformTipi' | 'canliHesap'> & { karGor: boolean };
+
+const KomisyonOnizleme = ({ sf, canliPlatformTipi, canliHesap, karGor }: KomisyonOnizlemeProps) => {
   if (!(Number(sf.satis_fiyati) > 0)) return null;
   return (
     <Box sx={{ mt: 3 }}>
@@ -76,7 +79,7 @@ const KomisyonOnizleme = ({ sf, canliPlatformTipi, canliHesap, karGor }) => {
         </Typography>
         <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mt: 1 }}>
           {(() => {
-            let kdvItems = [
+            const kdvItems = [
               { label: 'Satıştan Oluşan KDV', value: canliHesap.satistanKDV },
               { label: 'Alıştan Oluşan KDV', value: canliHesap.alisKDV },
               { label: 'Kargodan Oluşan KDV', value: canliHesap.kargoKDV },

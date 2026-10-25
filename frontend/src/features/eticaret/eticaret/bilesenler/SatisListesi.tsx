@@ -1,4 +1,5 @@
 import React from 'react';
+import type { EticaretSatis } from '../../../../shared/tipler';
 import { IslemDugmesi, sagaSutunlar } from '../../../../shared/ui';
 import { RENK } from '../../../../app/tokenlar';
 import { Box, Paper, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Alert, Chip } from '@mui/material';
@@ -8,7 +9,17 @@ import { formatTL } from '../eticaretVeri';
 import { tarihYaz, sayiDegeri } from '../../../../shared/utils/bicim';
 
 // Satış listesi: dar ekranda kartlar, geniş ekranda tablo; kâr sütunu yalnızca e-ticaret yetkisi olanlar için.
-const SatisListesi = ({ satislar, platformFiltre, isMobile, karGor, onDetay, onDuzenle, onSil }) => {
+interface SatisListesiProps {
+  satislar: EticaretSatis[];
+  platformFiltre: string | number;
+  isMobile: boolean;
+  karGor: boolean;
+  onDetay: (satis: EticaretSatis) => void;
+  onDuzenle: (satis: EticaretSatis) => void;
+  onSil: (id: number) => void;
+}
+
+const SatisListesi = ({ satislar, platformFiltre, isMobile, karGor, onDetay, onDuzenle, onSil }: SatisListesiProps) => {
   const filtered = platformFiltre ? satislar.filter((s) => s.platform_id === Number(platformFiltre)) : satislar;
   return isMobile ? (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>

@@ -1,5 +1,6 @@
 import React from 'react';
-import { Box, Button, Dialog, DialogContent, DialogActions } from '@mui/material';
+import type { EticaretSatis } from '../../../../shared/tipler';
+import { Box, Button, Dialog, DialogContent, DialogActions, type DialogProps } from '@mui/material';
 import { BilgiKarti, BolumBasligi, DialogBasligi, SayiKutusu } from '../../../../shared/ui';
 import EditIcon from '@mui/icons-material/Edit';
 
@@ -8,8 +9,17 @@ import { karEtiketi, formatTL } from '../eticaretVeri';
 import { tarihYaz, sayiDegeri } from '../../../../shared/utils/bicim';
 
 // Satış detay penceresi: ürün/fiyat bilgileri, net kâr ve platforma özel komisyon ve KDV dökümü.
-const SatisDetayModal = ({ open, data, onClose, onDuzenle, isMobile, karGor }) => {
-  const dialogProps = { open, onClose, maxWidth: 'md', fullWidth: true, fullScreen: isMobile };
+interface SatisDetayModalProps {
+  open: boolean;
+  data: EticaretSatis | null;
+  onClose: () => void;
+  onDuzenle: (satis: EticaretSatis) => void;
+  isMobile: boolean;
+  karGor: boolean;
+}
+
+const SatisDetayModal = ({ open, data, onClose, onDuzenle, isMobile, karGor }: SatisDetayModalProps) => {
+  const dialogProps: DialogProps = { open, onClose, maxWidth: 'md', fullWidth: true, fullScreen: isMobile };
   if (!data) return <Dialog {...dialogProps} />;
   const s = data;
   const detayPlatformTipi = detectPlatform(s.platform_adi);
@@ -95,7 +105,7 @@ const SatisDetayModal = ({ open, data, onClose, onDuzenle, isMobile, karGor }) =
         <BolumBasligi>KDV Detayları</BolumBasligi>
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(6, 1fr)' }, gap: 1.5 }}>
           {(() => {
-            let kdvItems = [
+            const kdvItems = [
               { label: 'Satıştan Oluşan KDV', value: `${formatTL(h.satistanKDV)} ₺` },
               { label: 'Alıştan Oluşan KDV', value: `${formatTL(h.alisKDV)} ₺` },
               { label: 'Kargodan Oluşan KDV', value: `${formatTL(h.kargoKDV)} ₺` },

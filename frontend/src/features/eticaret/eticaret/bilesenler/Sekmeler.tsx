@@ -1,10 +1,22 @@
 import React from 'react';
+import type { Platform } from '../../../../shared/tipler';
 import { Box, Button, TextField, MenuItem, Tabs, Tab } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { RENK } from '../../../../app/tokenlar';
 
 // Satışlar / Platformlar sekmeleri; sağda (satışlarda) platform süzgeci ve sekmeye göre "Yeni Satış" / "Yeni Platform" (yalnız admin) düğmesi.
-const Sekmeler = ({ tab, setTab, platformFiltre, setPlatformFiltre, platformlar, isAdmin, onYeniSatis, onYeniPlatform }) => {
+interface SekmelerProps {
+  tab: number;
+  setTab: (tab: number) => void;
+  platformFiltre: string | number;
+  setPlatformFiltre: (platformId: string | number) => void;
+  platformlar: Platform[];
+  isAdmin: boolean;
+  onYeniSatis: () => void;
+  onYeniPlatform: () => void;
+}
+
+const Sekmeler = ({ tab, setTab, platformFiltre, setPlatformFiltre, platformlar, isAdmin, onYeniSatis, onYeniPlatform }: SekmelerProps) => {
   return (
     <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 1.5, borderBottom: `1px solid ${RENK.cizgi}` }}>
       <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ flexGrow: 1 }} TabIndicatorProps={{ sx: { bgcolor: RENK.kirmizi } }}>

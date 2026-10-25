@@ -1,11 +1,21 @@
 import React from 'react';
+import type { AksesuarStok, Platform } from '../../../../shared/tipler';
+import type { ETicaretDurumu } from '../useETicaret';
 import StoreIcon from '@mui/icons-material/StorefrontOutlined';
 import { DialogBasligi } from '../../../../shared/ui';
 import { Button, TextField, Dialog, DialogContent, DialogActions, Alert, Grid, MenuItem } from '@mui/material';
 import KomisyonOnizleme from './KomisyonOnizleme';
 
 // Satış ekleme / düzenleme penceresi: stok ve platform seçimiyle otomatik doldurma + canlı komisyon önizlemesi.
-const SatisFormModal = ({ e, stokOptions, platformlar, karGor, isMobile }) => {
+interface SatisFormModalProps {
+  e: ETicaretDurumu;
+  stokOptions: AksesuarStok[];
+  platformlar: Platform[];
+  karGor: boolean;
+  isMobile: boolean;
+}
+
+const SatisFormModal = ({ e, stokOptions, platformlar, karGor, isMobile }: SatisFormModalProps) => {
   const { satisDialog, setSatisDialog, error, setSatisForm, handleStokSelect, handlePlatformSelect, sf, canliPlatformTipi, canliHesap, handleSatisSave } = e;
   const kapat = () => setSatisDialog({ open: false, data: null });
   return (
@@ -36,7 +46,7 @@ const SatisFormModal = ({ e, stokOptions, platformlar, karGor, isMobile }) => {
               <MenuItem value="">Seçiniz</MenuItem>
               {platformlar.map((p) => (
                 <MenuItem key={p.id} value={p.id}>
-                  {p.platform_adi} (%{parseFloat(p.komisyon_orani).toFixed(2)})
+                  {p.platform_adi} (%{parseFloat(String(p.komisyon_orani)).toFixed(2)})
                 </MenuItem>
               ))}
             </TextField>

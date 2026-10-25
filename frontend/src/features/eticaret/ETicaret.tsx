@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Box, useTheme, useMediaQuery } from '@mui/material';
 import { useAuth } from '../auth/AuthContext';
 import { useETicaret } from './eticaret/useETicaret';
+import type { EticaretSatis } from '../../shared/tipler';
 import IstatistikSatiri from './eticaret/bilesenler/IstatistikSatiri';
 import Sekmeler from './eticaret/bilesenler/Sekmeler';
 import SatisListesi from './eticaret/bilesenler/SatisListesi';
@@ -20,7 +21,7 @@ const ETicaret = () => {
   const karGor = isAdmin || !!user?.eticaret_yetkisi;
   const [tab, setTab] = useState(0);
   // Platform filtre
-  const [platformFiltre, setPlatformFiltre] = useState('');
+  const [platformFiltre, setPlatformFiltre] = useState<string | number>('');
   const e = useETicaret();
 
   return (
@@ -45,7 +46,7 @@ const ETicaret = () => {
           platformFiltre={platformFiltre}
           isMobile={isMobile}
           karGor={karGor}
-          onDetay={(s) => e.setDetayDialog({ open: true, data: s })}
+          onDetay={(s: EticaretSatis) => e.setDetayDialog({ open: true, data: s })}
           onDuzenle={e.openSatisDialog}
           onSil={e.handleSatisDelete}
         />

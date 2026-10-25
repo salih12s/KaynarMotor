@@ -1,4 +1,5 @@
 import React from 'react';
+import type { Platform } from '../../../../shared/tipler';
 import { sayiDegeri } from '../../../../shared/utils/bicim';
 import { IslemDugmesi } from '../../../../shared/ui';
 import { Box, Paper, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Alert } from '@mui/material';
@@ -6,7 +7,15 @@ import { Box, Paper, Typography, Table, TableBody, TableCell, TableContainer, Ta
 import { formatTL } from '../eticaretVeri';
 
 // Platform listesi: dar ekranda kartlar, geniş ekranda tablo; düzenle/sil yalnızca admin için.
-const PlatformListesi = ({ platformlar, isMobile, isAdmin, onDuzenle, onSil }) => {
+interface PlatformListesiProps {
+  platformlar: Platform[];
+  isMobile: boolean;
+  isAdmin: boolean;
+  onDuzenle: (platform: Platform) => void;
+  onSil: (id: number) => void;
+}
+
+const PlatformListesi = ({ platformlar, isMobile, isAdmin, onDuzenle, onSil }: PlatformListesiProps) => {
   return isMobile ? (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
       {platformlar.length === 0 && <Alert severity="info">Platform yok</Alert>}
