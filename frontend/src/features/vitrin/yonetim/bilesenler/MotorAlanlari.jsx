@@ -20,8 +20,12 @@ const MotorAlanlari = ({ f, stokMotorlar, segmentler }) => {
           value={form.motor_durumu}
           sx={{
             bgcolor: RENK.yuzey,
-            '& .MuiToggleButton-root': { textTransform: 'none', color: RENK.soluk, borderColor: RENK.alanCizgi },
-            '& .Mui-selected, & .Mui-selected:hover': { bgcolor: RENK.murekkep, color: '#fff' },
+            '& .MuiToggleButton-root': {
+              textTransform: 'none',
+              color: RENK.soluk,
+              borderColor: RENK.alanCizgi,
+              '&.Mui-selected, &.Mui-selected:hover': { bgcolor: RENK.murekkep, color: '#fff' },
+            },
           }}
           onChange={(e, val) => {
             if (!val) return;
