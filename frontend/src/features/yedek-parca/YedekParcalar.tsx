@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, type KeyboardEvent } from 'react';
 import { hataMesaji } from '../../shared/api/istemci';
 import AyarIkon from '@mui/icons-material/SettingsOutlined';
 import { IslemDugmesi, OzetSeridi, DialogBasligi } from '../../shared/ui';
@@ -36,10 +36,33 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { yedekParcaService, yedekParcaStokService } from './yedekParcaApi';
 import { musteriService } from '../musteriler/musteriApi';
 import { useKarGor } from '../auth/AuthContext';
-import { sayiYaz, sayiDegeri } from '../../shared/utils/bicim';
+import { sayiYaz, sayiDegeri, type Sayi } from '../../shared/utils/bicim';
+import type { YedekParcaSatis, YedekParcaStok } from '../../shared/tipler';
 
 // Hızlı yazarken eski aramanın yanıtı yeniyi ezmesin
 const sonAra = sonIstek();
+
+/** Satış formunun alanları: sayısal alanlar yazılırken metin, kayıttan gelirken sayı olabilir. */
+interface YedekParcaFormu {
+  urun_adi: string;
+  alis_fiyati: string | number;
+  satis_fiyati: string | number;
+  musteri_adi: string;
+  musteri_telefon: string;
+  kalan_odeme: string | number;
+  odeme_tamamlandi: boolean;
+  stok_id: number | null;
+  adet: string | number;
+}
+
+/** Satışa bağlanan stok: kayıt düzenlenirken yalnızca ad ve birim fiyatlar bilinir, stoktan seçilince `mevcut` da gelir. */
+interface SeciliStok {
+  id: number;
+  stok_adi: string | null;
+  alis_fiyati?: Sayi;
+  satis_fiyati?: Sayi;
+  mevcut?: number | null;
+}
 
 const YedekParcalar = () => {
   const onay = useOnay();
@@ -47,9 +70,9 @@ const YedekParcalar = () => {
   const isMobile = useMediaQuery(useTheme().breakpoints.down('sm'));
   const location = useLocation();
   const navigate = useNavigate();
-  const [parcalar, setParcalar] = useState([]);
-  const [dialog, setDialog] = useState({ open: false, data: null });
-  const [formData, setFormData] = useState({
+  const [parcalar, setParcalar] = useState<YedekParcaSatis[]>([]);
+  const [dialog, setDialog] = useState<{ open: boolean; data: YedekParcaSatis | null }>({ open: false, data: null });
+  const [formData, setFormData] = useState<YedekParcaFormu>({
     urun_adi: '',
     alis_fiyati: '',
     satis_fiyati: '',
@@ -62,9 +85,9 @@ const YedekParcalar = () => {
   });
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
-  const [stokOptions, setStokOptions] = useState([]);
+  const [stokOptions, setStokOptions] = useState<YedekParcaStok[]>([]);
   const [stokInput, setStokInput] = useState('');
-  const [seciliStok, setSeciliStok] = useState(null);
+  const [seciliStok, setSeciliStok] = useState<SeciliStok | null>(null);
 
   const loadData = async () => {
     try {
@@ -83,7 +106,7 @@ const YedekParcalar = () => {
     const p = parcalar.find((x) => x.id === id);
     if (p) openDialog(p);
     navigate(location.pathname, { replace: true, state: {} });
-  }, [location.state, parcalar]);
+  }, [location.state, location.pathname, navigate, parcalar]);
 
   const filtered = parcalar.filter(
     (p) =>
@@ -92,7 +115,7 @@ const YedekParcalar = () => {
       (p.musteri_telefon || '').includes(search),
   );
 
-  const openDialog = (parca = null) => {
+  const openDialog = (parca: YedekParcaSatis | null = null) => {
     setError('');
     setStokOptions([]);
     setStokInput('');
@@ -138,7 +161,7 @@ const YedekParcalar = () => {
   };
 
   // Yedek parça stoğundan ara (ad, marka veya barkod ile)
-  const handleStokSearch = async (q) => {
+  const handleStokSearch = async (q: string) => {
     if (!q || q.trim().length < 2) {
       sonAra.iptal();
       setStokOptions([]);
@@ -151,7 +174,7 @@ const YedekParcalar = () => {
   };
 
   // Stok ürününü satışa bağla: ürün adı ve fiyatlar otomatik dolar, kaydedilince stoktan düşer
-  const selectStok = (stok) => {
+  const selectStok = (stok: YedekParcaStok) => {
     setSeciliStok(stok);
     setFormData((prev) => ({
       ...prev,
@@ -166,7 +189,7 @@ const YedekParcalar = () => {
   };
 
   // Barkod okutulduğunda (Enter) stok kodundan tam eşleşme bul
-  const handleStokKeyDown = async (e) => {
+  const handleStokKeyDown = async (e: KeyboardEvent) => {
     if (e.key !== 'Enter') return;
     const kod = (stokInput || '').trim();
     if (!kod) return;
@@ -180,7 +203,7 @@ const YedekParcalar = () => {
   };
 
   // Adet değişince stoğa bağlı satışta toplam fiyatlar birim fiyattan yeniden hesaplanır
-  const handleAdetChange = (v) => {
+  const handleAdetChange = (v: string) => {
     setFormData((prev) => {
       const adet = Number(v) || 0;
       if (seciliStok && adet > 0) {
@@ -203,8 +226,9 @@ const YedekParcalar = () => {
   const handleSave = async () => {
     setError('');
     try {
-      const payload = { ...formData, kalan_odeme: formData.odeme_tamamlandi ? 0 : formData.kalan_odeme || 0 };
-      delete payload.odeme_tamamlandi;
+      // `odeme_tamamlandi` yalnızca ekran içindir; sunucuya kalan ödeme olarak gider
+      const { odeme_tamamlandi, ...alanlar } = formData;
+      const payload = { ...alanlar, kalan_odeme: odeme_tamamlandi ? 0 : formData.kalan_odeme || 0 };
       if (dialog.data) {
         await yedekParcaService.update(dialog.data.id, payload);
       } else {
@@ -217,7 +241,7 @@ const YedekParcalar = () => {
     }
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (id: number) => {
     if (!(await onay('Bu kaydı silmek istediğinizden emin misiniz?', { baslik: 'Kaydı sil' }))) return;
     try {
       await yedekParcaService.delete(id);

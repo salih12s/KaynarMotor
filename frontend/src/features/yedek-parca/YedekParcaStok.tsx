@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { hataMesaji } from '../../shared/api/istemci';
 import { stokEtiketiYazdir } from '../../shared/utils/stokEtiketi';
 import AyarIkon from '@mui/icons-material/SettingsOutlined';
@@ -34,34 +34,45 @@ import SearchIcon from '@mui/icons-material/Search';
 import PrintIcon from '@mui/icons-material/Print';
 import { yedekParcaStokService } from './yedekParcaApi';
 import { sayiYaz, sayiDegeri } from '../../shared/utils/bicim';
+import type { YedekParcaStok as YedekParcaStokKaydi } from '../../shared/tipler';
 
 // Hızlı yazarken eski aramanın yanıtı yeniyi ezmesin
 const sonAra = sonIstek();
 
+/** Stok ekleme/düzenleme formu: sayısal alanlar yazılırken metin, kayıttan gelirken sayı olabilir. */
+interface StokFormu {
+  stok_kodu: string;
+  stok_adi: string;
+  marka: string;
+  alis_fiyati: string | number;
+  satis_fiyati: string | number;
+  giren_miktar: string | number;
+}
+
 const YedekParcaStok = () => {
   const onay = useOnay();
   const isMobile = useMediaQuery(useTheme().breakpoints.down('sm'));
-  const [stoklar, setStoklar] = useState([]);
-  const [dialog, setDialog] = useState({ open: false, data: null });
+  const [stoklar, setStoklar] = useState<YedekParcaStokKaydi[]>([]);
+  const [dialog, setDialog] = useState<{ open: boolean; data: YedekParcaStokKaydi | null }>({ open: false, data: null });
   const [importDialog, setImportDialog] = useState(false);
   const [importText, setImportText] = useState('');
-  const [formData, setFormData] = useState({ stok_kodu: '', stok_adi: '', marka: '', alis_fiyati: '', satis_fiyati: '', giren_miktar: '' });
+  const [formData, setFormData] = useState<StokFormu>({ stok_kodu: '', stok_adi: '', marka: '', alis_fiyati: '', satis_fiyati: '', giren_miktar: '' });
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
   const [stokFilter, setStokFilter] = useState('');
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       const res = await yedekParcaStokService.getAll();
       setStoklar(res.data);
     } catch {}
-  };
+  }, []);
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [loadData]);
 
-  const handleSearch = async () => {
+  const handleSearch = useCallback(async () => {
     if (!search.trim()) {
       sonAra.iptal();
       return loadData();
@@ -70,14 +81,14 @@ const YedekParcaStok = () => {
       const res = await sonAra(yedekParcaStokService.search(search));
       if (res) setStoklar(res.data);
     } catch {}
-  };
+  }, [search, loadData]);
 
   useEffect(() => {
     const t = setTimeout(handleSearch, 300);
     return () => clearTimeout(t);
-  }, [search]);
+  }, [handleSearch]);
 
-  const openDialog = async (stok = null) => {
+  const openDialog = async (stok: YedekParcaStokKaydi | null = null) => {
     setError('');
     if (stok) {
       setFormData({
@@ -114,7 +125,7 @@ const YedekParcaStok = () => {
     }
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (id: number) => {
     if (!(await onay('Bu stok kaydını silmek istediğinizden emin misiniz?', { baslik: 'Stok kaydını sil' }))) return;
     try {
       await yedekParcaStokService.delete(id);
@@ -145,7 +156,7 @@ const YedekParcaStok = () => {
   };
 
   const totalUrun = stoklar.length;
-  const envanter = stoklar.reduce((acc, s) => acc + sayiDegeri(s.alis_fiyati) * parseInt(s.mevcut || 0), 0);
+  const envanter = stoklar.reduce((acc, s) => acc + sayiDegeri(s.alis_fiyati) * parseInt(String(s.mevcut || 0)), 0);
 
   const filteredStoklar = stoklar.filter((s) => {
     return !stokFilter || (stokFilter === 'biten' ? (s.mevcut || 0) <= 0 : (s.mevcut || 0) > 0);
