@@ -1,5 +1,6 @@
 import React from 'react';
 import { IslemDugmesi } from '../../../../shared/ui';
+import MotorIcon from '@mui/icons-material/TwoWheelerOutlined';
 import { Box, Button, Typography, Grid, Card, CardMedia, CardContent, CardActions, TextField, IconButton, Chip, CircularProgress } from '@mui/material';
 
 import DragIcon from '@mui/icons-material/DragIndicator';
@@ -97,14 +98,32 @@ const IlanKarti = ({ u, index, liste, isAdmin, isMotor, onDuzenle }) => {
           </Box>
         )}
         <Box sx={{ position: 'relative', width: '100%', aspectRatio: '4 / 3', overflow: 'hidden', bgcolor: '#F3F3EE', flexShrink: 0 }}>
-          <CardMedia
-            component="img"
-            image={u.kapak_gorsel_id ? vitrinService.gorselUrl(u.kapak_gorsel_id) : '/KaynarMotor.png'}
-            alt={u.baslik}
-            loading="lazy"
-            decoding="async"
-            sx={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
-          />
+          {u.kapak_gorsel_id ? (
+            <CardMedia
+              component="img"
+              image={vitrinService.gorselUrl(u.kapak_gorsel_id)}
+              alt={u.baslik}
+              loading="lazy"
+              decoding="async"
+              sx={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+            />
+          ) : (
+            <Box
+              sx={{
+                position: 'absolute',
+                inset: 0,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 0.5,
+                color: 'text.secondary',
+              }}
+            >
+              <MotorIcon fontSize="large" />
+              <Typography variant="body2">Fotoğraf yok</Typography>
+            </Box>
+          )}
         </Box>
         <CardContent sx={{ flex: 1, pb: 1, display: 'flex', flexDirection: 'column' }}>
           {u.ilan_no != null && (

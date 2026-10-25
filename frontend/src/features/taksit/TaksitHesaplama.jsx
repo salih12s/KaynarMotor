@@ -15,14 +15,13 @@ import {
   TableCell,
   TableBody,
   TableContainer,
-  useTheme,
-  useMediaQuery,
 } from '@mui/material';
 import CalculateIcon from '@mui/icons-material/Calculate';
 import ClearIcon from '@mui/icons-material/Clear';
 import ShareIcon from '@mui/icons-material/Share';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import { sayiYaz } from '../../shared/utils/bicim';
+import { FONT, RENK } from '../../app/tokenlar';
 
 // Taksit oranları (nakit fiyat / oran = taksitli toplam)
 export const ORANLAR = [
@@ -128,8 +127,27 @@ export const TaksitTablo = ({ sonuc, isMobile }) => {
   );
 };
 
+// Yönetim sayfasındaki sonuç: her taksit süresi için solda kırmızı şeritli kart (paylaşım sayfası TaksitTablo'yu kullanmaya devam eder).
+const TaksitKartlari = ({ sonuc }) => (
+  <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 2 }}>
+    {sonuc.map((r) => (
+      <Paper key={r.ay} sx={{ p: 2, borderLeft: `4px solid ${RENK.kirmizi}`, bgcolor: RENK.yuzey }}>
+        <Typography sx={{ fontFamily: FONT.baslik, fontWeight: 700, fontSize: 30, lineHeight: 1.2, mb: 1 }}>{r.ay} Ay</Typography>
+        {[
+          ['Aylık', r.aylik, 24],
+          ['Toplam', r.toplam, 18],
+        ].map(([etiket, deger, boyut]) => (
+          <Box key={etiket} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 1 }}>
+            <Typography sx={{ color: RENK.soluk }}>{etiket}</Typography>
+            <Typography sx={{ fontFamily: FONT.baslik, fontWeight: 700, fontSize: boyut, whiteSpace: 'nowrap' }}>{fmtTL(deger)}</Typography>
+          </Box>
+        ))}
+      </Paper>
+    ))}
+  </Box>
+);
+
 const TaksitHesaplama = () => {
-  const isMobile = useMediaQuery(useTheme().breakpoints.down('sm'));
   const [nakit, setNakit] = useState('');
   const [pesinat, setPesinat] = useState('');
   const [goster, setGoster] = useState(false);
@@ -165,15 +183,12 @@ const TaksitHesaplama = () => {
   };
 
   return (
-    <Box sx={{ maxWidth: 760, mx: 'auto' }}>
-      <Typography variant="h5" fontWeight="bold" gutterBottom>
-        Taksit Hesaplama
-      </Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+    <Box sx={{ maxWidth: 900, mx: 'auto' }}>
+      <Typography color="text.secondary" sx={{ mb: 2 }}>
         Nakit fiyat girerek 3, 6, 9 ve 12 ay taksitli ödeme seçeneklerini hesaplayabilirsiniz.
       </Typography>
 
-      <Paper sx={{ p: { xs: 2, md: 3 }, mb: 2, borderRadius: 3 }}>
+      <Paper sx={{ p: { xs: 2, md: 2.5 }, mb: 2 }}>
         <Stack spacing={1.5}>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
             <TextField
@@ -224,20 +239,12 @@ const TaksitHesaplama = () => {
 
       {sonuc && (
         <>
+          <TaksitKartlari sonuc={sonuc} />
           {paraToNumber(pesinat) > 0 && (
-            <Paper sx={{ p: 2, mb: 2, borderRadius: 3, textAlign: 'center' }}>
-              <Typography variant="body2" color="text.secondary">
-                Nakit Fiyat <span style={{ textDecoration: 'line-through' }}>{fmtTL(parseFloat(nakit) || 0)}</span> − Peşinat {fmtTL(paraToNumber(pesinat))}
-              </Typography>
-              <Typography variant="h5" fontWeight="bold" sx={{ color: '#C62828' }}>
-                {fmtTL(Math.max(kalan, 0))}
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                Taksitler bu tutar üzerinden hesaplanmaktadır
-              </Typography>
-            </Paper>
+            <Alert severity="info" sx={{ mt: 2 }}>
+              Peşinat sonrası kalan {fmtTL(Math.max(kalan, 0))} üzerinden hesaplandı.
+            </Alert>
           )}
-          <TaksitTablo sonuc={sonuc} isMobile={isMobile} />
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ mt: 2 }}>
             <Button variant="outlined" startIcon={<ShareIcon />} onClick={linkKopyala}>
               Müşteri Linkini Kopyala

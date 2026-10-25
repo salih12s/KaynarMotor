@@ -34,6 +34,7 @@ import SearchIcon from '@mui/icons-material/Search';
 
 import { musteriService } from './musteriApi';
 import { sayiYaz, tarihYaz } from '../../shared/utils/bicim';
+import { TON } from '../../app/tokenlar';
 
 // Hızlı yazarken eski aramanın yanıtı yeniyi ezmesin
 const sonAra = sonIstek();
@@ -116,22 +117,13 @@ const Musteriler = () => {
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, flexWrap: 'wrap', gap: 2 }}>
-        <Typography variant="h5" fontWeight="bold">
-          Müşteriler
-        </Typography>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={() => openDialog()}>
-          Yeni Müşteri
-        </Button>
-      </Box>
-
-      <Paper sx={{ p: 2, mb: 2 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2, flexWrap: 'wrap' }}>
         <TextField
           size="small"
-          fullWidth
           placeholder="Müşteri ara (ad, telefon)"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
+          sx={{ flex: '1 1 260px', maxWidth: 560 }}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
@@ -140,7 +132,28 @@ const Musteriler = () => {
             ),
           }}
         />
-      </Paper>
+        <Box sx={{ flex: 1, display: { xs: 'none', md: 'block' } }} />
+        <Box
+          component="span"
+          sx={{
+            display: 'inline-flex',
+            height: 36,
+            alignItems: 'center',
+            px: 1.5,
+            border: `1.5px solid ${TON.gri.fg}`,
+            borderRadius: '4px',
+            bgcolor: TON.gri.bg,
+            color: TON.gri.fg,
+            fontSize: 14,
+            fontWeight: 700,
+          }}
+        >
+          Toplam: {musteriler.length} müşteri
+        </Box>
+        <Button variant="contained" startIcon={<AddIcon />} onClick={() => openDialog()}>
+          Yeni Müşteri
+        </Button>
+      </Box>
 
       {isMobile ? (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
@@ -187,7 +200,7 @@ const Musteriler = () => {
             <TableBody>
               {musteriler.map((m) => (
                 <TableRow key={m.id} hover>
-                  <TableCell>{m.ad_soyad}</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>{m.ad_soyad}</TableCell>
                   <TableCell>{m.telefon || '-'}</TableCell>
                   <TableCell>{m.adres || '-'}</TableCell>
                   <TableCell>

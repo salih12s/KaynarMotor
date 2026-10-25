@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { IslemDugmesi } from '../../shared/ui';
+import { Damga, IslemDugmesi } from '../../shared/ui';
+import { FONT, TON } from '../../app/tokenlar';
 import {
   Box,
   Paper,
@@ -11,7 +12,6 @@ import {
   TableHead,
   TableRow,
   Button,
-  Chip,
   Alert,
   Dialog,
   DialogTitle,
@@ -27,6 +27,27 @@ import {
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 
 import { authService } from './authApi';
+
+// Rol: yuvarlak köşeli düz etiket (personel gri, yatırımcı mor, admin kırmızı).
+const ROL = { admin: ['kirmizi', 'admin'], yatirimci: ['mor', 'yatırımcı'], personel: ['gri', 'personel'], muhasebeci: ['mavi', 'muhasebeci'] };
+const RolEtiketi = ({ rol }) => {
+  const [ton, yazi] = ROL[rol] || ['gri', rol];
+  return (
+    <Box
+      component="span"
+      sx={{ display: 'inline-block', px: 1.25, py: '1px', borderRadius: '999px', fontSize: 13, fontWeight: 600, color: TON[ton].fg, bgcolor: TON[ton].bg }}
+    >
+      {yazi}
+    </Box>
+  );
+};
+
+// Onay durumu: çerçeveli damga
+const ONAY = { onaylandi: ['yesil', 'Onaylandı'], reddedildi: ['kirmizi', 'Reddedildi'], beklemede: ['bekle', 'Onay bekliyor'] };
+const OnayDamgasi = ({ durum }) => {
+  const [ton, yazi] = ONAY[durum] || ['gri', durum];
+  return <Damga ton={ton}>{yazi}</Damga>;
+};
 
 const Kullanicilar = () => {
   const isMobile = useMediaQuery(useTheme().breakpoints.down('sm'));
@@ -115,12 +136,6 @@ const Kullanicilar = () => {
     }
   };
 
-  const durumRenk = (durum) => {
-    if (durum === 'onaylandi') return 'success';
-    if (durum === 'reddedildi') return 'error';
-    return 'warning';
-  };
-
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, flexWrap: 'wrap', gap: 1 }}>
@@ -162,8 +177,8 @@ const Kullanicilar = () => {
                   {user.ad_soyad}
                 </Typography>
                 <Box sx={{ display: 'flex', gap: 0.5 }}>
-                  <Chip label={user.rol} size="small" color={user.rol === 'admin' ? 'primary' : 'default'} sx={{ height: 20, fontSize: '0.7rem' }} />
-                  <Chip label={user.onay_durumu} size="small" color={durumRenk(user.onay_durumu)} sx={{ height: 20, fontSize: '0.7rem' }} />
+                  <RolEtiketi rol={user.rol} />
+                  <OnayDamgasi durum={user.onay_durumu} />
                 </Box>
               </Box>
               <Typography variant="body2" color="text.secondary">
@@ -204,13 +219,13 @@ const Kullanicilar = () => {
             <TableBody>
               {users.map((user) => (
                 <TableRow key={user.id} hover>
-                  <TableCell>{user.ad_soyad}</TableCell>
-                  <TableCell>{user.kullanici_adi}</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>{user.ad_soyad}</TableCell>
+                  <TableCell sx={{ fontFamily: FONT.mono, fontSize: 14 }}>{user.kullanici_adi}</TableCell>
                   <TableCell>
-                    <Chip label={user.rol} size="small" color={user.rol === 'admin' ? 'primary' : 'default'} />
+                    <RolEtiketi rol={user.rol} />
                   </TableCell>
                   <TableCell>
-                    <Chip label={user.onay_durumu} size="small" color={durumRenk(user.onay_durumu)} />
+                    <OnayDamgasi durum={user.onay_durumu} />
                   </TableCell>
                   <TableCell>
                     {user.onay_durumu === 'beklemede' && (

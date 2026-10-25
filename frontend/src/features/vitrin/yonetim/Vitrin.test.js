@@ -200,7 +200,7 @@ describe('Vitrin: ilan listesi', () => {
     expect(k.getByText('150.000 ₺')).toBeInTheDocument();
     expect(within(kart('PCX Sıfır')).getByText('Sıfır')).toBeInTheDocument();
     expect(kart('NMAX Fırsat').querySelector('img')).toHaveAttribute('src', '/g/11');
-    expect(kart('PCX Sıfır').querySelector('img')).toHaveAttribute('src', '/KaynarMotor.png'); // kapak yok
+    expect(within(kart('PCX Sıfır')).getByText('Fotoğraf yok')).toBeInTheDocument(); // kapak yok: yer tutucu
   });
 
   test('yayındaki ve arşivdeki ilan sayıları; arşiv görünümü yalnızca yayından kaldırılanları gösterir', async () => {

@@ -29,15 +29,16 @@ import {
   Divider,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
-import BuildIcon from '@mui/icons-material/Build';
+import BuildIcon from '@mui/icons-material/BuildOutlined';
 import MotorIcon from '@mui/icons-material/TwoWheeler';
-import ShopIcon from '@mui/icons-material/ShoppingCart';
-import SettingsIcon from '@mui/icons-material/Settings';
+import ShopIcon from '@mui/icons-material/ShoppingCartOutlined';
+import SettingsIcon from '@mui/icons-material/SettingsOutlined';
 import OpenIcon from '@mui/icons-material/OpenInNew';
 
 import CloseIcon from '@mui/icons-material/Close';
 import { veresiyeService } from './raporApi';
 import { sayiYaz, tarihYaz } from '../../shared/utils/bicim';
+import { FONT, RENK, TON } from '../../app/tokenlar';
 
 const KAYNAK_INFO = {
   motor: { label: 'Motor Satış', color: '#C62828', bg: '#F6DAD7', icon: <MotorIcon fontSize="small" />, path: '/ikinci-el-motor' },
@@ -92,54 +93,67 @@ const Veresiye = () => {
   return (
     <Box>
       {/* Özet kartları */}
-      <Grid container spacing={1.5} sx={{ mb: 2 }}>
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(5, 1fr)' }, gap: 2, mb: 2 }}>
         {ozetCards.map((c) => (
-          <Grid size={{ xs: 6, sm: 4, md: 'grow' }} key={c.key}>
-            <Paper sx={{ p: 1.5, bgcolor: c.bg, borderLeft: `4px solid ${c.color}` }}>
-              <Typography variant="caption" color="text.secondary">
-                {c.label}
-              </Typography>
-              <Typography variant="h6" fontWeight="bold" sx={{ color: c.color }}>
-                {fmtTL(c.value)}
-              </Typography>
-            </Paper>
-          </Grid>
+          <Paper key={c.key} sx={{ px: 2.25, py: 1.5, bgcolor: c.bg }}>
+            <Typography sx={{ fontSize: 14, color: RENK.soluk }}>{c.label}</Typography>
+            <Typography sx={{ fontFamily: FONT.baslik, fontWeight: 700, fontSize: 34, lineHeight: 1.2, color: c.color, whiteSpace: 'nowrap' }}>
+              {fmtTL(c.value)}
+            </Typography>
+          </Paper>
         ))}
-      </Grid>
+      </Box>
 
       {/* Filtre */}
-      <Paper sx={{ p: 2, mb: 2 }}>
-        <Grid container spacing={2} alignItems="center">
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <TextField
-              size="small"
-              fullWidth
-              placeholder="Müşteri, telefon veya açıklama ara..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchIcon />
-                  </InputAdornment>
-                ),
-              }}
-            />
-          </Grid>
-          <Grid size={{ xs: 12, sm: 4 }}>
-            <TextField select size="small" fullWidth label="Kaynak" value={kaynakFilter} onChange={(e) => setKaynakFilter(e.target.value)}>
-              <MenuItem value="hepsi">Tümü</MenuItem>
-              <MenuItem value="motor">Motor Satış</MenuItem>
-              <MenuItem value="servis">Servis</MenuItem>
-              <MenuItem value="aksesuar">Aksesuar</MenuItem>
-              <MenuItem value="yedek_parca">Yedek Parça</MenuItem>
-            </TextField>
-          </Grid>
-          <Grid size={{ xs: 12, sm: 2 }}>
-            <Chip label={`${filtered.length} kayıt`} sx={{ width: '100%', fontWeight: 'bold' }} />
-          </Grid>
-        </Grid>
-      </Paper>
+      <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap', mb: 2 }}>
+        <TextField
+          size="small"
+          placeholder="Müşteri, telefon veya açıklama ara..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          sx={{ flex: '1 1 300px', maxWidth: 666 }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon />
+              </InputAdornment>
+            ),
+          }}
+        />
+        <TextField
+          select
+          size="small"
+          aria-label="Kaynak"
+          SelectProps={{ renderValue: (v) => `Kaynak: ${v === 'hepsi' ? 'Tümü' : KAYNAK_INFO[v]?.label}` }}
+          value={kaynakFilter}
+          onChange={(e) => setKaynakFilter(e.target.value)}
+          sx={{ minWidth: 190 }}
+        >
+          <MenuItem value="hepsi">Tümü</MenuItem>
+          <MenuItem value="motor">Motor Satış</MenuItem>
+          <MenuItem value="servis">Servis</MenuItem>
+          <MenuItem value="aksesuar">Aksesuar</MenuItem>
+          <MenuItem value="yedek_parca">Yedek Parça</MenuItem>
+        </TextField>
+        <Box sx={{ flex: 1 }} />
+        <Box
+          component="span"
+          sx={{
+            display: 'inline-flex',
+            height: 36,
+            alignItems: 'center',
+            px: 1.5,
+            border: `1.5px solid ${TON.gri.fg}`,
+            borderRadius: '4px',
+            bgcolor: TON.gri.bg,
+            color: TON.gri.fg,
+            fontSize: 14,
+            fontWeight: 700,
+          }}
+        >
+          {filtered.length} kayıt
+        </Box>
+      </Box>
 
       {loading && <Alert severity="info">Yükleniyor...</Alert>}
       {!loading && filtered.length === 0 && <Alert severity="success">Açık borç bulunmuyor</Alert>}
@@ -193,11 +207,11 @@ const Veresiye = () => {
           </Box>
         ) : (
           <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
-            <Table size="small">
+            <Table>
               <TableHead>
                 <TableRow>
-                  {['Kaynak', 'Müşteri', 'Telefon', 'Açıklama', 'Tarih', 'Toplam', 'Kalan Borç', ''].map((h) => (
-                    <TableCell key={h} sx={{ whiteSpace: 'nowrap' }}>
+                  {['Kaynak', 'Müşteri', 'Telefon', 'Açıklama', 'Tarih', 'Toplam', 'Kalan Borç', 'İşlemler'].map((h) => (
+                    <TableCell key={h} sx={{ whiteSpace: 'nowrap', textAlign: h === 'Toplam' || h === 'Kalan Borç' ? 'right' : 'left' }}>
                       {h}
                     </TableCell>
                   ))}
@@ -209,16 +223,23 @@ const Veresiye = () => {
                   return (
                     <TableRow key={i} hover>
                       <TableCell>
-                        <Chip icon={info.icon} label={info.label || b.kaynak} size="small" sx={{ bgcolor: info.bg, color: info.color, fontWeight: 'bold' }} />
+                        <Chip
+                          icon={info.icon}
+                          label={info.label || b.kaynak}
+                          size="small"
+                          sx={{ bgcolor: info.bg, color: info.color, fontWeight: 700, '& .MuiChip-icon': { color: info.color } }}
+                        />
                       </TableCell>
                       <TableCell>
                         <strong>{b.musteri_adi}</strong>
                       </TableCell>
                       <TableCell>{b.telefon || '-'}</TableCell>
-                      <TableCell sx={{ maxWidth: 280 }}>{b.aciklama || '-'}</TableCell>
-                      <TableCell>{tarihYaz(b.tarih)}</TableCell>
-                      <TableCell>{fmtTL(b.toplam_tutar)}</TableCell>
-                      <TableCell sx={{ color: '#C62828', fontWeight: 'bold' }}>{fmtTL(b.kalan_odeme)}</TableCell>
+                      <TableCell sx={{ maxWidth: 360, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={b.aciklama || ''}>
+                        {b.aciklama || '-'}
+                      </TableCell>
+                      <TableCell sx={{ color: RENK.soluk }}>{tarihYaz(b.tarih)}</TableCell>
+                      <TableCell sx={{ textAlign: 'right' }}>{fmtTL(b.toplam_tutar)}</TableCell>
+                      <TableCell sx={{ textAlign: 'right', color: RENK.kirmizi, fontWeight: 700 }}>{fmtTL(b.kalan_odeme)}</TableCell>
                       <TableCell>
                         <Tooltip title="Detaylar">
                           <IslemDugmesi tur="goz" onClick={() => openDetail(b)} />

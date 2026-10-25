@@ -137,10 +137,20 @@ export const temaOlustur = ({ primary = RENK.kirmizi, secondary = RENK.murekkep 
       MuiSwitch: {
         styleOverrides: {
           root: {
-            '& .MuiSwitch-switchBase.Mui-checked': { color: '#fff' },
+            width: 56,
+            height: 32,
+            padding: 0,
+            '& .MuiSwitch-switchBase': { padding: 3, '&.Mui-checked': { color: '#fff', transform: 'translateX(24px)' } },
             '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { backgroundColor: RENK.yesil, opacity: 1 },
-            '& .MuiSwitch-track': { backgroundColor: '#C9CCD1', opacity: 1 },
-            '& .MuiSwitch-thumb': { boxShadow: 'none' },
+            '& .MuiSwitch-track': { borderRadius: 16, backgroundColor: '#C9CCD1', opacity: 1 },
+            '& .MuiSwitch-thumb': { boxShadow: 'none', width: 26, height: 26 },
+          },
+          sizeSmall: {
+            width: 40,
+            height: 24,
+            '& .MuiSwitch-switchBase': { padding: 2, '&.Mui-checked': { transform: 'translateX(16px)' } },
+            '& .MuiSwitch-thumb': { width: 20, height: 20 },
+            '& .MuiSwitch-track': { borderRadius: 12 },
           },
         },
       },

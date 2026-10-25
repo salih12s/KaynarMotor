@@ -188,7 +188,7 @@ const ekranAc = async (secenek) => {
   kur(secenek);
   const user = userEvent.setup();
   sonEkran = sorguluRender(<Raporlar />);
-  await screen.findByText('Toplam Gelir'); // Genel Özet açılınca veri gelmiştir
+  await screen.findByText('Toplam gelir'); // Genel Özet açılınca veri gelmiştir
   return user;
 };
 
@@ -196,6 +196,8 @@ const sekme = (user, ad) => user.click(screen.getByRole('tab', { name: ad }));
 // Kart: etiket yazısının hemen altındaki değer yazısı
 // (tablo başlıklarında aynı yazı olabilir; kartın etiketi <p> ve altında değer yazısı vardır)
 const kart = (etiket) => screen.getAllByText(etiket).find((e) => e.tagName === 'P' && e.nextElementSibling).nextElementSibling.textContent;
+// Genel Özet tablosunda 4. hücre "Gelir payı" çubuğudur; sayı kontrollerinde atlanır
+const payHaric = (hucre) => hucre.filter((_, i) => i !== 3);
 const satir = (ad) => screen.getByRole('row', { name: ad });
 const hucreler = (row) =>
   within(row)
@@ -296,7 +298,7 @@ describe('Raporlar: tarih aralığı ve yükleme', () => {
     raporService.getAralik.mockRejectedValue(new Error('ağ'));
     sorguluRender(<Raporlar />);
     expect(await screen.findByText('Rapor yüklenirken hata oluştu')).toBeInTheDocument();
-    expect(screen.queryByText('Toplam Gelir')).not.toBeInTheDocument();
+    expect(screen.queryByText('Toplam gelir')).not.toBeInTheDocument();
   });
 
   test('eski isteğin geç gelen yanıtı yenisinin üzerine yazmaz (her aralık ayrı önbellek anahtarı; eskiden sonIstek)', async () => {
@@ -312,13 +314,13 @@ describe('Raporlar: tarih aralığı ve yükleme', () => {
     const user = userEvent.setup();
     sorguluRender(<Raporlar />);
     await user.click(screen.getByRole('button', { name: 'Geçen Yıl' }));
-    expect(await screen.findByText('Toplam Gelir')).toBeInTheDocument();
-    expect(kart('Toplam Gelir')).toBe('₺5.000,00');
+    expect(await screen.findByText('Toplam gelir')).toBeInTheDocument();
+    expect(kart('Toplam gelir')).toBe('₺5.000,00');
 
     await act(async () => {
       eskiyiBitir({ data: RAPOR });
     }); // eski yanıt şimdi geliyor
-    expect(kart('Toplam Gelir')).toBe('₺5.000,00');
+    expect(kart('Toplam gelir')).toBe('₺5.000,00');
     expect(screen.queryByText('Rapor yüklenirken hata oluştu')).not.toBeInTheDocument(); // yok sayılır, hata sayılmaz
   });
 
@@ -336,9 +338,9 @@ describe('Raporlar: tarih aralığı ve yükleme', () => {
     const user = await ekranAc();
     await user.click(screen.getByRole('button', { name: 'Geçen Yıl' }));
     await waitFor(() => expect(raporService.getAralik).toHaveBeenCalledTimes(2));
-    await screen.findByText('Toplam Gelir');
+    await screen.findByText('Toplam gelir');
     await user.click(screen.getByRole('button', { name: 'Bu Ay' }));
-    expect(await screen.findByText('Toplam Gelir')).toBeInTheDocument();
+    expect(await screen.findByText('Toplam gelir')).toBeInTheDocument();
     expect(raporService.getAralik).toHaveBeenCalledTimes(2);
     expect(raporService.getFisKar).toHaveBeenCalledTimes(2);
   });
@@ -357,19 +359,19 @@ describe('Raporlar: tarih aralığı ve yükleme', () => {
 describe('Raporlar: Genel Özet', () => {
   test('toplam kartları düzeltilmiş (yedek parça dahil) toplamları gösterir', async () => {
     await ekranAc();
-    expect(kart('Toplam Gelir')).toBe('₺103.000,00');
-    expect(kart('Toplam Maliyet')).toBe('₺72.000,00');
-    expect(kart('Toplam Kâr')).toBe('₺21.400,00');
-    expect(kart('Toplam İşlem')).toBe('8');
-    expect(kart('Motor Stok Değeri')).toBe('₺250.000,00');
+    expect(kart('Toplam gelir')).toBe('₺103.000,00');
+    expect(kart('Toplam maliyet')).toBe('₺72.000,00');
+    expect(kart('Toplam kâr')).toBe('₺21.400,00');
+    expect(kart('Toplam işlem')).toBe('8');
+    expect(kart('Motor stok değeri')).toBe('₺250.000,00');
   });
 
   test('kategori tablosu: sayı, gelir, kâr ve kâr oranı; TOPLAM satırı', async () => {
     await ekranAc();
-    expect(hucreler(satir(/^Motor Satışları/))).toEqual(['Motor Satışları', '3', '140.000,00 ₺', '116.500,00 ₺', '19.000,00 ₺', '%13.6']);
-    expect(hucreler(satir(/^İş Emirleri \(Servis\)/))).toEqual(['İş Emirleri (Servis)', '2', '2.500,00 ₺', '1.500,00 ₺', '1.000,00 ₺', '%40.0']);
-    expect(hucreler(satir(/^Yedek Parça \(Envanter\)/))).toEqual(['Yedek Parça (Envanter)', '2', '3.000,00 ₺', '2.000,00 ₺', '1.000,00 ₺', '%33.3']);
-    expect(hucreler(satir(/^TOPLAM/))).toEqual(['TOPLAM', '8', '103.000,00 ₺', '72.000,00 ₺', '21.400,00 ₺', '%20.8']);
+    expect(payHaric(hucreler(satir(/^Motor Satışları/)))).toEqual(['Motor Satışları', '3', '140.000,00 ₺', '116.500,00 ₺', '19.000,00 ₺', '%13.6']);
+    expect(payHaric(hucreler(satir(/^İş Emirleri \(Servis\)/)))).toEqual(['İş Emirleri (Servis)', '2', '2.500,00 ₺', '1.500,00 ₺', '1.000,00 ₺', '%40.0']);
+    expect(payHaric(hucreler(satir(/^Yedek Parça \(Envanter\)/)))).toEqual(['Yedek Parça (Envanter)', '2', '3.000,00 ₺', '2.000,00 ₺', '1.000,00 ₺', '%33.3']);
+    expect(payHaric(hucreler(satir(/^TOPLAM/)))).toEqual(['TOPLAM', '8', '103.000,00 ₺', '72.000,00 ₺', '21.400,00 ₺', '%20.8']);
   });
 
   test('kategori satırına tıklamak o sekmeye geçirir', async () => {
@@ -390,8 +392,8 @@ describe('Raporlar: Genel Özet', () => {
       ETC.adet,
       detectPlatform(ETC.platform_adi),
     ).netKar;
-    expect(kart('Toplam Kâr')).toBe(`₺${tl(21400 + net)}`);
-    expect(hucreler(satir(/^E-Ticaret/))[4]).toBe(`${tl(net)} ₺`);
+    expect(kart('Toplam kâr')).toBe(`₺${tl(21400 + net)}`);
+    expect(payHaric(hucreler(satir(/^E-Ticaret/)))[4]).toBe(`${tl(net)} ₺`);
   });
 });
 

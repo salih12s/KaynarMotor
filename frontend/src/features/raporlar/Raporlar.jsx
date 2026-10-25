@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Box, Paper, Tabs, Tab, TextField, MenuItem, CircularProgress, Alert, useTheme, useMediaQuery } from '@mui/material';
+import { Box, Tabs, Tab, TextField, MenuItem, CircularProgress, Alert, useTheme, useMediaQuery } from '@mui/material';
+import { RENK } from '../../app/tokenlar';
 import { useAuth } from '../auth/AuthContext';
 import { useRaporVerisi } from './useRaporVerisi';
 import { useDetayModal } from './useDetayModal';
@@ -44,13 +45,14 @@ const Raporlar = () => {
 
   return (
     <Box>
-      <Paper sx={{ mb: 2 }}>
+      <Box sx={{ mb: 2, borderBottom: `1px solid ${RENK.cizgi}` }}>
         <Tabs
           value={tab}
           onChange={(_, v) => setTab(v)}
           variant="scrollable"
-          TabIndicatorProps={{ sx: { bgcolor: '#C62828' } }}
-          sx={{ '& .MuiTab-root': { fontWeight: 'bold' }, '& .Mui-selected': { color: '#C62828 !important' } }}
+          scrollButtons="auto"
+          TabIndicatorProps={{ sx: { bgcolor: RENK.kirmizi } }}
+          sx={{ '& .MuiTab-root': { fontWeight: 700 } }}
         >
           <Tab label="Genel Özet" />
           <Tab label="Motor Satışları" />
@@ -61,7 +63,7 @@ const Raporlar = () => {
           <Tab label="Fiş Kâr Analizi" />
           {isAdmin && <Tab label="Yatırımcılar" />}
         </Tabs>
-      </Paper>
+      </Box>
 
       <TarihFiltresi baslangic={veri.baslangic} bitis={veri.bitis} setBaslangic={veri.setBaslangic} setBitis={veri.setBitis} presetler={veri.presetler}>
         {tab === 2 && (

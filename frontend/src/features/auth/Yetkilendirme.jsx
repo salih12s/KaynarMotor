@@ -19,6 +19,7 @@ import {
   useTheme,
   useMediaQuery,
 } from '@mui/material';
+import { RENK } from '../../app/tokenlar';
 import { authService } from './authApi';
 
 // Motor Satış yetkisi ile birlikte verilen görüntüleme yetkileri
@@ -142,12 +143,12 @@ const Yetkilendirme = () => {
           ))
         : users.length > 0 && (
             <TableContainer component={Paper}>
-              <Table size="small">
+              <Table>
                 <TableHead>
-                  <TableRow sx={{ bgcolor: '#FBFBF8' }}>
-                    <TableCell sx={{ fontWeight: 'bold', position: 'sticky', left: 0, bgcolor: '#FBFBF8' }}>Personel</TableCell>
+                  <TableRow>
+                    <TableCell sx={{ position: 'sticky', left: 0, bgcolor: RENK.yuzeyKoyu, zIndex: 1 }}>Personel</TableCell>
                     {TUM_YETKILER.map((y) => (
-                      <TableCell key={y.key} align="center" sx={{ fontWeight: 'bold', fontSize: '0.72rem' }}>
+                      <TableCell key={y.key} sx={{ whiteSpace: 'nowrap' }}>
                         {y.label}
                       </TableCell>
                     ))}
@@ -156,7 +157,7 @@ const Yetkilendirme = () => {
                 <TableBody>
                   {users.map((user) => (
                     <TableRow key={user.id} hover>
-                      <TableCell sx={{ position: 'sticky', left: 0, bgcolor: '#fff' }}>
+                      <TableCell sx={{ position: 'sticky', left: 0, bgcolor: RENK.yuzey }}>
                         <Typography fontWeight="bold" variant="body2">
                           {user.ad_soyad}
                         </Typography>
@@ -165,8 +166,8 @@ const Yetkilendirme = () => {
                         </Typography>
                       </TableCell>
                       {TUM_YETKILER.map((y) => (
-                        <TableCell key={y.key} align="center">
-                          <Switch size="small" checked={!!user[y.key]} onChange={(e) => handleToggle(user, y.key, e.target.checked)} />
+                        <TableCell key={y.key}>
+                          <Switch checked={!!user[y.key]} onChange={(e) => handleToggle(user, y.key, e.target.checked)} />
                         </TableCell>
                       ))}
                     </TableRow>

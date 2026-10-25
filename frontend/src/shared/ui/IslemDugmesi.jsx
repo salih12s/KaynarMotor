@@ -8,7 +8,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import CartIcon from '@mui/icons-material/ShoppingCart';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
-import LockResetIcon from '@mui/icons-material/LockReset';
+import LockIcon from '@mui/icons-material/LockOutlined';
 import DownloadIcon from '@mui/icons-material/Download';
 import OpenIcon from '@mui/icons-material/OpenInNew';
 import UpIcon from '@mui/icons-material/KeyboardArrowUp';
@@ -27,7 +27,7 @@ const TUR = {
   sepet: { Ikon: CartIcon, etiket: 'Satışa çevir' },
   onay: { Ikon: CheckIcon, etiket: 'Onayla' },
   carpi: { Ikon: CloseIcon, etiket: 'Reddet' },
-  kilit: { Ikon: LockResetIcon, etiket: 'Şifre sıfırla' },
+  kilit: { Ikon: LockIcon, etiket: 'Şifre sıfırla' },
   indir: { Ikon: DownloadIcon, etiket: 'İndir' },
   ac: { Ikon: OpenIcon, etiket: 'Aç' },
   yukari: { Ikon: UpIcon, etiket: 'Yukarı taşı' },

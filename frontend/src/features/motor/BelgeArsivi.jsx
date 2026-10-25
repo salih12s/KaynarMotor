@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { IslemDugmesi } from '../../shared/ui';
-import { Box, Typography, TextField, Alert, CircularProgress, Chip, InputAdornment, ToggleButton, ToggleButtonGroup, Button } from '@mui/material';
+import { Damga, IslemDugmesi, Plaka } from '../../shared/ui';
+import { RENK, TON } from '../../app/tokenlar';
+import { Box, Typography, TextField, Alert, CircularProgress, InputAdornment, ToggleButton, ToggleButtonGroup, Button } from '@mui/material';
 
 import DescriptionIcon from '@mui/icons-material/Description';
 import SearchIcon from '@mui/icons-material/Search';
@@ -67,11 +68,8 @@ const BelgeArsivi = () => {
   };
 
   return (
-    <Box sx={{ maxWidth: 820, mx: 'auto' }}>
-      <Typography variant="h5" fontWeight="bold" sx={{ mb: 0.5 }}>
-        Belge Arşivi
-      </Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+    <Box sx={{ maxWidth: 880, mx: 'auto' }}>
+      <Typography color="text.secondary" sx={{ mb: 2 }}>
         Motorlara eklenen tüm belgeler plakaya göre listelenir.
       </Typography>
 
@@ -94,7 +92,23 @@ const BelgeArsivi = () => {
       />
 
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap', mb: 2 }}>
-        <ToggleButtonGroup size="small" exclusive value={tarihTuru} onChange={(_, v) => v && setTarihTuru(v)} aria-label="Tarih türü">
+        <ToggleButtonGroup
+          size="small"
+          exclusive
+          value={tarihTuru}
+          onChange={(_, v) => v && setTarihTuru(v)}
+          aria-label="Tarih türü"
+          sx={{
+            bgcolor: RENK.yuzey,
+            '& .MuiToggleButton-root': {
+              textTransform: 'none',
+              fontWeight: 600,
+              color: RENK.soluk,
+              borderColor: RENK.alanCizgi,
+              '&.Mui-selected, &.Mui-selected:hover': { bgcolor: RENK.murekkep, color: '#fff' },
+            },
+          }}
+        >
           <ToggleButton value="satis" sx={{ px: 1.75 }}>
             Satış tarihi
           </ToggleButton>
@@ -138,7 +152,7 @@ const BelgeArsivi = () => {
             {gorunen.length} araç • {toplamDosya} dosya
           </Typography>
           {gorunen.map((g) => (
-            <Box key={g.motor_id} sx={{ mb: 2, border: '1px solid', borderColor: 'divider', borderRadius: 1, bgcolor: 'background.paper', overflow: 'hidden' }}>
+            <Box key={g.motor_id} sx={{ mb: 2, border: '1px solid', borderColor: 'divider', borderRadius: 1, bgcolor: RENK.yuzey, overflow: 'hidden' }}>
               <Box
                 sx={{
                   display: 'flex',
@@ -147,28 +161,12 @@ const BelgeArsivi = () => {
                   flexWrap: 'wrap',
                   px: 2,
                   py: 1.25,
-                  bgcolor: 'action.hover',
+                  bgcolor: RENK.yuzey,
                   borderBottom: '1px solid',
                   borderColor: 'divider',
                 }}
               >
-                <Box
-                  sx={{
-                    px: 1.25,
-                    py: 0.25,
-                    border: '2px solid #1a1a1a',
-                    borderRadius: '4px',
-                    bgcolor: '#fff',
-                    color: '#1a1a1a',
-                    fontWeight: 800,
-                    letterSpacing: 1.5,
-                    fontSize: '1.05rem',
-                    fontFamily: 'monospace',
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  {g.plaka || 'PLAKASIZ'}
-                </Box>
+                <Plaka plaka={g.plaka || 'PLAKASIZ'} />
                 <Typography variant="body2" color="text.secondary" sx={{ flexGrow: 1, minWidth: 0 }} noWrap>
                   {[g.marka, g.model].filter(Boolean).join(' ')}
                 </Typography>
@@ -179,11 +177,7 @@ const BelgeArsivi = () => {
                     {g.satis_tarihi && `Satış ${gunYaz(g.satis_tarihi)}`}
                   </Typography>
                 )}
-                {g.durum === 'tamamlandi' ? (
-                  <Chip size="small" label="Satıldı" color="success" variant="outlined" />
-                ) : (
-                  <Chip size="small" label="Stokta" variant="outlined" />
-                )}
+                {g.durum === 'tamamlandi' ? <Damga ton="yesil">Satıldı</Damga> : <Damga ton="gri">Stokta</Damga>}
               </Box>
               {g.belgeler.map((b) => (
                 <Box
@@ -199,9 +193,22 @@ const BelgeArsivi = () => {
                     '&:last-child': { borderBottom: 0 },
                   }}
                 >
-                  <DescriptionIcon color="action" />
+                  <Box
+                    sx={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: '6px',
+                      bgcolor: TON.kirmizi.bg,
+                      color: TON.kirmizi.fg,
+                      display: 'grid',
+                      placeItems: 'center',
+                      mr: 0.5,
+                    }}
+                  >
+                    <DescriptionIcon fontSize="small" />
+                  </Box>
                   <Box sx={{ flexGrow: 1, minWidth: 0 }}>
-                    <Typography variant="body2" fontWeight="500" noWrap title={b.dosya_adi}>
+                    <Typography variant="body2" fontWeight="700" noWrap title={b.dosya_adi}>
                       {b.dosya_adi}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
