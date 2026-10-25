@@ -273,8 +273,8 @@ describe('Raporlar: roller ve sekmeler', () => {
     await user.click(screen.getByRole('button', { name: 'Bu Ay' }));
     await waitFor(() =>
       expect(raporService.getYatirimciRapor).toHaveBeenLastCalledWith({
-        baslangic: expect.stringMatching(/^\d{4}-\d{2}-01$/),
-        bitis: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
+        baslangic: expect.stringMatching(/^\d{4}-\d{2}-01$/) as string,
+        bitis: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/) as string,
       }),
     );
     expect(screen.getByRole('button', { name: 'Tümünü Göster' })).toBeInTheDocument();
@@ -300,7 +300,7 @@ describe('Raporlar: tarih aralığı ve yükleme', () => {
 
   test('rapor isteği hata verirse hata mesajı görünür, kartlar görünmez', async () => {
     kur();
-    vi.mocked(raporService.getAralik).mockRejectedValue(new Error('ağ') as never);
+    vi.mocked(raporService.getAralik).mockRejectedValue(new Error('ağ'));
     sorguluRender(<Raporlar />);
     expect(await screen.findByText('Rapor yüklenirken hata oluştu')).toBeInTheDocument();
     expect(screen.queryByText('Toplam gelir')).not.toBeInTheDocument();

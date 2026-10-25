@@ -2,7 +2,7 @@ import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Box, Typography, useMediaQuery, useTheme } from '@mui/material';
 import { VitrinTema, RENK, YAZI } from '../VitrinOrtak';
-import { useStorefront } from './storefront/useStorefront';
+import { useStorefront, type GeriDonusDurumu } from './storefront/useStorefront';
 import GirisEkrani from './storefront/bilesenler/GirisEkrani';
 import UstBar from './storefront/bilesenler/UstBar';
 import MobilMenu from './storefront/bilesenler/MobilMenu';
@@ -22,7 +22,7 @@ const Storefront = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   // Filtre sütunu md altında üste taşınır ve aç/kapa olur
   const darEkran = useMediaQuery(theme.breakpoints.down('md'));
-  const geriDonus = location.state?.storefront;
+  const geriDonus = (location.state as { storefront?: Partial<GeriDonusDurumu> } | null)?.storefront;
 
   const s = useStorefront({ geriDonus, navigate });
 

@@ -10,7 +10,7 @@ açıktır: gerçek müşteri verisi, parola, token ve kullanıcı adı **commit
   service express bilmez (hata `IstemciHatasi` sınıflarıyla), denetim günlüğü controller'da, saf kurallar `*.gorunum.ts` / `*.hesap.ts`.
   Klasörler: `core/{veritabani,dogrulama,http,gunluk,onbellek,middleware}`, `shared/`, `modules/<alan>/<özellik>/`.
   **Ayrıntı ve "yeni özellik ekleme" adımları: `docs/TS-GECISI.md`.**
-- `frontend/`: **Vite 8** (derleme + `npm start`, port 3100, `vite.config.mjs`; testler **Vitest** + jsdom, `npm test`; ESLint 9 düz yapılandırma `eslint.config.mjs`; TypeScript'e geçiş aşama 3-4) + React + MUI (JS), rota bazlı `React.lazy` kod bölme; geçiş planı `docs/VITE-TS-YOL-HARITASI.md`. `src/features/<alan>/`. Bölme sürüyor (bkz. `docs/FRONTEND-BOLME-RAPORU.md`): **büyük dosyaların hepsi bölündü** (Raporlar, IsEmirleri, Vitrin, MotorStok, IkinciElMotor, Storefront, ETicaret, Aksesuarlar)
+- `frontend/`: **Vite 8** (derleme + `npm start`, port 3100, `vite.config.mjs`; testler **Vitest** + jsdom, `npm test`; ESLint 9 düz yapılandırma `eslint.config.mjs`, tip bilgili kurallar; **TypeScript strict, %100 `.ts/.tsx`, `allowJs: false`, `any` yok**: `npm run typecheck`) + React + MUI, rota bazlı `React.lazy` kod bölme; geçiş planı `docs/VITE-TS-YOL-HARITASI.md`. `src/features/<alan>/`. Bölme sürüyor (bkz. `docs/FRONTEND-BOLME-RAPORU.md`): **büyük dosyaların hepsi bölündü** (Raporlar, IsEmirleri, Vitrin, MotorStok, IkinciElMotor, Storefront, ETicaret, Aksesuarlar)
 - Roller: admin, personel (modül yetkileri), yatırımcı, muhasebeci. **Kâr yalnızca admin görür.** Alan düzeyinde görünürlük:
   `backend/modules/motor/ikinciElMotor/ikinciElMotor.gorunum.ts` + `core/middleware/yetki.ts` (`kariGizle`).
   **İstisna (2026-10-22): e-ticaret kârı, `eticaret_yetkisi` olan herkese açıktır** (`/api/eticaret` `kariGizle` dışında; arayüzde `karGor`).
@@ -45,8 +45,9 @@ Doğrulama: 415 frontend testi, backend tsc + 248 birim + 203 API (kaynak/paket)
 **Hostinger MCP:** `~/.claude.json` içinde sunucular `node ...\.hostinger-mcp
 ode_modules\@hostinger\mcp\src\servers\<ad>.js` ile çalışmalı (npx @latest "Connection closed" verir); uzantı geri yazarsa yeniden düzelt (yedek: `~/.claude.json.yedek-hostinger`). Deploy: `hosting_deploy` + `hosting_get-deployment` (execute ile).
 `typescript` dalı (= `main`, GitHub'da) **canlıda**: kaynarmotor.com.tr 2026-10-25'te bu daldan yayına alındı (Hostinger build 01a17083; önceki yayın 21 Ekim).
-Doğrulama: tsc temiz, 248 birim, 203 API (kaynak ve paket), 406 frontend, 13 E2E (Playwright, `npm run test:e2e`). Tam frontend koşusu için
-`--maxWorkers=2` kullan (yavaş makinede 60 sn zaman aşımı flaky üretir); geliştirirken `cd frontend && npm run test:hizli` (~12 sn).
+Doğrulama (vite-ts dalı, 2026-10-26): backend tsc + 248 birim + 203 API (kaynak ve paket), frontend `typecheck` + `lint` (0 uyarı) + 431 Vitest, 11 E2E (Playwright, `npm run test:e2e`). Tam frontend koşusu için
+`--maxWorkers=2` kullan (yavaş makinede 60 sn zaman aşımı flaky üretir, ~160 sn); geliştirirken `cd frontend && npm run test:hizli` (~16 sn). Frontend lint tip bilgili (~35 sn).
+**Vite+TS geçişi (dal `vite-ts`, main'in 57 commit önünde, canlıya ÇIKMADI, push edilmedi):** aşama 0-5 kodda bitti, rapor ve ölçüler `docs/VITE-TS-YOL-HARITASI.md`. Canlıya çıkış ayrıca onay ister.
 **Deploy (her seferinde kullanıcı onayı):** `npm run package:hostinger` → `cd backend && node --test tests/smoke/paket.smoke.test.js` → Hostinger MCP
 `hosting_deploy` (domain kaynarmotor.com.tr, path = deploy/hostinger/kaynarmotor-hostinger.zip, type nodejs, appType nest, nodeVersion 24,
 outputDirectory dist, buildScript build, entryFile main.cjs) → `hosting_get-deployment` ile bekle → `/api/health`, `/api/health/database`, anonim
@@ -58,5 +59,5 @@ Güvenlik ağı yerel: `bash backend/scripts/hepsiniDogrula.sh` (+ frontend + E2
 README'de CI rozeti KOYMA; kanıt olarak test sayılarını yaz.
 Frontend bölme **bitti**; satır sayıları Prettier sonrası: Raporlar 126 (1563'ten), IsEmirleri 72, Vitrin 107, MotorStok 102, IkinciElMotor 84, Storefront 77, ETicaret 74, Aksesuarlar 49.
 Yöntem ve kurallar `docs/FRONTEND-BOLME-RAPORU.md` §9'da. Tamamlananlar: bicim.js, ESLint/Prettier, TanStack Query (İş Emirleri, Motor, Raporlar), Playwright E2E.
-Sonraki işler: `plain_sifre` kararı, tasarım gözden geçirme, Vite+TSX.
+Sonraki işler: `plain_sifre` kararı, tasarım gözden geçirme, `no-floating-promises` (82 yer, bilerek kapalı), isteğe bağlı `noUncheckedIndexedAccess`.
 **Tüm kalan işler, öncelik sırası ve sunum (portföy) hedefi: `docs/YOL-HARITASI.md`.** Yeni sohbette önce onu oku.

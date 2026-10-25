@@ -173,7 +173,7 @@ export const useStorefront = ({ geriDonus, navigate }: { geriDonus: Partial<Geri
   // filtre değişince (kısa debounce ile) yükle — giriş ekranındayken ve ilan göstermeyen hizmet sayfalarında yükleme yapma
   useEffect(() => {
     if (intro || durumSecimi || isHizmet) return;
-    const t = setTimeout(loadUrunler, 250);
+    const t = setTimeout(() => void loadUrunler(), 250);
     return () => clearTimeout(t);
   }, [loadUrunler, intro, durumSecimi, isHizmet]);
 

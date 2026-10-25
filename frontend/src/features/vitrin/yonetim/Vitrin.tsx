@@ -46,7 +46,7 @@ const Vitrin = () => {
       <Paper sx={{ mb: 2 }}>
         <Tabs
           value={tab}
-          onChange={(_, v) => {
+          onChange={(_, v: number) => {
             setTab(v);
             liste.setArama('');
             liste.setGorunum('aktif');

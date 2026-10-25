@@ -29,7 +29,7 @@ const MotorAlanlari = ({ f, stokMotorlar, segmentler }: { f: IlanFormuDurumu; st
               '&.Mui-selected, &.Mui-selected:hover': { bgcolor: RENK.murekkep, color: '#fff' },
             },
           }}
-          onChange={(e, val) => {
+          onChange={(e, val: string | null) => {
             if (!val) return;
             setForm((f) => ({ ...f, motor_durumu: val }));
           }}

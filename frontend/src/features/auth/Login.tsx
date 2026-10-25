@@ -103,7 +103,7 @@ const Login = () => {
 
         <Tabs
           value={tab}
-          onChange={(_, v) => {
+          onChange={(_, v: number) => {
             setTab(v);
             setError('');
             setSuccess('');

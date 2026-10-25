@@ -19,7 +19,7 @@ interface SekmelerProps {
 const Sekmeler = ({ tab, setTab, platformFiltre, setPlatformFiltre, platformlar, isAdmin, onYeniSatis, onYeniPlatform }: SekmelerProps) => {
   return (
     <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 1.5, borderBottom: `1px solid ${RENK.cizgi}` }}>
-      <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ flexGrow: 1 }} TabIndicatorProps={{ sx: { bgcolor: RENK.kirmizi } }}>
+      <Tabs value={tab} onChange={(_, v: number) => setTab(v)} sx={{ flexGrow: 1 }} TabIndicatorProps={{ sx: { bgcolor: RENK.kirmizi } }}>
         <Tab label="Satışlar" />
         <Tab label="Platformlar" />
       </Tabs>

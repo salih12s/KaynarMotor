@@ -38,13 +38,19 @@ export default tseslint.config(
   {
     // TypeScript: tanımsız değişkeni derleyici yakalar (no-undef kapanır); `any` yasak.
     files: ['src/**/*.{ts,tsx}'],
-    extends: [tseslint.configs.recommended],
+    extends: [tseslint.configs.recommendedTypeChecked],
     plugins: { react, 'react-hooks': reactHooks },
-    languageOptions: { globals: { ...globals.browser } },
+    languageOptions: { globals: { ...globals.browser }, parserOptions: { projectService: true, tsconfigRootDir: import.meta.dirname } },
     settings: { react: { version: 'detect' } },
     rules: {
       ...ortakKurallar,
       '@typescript-eslint/no-explicit-any': 'error',
+      // React'te async olay işleyici (onClick={async () => ...}) yaygın ve zararsız
+      '@typescript-eslint/no-misused-promises': ['error', { checksVoidReturn: { attributes: false, properties: false } }],
+      // Etkide/olayda 'yukle();' biçimindeki çağrılar kendi hatasını yakalar; 82 yerde 'void' eklemek gürültü (bkz. yol haritası)
+      '@typescript-eslint/no-floating-promises': 'off',
+      // Genel amaçlı metne çevirici yardımcılar (String(unknown)) bilerek nesne de alır
+      '@typescript-eslint/no-base-to-string': 'off',
       '@typescript-eslint/no-unused-vars': ['warn', { args: 'none', ignoreRestSiblings: true }],
     },
   },
@@ -52,5 +58,11 @@ export default tseslint.config(
     // Testler Vitest globallerini (describe, test, expect, vi...) ve Node'u (require, __dirname) kullanır
     files: ['**/*.test.{js,jsx,ts,tsx}', 'src/setupTests.{js,ts}'],
     languageOptions: { globals: { ...globals.node, ...globals.vitest } },
+    rules: {
+      // vi.mocked(servis.metot) kalıbı 'unbound-method' uyarısı üretir; sahte (mock) üzerinde zararsız
+      '@typescript-eslint/unbound-method': 'off',
+      // Sahte async işlevler çoğu zaman await içermez
+      '@typescript-eslint/require-await': 'off',
+    },
   },
 );

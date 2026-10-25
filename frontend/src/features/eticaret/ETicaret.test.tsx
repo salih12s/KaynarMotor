@@ -218,14 +218,14 @@ describe('E-Ticaret: satışlar', () => {
 
   test('silme: onay, iptal ve hata', async () => {
     const user = await ekranAc();
-    vi.mocked(window.confirm).mockReturnValueOnce(false as never);
+    vi.mocked(window.confirm).mockReturnValueOnce(false);
     await user.click(ikon(satir('Eldiven'), 'DeleteIcon'));
     expect(eticaretService.deleteSale).not.toHaveBeenCalled();
     const cagri = vi.mocked(eticaretService.getSales).mock.calls.length;
     await user.click(ikon(satir('Eldiven'), 'DeleteIcon'));
     await waitFor(() => expect(eticaretService.deleteSale).toHaveBeenCalledWith(2));
     await waitFor(() => expect(vi.mocked(eticaretService.getSales).mock.calls.length).toBe(cagri + 1));
-    vi.mocked(eticaretService.deleteSale).mockRejectedValue({ response: { data: { message: 'Silinemez' } } } as never);
+    vi.mocked(eticaretService.deleteSale).mockRejectedValue({ response: { data: { message: 'Silinemez' } } });
     await user.click(ikon(satir('Eldiven'), 'DeleteIcon'));
     await waitFor(() => expect(window.alert).toHaveBeenCalledWith('Silinemez'));
   });
@@ -264,7 +264,7 @@ describe('E-Ticaret: platformlar', () => {
     );
     await bekleDialogKapanana();
 
-    vi.mocked(eticaretService.createPlatform).mockRejectedValue({ response: { data: { message: 'Platform var' } } } as never);
+    vi.mocked(eticaretService.createPlatform).mockRejectedValue({ response: { data: { message: 'Platform var' } } });
     await user.click(screen.getByRole('button', { name: 'Yeni Platform' }));
     p = await screen.findByRole('dialog');
     await user.type(alan('Platform Adı *'), 'X');
@@ -396,7 +396,7 @@ describe('E-Ticaret: satış formu', () => {
     await bekleDialogKapanana();
     await waitFor(() => expect(vi.mocked(eticaretService.getSales).mock.calls.length).toBe(cagri + 1));
 
-    vi.mocked(eticaretService.createSale).mockRejectedValue({ response: { data: { message: 'Stok yetersiz' } } } as never);
+    vi.mocked(eticaretService.createSale).mockRejectedValue({ response: { data: { message: 'Stok yetersiz' } } });
     p = await yeniAc(user);
     await user.click(within(p).getByRole('button', { name: 'Kaydet' }));
     expect(await within(p).findByText('Stok yetersiz')).toBeInTheDocument();

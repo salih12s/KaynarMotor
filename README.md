@@ -182,11 +182,11 @@ kim tarafından ne zaman yapıldığını kaydeden aktivite logu.
 
 | Katman | Teknolojiler |
 |---|---|
-| **Frontend** | React 19, React Router 7, Material UI 7, **TanStack Query 5** (sunucu verisi önbelleği), Axios, jsbarcode, qrcode, react-to-print; testler: Vitest + Testing Library |
+| **Frontend** | React 19, **TypeScript (strict, %100)**, **Vite 8**, React Router 7, Material UI 7, **TanStack Query 5** (sunucu verisi önbelleği), Axios, jsbarcode, qrcode, react-to-print; testler: **Vitest** + Testing Library |
 | **Backend** | Node.js (>=20), Express 4, **TypeScript (strict)**, **zod** (girdi doğrulama), JSON Web Token, bcryptjs, helmet, express-rate-limit; `tsx` ile çalışır, `esbuild` ile tek dosyaya paketlenir |
 | **Veritabanı** | MariaDB 11 — ORM kullanılmadan, `mysql2` ile doğrudan parametreli SQL (`$1` tarzı parametreleri MariaDB'ye çeviren ince katman: `backend/core/veritabani/`) |
 | **Test** | Birim (sahte veritabanıyla), API (gerçek MariaDB'ye karşı, kaynak ve paket), paket duman testi, frontend bileşen testleri, **Playwright E2E** (gerçek Chrome + gerçek backend + tek kullanımlık veritabanı) |
-| **Kalite** | ESLint (`react-app`, react-hooks dahil), Prettier, `.editorconfig` + `.gitattributes` (LF), TypeScript strict |
+| **Kalite** | ESLint 9 (tip bilgili `typescript-eslint`, react-hooks dahil; `any` yasak), Prettier, `.editorconfig` + `.gitattributes` (LF), TypeScript strict (backend ve frontend, `allowJs: false`) |
 | **Altyapı** | Hostinger Node.js barındırma (tek uygulama + MariaDB) |
 
 ## Mimari
@@ -422,8 +422,8 @@ ve TC bilgileri uydurmadır.
 | Birim (backend) | Servis kuralları, kâr gizleme, komisyon/hesap fonksiyonları; sahte veritabanı (`tests/unit/sahteDb.js`) | 248 |
 | API (backend) | HTTP sözleşmesi, yetki, transaction/rollback, eşzamanlılık; **gerçek MariaDB**'ye karşı, hem kaynak koddan hem **esbuild paketinden** | 203 + 203 |
 | Duman (paket) | Canlıdaki gibi üretilen zip açılır, sunucu ayağa kalkar, sağlık ve giriş uçları denenir (`npm run package:hostinger` sonrası: `node --test tests/smoke/paket.smoke.test.js`) | ayrı çalıştırılır |
-| Frontend | Sekiz büyük ekran (Raporlar, İş Emirleri, Vitrin yönetimi, Motor stok, İkinci el motor, Mağaza, E-Ticaret, Aksesuar) için bileşen testleri (roller, süzgeçler, formlar, sıralama, detay/yazdırma, mobil, **önbellek davranışı**), saf fonksiyonlar (para/tarih biçimleme dahil), servis çağrı denetimi | 406 |
-| **E2E** (Playwright) | Gerçek Chrome + gerçek frontend + gerçek backend + her koşuda sıfırdan kurulan tek kullanımlık veritabanı: giriş ve rol kısıtı, iş emri oluştur/düzenle/tamamla, motor satışı (ekranda ve sunucuda). Üç tur üst üste 27/27 yeşil (flaky yok) | 13 |
+| Frontend | Sekiz büyük ekran (Raporlar, İş Emirleri, Vitrin yönetimi, Motor stok, İkinci el motor, Mağaza, E-Ticaret, Aksesuar) için bileşen testleri (roller, süzgeçler, formlar, sıralama, detay/yazdırma, mobil, **önbellek davranışı**), saf fonksiyonlar (para/tarih biçimleme, taksit hesabı dahil). Servis çağrısı ve tanımsız değişken hataları artık test değil derleyici (`tsc`) tarafından yakalanır | 431 |
+| **E2E** (Playwright) | Gerçek Chrome + gerçek frontend + gerçek backend + her koşuda sıfırdan kurulan tek kullanımlık veritabanı: giriş ve rol kısıtı, iş emri oluştur/düzenle/tamamla, motor satışı (ekranda ve sunucuda). Üç tur üst üste 27/27 yeşil (flaky yok) | 11 |
 
 Test piramidi: çok sayıda hızlı birim ve bileşen testi, daha az API testi, **yalnızca kritik akışlar için** birkaç E2E. E2E bunların yerine değil üstüne gelir:
 arayüz ile API arasındaki kablolamayı (form alanı → istek → veritabanı → liste) yalnızca o sınar. Ayrı tarayıcı indirmez, makinedeki Chrome'u kullanır.

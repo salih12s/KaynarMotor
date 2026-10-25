@@ -168,7 +168,7 @@ const StorefrontDetay = () => {
   );
 
   const geriDon = () => {
-    if (location.state?.storefront) navigate('/site', { state: location.state });
+    if ((location.state as { storefront?: unknown } | null)?.storefront) navigate('/site', { state: location.state as unknown });
     else if (window.history.length > 1) navigate(-1);
     else navigate('/site');
   };
@@ -577,7 +577,7 @@ const StorefrontDetay = () => {
                   </Typography>
                   <Box sx={ilanIzgarasi(motor)}>
                     {digerleri.map((u) => (
-                      <IlanKarti key={u.id} u={u} kucuk onClick={() => navigate(`/ilan/${u.id}`, { state: location.state })} />
+                      <IlanKarti key={u.id} u={u} kucuk onClick={() => navigate(`/ilan/${u.id}`, { state: location.state as unknown })} />
                     ))}
                   </Box>
                 </Box>

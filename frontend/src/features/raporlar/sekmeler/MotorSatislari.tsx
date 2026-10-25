@@ -62,7 +62,7 @@ const MotorSatislari = ({ rapor, isMobile, motorSubTab, setMotorSubTab, komisyon
       <Box sx={{ mb: 2, borderBottom: `1px solid ${RENK.cizgi}` }}>
         <Tabs
           value={motorSubTab}
-          onChange={(_, v) => setMotorSubTab(v)}
+          onChange={(_, v: number) => setMotorSubTab(v)}
           TabIndicatorProps={{ sx: { bgcolor: RENK.kirmizi } }}
           sx={{ '& .MuiTab-root': { fontWeight: 700 } }}
         >

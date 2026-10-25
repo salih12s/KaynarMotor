@@ -20,7 +20,7 @@
     "start": "vite",
     "build": "vite build",
     "test": "vitest run",
-    "test:hizli": "vitest run --exclude \"**/{Raporlar,IsEmirleri,Vitrin,MotorStok,IkinciElMotor,Storefront,ETicaret,Aksesuarlar}.test.jsx\"",
+    "test:hizli": "vitest run --exclude \"**/{Raporlar,IsEmirleri,Vitrin,MotorStok,IkinciElMotor,Storefront,ETicaret,Aksesuarlar}.test.tsx\"",
     "lint": "eslint src",
     "typecheck": "tsc --noEmit",
     "preview": "vite preview --port 3100",

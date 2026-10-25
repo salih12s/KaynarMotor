@@ -84,7 +84,7 @@ const YedekParcaStok = () => {
   }, [search, loadData]);
 
   useEffect(() => {
-    const t = setTimeout(handleSearch, 300);
+    const t = setTimeout(() => void handleSearch(), 300);
     return () => clearTimeout(t);
   }, [handleSearch]);
 

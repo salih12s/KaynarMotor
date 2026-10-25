@@ -194,6 +194,46 @@ Aşamada çıkan notlar:
 - ESLint: `no-empty` boş `catch {}`'e izin verir (en iyi çaba işlemleri; CRA bu kuralı açmıyordu), `process` global tanımlı (aşama 3'te `import.meta.env`'e geçince kalkacak).
 - `eslint.config.mjs` ve `vite.config.mjs` `.mjs`: paket `"type": "module"` değil.
 
+## Aşama 3 sonuçları (2026-10-25/26)
+
+- TypeScript 6.0.3, `strict: true`, `moduleResolution: bundler`, `noEmit`; `npm run typecheck` paketleme betiğine (`package-hostinger.cjs`) ve CI/yerel doğrulama zincirine girdi (Vite tip denetlemez).
+- Ortam değişkeni `import.meta.env.VITE_API_URL` (tek yer: `shared/api/istemci.ts`, `AuthContext` oradaki `API_URL`'i kullanır). Paketleme `VITE_API_URL=/api` verir.
+- API tipleri kararı: **(a)** elle yazılmış `frontend/src/shared/tipler/*`. Tipler backend'in `core/veritabani/initDb.ts` şemasından türetildi; MariaDB `DECIMAL` sürücüden **string** döndüğü için para/sayı alanları `Sayi = number | string | null | undefined` ve okuma `sayiDegeri()` ile yapılıyor. Sunucu rol bazında alan sildiği için (kâr yalnızca admin) `Motor` gibi tiplerde alanlar isteğe bağlı.
+
+## Aşama 4 sonuçları (2026-10-25/26)
+
+Sekiz alt adımın hepsi bitti (4.1 yardımcılar, 4.2 API, 4.3 ortak arayüz, 4.4 uygulama kabuğu, 4.5 para hesapları, 4.6 yönetim ekranları, 4.7 herkese açık vitrin, 4.8 testler); her adım ayrı commit.
+
+| Ölçü | Önce | Sonra |
+|---|---|---|
+| TypeScript oranı (`node scripts/tsOrani.cjs`) | %0 (204 dosya, 26.567 satır) | **%100** (217 dosya, 28.855 satır, testler dahil) |
+| `any`, `@ts-ignore`, `@ts-expect-error`, `eslint-disable` (kaynakta) | - | **0 / 0 / 0 / 0** |
+| ESLint | 0 hata, **11 uyarı** | 0 hata, **0 uyarı** (11 `exhaustive-deps` tek tek incelenip kapatıldı) |
+| `tsc --noEmit` | - | temiz, ~11 sn |
+| Frontend testleri (Vitest) | 415 | **431** (fark açıklaması aşağıda) |
+
+Test sayısı farkı: 415 - 3 (kaldırılan tarama testleri) + 18 (yeni taksit birim testi) + 1 (aşağıdaki regression) = **431**.
+
+Dönüştürme sırasında bulunanlar:
+- **Taksit boşluğu kapandı:** hesap saf modüle (`taksit/taksitHesap.ts`) çıkarıldı ve ilk kez 18 birim testi yazıldı (aşama 2'de "kanıtlanamadı" denen madde).
+- **Gizli hata (IsEmriForm, tam sayfa "Yeni İş Emri"):** "Ad Soyad" serbest metin (`freeSolo`) alanında listeden seçmeden Enter'a basınca `onChange`'e müşteri değil **string** geliyordu; kod onu müşteri nesnesi sayıp telefon ve adresi boşaltıyordu. Düzeltme + regression testi (`IsEmriForm.test.tsx`). **Mutasyonla kanıt:** eski kod geri konunca test kırmızı, düzeltilmiş kodla yeşil.
+- Liste yükleme etkisinde bağımlılık dizisi eksikti; `bildir` (snack) işlevi kararlı kimliğe (`useCallback`) alınmadan bağımlılığa eklenseydi sonsuz döngü olurdu, önce işlev sabitlendi.
+- Test tarafı: kısmi test verisi için `shared/test/kayit.ts` (`kayit<T>()`, `kayitlar<T>()`). Üretim koduna `as never` girmedi; 112 kullanım yalnızca testlerde sahte (mock) yanıtlar için.
+
+## Aşama 5 sonuçları (2026-10-26)
+
+1. **`allowJs: false`** (ve `checkJs` kalktı): `src` içinde tek `.js/.jsx` yok; `tsc` temiz.
+2. **Tip bilgili ESLint** (`typescript-eslint` `recommendedTypeChecked`, `projectService`): ilk koşuda 292 bulgu. Ayrıştırma: gerçek bulgular düzeltildi, gürültü kuralları gerekçesiyle ayarlandı.
+   - Düzeltilen (gerçek): MUI `Tabs`/`ToggleButtonGroup` `onChange` değeri `any` sızdırıyordu (8 yer, parametre tipi yazıldı); `useLocation().state` `any` idi (4 yer, tipli okuma); `setTimeout(asyncIslev)` söz döndüren işlev (4 yer); axios yanıt kesicisi `Error` olmayan değerle `reject` edebiliyordu (`istemci.ts`); testlerde gereksiz tip iddiaları (`eslint --fix`, 31 yer).
+   - Kapatılan (gerekçe `eslint.config.mjs` içinde): `no-misused-promises` için JSX niteliği/özellik denetimi (React'te `onClick={async ...}` yaygın, 112 yer); `no-base-to-string` (genel amaçlı `String(unknown)` yardımcıları bilerek nesne de alır); testlerde `unbound-method`, `require-await` (sahte async işlevler).
+   - **Bilerek kapalı bırakılan: `no-floating-promises` (82 yer).** Etkide `yukle();` gibi çağrılar kendi hatasını yakalıyor; hepsine `void` eklemek davranışı değiştirmez ama diff gürültüsü. Sonraki iş olarak açık duruyor, **kaçak değil, ertelenmiş**.
+   - Maliyet: ESLint ~3 sn -> ~34 sn (tip bilgisi). Yerel doğrulamada kabul edilebilir; geliştirirken `eslint src --cache` ya da editör eklentisi.
+3. **İki tarama testi kaldırıldı** (`servisCagrilari.test.js` 2 test, `tanimsizDegisken.test.js` 1 test): yakaladıkları hata sınıfları (tanımsız servis metodu, tanımsız değişken) artık derleyicide. Kanıt: kasıtlı hata içeren dosyayla `tsc` her ikisini de yakaladı (`bulkImport` ve tanımsız değişken olayları). "Test yerine tip" kararı olarak README'de anlatılabilir.
+4. **(b) ortak zod tipleri değerlendirildi, yapılmadı:** backend `*.schemas.ts` (13 dosya) yalnızca **istek gövdelerini** doğruluyor, üstelik bilerek "gevşek" (`gevsekMetin`, `gevsekSayi`); yanıt biçimleri şemalı değil. Ortak pakete taşımak yalnızca istek tiplerini kapsar, iki paket arasında yol/derleme ayarı ister ve kazanç küçük. Yanıt tipleri zaten `initDb.ts`'ten elle türetiliyor. Gerekirse sonraki adım: yanıt tiplerini `initDb.ts` tablolarından üretmek.
+5. **Denenmedi:** `noUncheckedIndexedAccess` (isteğe bağlıydı; açılırsa yüzlerce `arr[0]` düzeltmesi çıkar, ayrı iş). TypeScript 7 (yerel derleyici) denenmedi; şu an 6.0.3.
+
+Son doğrulama zinciri (2026-10-26): `typecheck` temiz, `lint` 0/0, `format:check` temiz, Vitest 431/431, `package:hostinger` 22,8 sn (tsc + Vite + esbuild + zip, zip 6,64 MB), paket duman testi yeşil, E2E 11/11 (Vite dev sunucusunda, ~48 sn). Backend'e dokunulmadı.
+
 ## Takvim (tahmini, oturum bazında)
 
 | Aşama | Emek | Canlıya çıkış |
@@ -214,6 +254,6 @@ Her canlıya çıkış ayrıca onaylanır (`CLAUDE.md` deploy kuralı). Geri dö
 | 0 | **Bitti** | 2026-10-25 | `vite-ts` dalı, `scripts/tsOrani.cjs`, taban ölçüleri aşağıda |
 | 1 | **Kodda bitti, canlıya çıkmadı** | 2026-10-25 | Vite 8 dev+build, kod bölme, paket+duman yeşil, E2E 11/11; Jest sonucu ve ölçüler "Aşama 1 sonuçları" bölümünde |
 | 2 | **Kodda bitti, canlıya çıkmadı** | 2026-10-25 | Vitest 5, 415/415 aynı adlar, react-scripts yok, ESLint 9; mutasyon: komisyon ve kâr gizleme kırmızıya döndü, taksit testsiz (boşluk) |
-| 3 | Bekliyor | | |
-| 4 | Bekliyor | | |
-| 5 | Bekliyor | | |
+| 3 | **Kodda bitti, canlıya çıkmadı** | 2026-10-25 | TypeScript 6 strict, `typecheck` zincirde, `VITE_API_URL`, elle yazılmış API tipleri (a) |
+| 4 | **Kodda bitti, canlıya çıkmadı** | 2026-10-26 | 8 alt adım, %100 TypeScript, `any` 0, ESLint 0 uyarı, 431 test; IsEmriForm freeSolo hatası bulunup düzeltildi |
+| 5 | **Kodda bitti, canlıya çıkmadı** | 2026-10-26 | `allowJs: false`, tip bilgili ESLint, iki tarama testi kaldırıldı; ertelenen: `no-floating-promises`, `noUncheckedIndexedAccess`, ortak zod tipleri |

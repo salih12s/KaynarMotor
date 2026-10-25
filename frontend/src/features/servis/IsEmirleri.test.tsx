@@ -129,8 +129,8 @@ const kur = ({ rol = 'admin', liste = LISTE }: KurSecenegi = {}) => {
   vi.mocked(musteriService.searchByPhone).mockResolvedValue({ data: null } as never);
   vi.mocked(aksesuarStokService.search).mockResolvedValue({ data: [AKS_STOK] } as never);
   vi.mocked(yedekParcaStokService.search).mockResolvedValue({ data: [] } as never);
-  vi.mocked(aksesuarStokService.getByBarkod).mockRejectedValue(new Error('yok') as never);
-  vi.mocked(yedekParcaStokService.getByBarkod).mockRejectedValue(new Error('yok') as never);
+  vi.mocked(aksesuarStokService.getByBarkod).mockRejectedValue(new Error('yok'));
+  vi.mocked(yedekParcaStokService.getByBarkod).mockRejectedValue(new Error('yok'));
 };
 
 const ekranAc = async (secenek: KurSecenegi = {}) => {
@@ -313,7 +313,7 @@ describe('İş Emirleri: süzgeçler', () => {
 describe('İş Emirleri: silme', () => {
   test('admin onaylarsa siler ve listeyi yeniler; iptal ederse silmez', async () => {
     const { user } = await ekranAc();
-    vi.mocked(window.confirm).mockReturnValueOnce(false as never);
+    vi.mocked(window.confirm).mockReturnValueOnce(false);
     await user.click(ikon(satir(/Veli Demir/), 'DeleteIcon'));
     expect(isEmriService.delete).not.toHaveBeenCalled();
 
@@ -326,7 +326,7 @@ describe('İş Emirleri: silme', () => {
 
   test('silme hatasında sunucu mesajı uyarı olarak gösterilir', async () => {
     const { user } = await ekranAc();
-    vi.mocked(isEmriService.delete).mockRejectedValue({ response: { data: { message: 'Bağlı kayıt var' } } } as never);
+    vi.mocked(isEmriService.delete).mockRejectedValue({ response: { data: { message: 'Bağlı kayıt var' } } });
     await user.click(ikon(satir(/Veli Demir/), 'DeleteIcon'));
     await waitFor(() => expect(window.alert).toHaveBeenCalledWith('Bağlı kayıt var'));
   });
@@ -401,7 +401,7 @@ describe('İş Emirleri: detay penceresi', () => {
 
   test('pop-up engellenirse yazdırma uyarı verir', async () => {
     const { user } = await ekranAc();
-    vi.mocked(window.open).mockReturnValue(null as never);
+    vi.mocked(window.open).mockReturnValue(null);
     await user.click(ikon(satir(/Ayşe Yılmaz/), 'VisibilityIcon'));
     const p = await screen.findByRole('dialog');
     await user.click(within(p).getByRole('button', { name: 'Yazdır' }));
@@ -432,7 +432,7 @@ describe('İş Emirleri: servis QR etiketi', () => {
     await waitFor(() => expect(win.document.write).toHaveBeenCalled());
     expect(servisGecmisiService.getQrToken).toHaveBeenCalledWith('34ABC123');
     expect(QRCode.toDataURL).toHaveBeenCalledWith(`${window.location.origin}/s/tok123`, { margin: 1, width: 400, errorCorrectionLevel: 'M' });
-    const html = vi.mocked(win.document.write).mock.calls[0][0];
+    const html = vi.mocked(win.document.write).mock.calls[0][0] as string;
     expect(html).toContain('KAYNAR MOTOR');
     expect(html).toContain('34ABC123');
     expect(html).toContain('data:image/png;base64,AAA');
@@ -441,7 +441,7 @@ describe('İş Emirleri: servis QR etiketi', () => {
 
   test('token alınamazsa sunucu mesajı uyarı olur', async () => {
     const { user } = await ekranAc();
-    vi.mocked(servisGecmisiService.getQrToken).mockRejectedValue({ response: { data: { message: 'Yetkiniz yok' } } } as never);
+    vi.mocked(servisGecmisiService.getQrToken).mockRejectedValue({ response: { data: { message: 'Yetkiniz yok' } } });
     await user.click(ikon(satir(/Ayşe Yılmaz/), 'QrCode2Icon'));
     await waitFor(() => expect(window.alert).toHaveBeenCalledWith('Yetkiniz yok'));
     expect(win.document.write).not.toHaveBeenCalled();
@@ -512,7 +512,7 @@ describe('İş Emirleri: yeni iş emri formu', () => {
 
   test('sunucu hatasında mesaj pencerede gösterilir, pencere açık kalır', async () => {
     const { user } = await ekranAc();
-    vi.mocked(isEmriService.create).mockRejectedValue({ response: { data: { message: 'Fiş no çakıştı' } } } as never);
+    vi.mocked(isEmriService.create).mockRejectedValue({ response: { data: { message: 'Fiş no çakıştı' } } });
     const p = await yeniAc(user);
     await user.type(alan('Ad Soyad *'), 'Test Müşteri');
     await user.click(within(p).getByRole('button', { name: 'Kaydet' }));

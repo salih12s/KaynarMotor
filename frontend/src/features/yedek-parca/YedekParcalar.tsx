@@ -101,7 +101,7 @@ const YedekParcalar = () => {
   }, []);
 
   useEffect(() => {
-    const id = location.state?.openDetailId;
+    const id = (location.state as { openDetailId?: number } | null)?.openDetailId;
     if (!id || parcalar.length === 0) return;
     const p = parcalar.find((x) => x.id === id);
     if (p) openDialog(p);

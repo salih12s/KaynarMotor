@@ -81,7 +81,7 @@ const Musteriler = () => {
   }, [search, loadData]);
 
   useEffect(() => {
-    const timer = setTimeout(handleSearch, 300);
+    const timer = setTimeout(() => void handleSearch(), 300);
     return () => clearTimeout(timer);
   }, [handleSearch]);
 

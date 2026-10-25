@@ -191,7 +191,7 @@ describe('Vitrin: sekmeler ve roller', () => {
 
   test('ilanlar yüklenemezse hata bildirimi çıkar', async () => {
     kur();
-    vi.mocked(vitrinService.getAllAdmin).mockRejectedValue(new Error('ağ') as never);
+    vi.mocked(vitrinService.getAllAdmin).mockRejectedValue(new Error('ağ'));
     render(<Vitrin />);
     expect(await screen.findByText('Ürünler yüklenemedi')).toBeInTheDocument();
   });
@@ -303,7 +303,7 @@ describe('Vitrin: sıralama', () => {
 
   test('sıralama kaydı hata verirse eski sıra geri gelir ve hata bildirilir', async () => {
     const user = await ekranAc({ rol: 'personel', user: { motor_vitrin_yetkisi: true } });
-    vi.mocked(vitrinService.reorder).mockRejectedValue(new Error('x') as never);
+    vi.mocked(vitrinService.reorder).mockRejectedValue(new Error('x'));
     await user.click(within(kart('NMAX Fırsat')).getByTitle('Bir sıra aşağı'));
     expect(await screen.findByText('Vitrin sırası kaydedilemedi')).toBeInTheDocument();
   });
@@ -352,14 +352,14 @@ describe('Vitrin: yayın ve silme', () => {
 
   test('silme: onay verilirse siler ve bildirir; onaylanmazsa silmez; hatada uyarır', async () => {
     const user = await ekranAc();
-    vi.mocked(window.confirm).mockReturnValueOnce(false as never);
+    vi.mocked(window.confirm).mockReturnValueOnce(false);
     await user.click(within(kart('PCX Sıfır')).getByTestId('DeleteIcon'));
     expect(vitrinService.delete).not.toHaveBeenCalled();
     await user.click(within(kart('PCX Sıfır')).getByTestId('DeleteIcon'));
     expect(window.confirm).toHaveBeenLastCalledWith('Bu ilanı silmek istediğinize emin misiniz?');
     await waitFor(() => expect(vitrinService.delete).toHaveBeenCalledWith(2));
     expect(await screen.findByText('Silindi')).toBeInTheDocument();
-    vi.mocked(vitrinService.delete).mockRejectedValue(new Error('x') as never);
+    vi.mocked(vitrinService.delete).mockRejectedValue(new Error('x'));
     await user.click(within(kart('PCX Sıfır')).getByTestId('DeleteIcon'));
     expect(await screen.findByText('Silinemedi')).toBeInTheDocument();
   });
@@ -422,7 +422,7 @@ describe('Vitrin: yeni ilan formu', () => {
 
   test('kaydedilemezse hata bildirimi çıkar ve pencere açık kalır', async () => {
     const user = await ekranAc();
-    vi.mocked(vitrinService.create).mockRejectedValue(new Error('x') as never);
+    vi.mocked(vitrinService.create).mockRejectedValue(new Error('x'));
     const p = await yeniAc(user);
     await user.type(alan('Başlık *'), 'X');
     await user.type(alan('Segment *'), 'Naked');
@@ -576,7 +576,7 @@ describe('Vitrin: ilan düzenleme, görseller ve video', () => {
 
   test('ilan yüklenemezse hata bildirilir', async () => {
     const user = await ekranAc();
-    vi.mocked(vitrinService.getById).mockRejectedValue(new Error('x') as never);
+    vi.mocked(vitrinService.getById).mockRejectedValue(new Error('x'));
     await user.click(within(kart('NMAX Fırsat')).getByTestId('EditIcon'));
     expect(await screen.findByText('Ürün yüklenemedi')).toBeInTheDocument();
   });

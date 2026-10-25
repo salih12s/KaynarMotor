@@ -76,7 +76,7 @@ interface KurSecenegi {
   bekleme?: boolean;
 }
 const kur = ({ karGor = true, liste = LISTE }: KurSecenegi = {}) => {
-  vi.mocked(useKarGor).mockReturnValue(karGor as never);
+  vi.mocked(useKarGor).mockReturnValue(karGor);
   vi.mocked(aksesuarService.getAll).mockResolvedValue({ data: liste } as never);
   vi.mocked(aksesuarService.getStats).mockResolvedValue({ data: STATS } as never);
   vi.mocked(aksesuarService.getById).mockImplementation(async (id) => ({ data: id === 1 ? DETAY1 : liste.find((x) => x.id === id) }) as never);
@@ -84,7 +84,7 @@ const kur = ({ karGor = true, liste = LISTE }: KurSecenegi = {}) => {
   vi.mocked(aksesuarService.update).mockResolvedValue({ data: {} } as never);
   vi.mocked(aksesuarService.delete).mockResolvedValue({ data: {} } as never);
   vi.mocked(aksesuarStokService.getAll).mockResolvedValue({ data: STOK } as never);
-  vi.mocked(aksesuarStokService.getByBarkod).mockRejectedValue(new Error('yok') as never);
+  vi.mocked(aksesuarStokService.getByBarkod).mockRejectedValue(new Error('yok'));
   vi.mocked(musteriService.search).mockResolvedValue({ data: [{ id: 5, ad_soyad: 'Mehmet Aksoy', telefon: '0555' }] } as never);
   vi.mocked(musteriService.searchByPhone).mockResolvedValue({ data: null } as never);
 };
@@ -185,7 +185,7 @@ describe('Aksesuarlar: liste', () => {
 
   test('silme: onay, iptal ve hata; silince stok da yenilenir', async () => {
     const user = await ekranAc();
-    vi.mocked(window.confirm).mockReturnValueOnce(false as never);
+    vi.mocked(window.confirm).mockReturnValueOnce(false);
     await user.click(ikon(satir('Veli Demir'), 'DeleteIcon'));
     expect(aksesuarService.delete).not.toHaveBeenCalled();
     const stokCagri = vi.mocked(aksesuarStokService.getAll).mock.calls.length;
@@ -193,7 +193,7 @@ describe('Aksesuarlar: liste', () => {
     expect(window.confirm).toHaveBeenLastCalledWith('Silmek istediğinizden emin misiniz?');
     await waitFor(() => expect(aksesuarService.delete).toHaveBeenCalledWith(2));
     await waitFor(() => expect(vi.mocked(aksesuarStokService.getAll).mock.calls.length).toBe(stokCagri + 1));
-    vi.mocked(aksesuarService.delete).mockRejectedValue({ response: { data: { message: 'Silinemez' } } } as never);
+    vi.mocked(aksesuarService.delete).mockRejectedValue({ response: { data: { message: 'Silinemez' } } });
     await user.click(ikon(satir('Veli Demir'), 'DeleteIcon'));
     await waitFor(() => expect(window.alert).toHaveBeenCalledWith('Silinemez'));
   });
@@ -363,7 +363,7 @@ describe('Aksesuarlar: satış formu', () => {
     await user.click(within(p).getByRole('checkbox', { name: 'Ödeme Tamamlandı' }));
     await user.type(alan('Kalan Ödeme (₺)'), '750');
     await user.type(alan('Ad Soyad *'), 'Test');
-    vi.mocked(aksesuarService.create).mockRejectedValueOnce({ response: { data: { message: 'Stok yetersiz' } } } as never);
+    vi.mocked(aksesuarService.create).mockRejectedValueOnce({ response: { data: { message: 'Stok yetersiz' } } });
     await user.click(within(p).getByRole('button', { name: 'Kaydet' }));
     expect(await within(p).findByText('Stok yetersiz')).toBeInTheDocument();
     await user.click(within(p).getByRole('button', { name: 'Kaydet' }));
@@ -413,7 +413,7 @@ describe('Aksesuarlar: satış formu', () => {
     expect(vi.mocked(aksesuarService.update).mock.calls[0][1]).toMatchObject({ ad_soyad: 'Ayşe Yılmaz', kalan_odeme: 500, indirim: 200 });
     await bekleDialogKapanana();
 
-    vi.mocked(aksesuarService.getById).mockRejectedValue(new Error('x') as never);
+    vi.mocked(aksesuarService.getById).mockRejectedValue(new Error('x'));
     await user.click(ikon(satir('Veli Demir'), 'EditIcon'));
     expect(await screen.findByText('Yükleme hatası')).toBeInTheDocument();
   });

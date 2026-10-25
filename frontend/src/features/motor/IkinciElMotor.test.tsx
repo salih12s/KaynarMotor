@@ -258,7 +258,7 @@ describe('İkinci El Motor: roller, liste ve süzgeçler', () => {
 
   test('silme: onay, iptal ve hata', async () => {
     const user = await ekranAc();
-    vi.mocked(window.confirm).mockReturnValueOnce(false as never);
+    vi.mocked(window.confirm).mockReturnValueOnce(false);
     await user.click(ikon(satir('06SAT222'), 'DeleteIcon'));
     expect(ikinciElMotorService.delete).not.toHaveBeenCalled();
     const cagri = vi.mocked(ikinciElMotorService.getAll).mock.calls.length;
@@ -267,7 +267,7 @@ describe('İkinci El Motor: roller, liste ve süzgeçler', () => {
     await waitFor(() => expect(ikinciElMotorService.delete).toHaveBeenCalledWith(2));
     await waitFor(() => expect(vi.mocked(ikinciElMotorService.getAll).mock.calls.length).toBe(cagri + 1));
     await waitFor(() => expect(vi.mocked(ikinciElMotorService.getStats).mock.calls.length).toBe(istatistikCagri + 1)); // sayaçlar da tazelenir
-    vi.mocked(ikinciElMotorService.delete).mockRejectedValue({ response: { data: { message: 'Bağlı kayıt' } } } as never);
+    vi.mocked(ikinciElMotorService.delete).mockRejectedValue({ response: { data: { message: 'Bağlı kayıt' } } });
     await user.click(ikon(satir('06SAT222'), 'DeleteIcon'));
     await waitFor(() => expect(window.alert).toHaveBeenCalledWith('Bağlı kayıt'));
   });
@@ -511,7 +511,7 @@ describe('İkinci El Motor: satış formu', () => {
     await waitFor(() => expect(window.alert).toHaveBeenCalledWith(expect.stringContaining('ruhsat.pdf: büyük')));
     await bekleDialogKapanana();
 
-    vi.mocked(ikinciElMotorService.create).mockRejectedValue({ response: { data: { message: 'Plaka çakışıyor' } } } as never);
+    vi.mocked(ikinciElMotorService.create).mockRejectedValue({ response: { data: { message: 'Plaka çakışıyor' } } });
     p = await yeniAc(user);
     await user.type(alan('Plaka *'), 'Z');
     await user.type(alan('Marka *'), 'Y');

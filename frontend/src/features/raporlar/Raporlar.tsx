@@ -49,7 +49,7 @@ const Raporlar = () => {
       <Box sx={{ mb: 2, borderBottom: `1px solid ${RENK.cizgi}` }}>
         <Tabs
           value={tab}
-          onChange={(_, v) => setTab(v)}
+          onChange={(_, v: number) => setTab(v)}
           variant="scrollable"
           scrollButtons="auto"
           TabIndicatorProps={{ sx: { bgcolor: RENK.kirmizi } }}

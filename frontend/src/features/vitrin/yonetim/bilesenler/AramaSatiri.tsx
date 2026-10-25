@@ -45,7 +45,7 @@ const AramaSatiri = ({ arama, setArama, gorunum, setGorunum, aktifSayisi, arsivS
         size="small"
         color="error"
         value={gorunum}
-        onChange={(e, val) => {
+        onChange={(e, val: 'aktif' | 'arsiv' | null) => {
           if (val) setGorunum(val);
         }}
       >

@@ -329,14 +329,14 @@ describe('Motor Stok: sayaçlar ve süzgeçler', () => {
 
   test('silme: onaylanırsa siler ve listeyi yeniler; onaylanmazsa silmez; hatada uyarır', async () => {
     const user = await ekranAc();
-    vi.mocked(window.confirm).mockReturnValueOnce(false as never);
+    vi.mocked(window.confirm).mockReturnValueOnce(false);
     await user.click(ikon(satir('06BBB222'), 'DeleteIcon'));
     expect(ikinciElMotorService.delete).not.toHaveBeenCalled();
     const cagri = vi.mocked(ikinciElMotorService.getAll).mock.calls.length;
     await user.click(ikon(satir('06BBB222'), 'DeleteIcon'));
     await waitFor(() => expect(ikinciElMotorService.delete).toHaveBeenCalledWith(2));
     await waitFor(() => expect(vi.mocked(ikinciElMotorService.getAll).mock.calls.length).toBe(cagri + 1));
-    vi.mocked(ikinciElMotorService.delete).mockRejectedValue({ response: { data: { message: 'Bağlı satış var' } } } as never);
+    vi.mocked(ikinciElMotorService.delete).mockRejectedValue({ response: { data: { message: 'Bağlı satış var' } } });
     await user.click(ikon(satir('06BBB222'), 'DeleteIcon'));
     await waitFor(() => expect(window.alert).toHaveBeenCalledWith('Bağlı satış var'));
   });
@@ -468,7 +468,7 @@ describe('Motor Stok: ekleme ve düzenleme formu', () => {
 
   test('sunucu hatası pencerede gösterilir ve pencere açık kalır', async () => {
     const user = await ekranAc();
-    vi.mocked(ikinciElMotorService.create).mockRejectedValue({ response: { data: { message: 'Plaka zaten kayıtlı' } } } as never);
+    vi.mocked(ikinciElMotorService.create).mockRejectedValue({ response: { data: { message: 'Plaka zaten kayıtlı' } } });
     const p = await eklemeAc(user);
     await user.type(alan('Plaka *'), 'X1');
     await user.type(alan('Marka *'), 'Y');
@@ -576,7 +576,7 @@ describe('Motor Stok: hızlı satış', () => {
   test('ödeme kalemi girilmezse kalan ödeme 0 ve ödeme listesi boş gider; sunucu hatası uyarı olur', async () => {
     const user = await ekranAc();
     const p = await hizliAc(user);
-    vi.mocked(ikinciElMotorService.update).mockRejectedValueOnce({ response: { data: { message: 'Yetkisiz' } } } as never);
+    vi.mocked(ikinciElMotorService.update).mockRejectedValueOnce({ response: { data: { message: 'Yetkisiz' } } });
     await user.click(within(p).getByRole('button', { name: 'Satışı Tamamla' }));
     await waitFor(() => expect(window.alert).toHaveBeenCalledWith('Yetkisiz'));
     await user.click(within(p).getByRole('button', { name: 'Satışı Tamamla' }));

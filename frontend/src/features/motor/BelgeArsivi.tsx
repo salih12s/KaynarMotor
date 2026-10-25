@@ -98,7 +98,9 @@ const BelgeArsivi = () => {
           size="small"
           exclusive
           value={tarihTuru}
-          onChange={(_, v) => v && setTarihTuru(v)}
+          onChange={(_, v: 'satis' | 'alis' | null) => {
+            if (v) setTarihTuru(v);
+          }}
           aria-label="Tarih türü"
           sx={{
             bgcolor: RENK.yuzey,
