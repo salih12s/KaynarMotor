@@ -22,7 +22,7 @@ tutarlı tasarım. Bu belge neyin bittiğini, neyin kaldığını ve hangi sıra
    - "Testler" bölümü yok: test piramidi ve sayılar (birim 248, API 201, frontend 61, paket duman testi) + nasıl çalıştırılır.
    - Mimari diyagramı güncel yapıyla karşılaştır.
    - Ekran görüntüleri güncel mi kontrol et (`docs/screenshots`); GIF/video için `readme-media` skill'i, "Demo ile dene" için `demo-account` skill'i.
-4. **Yerel temizlik** (git dışı, sahibi yapar): `yerel-arsiv/` içindeki eski ortam betiklerini sil, eski ortamın parolasını değiştir; gerçek müşteri CSV'sini sil.
+4. **Yerel temizlik:** ~~Railway kopyaları~~ **YAPILDI (2026-10-25)**: depodaki tüm Railway/parity araçları, yerel Railway yedekleri (2 × 172 MB), `kaynar_pgkopya` ve `kaynar_ref` veritabanları, eski ortam betikleri ve Railway ortam bilgileri silindi. Kalan (sahibi karar verir): `yerel-arsiv/notlar-ve-veri/` içindeki gerçek müşteri CSV'si, makine genelindeki Railway CLI ve oturumu, Railway panelindeki proje/hizmet (kapatılmalı).
 
 ## B. Frontend bölme (sırayla; yöntem: `docs/FRONTEND-BOLME-RAPORU.md` §9)
 | Sıra | Dosya | Satır | Zorluk |
