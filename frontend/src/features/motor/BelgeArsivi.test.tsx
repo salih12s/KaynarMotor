@@ -62,8 +62,8 @@ const grup = (dosyaAdi: string) => screen.getByText(dosyaAdi).closest('div[class
 const ayYaz = (etiket: string, deger: string) => fireEvent.change(screen.getByLabelText(etiket), { target: { value: deger } });
 
 beforeEach(() => {
-  vi.mocked(belgeOnizlenebilir).mockImplementation(((b: { mime?: string }) => b.mime === 'application/pdf') as never);
-  vi.mocked(belgeAc).mockResolvedValue(undefined as never);
+  vi.mocked(belgeOnizlenebilir).mockImplementation((b: { mime?: string }) => b.mime === 'application/pdf');
+  vi.mocked(belgeAc).mockResolvedValue(undefined);
 });
 
 // ---- Liste -------------------------------------------------------------------------------------------------------
@@ -207,7 +207,7 @@ describe('Belge Arşivi: belge açma ve indirme', () => {
 
   test('açma sürerken o belgenin düğmeleri yerine ilerleme göstergesi çıkar', async () => {
     let bitir: () => void = () => {};
-    vi.mocked(belgeAc).mockImplementationOnce(() => new Promise<void>((coz) => (bitir = coz)) as never);
+    vi.mocked(belgeAc).mockImplementationOnce(() => new Promise<void>((coz) => (bitir = coz)));
     const user = await ekranAc();
     await user.click(within(grup('ruhsat.pdf')).getByRole('button', { name: 'Görüntüle' }));
     expect(within(grup('ruhsat.pdf')).getByRole('progressbar')).toBeInTheDocument();
