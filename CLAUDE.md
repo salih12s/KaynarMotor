@@ -41,11 +41,11 @@ npm run test:e2e                      # Playwright (gerçek Chrome + sıfırdan 
 **Arayüz: Tasarım A "Servis Defteri" CANLIDA (2026-10-25, Hostinger build 01a173d1, arayüz main.95dd23dd.js; önceki yayın 01a17083, yedek `deploy/yedek/kaynarmotor-hostinger-2026-10-25-canli.zip`).**
 Kaynak dal `typescript` (= `tasarim-a`, yerel; GitHub'a push edilmedi). Müşterinin gördüğü sayfalar (`/site`, `/ilan`, `/taksit/:fiyat`, `/s/:token`) eski temada kaldı. Panel teması `PanelTema` (App.jsx);
 ortak parçalar `frontend/src/shared/ui`, belirteçler `frontend/src/app/tokenlar.js`, tema `tema.js`. Tasarım görselleri: `docs/tasarim-yonleri/`. Kalan cilalar: `docs/YOL-HARITASI.md` §D.
-Doğrulama: 415 frontend testi, backend tsc + 248 birim + 203 API (kaynak/paket), 9 E2E; **E2E'yi dev sunucuları (5100/3100) kapalıyken çalıştır.** Paket duman testi için `.env.mariadb.dev` kullan (test DB'de vitrin görseli yok).
+Doğrulama: 415 frontend testi, backend tsc + 248 birim + 213 API (kaynak/paket), 9 E2E; **E2E'yi dev sunucuları (5100/3100) kapalıyken çalıştır.** Paket duman testi için `.env.mariadb.dev` kullan (test DB'de vitrin görseli yok).
 **Hostinger MCP:** `~/.claude.json` içinde sunucular `node ...\.hostinger-mcp
 ode_modules\@hostinger\mcp\src\servers\<ad>.js` ile çalışmalı (npx @latest "Connection closed" verir); uzantı geri yazarsa yeniden düzelt (yedek: `~/.claude.json.yedek-hostinger`). Deploy: `hosting_deploy` + `hosting_get-deployment` (execute ile).
 `typescript` dalı (= `main`, GitHub'da) **canlıda**: kaynarmotor.com.tr 2026-10-25'te bu daldan yayına alındı (Hostinger build 01a17083; önceki yayın 21 Ekim).
-Doğrulama (vite-ts dalı, 2026-10-26): backend tsc + 248 birim + 203 API (kaynak ve paket), frontend `typecheck` + `lint` (0 uyarı) + 431 Vitest, 11 E2E (Playwright, `npm run test:e2e`). Tam frontend koşusu için
+Doğrulama (vite-ts dalı, 2026-10-26): backend tsc + 248 birim + 213 API (kaynak ve paket), frontend `typecheck` + `lint` (0 uyarı) + 431 Vitest, 11 E2E (Playwright, `npm run test:e2e`). Tam frontend koşusu için
 `--maxWorkers=2` kullan (yavaş makinede 60 sn zaman aşımı flaky üretir, ~160 sn); geliştirirken `cd frontend && npm run test:hizli` (~16 sn). Frontend lint tip bilgili (~35 sn).
 **Vite+TS geçişi (dal `vite-ts`, main'in 57 commit önünde, canlıya ÇIKMADI, push edilmedi):** aşama 0-5 kodda bitti, rapor ve ölçüler `docs/VITE-TS-YOL-HARITASI.md`. Canlıya çıkış ayrıca onay ister.
 **Deploy (her seferinde kullanıcı onayı):** `npm run package:hostinger` → `cd backend && node --test tests/smoke/paket.smoke.test.js` → Hostinger MCP

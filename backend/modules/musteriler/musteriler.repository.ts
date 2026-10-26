@@ -1,5 +1,5 @@
 /* Müşteri tabloları için SQL. İş kuralı yok: yalnızca sorgular. `db` havuz ya da açık bir transaction bağlantısıdır. */
-import { orderByText } from '../../core/veritabani/sqlText';
+import { orderByText, aramaKolonu, aramaDeseni } from '../../core/veritabani/sqlText';
 import type { Veritabani } from '../../core/tipler';
 
 export interface MusteriSatiri {
@@ -15,9 +15,9 @@ export const hepsiniListele = async (db: Veritabani) => (await db.query<MusteriS
 export const adVeyaTelefonaGoreAra = async (db: Veritabani, aranan: string) =>
   (
     await db.query<MusteriSatiri>(
-      `SELECT * FROM musteriler WHERE LOWER(ad_soyad) LIKE LOWER($1) OR LOWER(telefon) LIKE LOWER($1)
+      `SELECT * FROM musteriler WHERE ${aramaKolonu('ad_soyad')} LIKE $1 OR ${aramaKolonu('telefon')} LIKE $1
      ORDER BY ${orderByText('ad_soyad')} LIMIT 20`,
-      [aranan],
+      [aramaDeseni(aranan)],
     )
   ).rows;
 

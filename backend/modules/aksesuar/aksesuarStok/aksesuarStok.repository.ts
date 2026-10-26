@@ -1,5 +1,5 @@
 /* Aksesuar stok tablosu için SQL. İş kuralı yok: yalnızca sorgular. */
-import { orderByText } from '../../../core/veritabani/sqlText';
+import { orderByText, aramaKolonu, aramaDeseni } from '../../../core/veritabani/sqlText';
 import type { Veritabani } from '../../../core/tipler';
 
 export interface StokGirdisi {
@@ -35,9 +35,9 @@ export const hepsiniListele = async (db: Veritabani) => (await db.query(`SELECT 
 export const ara = async (db: Veritabani, aranan: string) =>
   (
     await db.query(
-      `SELECT * FROM aksesuar_stok WHERE LOWER(stok_kodu) LIKE LOWER($1) OR LOWER(stok_adi) LIKE LOWER($1) OR LOWER(marka) LIKE LOWER($1)
+      `SELECT * FROM aksesuar_stok WHERE ${aramaKolonu('stok_kodu')} LIKE $1 OR ${aramaKolonu('stok_adi')} LIKE $1 OR ${aramaKolonu('marka')} LIKE $1
      ORDER BY ${orderByText('stok_adi')} LIMIT 20`,
-      [aranan],
+      [aramaDeseni(aranan)],
     )
   ).rows;
 

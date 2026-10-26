@@ -60,3 +60,17 @@ export function grupla<T extends Record<string, any>>(satirlar: T[], anahtar: st
   }
   return harita;
 }
+
+/**
+ * Arama karşılaştırması için kolon ifadesi: küçük harf + Türkçe noktasız "ı" -> "i".
+ * `LOWER()` büyük "I"yı noktalı "i"ye çevirir ("YILMAZ" -> "yilmaz") ama kayıt "Yılmaz" diye durabilir; ı/I/İ/i farkı yok sayılsın.
+ * Karşı tarafı `aramaDeseni()` ile aynı kurala getirilmiş parametre olmalıdır: `${aramaKolonu('ad')} LIKE $1`.
+ */
+export function aramaKolonu(column: string): string {
+  return `LOWER(REPLACE(${column}, 'ı', 'i'))`;
+}
+
+/** `aramaKolonu()` ile karşılaştırılacak parametre: JavaScript'te Türkçe küçük harf + "ı" -> "i" (SQL'deki kuralın aynısı). */
+export function aramaDeseni(metin: string): string {
+  return metin.toLocaleLowerCase('tr').replace(/ı/g, 'i');
+}

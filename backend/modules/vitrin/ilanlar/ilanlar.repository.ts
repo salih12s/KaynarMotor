@@ -1,5 +1,5 @@
 /* Vitrin ilanları, görselleri ve videoları için SQL. İş kuralı yok: yalnızca sorgular. */
-import { orderByText } from '../../../core/veritabani/sqlText';
+import { orderByText, aramaKolonu, aramaDeseni } from '../../../core/veritabani/sqlText';
 import type { SqlSonuc, Veritabani } from '../../../core/tipler';
 
 /** INSERT/UPDATE için hazır (normalize edilmiş) ilan alanları. */
@@ -77,8 +77,8 @@ export const ilanlariListele = async (db: Veritabani, f: ListeFiltresi) => {
     sorgu += ` AND km <= $${params.length}`;
   }
   if (f.q) {
-    params.push(`%${f.q}%`);
-    sorgu += ` AND (LOWER(baslik) LIKE LOWER($${params.length}) OR LOWER(aciklama) LIKE LOWER($${params.length}) OR LOWER(marka) LIKE LOWER($${params.length}) OR LOWER(model) LIKE LOWER($${params.length}))`;
+    params.push(aramaDeseni(`%${f.q}%`));
+    sorgu += ` AND (${aramaKolonu('baslik')} LIKE $${params.length} OR ${aramaKolonu('aciklama')} LIKE $${params.length} OR ${aramaKolonu('marka')} LIKE $${params.length} OR ${aramaKolonu('model')} LIKE $${params.length})`;
   }
 
   // Yönetim ekranında belirlenen sıra her zaman önceliklidir. one_cikan sadece aynı sıra değerine sahip eski kayıtlarda
