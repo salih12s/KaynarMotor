@@ -59,5 +59,5 @@ Güvenlik ağı yerel: `bash backend/scripts/hepsiniDogrula.sh` (+ frontend + E2
 README'de CI rozeti KOYMA; kanıt olarak test sayılarını yaz.
 Frontend bölme **bitti**; satır sayıları Prettier sonrası: Raporlar 126 (1563'ten), IsEmirleri 72, Vitrin 107, MotorStok 102, IkinciElMotor 84, Storefront 77, ETicaret 74, Aksesuarlar 49.
 Yöntem ve kurallar `docs/FRONTEND-BOLME-RAPORU.md` §9'da. Tamamlananlar: bicim.js, ESLint/Prettier, TanStack Query (İş Emirleri, Motor, Raporlar), Playwright E2E.
-Sonraki işler: tasarım gözden geçirme, `no-floating-promises` (82 yer, bilerek kapalı), isteğe bağlı `noUncheckedIndexedAccess`.
+Sonraki işler: **`docs/IYILESTIRME-LISTESI.md`** (D1-D18, sırasıyla; güvenlik ayrıntıları yerel `GUVENLIK-BULGULARI.md`).
 **Tüm kalan işler, öncelik sırası ve sunum (portföy) hedefi: `docs/YOL-HARITASI.md`.** Yeni sohbette önce onu oku.

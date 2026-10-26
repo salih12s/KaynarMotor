@@ -2,6 +2,7 @@
 
 | Belge | Ne anlatır |
 |---|---|
+| [IYILESTIRME-LISTESI.md](IYILESTIRME-LISTESI.md) | Senior değerlendirmesi (2026-10-26): puanlar ve teker teker düzeltilecek eksikler (D1-D18), önerilen sıra. |
 | [YOL-HARITASI.md](YOL-HARITASI.md) | Biten ve kalan işler, öncelik sırası, sunum (portföy) hedefi. Yeni oturumda önce bunu oku. |
 | [TS-GECISI.md](TS-GECISI.md) | Backend'in TypeScript ve katmanlı yapıya geçişi; "yeni özellik ekleme" adımları. |
 | [VITE-TS-YOL-HARITASI.md](VITE-TS-YOL-HARITASI.md) | Frontend'in CRA'dan Vite'a ve JavaScript'ten TypeScript'e geçişi: aşamalar, ölçüler, kararlar. |

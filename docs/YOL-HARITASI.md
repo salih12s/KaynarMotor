@@ -1,5 +1,8 @@
 # Yol haritası: kalan işler (2026-10-18)
 
+> **Güncel düzeltme listesi (2026-10-26):** senior değerlendirmesinde bulunan bütün eksikler, puanlar ve önerilen sıra
+> [IYILESTIRME-LISTESI.md](IYILESTIRME-LISTESI.md) dosyasında (D1-D18). Yeni oturumda önce onu oku; bu belge geçmiş ve F kodlu bulgular için kaynak.
+
 Amaç: projeyi bir ekip ya da işveren önünde **kanıtlarıyla** gösterebilmek: temiz klasör yapısı, katmanlı ve testli backend, düzenli frontend,
 tutarlı tasarım. Bu belge neyin bittiğini, neyin kaldığını ve hangi sırayla yapılacağını tutar. Yeni sohbette "docs/YOL-HARITASI.md'yi oku, sıradaki maddeden devam et" demek yeterlidir.
 
@@ -76,7 +79,7 @@ Backend, frontend, veritabanı, bağımlılık, test ve depo düzeni incelemesi.
 
 Önerilen sıra: G1-G2 (güvenlik yamaları) → F4 + G8 (ölü kod, `plain_sifre`) → Vite geçişi (G3, G4'ün yolu) → F1-F2 (veri modeli, ayrı plan ve onay) → F10 (README).
 
-### F listesi: durum (2026-10-26, dal `vite-ts`, canlıya çıkmadı)
+### F listesi: durum (2026-10-26, canlıda: build 01a175d2)
 - **F4 yapıldı:** `IsEmriForm`, `IsEmriDetay`, `MotorDetay` ve rotaları kaldırıldı; eski `/is-emri/*` adresleri `/servis`'e, `/motor/:id` `/ikinci-el-motor`'a yönlenir.
 - **F5 yarım:** frontend'de iki stok sayfasının ortak mantığı `shared/stok/` altına çıkarıldı (`useStokYonetimi`, `StokIceAktarPenceresi`). Backend stok servisleri bilerek ayrı kaldı: barkod şeması ve yedek parçadaki işlemli kod değişimi gerçekten farklı.
 - **F6 yapıldı (kapsamı belirtilerek):** panelde tokenla birebir aynı 241 renk sabiti token başvurusuna çevrildi; 19 `alert()` uygulamanın bildirimine (`bildir`) geçti. Kalan: tokenı olmayan birkaç renk, müşteriye dönük sayfalar (bilerek eski tema) ve yazdırma HTML'leri.
