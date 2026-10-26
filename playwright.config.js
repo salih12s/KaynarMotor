@@ -30,7 +30,7 @@ if (!['127.0.0.1', 'localhost'].includes(ortam.DB_HOST)) {
   throw new Error(`Güvenlik: E2E yalnızca yerel veritabanı sunucusunda çalışır (host="${ortam.DB_HOST}").`);
 }
 
-const API_PORT = ortam.PORT || '5100';
+const API_PORT = process.env.E2E_API_PORT || ortam.PORT || '5100';
 const WEB_PORT = process.env.E2E_WEB_PORT || '3100';
 
 // Testlerin (işçi süreçlerin) okuyacağı değerler
