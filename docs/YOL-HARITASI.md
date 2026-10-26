@@ -75,3 +75,13 @@ Backend, frontend, veritabanı, bağımlılık, test ve depo düzeni incelemesi.
 | F13 | Doğrulanmadı | Türkçe aramada büyük/küçük harf (İ/ı) eşleşmesi: tablolar `utf8mb4_nopad_bin`, aramalar `LOWER(...) LIKE LOWER(...)` | Arama repository'leri | "IŞIK" / "ışık" ile dene; gerekirse Türkçe duyarlı karşılaştırma |
 
 Önerilen sıra: G1-G2 (güvenlik yamaları) → F4 + G8 (ölü kod, `plain_sifre`) → Vite geçişi (G3, G4'ün yolu) → F1-F2 (veri modeli, ayrı plan ve onay) → F10 (README).
+
+### F listesi: durum (2026-10-26, dal `vite-ts`, canlıya çıkmadı)
+- **F4 yapıldı:** `IsEmriForm`, `IsEmriDetay`, `MotorDetay` ve rotaları kaldırıldı; eski `/is-emri/*` adresleri `/servis`'e, `/motor/:id` `/ikinci-el-motor`'a yönlenir.
+- **F5 yarım:** frontend'de iki stok sayfasının ortak mantığı `shared/stok/` altına çıkarıldı (`useStokYonetimi`, `StokIceAktarPenceresi`). Backend stok servisleri bilerek ayrı kaldı: barkod şeması ve yedek parçadaki işlemli kod değişimi gerçekten farklı.
+- **F6 yapıldı (kapsamı belirtilerek):** panelde tokenla birebir aynı 241 renk sabiti token başvurusuna çevrildi; 19 `alert()` uygulamanın bildirimine (`bildir`) geçti. Kalan: tokenı olmayan birkaç renk, müşteriye dönük sayfalar (bilerek eski tema) ve yazdırma HTML'leri.
+- **F7 yapıldı:** aksesuar/yedek parça stok, Müşteriler, Kullanıcılar, Veresiye, Belge Arşivi için yaklaşık 120 karakterizasyon testi; taksit önceki turda kapandı. Frontend toplam 568 test.
+- **F8 yarım:** `faz1..faz12` dosyaları konu adlarıyla yeniden adlandırıldı; dört karışık dosyanın (`describe` bazında) özelliğe göre bölünmesi yapılmadı.
+- **F10 yarım:** test sayıları ve Vite/TS maddesi güncellendi. Ekran görüntüleri/GIF'ler hâlâ eski tasarımdan (`readme-media` ile yenilenmeli); README dili karışık kaldı.
+- **F11 yapıldı:** B tasarımı görselleri depodan çıkarıldı, `docs/README.md` içindekiler eklendi.
+- **F13 (frontend) yapıldı:** `shared/utils/metin.ts`; büyük "YILMAZ" artık "Yılmaz" ile eşleşir (8 ekranın arama/eşitlik karşılaştırmaları). Sunucu tarafı arama (`LOWER ... LIKE`) doğrulanmadı.
