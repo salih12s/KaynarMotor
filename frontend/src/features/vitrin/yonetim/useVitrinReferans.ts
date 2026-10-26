@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import type { AksesuarStok, Motor, VitrinIletisim } from '../../../shared/tipler';
+import type { AksesuarStok, Motor, SifirMotor, VitrinIletisim } from '../../../shared/tipler';
 import { vitrinService } from '../vitrinApi';
-import { ikinciElMotorService } from '../../motor/motorApi';
+import { ikinciElMotorService, sifirMotorService } from '../../motor/motorApi';
 import { aksesuarStokService } from '../../aksesuar/aksesuarApi';
 import { SEGMENTLER } from '../vitrinSabitleri';
 
@@ -10,6 +10,7 @@ export const useVitrinReferans = () => {
   const [segmentler, setSegmentler] = useState<string[]>(SEGMENTLER); // dinamik segment listesi (adlar)
   const [iletisim, setIletisim] = useState<Record<string, VitrinIletisim>>({}); // { kategori: {personel_adi, telefon} }
   const [stokMotorlar, setStokMotorlar] = useState<Motor[]>([]); // stoktaki motorlar (vitrine aktarma için)
+  const [sifirModeller, setSifirModeller] = useState<SifirMotor[]>([]); // sıfır stok modelleri (sıfır ilanı bilgi + fotoğrafı buradan alır)
   const [stokAksesuarlar, setStokAksesuarlar] = useState<AksesuarStok[]>([]); // aksesuar stok (vitrine aktarma için)
   const [videoLimitMb, setVideoLimitMb] = useState(40); // sunucudan öğrenilir (veritabanı paket sınırına bağlı)
 
@@ -62,6 +63,16 @@ export const useVitrinReferans = () => {
       });
   }, []);
 
+  // Sıfır stok modellerini yükle — sıfır motor ilanını otomatik doldurmak için
+  useEffect(() => {
+    sifirMotorService
+      .getAll()
+      .then((res) => setSifirModeller(res.data || []))
+      .catch(() => {
+        /* yetki yoksa boş kalır */
+      });
+  }, []);
+
   // Aksesuar stoğunu yükle — aksesuar ilanını otomatik doldurmak için
   useEffect(() => {
     aksesuarStokService
@@ -72,7 +83,7 @@ export const useVitrinReferans = () => {
       });
   }, []);
 
-  return { segmentler, iletisim, loadIletisim, stokMotorlar, stokAksesuarlar, videoLimitMb };
+  return { segmentler, iletisim, loadIletisim, stokMotorlar, sifirModeller, stokAksesuarlar, videoLimitMb };
 };
 
 export type VitrinReferans = ReturnType<typeof useVitrinReferans>;

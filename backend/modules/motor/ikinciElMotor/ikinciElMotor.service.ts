@@ -3,7 +3,7 @@
  * ilanının senkronu, müşteri otomatik kaydı. HTTP bilmez (express yok). Denetim günlüğü controller'da yazılır.
  * Okuma görünümü (kim hangi alanı görür) ikinciElMotor.gorunum.ts içindedir.
  */
-import { BulunamadiHatasi, YetkiHatasi } from '../../../core/dogrulama/dogrula';
+import { BulunamadiHatasi, GecersizIstek, YetkiHatasi } from '../../../core/dogrulama/dogrula';
 import { bosuSifir } from '../../../core/dogrulama/sayi';
 import type { BaglamDb, Kullanici, Veritabani } from '../../../core/tipler';
 import { upsertMusteri } from '../../musteriler/musteriler.service';
@@ -65,25 +65,48 @@ export const detay = async (db: Veritabani, id: number, kullanici: Kullanici) =>
 // ---------------------------------------------------------------------------------------------------------------
 
 /**
+ * Sıfır motor satışı: sıfır stoktaki model okunur, boş bırakılan marka/model/yıl ve alış/satış fiyatı modelden gelir.
+ * Model YALNIZCA OKUNUR: satış onu stoktan düşürmez ve değiştirmez (aynı modelden yine satılır).
+ */
+const sifirSatisi = async (tx: Veritabani, govde: MotorOlusturGovdesi) => {
+  const id = bosuSifir(govde.sifir_motor_id);
+  if (!Number.isInteger(id) || id <= 0) throw new GecersizIstek('Sıfır motor satışı için stoktan model seçin');
+  const model = await repo.sifirModelBul(tx, id);
+  if (!model) throw new GecersizIstek('Seçilen sıfır motor stokta bulunamadı');
+  const bos = (v: unknown) => v === undefined || v === null || v === '';
+  return {
+    id,
+    marka: bos(govde.marka) ? model.marka : govde.marka,
+    model: bos(govde.model) ? model.model : govde.model,
+    yil: bosuSifir(govde.yil) || model.yil || null,
+    alis: bos(govde.alis_fiyati) ? sayi(model.alis_fiyati) : bosuSifir(govde.alis_fiyati),
+    satis: bos(govde.satis_fiyati) ? sayi(model.liste_fiyati) : bosuSifir(govde.satis_fiyati),
+  };
+};
+
+/**
  * Motor satışı/stok kaydı ekler. Motor kaydı ve müşteri kayıtları TEK işlemde yazılır: biri patlarsa hiçbiri kalmaz
  * (eskiden kayıt oluşup kullanıcı hata görüyor, yeniden deneyince çift kayıt çıkıyordu).
  */
 export const olustur = async (db: BaglamDb, govde: MotorOlusturGovdesi, kullanici: Kullanici) => {
   const satir = await db.withTransaction(async (tx) => {
-    const alis = bosuSifir(govde.alis_fiyati);
-    const satis = bosuSifir(govde.satis_fiyati);
+    const sifir = govde.motor_durumu === 'sifir' ? await sifirSatisi(tx, govde) : null;
+    const alis = sifir ? sifir.alis : bosuSifir(govde.alis_fiyati);
+    const satis = sifir ? sifir.satis : bosuSifir(govde.satis_fiyati);
     const masraf = bosuSifir(govde.masraflar);
     const komisyonTutar = bosuSifir(govde.komisyoncu_tutari);
 
     // Yatırımcı ataması ve yatırımcı kârı YALNIZCA admin tarafından yapılır (PUT'taki canKar kuralıyla aynı); başkasının
     // gönderdiği değer yok sayılır. Kâr satış esnasında elle (tutar olarak) girilir, işletme kârından düşer.
-    const yatirimciId = kullanici.rol === 'admin' && govde.yatirimci_id ? parseInt(String(govde.yatirimci_id)) : null;
+    // Sıfır motorda yatırımcı yoktur (model işletmenindir).
+    const yatirimciId = !sifir && kullanici.rol === 'admin' && govde.yatirimci_id ? parseInt(String(govde.yatirimci_id)) : null;
+    const durum = sifir ? 'tamamlandi' : govde.durum || 'stokta';
 
     const kayit = await repo.ekle(tx, {
       tarih: govde.tarih || new Date(),
       plaka: govde.plaka,
-      marka: govde.marka,
-      model: govde.model,
+      marka: sifir ? sifir.marka : govde.marka,
+      model: sifir ? sifir.model : govde.model,
       km: bosuSifir(govde.km),
       alis,
       satis,
@@ -97,10 +120,10 @@ export const olustur = async (db: BaglamDb, govde: MotorOlusturGovdesi, kullanic
       alici_adres: govde.alici_adres,
       odeme_sekli: govde.odeme_sekli || 'nakit',
       aciklama: govde.aciklama,
-      durum: govde.durum || 'stokta',
-      tamamlamaTarihi: govde.durum === 'tamamlandi' ? new Date() : null,
-      stok_tipi: govde.stok_tipi || 'sahip',
-      yil: bosuSifir(govde.yil) || null,
+      durum,
+      tamamlamaTarihi: durum === 'tamamlandi' ? new Date() : null,
+      stok_tipi: sifir ? 'sahip' : govde.stok_tipi || 'sahip',
+      yil: sifir ? sifir.yil : bosuSifir(govde.yil) || null,
       satici_adi: govde.satici_adi || null,
       satici_tc: govde.satici_tc || null,
       kalan_odeme: bosuSifir(govde.kalan_odeme),
@@ -120,6 +143,8 @@ export const olustur = async (db: BaglamDb, govde: MotorOlusturGovdesi, kullanic
       vitrin_segment: govde.vitrin_segment || null,
       vitrin_cc: bosuSifir(govde.vitrin_cc) || null,
       vitrin_hasar: govde.vitrin_hasar || null,
+      motorDurumu: sifir ? 'sifir' : 'ikinci_el',
+      sifirMotorId: sifir ? sifir.id : null,
     });
 
     // Müşteri auto-collect (aynı işlemde)
@@ -163,7 +188,9 @@ export const guncelle = async (db: BaglamDb, id: number, govde: MotorGuncelleGov
     const al = (alan: string) => (g[alan] !== undefined ? g[alan] : mevcut[alan]);
     // Ödeme dağılımı body'de yoksa mevcut değeri koru (kısmi güncellemeyi bozma)
     const odemeDetay = g.odeme_detaylari !== undefined ? odemeyiNormalle(g.odeme_detaylari) : mevcut.odeme_detaylari || null;
-    const durum = al('durum');
+    // Sıfır motor satışı satış olarak kalır: durumu "stokta"ya çekilip ikinci el stoğuna düşemez, yatırımcıya bağlanamaz
+    const sifirSatis = mevcut.motor_durumu === 'sifir';
+    const durum = sifirSatis ? 'tamamlandi' : al('durum');
 
     // Hassas alanlar: yetkisi olmayan kullanıcının gönderdiği (boş/null) değerle veriyi bozmamak için DB değerini koru
     const alis = canAlis ? bosuSifir(al('alis_fiyati')) : sayi(mevcut.alis_fiyati);
@@ -184,13 +211,15 @@ export const guncelle = async (db: BaglamDb, id: number, govde: MotorGuncelleGov
     const komAdi = canMusteri ? al('komisyoncu_adi') || null : mevcut.komisyoncu_adi;
     const komTel = canMusteri ? al('komisyoncu_telefon') || null : mevcut.komisyoncu_telefon;
     const kar = karHesapla(satis, alis, masraf, komisyonTutar);
-    const yatirimciId: number | null = canKar
-      ? g.yatirimci_id
-        ? parseInt(String(g.yatirimci_id))
-        : g.yatirimci_id === null
-          ? null
-          : mevcut.yatirimci_id || null
-      : mevcut.yatirimci_id || null;
+    const yatirimciId: number | null = sifirSatis
+      ? null
+      : canKar
+        ? g.yatirimci_id
+          ? parseInt(String(g.yatirimci_id))
+          : g.yatirimci_id === null
+            ? null
+            : mevcut.yatirimci_id || null
+        : mevcut.yatirimci_id || null;
     const yatirimciOran = canKar ? (yatirimciId ? bosuSifir(al('yatirimci_kar_orani')) : 0) : sayi(mevcut.yatirimci_kar_orani);
     // Yatırımcı kârı: satışta elle girilen tutar. Body'de yoksa (örn. stok düzenleme) mevcut değeri koru.
     const yatirimciKar = !yatirimciId ? 0 : canKar && g.yatirimci_kar !== undefined ? bosuSifir(g.yatirimci_kar) : sayi(mevcut.yatirimci_kar);

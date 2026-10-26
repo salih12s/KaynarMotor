@@ -7,10 +7,10 @@ import type { Request, RequestHandler, Response } from 'express';
 import { pool } from '../../../core/veritabani/db';
 import * as servis from './medya.service';
 
-const KALICI_ONBELLEK = 'public, max-age=31536000, immutable';
+export const KALICI_ONBELLEK = 'public, max-age=31536000, immutable';
 
 /** Sunulan medya betik çalıştıramasın: sniffing kapalı, sandbox'lı CSP. */
-const medyaBasliklari = (res: Response) => {
+export const medyaBasliklari = (res: Response) => {
   res.set('X-Content-Type-Options', 'nosniff');
   res.set('Content-Security-Policy', "default-src 'none'; sandbox");
 };

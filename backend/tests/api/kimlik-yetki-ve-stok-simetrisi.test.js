@@ -442,6 +442,9 @@ describe('motor: yatırımcı ataması, okuma allowlist, yatırımcı raporu', (
       'vitrin_segment',
       'vitrin_cc',
       'vitrin_hasar',
+      // Sıfır / ikinci el ayrımı ve bağlı sıfır model: mali/kişisel değil; stok ekranı sıfır satışları bununla ayırır
+      'motor_durumu',
+      'sifir_motor_id',
     ]);
     const fazla = Object.keys(r.govde).filter((k) => !GUVENLI.has(k) && r.govde[k] !== null && r.govde[k] !== undefined);
     assert.deepEqual(fazla, []);

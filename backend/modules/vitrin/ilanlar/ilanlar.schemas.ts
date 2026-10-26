@@ -26,6 +26,8 @@ const ilanAlanlari = {
   video: serbest,
   one_cikan: serbest,
   stok_motor_id: gevsekSayi,
+  /** Sıfır motor ilanının bağlı olduğu sıfır stok modeli (yalnızca motor_durumu = 'sifir' iken saklanır). */
+  sifir_motor_id: gevsekSayi,
   rubik_link: serbest,
   hasar_kaydi: gevsekMetin,
   motor_durumu: serbest,

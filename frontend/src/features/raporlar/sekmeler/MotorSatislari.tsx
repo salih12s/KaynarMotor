@@ -1,7 +1,8 @@
 import React from 'react';
 import type { AralikRaporu, Motor } from '../../../shared/tipler';
 import { sayiDegeri } from '../../../shared/utils/bicim';
-import { Damga, IslemDugmesi, Plaka } from '../../../shared/ui';
+import { Damga, IslemDugmesi } from '../../../shared/ui';
+import PlakaVeSifir from '../../motor/sifirMotor/bilesenler/PlakaVeSifir';
 import { RENK, TON } from '../../../app/tokenlar';
 import {
   Box,
@@ -31,7 +32,8 @@ const FaturaDamgasi = ({ kesildi }: { kesildi: boolean | null | undefined }) => 
   <Damga ton={kesildi ? 'yesil' : 'kirmizi'}>{kesildi ? 'Kesildi' : 'Kesilmedi'}</Damga>
 );
 
-// Motor Satışları sekmesi (Satışlar / Komisyonlu alt sekmeleri). Alt sekme ve komisyoncu süzgeci üstte tutulur: sekme değişince kaybolmaz.
+// Motor Satışları sekmesi (Satışlar / Komisyonlu / Sıfır alt sekmeleri). Sıfır satışlar "Satışlar"a ve toplamlara girer; kârları ayrı kartta.
+// Alt sekme 0: tüm satışlar, 1: komisyonlu, 2: sıfır. Alt sekme ve komisyoncu süzgeci üstte tutulur: sekme değişince kaybolmaz.
 interface MotorSatislariProps {
   rapor: AralikRaporu;
   isMobile: boolean;
@@ -51,12 +53,14 @@ const MotorSatislari = ({ rapor, isMobile, motorSubTab, setMotorSubTab, komisyon
   const komisyonluMotorlar = komisyoncuFilter
     ? komisyonluAll.filter((m) => kucukHarf((m.komisyoncu_adi || '').trim()) === kucukHarf(komisyoncuFilter))
     : komisyonluAll;
-  const shownMotorlar = motorSubTab === 1 ? komisyonluMotorlar : allMotorlar;
+  const sifirMotorlar = allMotorlar.filter((m) => m.motor_durumu === 'sifir');
+  const sifirKar = sayiDegeri(rapor.motorSifirKar);
+  const shownMotorlar = motorSubTab === 1 ? komisyonluMotorlar : motorSubTab === 2 ? sifirMotorlar : allMotorlar;
   const shownGelir = shownMotorlar.reduce((t, m) => t + sayiDegeri(m.satis_fiyati), 0);
   const shownMaliyet = shownMotorlar.reduce((t, m) => t + sayiDegeri(m.alis_fiyati) + sayiDegeri(m.masraflar), 0);
   const shownKar = shownMotorlar.reduce((t, m) => t + (sayiDegeri(m.kar) - sayiDegeri(m.yatirimci_kar)), 0);
   const shownNoterSatis = shownMotorlar.reduce((t, m) => t + sayiDegeri(m.noter_satis), 0);
-  const shownStokDegeri = motorSubTab === 1 ? 0 : rapor.motorStokToplam || 0;
+  const shownStokDegeri = motorSubTab === 0 ? rapor.motorStokToplam || 0 : 0;
   const komisyonToplamTutar = komisyonluMotorlar.reduce((t, m) => t + sayiDegeri(m.komisyoncu_tutari), 0);
   return (
     <>
@@ -69,6 +73,7 @@ const MotorSatislari = ({ rapor, isMobile, motorSubTab, setMotorSubTab, komisyon
         >
           <Tab label={`Satışlar (${allMotorlar.length})`} />
           <Tab label={`Komisyonlu Satışlar (${komisyonluAll.length})`} />
+          <Tab label={`Sıfır Satışlar (${sifirMotorlar.length})`} />
         </Tabs>
       </Box>
       {motorSubTab === 1 && komisyoncuList.length > 0 && (
@@ -111,17 +116,27 @@ const MotorSatislari = ({ rapor, isMobile, motorSubTab, setMotorSubTab, komisyon
               { label: 'Toplam Komisyon', value: `₺${formatTL(komisyonToplamTutar)}`, color: TON.bekle.fg },
               { label: 'Faturalı', value: komisyonluMotorlar.filter((m) => m.fatura_kesildi).length, color: '#0F7B6C' },
             ]
-          : [
-              { label: 'Toplam Satış', value: allMotorlar.length, color: RENK.kirmizi },
-              { label: 'Motor Gelir', value: `₺${formatTL(rapor.motorGelir)}`, color: RENK.mavi },
-              { label: 'Motor Maliyet', value: `₺${formatTL(rapor.motorMaliyet)}`, color: TON.turuncu.fg },
-              { label: 'Motor Kârı (Payınız)', value: `₺${formatTL(rapor.motorKar)}`, color: RENK.yesil },
-              { label: 'Yatırımcı Payı', value: `₺${formatTL(rapor.motorYatirimciKar)}`, color: RENK.mavi },
-              { label: 'Komisyoncu Payı', value: `₺${formatTL(rapor.motorKomisyon)}`, color: TON.bekle.fg },
-              { label: 'Noter Satış Cirosu', value: `₺${formatTL(rapor.motorNoterSatisCiro)}`, color: TON.mor.fg },
-              { label: 'Faturalı', value: allMotorlar.filter((m) => m.fatura_kesildi).length, color: '#0F7B6C' },
-              { label: 'Motor Stok Değeri', value: `₺${formatTL(shownStokDegeri)}`, color: TON.mor.fg },
-            ]
+          : motorSubTab === 2
+            ? [
+                { label: 'Sıfır Satış', value: sifirMotorlar.length, color: RENK.kirmizi },
+                { label: 'Sıfır Gelir', value: `₺${formatTL(shownGelir)}`, color: RENK.mavi },
+                { label: 'Sıfır Maliyet', value: `₺${formatTL(shownMaliyet)}`, color: TON.turuncu.fg },
+                { label: 'Sıfır Kârı', value: `₺${formatTL(shownKar)}`, color: RENK.yesil },
+                { label: 'Faturalı', value: sifirMotorlar.filter((m) => m.fatura_kesildi).length, color: '#0F7B6C' },
+              ]
+            : [
+                { label: 'Toplam Satış', value: allMotorlar.length, color: RENK.kirmizi },
+                { label: 'Motor Gelir', value: `₺${formatTL(rapor.motorGelir)}`, color: RENK.mavi },
+                { label: 'Motor Maliyet', value: `₺${formatTL(rapor.motorMaliyet)}`, color: TON.turuncu.fg },
+                { label: 'Motor Kârı (Payınız)', value: `₺${formatTL(rapor.motorKar)}`, color: RENK.yesil },
+                { label: 'İkinci El Kârı', value: `₺${formatTL(sayiDegeri(rapor.motorKar) - sifirKar)}`, color: RENK.yesil },
+                { label: 'Sıfır Kârı', value: `₺${formatTL(sifirKar)}`, color: RENK.yesil },
+                { label: 'Yatırımcı Payı', value: `₺${formatTL(rapor.motorYatirimciKar)}`, color: RENK.mavi },
+                { label: 'Komisyoncu Payı', value: `₺${formatTL(rapor.motorKomisyon)}`, color: TON.bekle.fg },
+                { label: 'Noter Satış Cirosu', value: `₺${formatTL(rapor.motorNoterSatisCiro)}`, color: TON.mor.fg },
+                { label: 'Faturalı', value: allMotorlar.filter((m) => m.fatura_kesildi).length, color: '#0F7B6C' },
+                { label: 'Motor Stok Değeri', value: `₺${formatTL(shownStokDegeri)}`, color: TON.mor.fg },
+              ]
         ).map((k, i) => (
           <KartItem key={i} label={k.label} value={k.value} color={k.color} />
         ))}
@@ -133,7 +148,8 @@ const MotorSatislari = ({ rapor, isMobile, motorSubTab, setMotorSubTab, komisyon
               <Paper key={i} sx={{ p: 1.5, cursor: 'pointer' }} onClick={() => onDetay(m)}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
                   <Typography variant="subtitle2" fontWeight="bold">
-                    {m.plaka}
+                    {m.plaka || '-'}
+                    {m.motor_durumu === 'sifir' ? ' • Sıfır' : ''}
                   </Typography>
                   <FaturaDamgasi kesildi={m.fatura_kesildi} />
                 </Box>
@@ -194,7 +210,7 @@ const MotorSatislari = ({ rapor, isMobile, motorSubTab, setMotorSubTab, komisyon
                     </TableCell>
                     <TableCell sx={{ whiteSpace: 'nowrap', color: RENK.soluk }}>{formatDate(m.satis_tarihi || m.tamamlama_tarihi || m.created_at)}</TableCell>
                     <TableCell>
-                      <Plaka plaka={m.plaka} />
+                      <PlakaVeSifir m={m} />
                     </TableCell>
                     <TableCell sx={{ whiteSpace: 'nowrap' }}>
                       <strong>{m.marka}</strong> {m.model}
@@ -230,7 +246,11 @@ const MotorSatislari = ({ rapor, isMobile, motorSubTab, setMotorSubTab, komisyon
         )
       ) : (
         <Alert severity="info">
-          {motorSubTab === 1 ? 'Seçilen tarih aralığında komisyonlu motor satışı bulunamadı.' : 'Seçilen tarih aralığında motor satışı bulunamadı.'}
+          {motorSubTab === 1
+            ? 'Seçilen tarih aralığında komisyonlu motor satışı bulunamadı.'
+            : motorSubTab === 2
+              ? 'Seçilen tarih aralığında sıfır motor satışı bulunamadı.'
+              : 'Seçilen tarih aralığında motor satışı bulunamadı.'}
         </Alert>
       )}
     </>

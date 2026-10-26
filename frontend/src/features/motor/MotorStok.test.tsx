@@ -9,7 +9,7 @@ import { screen, within, waitFor } from '@testing-library/react';
 import { sorguluRender } from '../../shared/sorgu/sorguluRender';
 import userEvent from '@testing-library/user-event';
 import MotorStok from './MotorStok';
-import { ikinciElMotorService } from './motorApi';
+import { ikinciElMotorService, sifirMotorService } from './motorApi';
 import { plakaBicim } from '../../shared/ui';
 import { musteriService } from '../musteriler/musteriApi';
 import { authService } from '../auth/authApi';
@@ -19,11 +19,15 @@ import { useReactToPrint } from 'react-to-print';
 
 vi.mock('./motorApi', () => ({
   ikinciElMotorService: { getAll: vi.fn(), getById: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn() },
+  sifirMotorService: { getAll: vi.fn(), getById: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn(), gorselUrl: (id: number) => `/sifir-gorsel/${id}` },
 }));
 vi.mock('../musteriler/musteriApi', () => ({ musteriService: { search: vi.fn() } }));
 vi.mock('../auth/authApi', () => ({ authService: { getYatirimcilar: vi.fn() } }));
 vi.mock('../auth/AuthContext', () => ({ useAuth: vi.fn() }));
 vi.mock('react-to-print', () => ({ useReactToPrint: vi.fn() }));
+// Yönlendirme sahte: Sıfır sekmesindeki "Satış gir" Motor Satış sayfasına geçer (IkinciElMotor.test ile aynı kalıp)
+const mockNavigate = vi.fn();
+vi.mock('react-router-dom', () => ({ useNavigate: () => mockNavigate }));
 vi.mock('./SatisBelgeleri', () => ({
   BelgeBolumu: ({ motorId }: { motorId: number }) => <div>BELGE-BOLUMU-{motorId}</div>,
   BekleyenBelgeler: ({ dosyalar, setDosyalar }: { dosyalar: unknown[]; setDosyalar: (d: unknown[]) => void }) => (
@@ -168,6 +172,7 @@ const plakalar = () =>
     .map((r) => within(r).getAllByRole('cell')[0].textContent.replace(/\s/g, ''));
 
 beforeEach(() => {
+  vi.mocked(sifirMotorService.getAll).mockResolvedValue({ data: [] } as never);
   vi.spyOn(window, 'alert').mockImplementation(() => {});
   vi.spyOn(window, 'confirm').mockImplementation(() => true);
   vi.spyOn(console, 'error').mockImplementation(() => {});
@@ -625,5 +630,113 @@ describe('Motor Stok: mobil görünüm', () => {
     await ekranAc({ user: YETKISIZ });
     expect(screen.queryByText(/Alım:/)).not.toBeInTheDocument();
     expect(screen.queryByText(/İlan:/)).not.toBeInTheDocument();
+  });
+});
+
+// ---- Sıfır sekmesi -----------------------------------------------------------------------------------------------
+// Sıfır stok bir MODEL listesidir: satış modeli stoktan düşürmez. Sıfır satış kayıtları ikinci el stoğunda görünmez.
+describe('Motor Stok: Sıfır sekmesi', () => {
+  const PCX = {
+    id: 31,
+    marka: 'Honda',
+    model: 'PCX 125',
+    yil: 2026,
+    motor_cc: 125,
+    segment: 'Scooter',
+    alis_fiyati: '95000.00',
+    liste_fiyati: '120000.00',
+    aciklama: null,
+    kapak_gorsel_id: 7,
+    gorsel_sayisi: 1,
+    satilan_adet: 2,
+  };
+  const SIFIR_SATIS = {
+    id: 40,
+    plaka: null,
+    marka: 'Honda',
+    model: 'PCX 125',
+    durum: 'tamamlandi',
+    motor_durumu: 'sifir',
+    sifir_motor_id: 31,
+    tarih: '2026-10-01T12:00:00',
+  };
+  // Sıfır listesi sayfa açılırken çekilir: sahte yanıt sayfa açılmadan ÖNCE verilir
+  const sifirSekmesi = async (secenek: KurSecenegi = {}, modeller: object[] = [PCX]) => {
+    vi.mocked(sifirMotorService.getAll).mockResolvedValue({ data: modeller } as never);
+    const user = await ekranAc(secenek);
+    await user.click(await screen.findByRole('tab', { name: /Sıfır/ }));
+    return user;
+  };
+
+  test('REGRESYON: sıfır satış kaydı ikinci el stoğunda görünmez ve "Satılan" sayacına girmez', async () => {
+    await ekranAc({ liste: [...HEPSI, SIFIR_SATIS] as typeof HEPSI });
+    expect(screen.getByText('Satılan: 1')).toBeInTheDocument(); // yalnızca M6
+    expect(screen.queryByText('PCX 125')).not.toBeInTheDocument();
+  });
+
+  test('model kartı: liste fiyatı, alış (yetkiliye), satılan sayacı, kapak fotoğrafı; satış modeli stoktan düşürmez notu', async () => {
+    await sifirSekmesi();
+    const kart = await screen.findByRole('article', { name: 'Honda PCX 125 (2026)' });
+    expect(within(kart).getByText('₺120.000')).toBeInTheDocument();
+    expect(within(kart).getByText('Alış ₺95.000')).toBeInTheDocument();
+    expect(within(kart).getByText('2 satıldı')).toBeInTheDocument();
+    expect(within(kart).getByRole('img')).toHaveAttribute('src', '/sifir-gorsel/7');
+    expect(screen.getByText(/Satış girince model stoktan düşmez/)).toBeInTheDocument();
+  });
+
+  test('yetkisiz personel: alış fiyatı, ekleme ve işlem düğmeleri yok', async () => {
+    const { alis_fiyati: _gizli, ...alissiz } = PCX; // sunucu alış fiyatını göndermez
+    await sifirSekmesi({ user: YETKISIZ }, [alissiz]);
+    const kart = await screen.findByRole('article', { name: 'Honda PCX 125 (2026)' });
+    expect(within(kart).queryByText(/Alış/)).not.toBeInTheDocument();
+    expect(within(kart).queryAllByRole('button')).toHaveLength(0);
+    expect(screen.queryByRole('button', { name: 'Sıfır Motor Ekle' })).not.toBeInTheDocument();
+  });
+
+  test('"Satış gir" Motor Satış sayfasına modeli taşır', async () => {
+    const user = await sifirSekmesi({ user: SATIS });
+    await user.click(await screen.findByRole('button', { name: 'Honda PCX 125 (2026) için satış gir' }));
+    expect(mockNavigate).toHaveBeenCalledWith('/ikinci-el-motor', { state: { sifirSatisId: 31 } });
+  });
+
+  test('boş stokta yönlendirici mesaj; "İlk modeli ekle" formu açar; marka boşsa sunucuya gitmez', async () => {
+    const user = await sifirSekmesi({}, []);
+    expect(await screen.findByText('Henüz sıfır motor yok')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'İlk modeli ekle' }));
+    const pencere = await screen.findByRole('dialog');
+    await user.click(within(pencere).getByRole('button', { name: 'Kaydet' }));
+    expect(within(pencere).getByText('Marka zorunlu')).toBeInTheDocument();
+    expect(sifirMotorService.create).not.toHaveBeenCalled();
+  });
+
+  test('ekleme: yük alanları ve (boş) görsel listesi gider, pencere kapanır', async () => {
+    const user = await sifirSekmesi({}, []);
+    vi.mocked(sifirMotorService.create).mockResolvedValue({ data: { id: 50 } } as never);
+    await user.click(screen.getByRole('button', { name: 'Sıfır Motor Ekle' }));
+    const pencere = await screen.findByRole('dialog');
+    await user.type(within(pencere).getByLabelText(/Marka/), 'Yamaha');
+    await user.type(within(pencere).getByLabelText('Model'), 'NMAX');
+    await user.type(within(pencere).getByLabelText('Alış Fiyatı (₺)'), '110000');
+    await user.type(within(pencere).getByLabelText('Liste Fiyatı (₺)'), '140000');
+    await user.click(within(pencere).getByRole('button', { name: 'Kaydet' }));
+    await waitFor(() =>
+      expect(sifirMotorService.create).toHaveBeenCalledWith(
+        expect.objectContaining({ marka: 'Yamaha', model: 'NMAX', alis_fiyati: '110000', liste_fiyati: '140000', gorseller: [] }),
+      ),
+    );
+    await bekleDialogKapanana();
+  });
+
+  test('silme yalnızca admin; onaylanırsa siler', async () => {
+    const user = await sifirSekmesi();
+    vi.mocked(sifirMotorService.delete).mockResolvedValue({ data: {} } as never);
+    await user.click(await screen.findByRole('button', { name: 'Honda PCX 125 (2026) sil' }));
+    await waitFor(() => expect(sifirMotorService.delete).toHaveBeenCalledWith(31));
+  });
+
+  test('yatırımcı: Sıfır sekmesi yok ve sıfır stok sunucudan istenmez', async () => {
+    await ekranAc({ user: YAT_SAHIP });
+    expect(screen.queryByRole('tab', { name: /Sıfır/ })).not.toBeInTheDocument();
+    expect(sifirMotorService.getAll).not.toHaveBeenCalled();
   });
 });

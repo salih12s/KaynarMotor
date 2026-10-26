@@ -8,7 +8,7 @@ import { render, screen, within, waitFor, fireEvent } from '@testing-library/rea
 import userEvent from '@testing-library/user-event';
 import Vitrin from './Vitrin';
 import { vitrinService } from '../vitrinApi';
-import { ikinciElMotorService } from '../../motor/motorApi';
+import { ikinciElMotorService, sifirMotorService } from '../../motor/motorApi';
 import { aksesuarStokService } from '../../aksesuar/aksesuarApi';
 import { useAuth } from '../../auth/AuthContext';
 
@@ -30,7 +30,10 @@ vi.mock('../vitrinApi', () => ({
     iletisimGorselUrl: vi.fn(),
   },
 }));
-vi.mock('../../motor/motorApi', () => ({ ikinciElMotorService: { getAll: vi.fn() } }));
+vi.mock('../../motor/motorApi', () => ({
+  ikinciElMotorService: { getAll: vi.fn() },
+  sifirMotorService: { getAll: vi.fn(), getById: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn(), gorselUrl: (id: number) => `/sifir-gorsel/${id}` },
+}));
 vi.mock('../../aksesuar/aksesuarApi', () => ({ aksesuarStokService: { getAll: vi.fn() } }));
 vi.mock('../../auth/AuthContext', () => ({ useAuth: vi.fn() }));
 vi.mock('../../motor/SatisBelgeleri', () => ({ BelgeBolumu: ({ motorId }: { motorId: number }) => <div>BELGE-BOLUMU-{motorId}</div> }));
@@ -139,6 +142,7 @@ const bekleDialogKapanana = () => waitFor(() => expect(screen.queryByRole('dialo
 const yaziVar = (metin: string) => expect(screen.getByText(metin)).toBeInTheDocument();
 
 beforeEach(() => {
+  vi.mocked(sifirMotorService.getAll).mockResolvedValue({ data: [] } as never);
   vi.spyOn(window, 'confirm').mockImplementation(() => true);
   vi.spyOn(console, 'error').mockImplementation(() => {});
 });
@@ -412,6 +416,7 @@ describe('Vitrin: yeni ilan formu', () => {
       siralama: 3,
       one_cikan: false,
       stok_motor_id: null,
+      sifir_motor_id: null,
       rubik_link: '',
       kategori: 'motor',
       gorseller: [],
@@ -462,6 +467,53 @@ describe('Vitrin: yeni ilan formu', () => {
     await user.click(within(p).getByRole('button', { name: 'Kaydet' }));
     await waitFor(() => expect(vitrinService.create).toHaveBeenCalled());
     expect((vi.mocked(vitrinService.create).mock.calls[0][0] as Record<string, unknown>).motor_durumu).toBe('sifir');
+  });
+
+  test('sıfır ilan: sıfır stoktan model seçmek bilgileri, fiyatı ve FOTOĞRAFLARI doldurur; yüke model bağlantısı girer', async () => {
+    const MODEL = {
+      id: 31,
+      marka: 'Honda',
+      model: 'PCX 125',
+      yil: 2026,
+      motor_cc: 125,
+      segment: 'Scooter',
+      liste_fiyati: '120000.00',
+      aciklama: 'Kırmızı ve beyaz renk',
+      kapak_gorsel_id: 70,
+      gorsel_sayisi: 2,
+      satilan_adet: 0,
+    };
+    vi.mocked(sifirMotorService.getAll).mockResolvedValue({ data: [MODEL] } as never);
+    vi.mocked(sifirMotorService.getById).mockResolvedValue({ data: { ...MODEL, gorsel_idler: [70, 71] } } as never);
+    const user = await ekranAc();
+    const p = await yeniAc(user);
+    await user.click(within(p).getByRole('button', { name: 'Sıfır' }));
+    await user.click(within(p).getByLabelText('Sıfır Stoktan Seç'));
+    await user.click(await screen.findByRole('option', { name: /Honda PCX 125 \(2026\)/ }));
+    await waitFor(() => expect(within(p).getAllByAltText(/^gorsel-/)).toHaveLength(2));
+    expect(vi.mocked(global.fetch).mock.calls.map((c) => c[0])).toEqual(['/sifir-gorsel/70', '/sifir-gorsel/71']);
+    expect(alan('Başlık *')).toHaveValue('Honda PCX 125 2026');
+    await user.click(within(p).getByRole('button', { name: 'Kaydet' }));
+    await waitFor(() => expect(vitrinService.create).toHaveBeenCalled());
+    const yuk = vi.mocked(vitrinService.create).mock.calls[0][0] as Record<string, unknown>;
+    expect(yuk).toMatchObject({ motor_durumu: 'sifir', sifir_motor_id: 31, stok_motor_id: null, marka: 'Honda', fiyat: '120000.00', segment: 'Scooter' });
+    expect(yuk.gorseller).toHaveLength(2);
+  });
+
+  test('ikinci ele geçince sıfır stok bağlantısı yükten düşer', async () => {
+    vi.mocked(sifirMotorService.getAll).mockResolvedValue({
+      data: [{ id: 31, marka: 'Honda', model: 'PCX', yil: 2026, liste_fiyati: 1, gorsel_sayisi: 0 }],
+    } as never);
+    const user = await ekranAc();
+    const p = await yeniAc(user);
+    await user.click(within(p).getByRole('button', { name: 'Sıfır' }));
+    await user.click(within(p).getByLabelText('Sıfır Stoktan Seç'));
+    await user.click(await screen.findByRole('option', { name: /Honda PCX/ }));
+    await user.click(within(p).getByRole('button', { name: 'İkinci El' }));
+    await user.type(alan('Segment *'), 'Naked');
+    await user.click(within(p).getByRole('button', { name: 'Kaydet' }));
+    await waitFor(() => expect(vitrinService.create).toHaveBeenCalled());
+    expect((vi.mocked(vitrinService.create).mock.calls[0][0] as Record<string, unknown>).sifir_motor_id).toBeNull();
   });
 
   test('aksesuar sekmesi: stoktan seçmek başlık, marka, fiyat ve açıklamayı doldurur; segment zorunlu değildir', async () => {

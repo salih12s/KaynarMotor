@@ -215,6 +215,36 @@ CREATE TABLE IF NOT EXISTS ikinci_el_motorlar (
   FOREIGN KEY (yatirimci_id) REFERENCES kullanicilar(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_nopad_bin
   `,
+  // Sıfır motor stoğu: tek tek araç değil MODEL kaydıdır (adet tutulmaz). Satış ikinci_el_motorlar tablosuna
+  // motor_durumu = 'sifir' ile yazılır; model satılınca stoktan düşmez. Vitrin ilanı bilgi ve görselini buradan alır.
+  `
+CREATE TABLE IF NOT EXISTS sifir_motorlar (
+  id INT NOT NULL AUTO_INCREMENT,
+  marka VARCHAR(100) NOT NULL,
+  model VARCHAR(100),
+  yil INT,
+  motor_cc INT,
+  segment VARCHAR(50),
+  alis_fiyati DECIMAL(12,2) DEFAULT 0,
+  liste_fiyati DECIMAL(12,2) DEFAULT 0,
+  aciklama TEXT,
+  kapak_gorsel_id INT,
+  created_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6),
+  updated_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6),
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_nopad_bin
+  `,
+  `
+CREATE TABLE IF NOT EXISTS sifir_motor_gorseller (
+  id INT NOT NULL AUTO_INCREMENT,
+  sifir_motor_id INT NOT NULL,
+  data LONGTEXT NOT NULL,
+  sira INT DEFAULT 0,
+  created_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6),
+  PRIMARY KEY (id),
+  FOREIGN KEY (sifir_motor_id) REFERENCES sifir_motorlar(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_nopad_bin
+  `,
   `
 CREATE TABLE IF NOT EXISTS musteriler (
   id INT NOT NULL AUTO_INCREMENT,
@@ -442,6 +472,15 @@ const MIGRATIONS = [
   'ALTER TABLE kullanicilar DROP COLUMN IF EXISTS plain_sifre',
   // Muhasebeci için "Motor Satış sayfasını salt-okunur görebilir" anahtarı (admin Yetkilendirme'den açar)
   'ALTER TABLE kullanicilar ADD COLUMN IF NOT EXISTS motor_satis_gor BOOLEAN DEFAULT FALSE',
+  // Sıfır motor satışı: motor satış kaydı sıfır stoktaki modele bağlanır. Raporlardaki ayrım motor_durumu'na dayanır
+  // (model silinse de satış "sıfır" kalır; bağlantı NULL olur).
+  "ALTER TABLE ikinci_el_motorlar ADD COLUMN IF NOT EXISTS motor_durumu VARCHAR(20) DEFAULT 'ikinci_el'",
+  'ALTER TABLE ikinci_el_motorlar ADD COLUMN IF NOT EXISTS sifir_motor_id INT NULL',
+  'ALTER TABLE ikinci_el_motorlar ADD CONSTRAINT ikinci_el_motorlar_sifir_fk FOREIGN KEY IF NOT EXISTS (sifir_motor_id) REFERENCES sifir_motorlar(id) ON DELETE SET NULL',
+  'CREATE INDEX IF NOT EXISTS idx_motorlar_sifir ON ikinci_el_motorlar (sifir_motor_id)',
+  // Sıfır motor ilanı sıfır stoktaki modele bağlanır (fiyat senkronu; model silinince ilan yayından kalkar)
+  'ALTER TABLE vitrin_urunleri ADD COLUMN IF NOT EXISTS sifir_motor_id INT NULL',
+  'CREATE INDEX IF NOT EXISTS idx_sifir_gorsel_motor ON sifir_motor_gorseller (sifir_motor_id)',
 ];
 
 export const initializeDatabase = async (): Promise<void> => {
@@ -502,6 +541,7 @@ export const initializeDatabase = async (): Promise<void> => {
     //  - motor_durumu boş kalan vitrin ilanları 'ikinci_el' olur
     await client.query("UPDATE ikinci_el_motorlar SET durum = 'stokta' WHERE durum = 'beklemede'");
     await client.query("UPDATE vitrin_urunleri SET motor_durumu = 'ikinci_el' WHERE motor_durumu IS NULL");
+    await client.query("UPDATE ikinci_el_motorlar SET motor_durumu = 'ikinci_el' WHERE motor_durumu IS NULL");
 
     console.log('Tüm tablolar başarıyla oluşturuldu/kontrol edildi');
   } catch (error) {

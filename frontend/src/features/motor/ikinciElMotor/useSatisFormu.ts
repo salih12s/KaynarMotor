@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { hataMesaji } from '../../../shared/api/istemci';
 import { sonIstek } from '../../../shared/utils/sonIstek';
-import type { Motor, Musteri } from '../../../shared/tipler';
+import type { Motor, Musteri, SifirMotor } from '../../../shared/tipler';
 import { ikinciElMotorService } from '../motorApi';
 import { musteriService } from '../../musteriler/musteriApi';
 import { bekleyenBelgeleriYukle } from '../SatisBelgeleri';
-import { ilkForm, bosForm, motordenForm, hesaplaCanliKar, type MotorSatisFormu } from './satisVeri';
+import { ilkForm, bosForm, motordenForm, hesaplaCanliKar, sifirdenSatisFormu, ikinciElFormu, type MotorSatisFormu } from './satisVeri';
 import { bildir } from '../../../shared/ui';
 
 // Hızlı yazarken eski aramanın yanıtı yeniyi ezmesin
@@ -42,14 +42,23 @@ export const useSatisFormu = ({ salt, yenile }: { salt: boolean; yenile: () => v
 
   const kapat = () => setDialog({ open: false, data: null });
 
-  const openDialog = (motor: Motor | null = null) => {
+  // `sifirModel` verilirse yeni satış o sıfır modelle açılır (Motor Stok > Sıfır > "Satış gir")
+  const openDialog = (motor: Motor | null = null, sifirModel: SifirMotor | null = null) => {
     if (salt) return;
     setError('');
     setSelectedStokId(null);
     setBekleyenBelgeler([]);
-    setFormData(motor ? motordenForm(motor) : bosForm());
+    setFormData(motor ? motordenForm(motor) : sifirModel ? sifirdenSatisFormu(bosForm(), sifirModel) : bosForm());
     setDialog({ open: true, data: motor });
   };
+
+  // Yeni satışta tür seçimi: sıfıra geçince stoktan seçilmiş ikinci el kaydı bırakılır
+  const turSec = (tur: 'sifir' | 'ikinci_el') => {
+    setSelectedStokId(null);
+    setFormData((f) => (tur === 'sifir' ? { ...f, motor_durumu: 'sifir', durum: 'tamamlandi', plaka: '' } : ikinciElFormu(f)));
+  };
+  const sifirSec = (model: SifirMotor | null) =>
+    setFormData((f) => (model ? sifirdenSatisFormu(f, model) : { ...f, sifir_motor_id: '', marka: '', model: '', yil: '', alis_fiyati: '', satis_fiyati: '' }));
 
   const handleSave = async () => {
     setError('');
@@ -57,6 +66,11 @@ export const useSatisFormu = ({ salt, yenile }: { salt: boolean; yenile: () => v
     try {
       // `odeme_tamamlandi` yalnızca ekran içindir; sunucuya kalan ödeme olarak gider
       const { odeme_tamamlandi, ...alanlar } = formData;
+      if (alanlar.motor_durumu === 'sifir' && !alanlar.sifir_motor_id) {
+        setError('Sıfır stoktan bir model seçin');
+        setKaydediliyor(false);
+        return;
+      }
       const payload = { ...alanlar, kalan_odeme: odeme_tamamlandi ? 0 : formData.kalan_odeme || 0 };
       let motorId: number;
       if (dialog.data) {
@@ -119,6 +133,8 @@ export const useSatisFormu = ({ salt, yenile }: { salt: boolean; yenile: () => v
     setBekleyenBelgeler,
     kaydediliyor,
     setSelectedStokId,
+    turSec,
+    sifirSec,
     musteriOptions,
     searchMusteri,
     autofillByPhone,

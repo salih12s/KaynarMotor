@@ -33,7 +33,10 @@ export const olustur = sarmala('Motor satış ekleme hatası:', async (req, res)
     kullanici_id: req.user.id,
     kullanici_adi: req.user.kullanici_adi,
     islem_tipi: ISLEM_TIPLERI.MOTOR_SATIS_OLUSTUR,
-    islem_detay: `2. El Motor: ${govde.plaka} - ${govde.marka} ${govde.model}`,
+    islem_detay:
+      kayit.motor_durumu === 'sifir'
+        ? `Sıfır Motor satışı: ${kayit.marka} ${kayit.model || ''} (model #${kayit.sifir_motor_id})`
+        : `2. El Motor: ${govde.plaka} - ${govde.marka} ${govde.model}`,
     hedef_tablo: 'ikinci_el_motorlar',
     hedef_id: kayit.id,
   });

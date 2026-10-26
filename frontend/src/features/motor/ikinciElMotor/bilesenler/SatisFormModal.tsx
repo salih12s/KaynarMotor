@@ -6,7 +6,7 @@ import MotorBilgileriBolumu from './MotorBilgileriBolumu';
 import FiyatKarBolumu from './FiyatKarBolumu';
 import TaraflarBolumu from './TaraflarBolumu';
 import KalanOdemeBelgeBolumu from './KalanOdemeBelgeBolumu';
-import type { Motor } from '../../../../shared/tipler';
+import type { Motor, SifirMotor } from '../../../../shared/tipler';
 import type { SatisFormuDurumu } from '../useSatisFormu';
 import { TON } from '../../../../app/tokenlar';
 
@@ -14,13 +14,14 @@ import { TON } from '../../../../app/tokenlar';
 interface SatisFormModalProps {
   form: SatisFormuDurumu;
   stokMotorlar: Motor[];
+  sifirModeller: SifirMotor[];
   yatirimciMap: Record<number, string>;
   canAlis: boolean;
   canKar: boolean;
   isMobile: boolean;
 }
 
-const SatisFormModal = ({ form, stokMotorlar, yatirimciMap, canAlis, canKar, isMobile }: SatisFormModalProps) => {
+const SatisFormModal = ({ form, stokMotorlar, sifirModeller, yatirimciMap, canAlis, canKar, isMobile }: SatisFormModalProps) => {
   const {
     dialog,
     kapat,
@@ -32,6 +33,8 @@ const SatisFormModal = ({ form, stokMotorlar, yatirimciMap, canAlis, canKar, isM
     setBekleyenBelgeler,
     kaydediliyor,
     setSelectedStokId,
+    turSec,
+    sifirSec,
     musteriOptions,
     searchMusteri,
     autofillByPhone,
@@ -58,7 +61,16 @@ const SatisFormModal = ({ form, stokMotorlar, yatirimciMap, canAlis, canKar, isM
             </Box>
           </Alert>
         )}
-        <MotorBilgileriBolumu f={f} setFormData={setFormData} stokMotorlar={stokMotorlar} setSelectedStokId={setSelectedStokId} />
+        <MotorBilgileriBolumu
+          f={f}
+          setFormData={setFormData}
+          stokMotorlar={stokMotorlar}
+          setSelectedStokId={setSelectedStokId}
+          sifirModeller={sifirModeller}
+          turSec={turSec}
+          sifirSec={sifirSec}
+          duzenleme={!!dialog.data}
+        />
         <FiyatKarBolumu f={f} setFormData={setFormData} canAlis={canAlis} canKar={canKar} canliKar={canliKar} />
         <TaraflarBolumu f={f} setFormData={setFormData} musteriOptions={musteriOptions} searchMusteri={searchMusteri} autofillByPhone={autofillByPhone} />
         <KalanOdemeBelgeBolumu

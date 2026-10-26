@@ -45,6 +45,8 @@ export interface YeniMotor {
   vitrin_segment: unknown;
   vitrin_cc: number | null;
   vitrin_hasar: unknown;
+  motorDurumu: 'sifir' | 'ikinci_el';
+  sifirMotorId: number | null;
 }
 
 /** UPDATE için hazır değerler (kısmi güncelleme service'te çözülmüştür). */
@@ -102,7 +104,10 @@ export const ozet = async (db: Veritabani): Promise<MotorSatiri> =>
         COALESCE(SUM(CASE WHEN durum = 'tamamlandi' THEN kar END), 0) as toplam_kar,
         COALESCE(SUM(CASE WHEN durum = 'tamamlandi' THEN satis_fiyati END), 0) as toplam_satis_tutari,
         COUNT(CASE WHEN durum = 'beklemede' THEN 1 END) as bekleyen,
-        COUNT(CASE WHEN durum = 'tamamlandi' THEN 1 END) as tamamlanan
+        COUNT(CASE WHEN durum = 'tamamlandi' THEN 1 END) as tamamlanan,
+        COUNT(CASE WHEN durum = 'tamamlandi' AND motor_durumu = 'sifir' THEN 1 END) as sifir_adet,
+        COALESCE(SUM(CASE WHEN durum = 'tamamlandi' AND motor_durumu = 'sifir' THEN satis_fiyati END), 0) as sifir_satis,
+        COALESCE(SUM(CASE WHEN durum = 'tamamlandi' AND motor_durumu = 'sifir' THEN kar END), 0) as sifir_kar
       FROM ikinci_el_motorlar
     `)
   ).rows[0];
@@ -153,8 +158,8 @@ export const ekle = async (db: Veritabani, m: YeniMotor): Promise<MotorSatiri> =
       yil, satici_adi, satici_tc, kalan_odeme, fatura_kesildi, yevmiye_no, satis_tarihi,
       komisyoncu_adi, komisyoncu_telefon, komisyoncu_tutari,
       yatirimci_id, yatirimci_kar_orani, yatirimci_kar, liste_fiyati, odeme_detaylari,
-      vitrin_baslik, vitrin_aciklama, vitrin_segment, vitrin_cc, vitrin_hasar)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34,$35,$36,$37,$38,$39,$40) RETURNING *`,
+      vitrin_baslik, vitrin_aciklama, vitrin_segment, vitrin_cc, vitrin_hasar, motor_durumu, sifir_motor_id)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34,$35,$36,$37,$38,$39,$40,$41,$42) RETURNING *`,
       [
         m.tarih,
         m.plaka,
@@ -196,9 +201,15 @@ export const ekle = async (db: Veritabani, m: YeniMotor): Promise<MotorSatiri> =
         m.vitrin_segment,
         m.vitrin_cc,
         m.vitrin_hasar,
+        m.motorDurumu,
+        m.sifirMotorId,
       ],
     )
   ).rows[0];
+
+/** Satışı yapılacak sıfır model (işlem bitene kadar silinemesin diye paylaşımlı kilitle okunur). */
+export const sifirModelBul = async (db: Veritabani, id: number): Promise<MotorSatiri | null> =>
+  (await db.query('SELECT * FROM sifir_motorlar WHERE id = $1 LOCK IN SHARE MODE', [id])).rows[0] ?? null;
 
 export const guncelle = async (db: Veritabani, id: number, m: MotorGuncelleme): Promise<MotorSatiri> =>
   (

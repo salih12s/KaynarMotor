@@ -9,7 +9,7 @@ import { screen, within, waitFor, fireEvent } from '@testing-library/react';
 import { sorguluRender } from '../../shared/sorgu/sorguluRender';
 import userEvent from '@testing-library/user-event';
 import IkinciElMotor from './IkinciElMotor';
-import { ikinciElMotorService } from './motorApi';
+import { ikinciElMotorService, sifirMotorService } from './motorApi';
 import { musteriService } from '../musteriler/musteriApi';
 import { authService } from '../auth/authApi';
 import { bekleyenBelgeleriYukle } from './SatisBelgeleri';
@@ -19,6 +19,7 @@ import { plakaBicim } from '../../shared/ui';
 
 vi.mock('./motorApi', () => ({
   ikinciElMotorService: { getAll: vi.fn(), getStats: vi.fn(), getById: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn() },
+  sifirMotorService: { getAll: vi.fn(), getById: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn(), gorselUrl: (id: number) => `/sifir-gorsel/${id}` },
 }));
 vi.mock('../musteriler/musteriApi', () => ({ musteriService: { search: vi.fn(), searchByPhone: vi.fn() } }));
 vi.mock('../auth/authApi', () => ({ authService: { getYatirimcilar: vi.fn() } }));
@@ -161,6 +162,7 @@ const plakalar = () =>
 const bekleDialogKapanana = () => waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
 
 beforeEach(() => {
+  vi.mocked(sifirMotorService.getAll).mockResolvedValue({ data: [] } as never);
   mockLocation = { pathname: '/ikinci-el-motor', state: null };
   vi.spyOn(window, 'alert').mockImplementation(() => {});
   vi.spyOn(window, 'confirm').mockImplementation(() => true);
@@ -584,5 +586,104 @@ describe('İkinci El Motor: mobil görünüm', () => {
     await ekranAc({ user: MUHASEBE });
     expect(screen.queryByText(/Kâr:/)).not.toBeInTheDocument();
     expect(screen.queryAllByTestId('EditIcon')).toHaveLength(0);
+  });
+});
+
+// ---- Sıfır motor satışı ------------------------------------------------------------------------------------------
+// Sıfır stoktaki model seçilerek satış girilir: model stoktan düşmez; satış listede "Sıfır" damgasıyla görünür.
+describe('İkinci El Motor: sıfır motor satışı', () => {
+  const PCX = {
+    id: 31,
+    marka: 'Honda',
+    model: 'PCX 125',
+    yil: 2026,
+    motor_cc: 125,
+    segment: 'Scooter',
+    alis_fiyati: '95000.00',
+    liste_fiyati: '120000.00',
+    aciklama: null,
+    kapak_gorsel_id: null,
+    gorsel_sayisi: 0,
+    satilan_adet: 0,
+  };
+  const SIFIR_SATIS = {
+    id: 40,
+    plaka: '34SFR001',
+    marka: 'Honda',
+    model: 'PCX 125',
+    yil: 2026,
+    durum: 'tamamlandi',
+    motor_durumu: 'sifir',
+    sifir_motor_id: 31,
+    alis_fiyati: 95000,
+    satis_fiyati: 120000,
+    kar: 25000,
+    alici_adi: 'Zeynep',
+    satis_tarihi: '2026-10-06T12:00:00',
+  };
+  const sifirliAc = async (secenek: KurSecenegi = {}) => {
+    vi.mocked(sifirMotorService.getAll).mockResolvedValue({ data: [PCX] } as never);
+    return ekranAc(secenek);
+  };
+  const yeniSifirSatis = async (user: Kullanim) => {
+    await user.click(screen.getByRole('button', { name: 'Motor Satış' }));
+    const pencere = await screen.findByRole('dialog');
+    await user.click(within(pencere).getByRole('button', { name: 'Sıfır' }));
+    return pencere;
+  };
+
+  test('Sıfır seçilince model kutusu çıkar; KM ve alım tarihi gizlenir, durum "Tamamlandı"da kilitlenir', async () => {
+    const user = await sifirliAc();
+    const pencere = await yeniSifirSatis(user);
+    expect(within(pencere).getByLabelText(/Sıfır Model/)).toBeInTheDocument();
+    expect(within(pencere).queryByLabelText('KM')).not.toBeInTheDocument();
+    expect(within(pencere).queryByLabelText('Alım Tarihi')).not.toBeInTheDocument();
+    expect(within(pencere).getByText('Tamamlandı')).toBeInTheDocument();
+  });
+
+  test('model seçmek marka, model, yıl ve fiyatları doldurur; kayıt yükünde sıfır işareti ve model id gider', async () => {
+    const user = await sifirliAc();
+    const pencere = await yeniSifirSatis(user);
+    await user.click(within(pencere).getByLabelText(/Sıfır Model/));
+    await user.click(await screen.findByRole('option', { name: /Honda PCX 125 \(2026\)/ }));
+    expect(within(pencere).getByLabelText(/Marka/)).toHaveValue('Honda');
+    expect(within(pencere).getByLabelText('Satış Fiyatı (₺)')).toHaveValue(120000);
+    expect(within(pencere).getByLabelText('Alış Fiyatı (₺)')).toHaveValue(95000);
+    await user.click(within(pencere).getByRole('button', { name: 'Kaydet' }));
+    await waitFor(() =>
+      expect(ikinciElMotorService.create).toHaveBeenCalledWith(
+        expect.objectContaining({ motor_durumu: 'sifir', sifir_motor_id: 31, durum: 'tamamlandi', satis_fiyati: '120000.00', yatirimci_id: '' }),
+      ),
+    );
+    // Sıfır satış stoktaki (ikinci el) bir kaydı GÜNCELLEMEZ: yeni kayıt açılır
+    expect(ikinciElMotorService.update).not.toHaveBeenCalled();
+  });
+
+  test('model seçilmeden kaydedilemez: uyarı çıkar, sunucuya gitmez', async () => {
+    const user = await sifirliAc();
+    const pencere = await yeniSifirSatis(user);
+    await user.click(within(pencere).getByRole('button', { name: 'Kaydet' }));
+    expect(await within(pencere).findByText('Sıfır stoktan bir model seçin')).toBeInTheDocument();
+    expect(ikinciElMotorService.create).not.toHaveBeenCalled();
+  });
+
+  test('Motor Stok > "Satış gir" ile gelinince form o modelle açılır ve konum durumu temizlenir', async () => {
+    mockLocation = { pathname: '/ikinci-el-motor', state: { sifirSatisId: 31 } };
+    await sifirliAc();
+    const pencere = await screen.findByRole('dialog');
+    expect(within(pencere).getByLabelText(/Sıfır Model/)).toHaveValue('Honda PCX 125 (2026)');
+    expect(mockNavigate).toHaveBeenCalledWith('/ikinci-el-motor', { replace: true, state: {} });
+  });
+
+  test('listede "Sıfır" damgası; özet şeridinde sıfır sayısı ve (admin) sıfır kârı', async () => {
+    vi.mocked(sifirMotorService.getAll).mockResolvedValue({ data: [PCX] } as never);
+    kur({ liste: [...HEPSI, SIFIR_SATIS] });
+    vi.mocked(ikinciElMotorService.getStats).mockResolvedValue({ data: { ...STATS, sifir_kar: 25000 } } as never);
+    sorguluRender(<IkinciElMotor />);
+    await screen.findByText(plakaBicim('34SFR001'));
+    expect(within(satir('34SFR001')).getByText('Sıfır')).toBeInTheDocument();
+    expect(within(satir('34SAT111')).queryByText('Sıfır')).not.toBeInTheDocument();
+    await waitFor(() => expect(ozet('Sıfır kârı')).toBe('₺25.000'));
+    expect(ozet('Sıfır')).toBe('1');
   });
 });

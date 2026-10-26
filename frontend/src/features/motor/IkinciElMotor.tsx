@@ -1,5 +1,8 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Box, useTheme, useMediaQuery } from '@mui/material';
+import type { SifirMotor } from '../../shared/tipler';
+import { useSifirMotorlar } from './motorSorgulari';
 import { useAuth } from '../auth/AuthContext';
 import { filtrele } from './ikinciElMotor/satisVeri';
 import { excelHtml, excelIndir } from './ikinciElMotor/excel';
@@ -10,6 +13,8 @@ import Suzgecler from './ikinciElMotor/bilesenler/Suzgecler';
 import SatisListesi from './ikinciElMotor/bilesenler/SatisListesi';
 import SatisFormModal from './ikinciElMotor/bilesenler/SatisFormModal';
 import MotorDetayModal from './ikinciElMotor/bilesenler/MotorDetayModal';
+
+const BOS: SifirMotor[] = [];
 
 // İkinci El Motor (satış kayıtları) sayfasının kabuğu: rol/izin bayrakları ve arama/tarih süzgeçleri burada; sunucu verisi ve form
 // durumu hook'lardan gelir (./ikinciElMotor/use*.js); liste, çipler ve pencereler yalnızca çizim yapar (./ikinciElMotor/bilesenler/).
@@ -25,6 +30,22 @@ const IkinciElMotor = () => {
 
   const liste = useSatisListesi();
   const form = useSatisFormu({ salt, yenile: liste.yenile });
+  // Sıfır stok modelleri (satış formunda seçilir). Muhasebeci salt okunur: form açmaz, istenmez.
+  const sifirModeller = useSifirMotorlar({ etkin: !salt }).data ?? BOS;
+  const location = useLocation();
+  const navigate = useNavigate();
+  // Motor Stok > Sıfır > "Satış gir": yeni satış o modelle açılır (modeller yüklenince), konum durumu temizlenir
+  const sifirSatisId = (location.state as { sifirSatisId?: number } | null)?.sifirSatisId;
+  const { openDialog } = form;
+  const islenenSifir = useRef<number | null>(null);
+  useEffect(() => {
+    if (!sifirSatisId || islenenSifir.current === sifirSatisId) return;
+    const model = sifirModeller.find((m) => m.id === sifirSatisId);
+    if (!model) return;
+    islenenSifir.current = sifirSatisId;
+    openDialog(null, model);
+    navigate(location.pathname, { replace: true, state: {} });
+  }, [sifirSatisId, sifirModeller, openDialog, navigate, location.pathname]);
   const printRef = useRef<HTMLDivElement>(null);
   const [search, setSearch] = useState('');
   const [tarihBaslangic, setTarihBaslangic] = useState('');
@@ -60,7 +81,15 @@ const IkinciElMotor = () => {
         onSil={liste.sil}
       />
 
-      <SatisFormModal form={form} stokMotorlar={liste.stokMotorlar} yatirimciMap={liste.yatirimciMap} canAlis={canAlis} canKar={canKar} isMobile={isMobile} />
+      <SatisFormModal
+        form={form}
+        stokMotorlar={liste.stokMotorlar}
+        sifirModeller={sifirModeller}
+        yatirimciMap={liste.yatirimciMap}
+        canAlis={canAlis}
+        canKar={canKar}
+        isMobile={isMobile}
+      />
 
       {/* Motor Detay Modal */}
       <MotorDetayModal

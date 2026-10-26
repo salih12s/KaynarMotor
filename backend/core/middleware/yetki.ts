@@ -84,7 +84,7 @@ export const YEDEK_PARCA_STOK_OKUYANLAR: YetkiAlani[] = ['yedek_parca_yetkisi', 
 // Karlılık bilgisi yalnızca admin'e açıktır. Bu alanlar admin dışındaki herkesin yanıtından,
 // iç içe nesneler ve diziler dahil, silinir. Uç tek tek temizlenmediği için yeni bir uç kâr
 // döndürse bile sızmaz. (kar_gor gibi kullanıcı bayrakları artık hiçbir şeyi açmaz.)
-export const KAR_ALANLARI = new Set<string>(['kar', 'toplam_kar', 'kar_toplam', 'isletme_kar']);
+export const KAR_ALANLARI = new Set<string>(['kar', 'toplam_kar', 'kar_toplam', 'isletme_kar', 'sifir_kar', 'ikinci_el_kar']);
 // Yatırımcının kendi payı: yatırımcı kendi raporunda bunu görür, diğer roller görmez.
 export const YATIRIMCI_PAYI_ALANLARI = new Set<string>(['yatirimci_kar', 'yatirimci_kar_orani', 'toplam_yatirimci_kar']);
 

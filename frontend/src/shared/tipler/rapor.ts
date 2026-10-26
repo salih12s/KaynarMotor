@@ -21,6 +21,11 @@ export interface AralikRaporu {
   motorYatirimciKar: number;
   motorKomisyon: number;
   motorNoterSatisCiro: number;
+  /** Sıfır motor satışları: yukarıdaki motor toplamlarının İÇİNDEDİR; kârları ayrıca gösterilir. */
+  motorSifirAdet?: number;
+  motorSifirGelir?: number;
+  motorSifirMaliyet?: number;
+  motorSifirKar?: number;
   isEmirleri: IsEmriDetayi[];
   isEmriGelir: number;
   isEmriMaliyet: number;

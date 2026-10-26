@@ -1,7 +1,9 @@
 import { useState, type ChangeEvent } from 'react';
 import { vitrinService } from '../vitrinApi';
-import { resizeImage } from './gorselIsle';
-import type { AksesuarStok, Motor, VitrinIlan } from '../../../shared/tipler';
+import { sifirMotorService } from '../../motor/motorApi';
+import { urlDenDataUrl } from './gorselIsle';
+import { useGorselListesi } from './useGorselListesi';
+import type { AksesuarStok, Motor, SifirMotor, VitrinIlan } from '../../../shared/tipler';
 import type { Bildir } from './tipler';
 
 /** İlan formunun alanları; sayısal alanlar yazılırken metin, kayıttan gelirken sayı olabilir. */
@@ -22,6 +24,7 @@ export interface IlanFormu {
   siralama: number;
   one_cikan: boolean;
   stok_motor_id: number | null;
+  sifir_motor_id: number | null;
   rubik_link: string;
 }
 
@@ -42,6 +45,7 @@ const bosUrun: IlanFormu = {
   siralama: 0,
   one_cikan: false,
   stok_motor_id: null,
+  sifir_motor_id: null,
   rubik_link: '',
 };
 
@@ -60,9 +64,10 @@ export const useIlanFormu = ({ kategori, isMotor, urunler, videoLimitMb, bildir,
   const [dlgOpen, setDlgOpen] = useState(false);
   const [form, setForm] = useState<IlanFormu>(bosUrun);
   const [editId, setEditId] = useState<number | null>(null);
-  const [gorseller, setGorseller] = useState<string[]>([]); // base64 data URL dizisi
+  const gorselListesi = useGorselListesi(bildir); // base64 data URL dizisi; ilki kapak
+  const { gorseller, setGorseller } = gorselListesi;
   const [saving, setSaving] = useState(false);
-  const [draggedGorselIndex, setDraggedGorselIndex] = useState<number | null>(null);
+  const [sifirGorselYukleniyor, setSifirGorselYukleniyor] = useState(false);
 
   // video: videoFile = yeni seçilen base64; videoVar = üründe zaten video var mı; videoSil = mevcudu kaldır
   const [videoFile, setVideoFile] = useState<string | null>(null);
@@ -101,6 +106,7 @@ export const useIlanFormu = ({ kategori, isMotor, urunler, videoLimitMb, bildir,
     setForm((f) => ({
       ...f,
       stok_motor_id: motor.id,
+      sifir_motor_id: null,
       marka: motor.marka || f.marka,
       model: motor.model || f.model,
       yil: motor.yil || f.yil,
@@ -113,6 +119,37 @@ export const useIlanFormu = ({ kategori, isMotor, urunler, videoLimitMb, bildir,
       motor_cc: motor.vitrin_cc || f.motor_cc,
       hasar_kaydi: motor.vitrin_hasar || f.hasar_kaydi,
     }));
+  };
+
+  // Sıfır stoktan model seçilince bilgiler ve FOTOĞRAFLAR stoktan gelir (müşteri bir kez girer; fiyat stokla senkron kalır)
+  const secSifirMotor = async (model: SifirMotor | null) => {
+    if (!model) {
+      setForm((f) => ({ ...f, sifir_motor_id: null }));
+      return;
+    }
+    setForm((f) => ({
+      ...f,
+      sifir_motor_id: model.id,
+      stok_motor_id: null,
+      marka: model.marka || f.marka,
+      model: model.model || f.model,
+      yil: model.yil || f.yil,
+      km: '',
+      motor_cc: model.motor_cc || f.motor_cc,
+      segment: model.segment || f.segment,
+      fiyat: model.liste_fiyati || f.fiyat,
+      baslik: f.baslik || [model.marka, model.model, model.yil].filter(Boolean).join(' '),
+      aciklama: model.aciklama || f.aciklama,
+    }));
+    if (!model.gorsel_sayisi) return;
+    setSifirGorselYukleniyor(true);
+    try {
+      const { data } = await sifirMotorService.getById(model.id);
+      setGorseller(await Promise.all((data.gorsel_idler || []).map((gid) => urlDenDataUrl(sifirMotorService.gorselUrl(gid)))));
+    } catch {
+      bildir('Stoktaki fotoğraflar getirilemedi; elle ekleyebilirsiniz', 'warning');
+    }
+    setSifirGorselYukleniyor(false);
   };
 
   const resetVideo = () => {
@@ -152,21 +189,11 @@ export const useIlanFormu = ({ kategori, isMotor, urunler, videoLimitMb, bildir,
         siralama: d.siralama || 0,
         one_cikan: !!d.one_cikan,
         stok_motor_id: d.stok_motor_id || null,
+        sifir_motor_id: d.sifir_motor_id || null,
         rubik_link: d.rubik_link || '',
       });
       // mevcut görselleri data URL olarak getir (endpoint'ten)
-      const gorsellerData = await Promise.all(
-        (d.gorsel_idler || []).map(async (gid) => {
-          const r = await fetch(vitrinService.gorselUrl(gid));
-          const blob = await r.blob();
-          return await new Promise<string>((resolve) => {
-            const fr = new FileReader();
-            fr.onload = () => resolve(fr.result as string);
-            fr.readAsDataURL(blob);
-          });
-        }),
-      );
-      setGorseller(gorsellerData);
+      setGorseller(await Promise.all((d.gorsel_idler || []).map((gid) => urlDenDataUrl(vitrinService.gorselUrl(gid)))));
       // Mevcut video base64'ünü forma çekmeyiz (büyük olabilir); sadece var/yok bilgisini tutarız
       setVideoFile(null);
       setVideoAdi('');
@@ -209,41 +236,6 @@ export const useIlanFormu = ({ kategori, isMotor, urunler, videoLimitMb, bildir,
     if (videoVar) setVideoSil(true); // kaydedince sunucudaki mevcut video silinsin
   };
 
-  const handleFiles = async (e: ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    try {
-      const resized = await Promise.all(files.map((f) => resizeImage(f)));
-      setGorseller((prev) => [...prev, ...resized]);
-    } catch {
-      bildir('Görsel işlenemedi', 'error');
-    }
-    e.target.value = '';
-  };
-
-  const removeGorsel = (i: number) => setGorseller((prev) => prev.filter((_, idx) => idx !== i));
-  const makeKapak = (i: number) =>
-    setGorseller((prev) => {
-      const arr = [...prev];
-      const [g] = arr.splice(i, 1);
-      arr.unshift(g);
-      return arr;
-    });
-
-  const moveGorsel = (from: number, to: number) => {
-    if (from === to || from < 0 || to < 0 || from >= gorseller.length || to >= gorseller.length) return;
-    setGorseller((prev) => {
-      const arr = [...prev];
-      const [moved] = arr.splice(from, 1);
-      arr.splice(to, 0, moved);
-      return arr;
-    });
-  };
-
-  const handleGorselDrop = (to: number) => {
-    if (draggedGorselIndex !== null) moveGorsel(draggedGorselIndex, to);
-    setDraggedGorselIndex(null);
-  };
-
   const handleSave = async () => {
     if (!form.baslik.trim()) {
       bildir('Başlık zorunlu', 'warning');
@@ -284,10 +276,9 @@ export const useIlanFormu = ({ kategori, isMotor, urunler, videoLimitMb, bildir,
     form,
     setForm,
     editId,
-    gorseller,
+    ...gorselListesi,
     saving,
-    draggedGorselIndex,
-    setDraggedGorselIndex,
+    sifirGorselYukleniyor,
     videoFile,
     videoAdi,
     videoVar,
@@ -295,15 +286,11 @@ export const useIlanFormu = ({ kategori, isMotor, urunler, videoLimitMb, bildir,
     videoYukleniyor,
     secStokAksesuar,
     secStokMotor,
+    secSifirMotor,
     openNew,
     openEdit,
     handleVideoFile,
     removeVideo,
-    handleFiles,
-    removeGorsel,
-    makeKapak,
-    moveGorsel,
-    handleGorselDrop,
     handleSave,
   };
 };

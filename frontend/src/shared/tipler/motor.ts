@@ -60,6 +60,34 @@ export interface Motor {
   vitrin_cc?: number | null;
   vitrin_fiyat?: Sayi;
   vitrin_hasar?: string | null;
+  /** 'sifir': sıfır stoktaki bir modelin satışı (stoktan düşmez, raporda kârı ayrı); yoksa/'ikinci_el': ikinci el. */
+  motor_durumu?: string | null;
+  /** Sıfır satışın bağlı olduğu model (model silinirse null olur, satış yine "sıfır" kalır). */
+  sifir_motor_id?: number | null;
+}
+
+/**
+ * Sıfır motor stoğu: tek tek araç değil MODEL kaydı (adet tutulmaz). Kaynak: `sifir_motorlar`.
+ * Alış fiyatı yalnızca yetkiliye gelir (backend sifirMotor.gorunum.ts).
+ */
+export interface SifirMotor {
+  id: number;
+  marka: string;
+  model: string | null;
+  yil: number | null;
+  motor_cc: number | null;
+  segment: string | null;
+  alis_fiyati?: Sayi;
+  liste_fiyati: Sayi;
+  aciklama: string | null;
+  kapak_gorsel_id: number | null;
+  gorsel_sayisi: number;
+  /** Bu modelden yapılmış (tamamlanmış) satış sayısı; bilgi içindir, stok azalmaz. */
+  satilan_adet: number;
+  /** Yalnızca tek kayıt (detay) yanıtında: görsel id'leri, ilki kapak. */
+  gorsel_idler?: number[];
+  created_at?: string;
+  updated_at?: string;
 }
 
 /** `/ikinci-el-motor/stats/ozet` yanıtı: satış sayaçları (BIGINT/DECIMAL toplamlar metin gelir). */

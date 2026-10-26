@@ -28,6 +28,8 @@ export interface VitrinIlan {
   /** 'sifir' | 'ikinci_el' */
   motor_durumu: string | null;
   stok_motor_id: number | null;
+  /** Sıfır ilanının bağlı olduğu sıfır stok modeli. */
+  sifir_motor_id?: number | null;
   created_at?: string;
   updated_at?: string;
 }

@@ -30,3 +30,14 @@ export const resizeImage = (file: File, maxSize = 1280, quality = 0.7): Promise<
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
+
+// Sunucudaki görseli (URL) forma konabilecek data URL'e çevirir: kaydedilince görseller yeniden gönderilir.
+export const urlDenDataUrl = async (url: string): Promise<string> => {
+  const blob = await (await fetch(url)).blob();
+  return new Promise<string>((resolve, reject) => {
+    const fr = new FileReader();
+    fr.onload = () => resolve(fr.result as string);
+    fr.onerror = reject;
+    fr.readAsDataURL(blob);
+  });
+};

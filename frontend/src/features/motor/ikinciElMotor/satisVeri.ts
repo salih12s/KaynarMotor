@@ -1,6 +1,6 @@
 // İkinci El Motor (satış) ekranının saf kuralları (ekran/durum yok, doğrudan test edilebilir): form dönüşümleri, süzme+sıralama, canlı kâr.
 import { bugunYerel } from '../../../shared/utils/tarih';
-import type { Motor } from '../../../shared/tipler';
+import type { Motor, SifirMotor } from '../../../shared/tipler';
 import { metinIcerir } from '../../../shared/utils/metin';
 
 /** Form alanı: kullanıcı yazarken metin, kayıttan gelirken sayı olabilir. */
@@ -40,6 +40,9 @@ export interface MotorSatisFormu {
   yatirimci_id: FormSayisi;
   yatirimci_kar: FormSayisi;
   yatirimci_adi: string;
+  /** 'sifir': sıfır stoktaki modelin satışı (model stoktan düşmez); 'ikinci_el': plakalı ikinci el motor. */
+  motor_durumu: string;
+  sifir_motor_id: FormSayisi;
 }
 
 // Formun ilk (kapalıyken tutulan) hâli
@@ -75,6 +78,8 @@ export const ilkForm = (): MotorSatisFormu => ({
   yatirimci_id: '',
   yatirimci_kar: '',
   yatirimci_adi: '',
+  motor_durumu: 'ikinci_el',
+  sifir_motor_id: '',
 });
 
 // Yeni satış formu
@@ -110,6 +115,8 @@ export const bosForm = (): MotorSatisFormu => ({
   yatirimci_id: '',
   yatirimci_kar: '',
   yatirimci_adi: '',
+  motor_durumu: 'ikinci_el',
+  sifir_motor_id: '',
 });
 
 // Kayıtlı satışı form alanlarına çevirir (boşlar '', tarihler yyyy-aa-gg, kalan ödeme yoksa 'Ödeme Tamamlandı' işaretli)
@@ -145,6 +152,41 @@ export const motordenForm = (motor: Motor): MotorSatisFormu => ({
   yatirimci_id: motor.yatirimci_id || '',
   yatirimci_kar: motor.yatirimci_kar || '',
   yatirimci_adi: motor.yatirimci_adi || '',
+  motor_durumu: motor.motor_durumu || 'ikinci_el',
+  sifir_motor_id: motor.sifir_motor_id || '',
+});
+
+// Sıfır stoktan model seçilince satış formu: model bilgisi ve fiyatlar modelden gelir (fiyat değiştirilebilir). Sıfırda
+// plakalı stok kaydı, satıcı, alım tarihi ve yatırımcı yoktur; satış her zaman "tamamlandı"dır.
+export const sifirdenSatisFormu = (f: MotorSatisFormu, model: SifirMotor): MotorSatisFormu => ({
+  ...f,
+  motor_durumu: 'sifir',
+  sifir_motor_id: model.id,
+  marka: model.marka || '',
+  model: model.model || '',
+  yil: model.yil || '',
+  km: '',
+  alis_fiyati: model.alis_fiyati ?? '',
+  satis_fiyati: model.liste_fiyati || '',
+  satici_adi: '',
+  satici_tc: '',
+  tarih: '',
+  durum: 'tamamlandi',
+  yatirimci_id: '',
+  yatirimci_kar: '',
+  yatirimci_adi: '',
+});
+
+// Sıfırdan ikinci ele dönüş: sıfır modelden gelen motor ve fiyat bilgisi temizlenir (yanlış modelin fiyatı kalmasın).
+export const ikinciElFormu = (f: MotorSatisFormu): MotorSatisFormu => ({
+  ...f,
+  motor_durumu: 'ikinci_el',
+  sifir_motor_id: '',
+  marka: '',
+  model: '',
+  yil: '',
+  alis_fiyati: '',
+  satis_fiyati: '',
 });
 
 // Kâr = Satış - (Alış + Masraflar + Komisyoncu Tutarı)

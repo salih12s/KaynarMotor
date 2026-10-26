@@ -85,6 +85,7 @@ const Vitrin = () => {
         isAksesuar={isAksesuar}
         isAdmin={isAdmin}
         stokMotorlar={ref.stokMotorlar}
+        sifirModeller={ref.sifirModeller}
         stokAksesuarlar={ref.stokAksesuarlar}
         segmentler={ref.segmentler}
         videoLimitMb={ref.videoLimitMb}

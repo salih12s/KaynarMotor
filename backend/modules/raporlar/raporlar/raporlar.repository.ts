@@ -98,7 +98,10 @@ export const genelMotorlar = async (db: Veritabani) =>
              COALESCE(SUM(kar - COALESCE(yatirimci_kar,0)), 0) as kar,
              COALESCE(SUM(kar), 0) as kar_toplam,
              COALESCE(SUM(COALESCE(yatirimci_kar,0)), 0) as yatirimci_kar,
-             COALESCE(SUM(COALESCE(komisyoncu_tutari,0)), 0) as komisyon
+             COALESCE(SUM(COALESCE(komisyoncu_tutari,0)), 0) as komisyon,
+             COUNT(CASE WHEN motor_durumu = 'sifir' THEN 1 END) as sifir_adet,
+             COALESCE(SUM(CASE WHEN motor_durumu = 'sifir' THEN satis_fiyati END), 0) as sifir_gelir,
+             COALESCE(SUM(CASE WHEN motor_durumu = 'sifir' THEN kar - COALESCE(yatirimci_kar,0) END), 0) as sifir_kar
       FROM ikinci_el_motorlar WHERE ${MOTOR_RAPORA_GIRER}
     `)
   ).rows[0];

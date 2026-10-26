@@ -1,5 +1,5 @@
 import React from 'react';
-import type { AksesuarStok, Motor } from '../../../../shared/tipler';
+import type { AksesuarStok, Motor, SifirMotor } from '../../../../shared/tipler';
 import type { KategoriBilgisi } from '../../vitrinSabitleri';
 import type { IlanFormuDurumu } from '../useIlanFormu';
 import DunyaIkon from '@mui/icons-material/LanguageOutlined';
@@ -19,12 +19,24 @@ interface IlanDialogProps {
   isAksesuar: boolean;
   isAdmin: boolean;
   stokMotorlar: Motor[];
+  sifirModeller: SifirMotor[];
   stokAksesuarlar: AksesuarStok[];
   segmentler: string[];
   videoLimitMb: number;
 }
 
-const IlanDialog = ({ f, aktifKategori, isMotor, isAksesuar, isAdmin, stokMotorlar, stokAksesuarlar, segmentler, videoLimitMb }: IlanDialogProps) => {
+const IlanDialog = ({
+  f,
+  aktifKategori,
+  isMotor,
+  isAksesuar,
+  isAdmin,
+  stokMotorlar,
+  sifirModeller,
+  stokAksesuarlar,
+  segmentler,
+  videoLimitMb,
+}: IlanDialogProps) => {
   const { dlgOpen, kapat, form, setForm, editId, saving, secStokAksesuar, handleSave } = f;
   return (
     <Dialog open={dlgOpen} onClose={kapat} maxWidth="sm" fullWidth>
@@ -49,7 +61,7 @@ const IlanDialog = ({ f, aktifKategori, isMotor, isAksesuar, isAdmin, stokMotorl
 
           {isAksesuar && <TextField label="Marka" value={form.marka} onChange={(e) => setForm({ ...form, marka: e.target.value })} fullWidth />}
 
-          {isMotor && <MotorAlanlari f={f} stokMotorlar={stokMotorlar} segmentler={segmentler} />}
+          {isMotor && <MotorAlanlari f={f} stokMotorlar={stokMotorlar} sifirModeller={sifirModeller} segmentler={segmentler} />}
 
           {/* Video: kendi dosyanı yükle (DB'de tutulur, akıcı oynatılır) */}
           <VideoAlani f={f} videoLimitMb={videoLimitMb} />

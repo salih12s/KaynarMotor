@@ -10,17 +10,30 @@ const toplam = (satirlar: Satir[], hesap: (r: Satir) => number): number => satir
 const alanToplami = (satirlar: Satir[], alan: string): number => toplam(satirlar, (r) => f(r[alan]));
 const adetli = (r: Satir, alan: string): number => f(r[alan]) * parseInt(r.adet || 1);
 
-/** Motor satışlarının toplamları. Admin (işletme) payı = toplam kâr − yatırımcı kârı. */
+const motorMaliyeti = (motorlar: Satir[]): number => toplam(motorlar, (r) => f(r.alis_fiyati) + f(r.masraflar));
+
+/**
+ * Motor satışlarının toplamları. Admin (işletme) payı = toplam kâr − yatırımcı kârı.
+ * Sıfır motor satışları adede, gelire ve toplam kâra GİRER; kârları ayrıca `sifir` altında verilir (ikinci el kârı =
+ * toplam − sıfır). Sıfır motorda yatırımcı payı yoktur.
+ */
 const motorToplamlari = (motorlar: Satir[]) => {
   const kar_toplam = alanToplami(motorlar, 'kar');
   const yatirimci_kar = alanToplami(motorlar, 'yatirimci_kar');
+  const sifirlar = motorlar.filter((r) => r.motor_durumu === 'sifir');
   return {
     gelir: alanToplami(motorlar, 'satis_fiyati'),
-    maliyet: toplam(motorlar, (r) => f(r.alis_fiyati) + f(r.masraflar)),
+    maliyet: motorMaliyeti(motorlar),
     kar_toplam,
     yatirimci_kar,
     komisyon: alanToplami(motorlar, 'komisyoncu_tutari'),
     kar: kar_toplam - yatirimci_kar,
+    sifir: {
+      adet: sifirlar.length,
+      gelir: alanToplami(sifirlar, 'satis_fiyati'),
+      maliyet: motorMaliyeti(sifirlar),
+      kar: alanToplami(sifirlar, 'kar') - alanToplami(sifirlar, 'yatirimci_kar'),
+    },
   };
 };
 
@@ -57,6 +70,9 @@ export const gunlukHesapla = (hedefTarih: string, g: GunlukGirdi) => {
       kar_toplam: m.kar_toplam,
       yatirimci_kar: m.yatirimci_kar,
       komisyon: m.komisyon,
+      sifir_adet: m.sifir.adet,
+      sifir_gelir: m.sifir.gelir,
+      sifir_kar: m.sifir.kar,
     },
     eticaret: { kayitlar: g.eticaret, gelir: eticaretGelir, kar: eticaretKar },
     toplam: {
@@ -96,6 +112,10 @@ export const aralikHesapla = (baslangic: string, bitis: string, g: AralikGirdi) 
     motorYatirimciKar: m.yatirimci_kar,
     motorKomisyon: m.komisyon,
     motorNoterSatisCiro,
+    motorSifirAdet: m.sifir.adet,
+    motorSifirGelir: m.sifir.gelir,
+    motorSifirMaliyet: m.sifir.maliyet,
+    motorSifirKar: m.sifir.kar,
     isEmirleri: g.isEmirleri,
     isEmriGelir,
     isEmriMaliyet,

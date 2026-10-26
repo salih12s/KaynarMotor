@@ -19,6 +19,7 @@ export interface IlanAlanlari {
   siralama: unknown;
   one_cikan: boolean;
   stok_motor_id: number | null;
+  sifir_motor_id: number | null;
   rubik_link: unknown;
   hasar_kaydi: unknown;
   motor_durumu: string | null;
@@ -40,7 +41,7 @@ export interface ListeFiltresi {
 export const ilanlariListele = async (db: Veritabani, f: ListeFiltresi) => {
   let sorgu = `
         SELECT id, ilan_no, kategori, baslik, aciklama, fiyat, video_url, video_dosya_id, kapak_gorsel_id,
-               marka, model, yil, segment, motor_cc, km, motor_durumu, yayinda, siralama, one_cikan, stok_motor_id, rubik_link, created_at
+               marka, model, yil, segment, motor_cc, km, motor_durumu, yayinda, siralama, one_cikan, stok_motor_id, sifir_motor_id, rubik_link, created_at
         FROM vitrin_urunleri WHERE 1=1`;
   const params: unknown[] = [];
 
@@ -113,7 +114,7 @@ export const ilanBul = async (db: Veritabani, id: number) =>
   (
     await db.query(
       `SELECT id, ilan_no, kategori, baslik, aciklama, fiyat, video_url, video_dosya_id, kapak_gorsel_id,
-            marka, model, yil, segment, motor_cc, km, motor_durumu, hasar_kaydi, yayinda, siralama, one_cikan, stok_motor_id, rubik_link, created_at
+            marka, model, yil, segment, motor_cc, km, motor_durumu, hasar_kaydi, yayinda, siralama, one_cikan, stok_motor_id, sifir_motor_id, rubik_link, created_at
      FROM vitrin_urunleri WHERE id = $1`,
       [id],
     )
@@ -196,8 +197,8 @@ export const ilanEkle = async (db: Veritabani, a: IlanAlanlari): Promise<{ id: n
   (
     await db.query<{ id: number; ilan_no: number }>(
       `INSERT INTO vitrin_urunleri
-      (kategori, baslik, aciklama, fiyat, video_url, marka, model, yil, segment, motor_cc, km, yayinda, siralama, one_cikan, stok_motor_id, rubik_link, hasar_kaydi, motor_durumu)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18) RETURNING id, ilan_no`,
+      (kategori, baslik, aciklama, fiyat, video_url, marka, model, yil, segment, motor_cc, km, yayinda, siralama, one_cikan, stok_motor_id, rubik_link, hasar_kaydi, motor_durumu, sifir_motor_id)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19) RETURNING id, ilan_no`,
       [
         a.kategori,
         a.baslik,
@@ -217,6 +218,7 @@ export const ilanEkle = async (db: Veritabani, a: IlanAlanlari): Promise<{ id: n
         a.rubik_link,
         a.hasar_kaydi,
         a.motor_durumu,
+        a.sifir_motor_id,
       ],
     )
   ).rows[0]!;
@@ -226,7 +228,7 @@ export const ilanGuncelle = async (db: Veritabani, id: number, a: IlanAlanlari) 
     `UPDATE vitrin_urunleri SET
       kategori=$1, baslik=$2, aciklama=$3, fiyat=$4, video_url=$5,
       marka=$6, model=$7, yil=$8, segment=$9, motor_cc=$10, km=$11,
-      yayinda=$12, siralama=$13, one_cikan=$14, stok_motor_id=$15, rubik_link=$16, hasar_kaydi=$18, motor_durumu=$19, updated_at=CURRENT_TIMESTAMP
+      yayinda=$12, siralama=$13, one_cikan=$14, stok_motor_id=$15, rubik_link=$16, hasar_kaydi=$18, motor_durumu=$19, sifir_motor_id=$20, updated_at=CURRENT_TIMESTAMP
      WHERE id=$17`,
     [
       a.kategori,
@@ -248,6 +250,7 @@ export const ilanGuncelle = async (db: Veritabani, id: number, a: IlanAlanlari) 
       id,
       a.hasar_kaydi,
       a.motor_durumu,
+      a.sifir_motor_id,
     ],
   );
 };

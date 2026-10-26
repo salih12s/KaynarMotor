@@ -15,6 +15,13 @@ açıktır: gerçek müşteri verisi, parola, token ve kullanıcı adı **commit
   `backend/modules/motor/ikinciElMotor/ikinciElMotor.gorunum.ts` + `core/middleware/yetki.ts` (`kariGizle`).
   **İstisna (2026-10-22): e-ticaret kârı, `eticaret_yetkisi` olan herkese açıktır** (`/api/eticaret` `kariGizle` dışında; arayüzde `karGor`).
 
+- **Sıfır motor (2026-10-26, `sifir-motor` dalı, CANLIDA DEĞİL):** sıfır stok bir MODEL listesidir (`sifir_motorlar` +
+  `sifir_motor_gorseller`; `backend/modules/motor/sifirMotor/`, arayüz Motor Stok > Sıfır sekmesi). Adet tutulmaz: satış
+  `ikinci_el_motorlar`'a `motor_durumu = 'sifir'` + `sifir_motor_id` ile yazılır, model stoktan DÜŞMEZ. Raporda sıfır satışlar
+  adede/gelire/toplam kâra girer, kârı ayrı (`motorSifir*`, `sifir_kar` `KAR_ALANLARI`'nda). Vitrin ilanı `sifir_motor_id` ile
+  modele bağlanır (bilgi + fotoğraf oradan gelir, liste fiyatı senkron, satış ilanı kaldırmaz). Müşteriye sorulmadan seçilen
+  varsayımlar: adet yok, sıfırda yatırımcı yok, sıfır satış hep "tamamlandi"; eski sıfır ilanlar otomatik taşınmadı.
+
 ## Komutlar
 ```
 # backend klasöründe (yerel MariaDB açık olmalı; env dosyaları git dışıdır)

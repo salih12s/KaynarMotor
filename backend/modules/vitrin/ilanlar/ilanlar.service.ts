@@ -157,6 +157,7 @@ const ilanAlanlari = (g: IlanOlusturGovdesi, yayinda: unknown, siralama: unknown
   siralama,
   one_cikan: g.one_cikan === true,
   stok_motor_id: numOrNull(g.stok_motor_id),
+  sifir_motor_id: motorDurumu(g.kategori, g.motor_durumu) === 'sifir' ? numOrNull(g.sifir_motor_id) : null,
   rubik_link: bosuNull(g.rubik_link),
   hasar_kaydi: bosuNull(g.hasar_kaydi),
   motor_durumu: motorDurumu(g.kategori, g.motor_durumu),

@@ -32,6 +32,7 @@ import aksesuarRoutes from './modules/aksesuar/aksesuarlar/aksesuarlar.routes';
 import aksesuarStokRoutes from './modules/aksesuar/aksesuarStok/aksesuarStok.routes';
 import ikinciElMotorRoutes from './modules/motor/ikinciElMotor/ikinciElMotor.routes';
 import satisBelgeRoutes from './modules/motor/satisBelgeleri/satisBelgeleri.routes';
+import sifirMotorRoutes, { sifirMotorGorselRoutes } from './modules/motor/sifirMotor/sifirMotor.routes';
 import eticaretRoutes from './modules/eticaret/eticaret.routes';
 import yedekParcaRoutes from './modules/yedek-parca/yedekParcalar/yedekParcalar.routes';
 import yedekParcaStokRoutes from './modules/yedek-parca/yedekParcaStok/yedekParcaStok.routes';
@@ -105,6 +106,13 @@ const vitrinYazmaKapisi = async (req: Request, res: Response, next: NextFunction
 };
 app.use('/api/vitrin', vitrinYazmaKapisi);
 app.use('/api/vitrin', express.json({ limit: '120mb' }));
+// Sıfır motor stoğu da görsel (base64) taşır: aynı kural, gövde motor yazma yetkisi doğrulandıktan SONRA okunur.
+const sifirMotorYazmaKapisi = async (req: Request, res: Response, next: NextFunction) => {
+  if (req.method === 'GET' || req.method === 'HEAD' || req.method === 'OPTIONS') return next();
+  await authenticateToken(req, res, () => motorYazmaYetkisi(req, res, next));
+};
+app.use('/api/sifir-motor', sifirMotorYazmaKapisi);
+app.use('/api/sifir-motor', express.json({ limit: '60mb' }));
 app.use(express.json({ limit: '10mb' }));
 // Eksi tutar (fiyat, maliyet, indirim, kalan ödeme...) hiçbir uçta kabul edilmez
 app.use('/api', negatifTutarEngelle);
@@ -128,6 +136,9 @@ app.use(
   aksesuarStokRoutes,
 );
 app.use('/api/ikinci-el-motor', authenticateToken, kariGizle, motorYazmaYetkisi, ikinciElMotorRoutes);
+// Sıfır motor stoğu (model listesi): görsel ucu herkese açık, gerisi giriş + motor yazma yetkisi (okuma kapısı route'ta)
+app.use('/api/sifir-motor', sifirMotorGorselRoutes);
+app.use('/api/sifir-motor', authenticateToken, kariGizle, motorYazmaYetkisi, sifirMotorRoutes);
 // Satış belgeleri (sözleşme vb.): yetki kontrolü route dosyasında; yükleme gövdesi ham ikili (express.raw)
 app.use('/api/satis-belgeleri', authenticateToken, satisBelgeRoutes);
 // E-ticaret kârı bilerek kariGizle DIŞINDADIR (Salih'in kararı, 2026-10-22): sayfaya girebilen herkes (eticaret_yetkisi) kârı görür.

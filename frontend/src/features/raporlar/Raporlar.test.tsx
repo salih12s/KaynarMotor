@@ -651,3 +651,60 @@ describe('Raporlar: mobil görünüm', () => {
     expect(yazi('Alış: 50.000,00 ₺')).toBeInTheDocument();
   });
 });
+
+// ---- Sıfır motor satışları ---------------------------------------------------------------------------------------
+// Sıfır satışlar motor satışına (adet, gelir, toplam kâr) GİRER; kârları ayrıca gösterilir ve toplam iki kez sayılmaz.
+describe('Raporlar: sıfır motor satışları', () => {
+  const SF = {
+    plaka: null,
+    marka: 'Honda',
+    model: 'PCX 125',
+    motor_durumu: 'sifir',
+    alis_fiyati: 95000,
+    satis_fiyati: 120000,
+    masraflar: 0,
+    kar: 25000,
+    yatirimci_kar: 0,
+    fatura_kesildi: true,
+    satis_tarihi: '2026-10-08T12:00:00',
+  };
+  const RAPOR_SIFIR = {
+    ...RAPOR,
+    motorlar: [M1, M2, M3, SF],
+    motorGelir: 260000,
+    motorMaliyet: 211500,
+    motorKar: 44000,
+    motorSifirAdet: 1,
+    motorSifirGelir: 120000,
+    motorSifirMaliyet: 95000,
+    motorSifirKar: 25000,
+  };
+
+  test('Genel Özet: Motor Satışları sıfırı içerir; altında "İçinden sıfır motor" satırı toplama ikinci kez girmez', async () => {
+    await ekranAc({ rapor: RAPOR_SIFIR });
+    expect(payHaric(hucreler(satir(/^Motor Satışları/)))).toEqual(['Motor Satışları', '4', '260.000,00 ₺', '211.500,00 ₺', '44.000,00 ₺', '%16.9']);
+    expect(payHaric(hucreler(satir(/^İçinden sıfır motor/)))).toEqual(['İçinden sıfır motor', '1', '120.000,00 ₺', '95.000,00 ₺', '25.000,00 ₺', '%20.8']);
+    expect(hucreler(satir(/^TOPLAM/))[1]).toBe('9'); // 4 motor + 2 iş emri + 1 aksesuar + 2 yedek parça (sıfır ayrıca sayılmaz)
+  });
+
+  test('sıfır satışı yoksa alt satır çıkmaz', async () => {
+    await ekranAc();
+    expect(screen.queryByRole('row', { name: /^İçinden sıfır motor/ })).not.toBeInTheDocument();
+  });
+
+  test('Motor Satışları: ikinci el ve sıfır kârı ayrı kartlarda; Sıfır Satışlar alt sekmesi yalnızca sıfırları listeler', async () => {
+    const user = await ekranAc({ rapor: RAPOR_SIFIR });
+    await sekme(user, 'Motor Satışları');
+    expect(kart('Toplam Satış')).toBe('4');
+    expect(kart('Motor Kârı (Payınız)')).toBe('₺44.000,00');
+    expect(kart('İkinci El Kârı')).toBe('₺19.000,00');
+    expect(kart('Sıfır Kârı')).toBe('₺25.000,00');
+    await user.click(screen.getByRole('tab', { name: 'Sıfır Satışlar (1)' }));
+    expect(kart('Sıfır Satış')).toBe('1');
+    expect(kart('Sıfır Gelir')).toBe('₺120.000,00');
+    expect(kart('Sıfır Kârı')).toBe('₺25.000,00');
+    const satirlar = screen.getAllByRole('row').slice(1);
+    expect(satirlar).toHaveLength(1);
+    expect(within(satirlar[0]).getByText('Sıfır')).toBeInTheDocument();
+  });
+});

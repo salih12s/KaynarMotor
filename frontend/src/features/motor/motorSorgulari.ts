@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ikinciElMotorService } from './motorApi';
+import { ikinciElMotorService, sifirMotorService } from './motorApi';
 import { authService } from '../auth/authApi';
 
 /*
@@ -11,6 +11,8 @@ export const motorAnahtari = {
   hepsi: ['motorlar'],
   liste: ['motorlar', 'liste'],
   istatistik: ['motorlar', 'istatistik'],
+  // Sıfır stok "motorlar" altında: satış eklenince/silinince satılan sayaçları da tazelensin
+  sifir: ['motorlar', 'sifir'],
   yatirimcilar: ['yatirimcilar'],
 };
 
@@ -28,6 +30,16 @@ export const useMotorIstatistik = () =>
     queryKey: motorAnahtari.istatistik,
     queryFn: async () => (await ikinciElMotorService.getStats()).data,
     refetchOnMount: 'always',
+  });
+
+// Sıfır motor stoğu (model listesi). `etkin` false ise istenmez (yatırımcıya kapalı uç).
+export const useSifirMotorlar = ({ etkin = true } = {}) =>
+  useQuery({
+    queryKey: motorAnahtari.sifir,
+    queryFn: async () => (await sifirMotorService.getAll()).data,
+    enabled: etkin,
+    refetchOnMount: 'always',
+    retry: false,
   });
 
 // Yatırımcılar (uç yalnızca admin'e açık). `etkin` false ise hiç istenmez; yetkisiz kullanıcıda 403'ü yeniden denemez.

@@ -96,6 +96,7 @@ const MotorDetayModal = ({ open, data, onClose, printRef, isMobile, canAlis, can
                               : data.durum
                 }
               />
+              {data.motor_durumu === 'sifir' && <InfoRow label="Motor" value="Sıfır (sıfır stoktan satış)" />}
               <InfoRow label="Stok Tipi" value={data.stok_tipi === 'konsinye' ? 'Konsinye' : 'Sahip'} />
               <InfoRow label="Ödeme Şekli" value={data.odeme_sekli || 'Nakit'} />
               <InfoRow label="Fatura" value={data.fatura_kesildi ? 'Kesildi ✓' : 'Kesilmedi'} />

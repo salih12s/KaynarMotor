@@ -1,14 +1,25 @@
 import React from 'react';
-import type { Motor } from '../../../../shared/tipler';
+import type { Motor, SifirMotor } from '../../../../shared/tipler';
 import type { IlanFormuDurumu } from '../useIlanFormu';
 import { RENK } from '../../../../app/tokenlar';
-import { Box, Typography, TextField, Chip, Stack, Autocomplete, ToggleButton, ToggleButtonGroup } from '@mui/material';
+import { Box, Typography, TextField, Chip, Stack, Autocomplete, ToggleButton, ToggleButtonGroup, CircularProgress } from '@mui/material';
+import { sayiYaz } from '../../../../shared/utils/bicim';
+import { sifirAdi } from '../../../motor/sifirMotor/sifirVeri';
 import { BelgeBolumu } from '../../../motor/SatisBelgeleri';
 import { MOTOR_DURUMLARI } from '../../vitrinSabitleri';
 
-// Motor ilanına özel alanlar: durum (sıfır/ikinci el), stoktan seçim, marka/model/yıl/cc/km, segment, hasar kaydı ve belgeler.
-const MotorAlanlari = ({ f, stokMotorlar, segmentler }: { f: IlanFormuDurumu; stokMotorlar: Motor[]; segmentler: string[] }) => {
-  const { form, setForm, secStokMotor } = f;
+// Motor ilanına özel alanlar: durum (sıfır/ikinci el), stoktan seçim (ikinci el stok ya da sıfır stok), marka/model/yıl/cc/km,
+// segment, hasar kaydı ve belgeler.
+interface MotorAlanlariProps {
+  f: IlanFormuDurumu;
+  stokMotorlar: Motor[];
+  sifirModeller: SifirMotor[];
+  segmentler: string[];
+}
+
+const MotorAlanlari = ({ f, stokMotorlar, sifirModeller, segmentler }: MotorAlanlariProps) => {
+  const { form, setForm, secStokMotor, secSifirMotor, sifirGorselYukleniyor } = f;
+  const sifir = form.motor_durumu === 'sifir';
   return (
     <>
       {/* Sıfır / İkinci El — sitede ilan seçilen sayfada listelenir */}
@@ -31,7 +42,8 @@ const MotorAlanlari = ({ f, stokMotorlar, segmentler }: { f: IlanFormuDurumu; st
           }}
           onChange={(e, val: string | null) => {
             if (!val) return;
-            setForm((f) => ({ ...f, motor_durumu: val }));
+            // İkinci ele geçince sıfır stok bağlantısı kalkar (sunucu da yalnızca sıfır ilanda saklar)
+            setForm((f) => ({ ...f, motor_durumu: val, sifir_motor_id: val === 'sifir' ? f.sifir_motor_id : null }));
           }}
         >
           {MOTOR_DURUMLARI.map((d) => (
@@ -44,21 +56,66 @@ const MotorAlanlari = ({ f, stokMotorlar, segmentler }: { f: IlanFormuDurumu; st
           Sitede müşteri "{form.motor_durumu === 'sifir' ? 'Sıfır' : 'İkinci El'}" seçtiğinde bu ilan listelenir.
         </Typography>
       </Box>
-      {/* Stoktan motor seç — temel bilgiler otomatik gelsin (sıfır ve ikinci el) */}
-      <Autocomplete
-        options={stokMotorlar}
-        getOptionLabel={(m) => `${m.plaka || '—'} • ${[m.marka, m.model, m.yil].filter(Boolean).join(' ')}`.trim()}
-        isOptionEqualToValue={(o, v) => o.id === v.id}
-        value={stokMotorlar.find((m) => m.id === form.stok_motor_id) || null}
-        onChange={(e, val) => secStokMotor(val)}
-        renderInput={(params) => (
-          <TextField
-            {...params}
-            label="Stoktan Motor Seç (opsiyonel)"
-            helperText="Seçersen marka, model, yıl, km ve ilan fiyatı stoktan otomatik gelir; sen sadece site bilgilerini düzenlersin."
-          />
-        )}
-      />
+      {/* Sıfır ilan: sıfır stoktan model seç — bilgiler, fiyat ve fotoğraflar stoktan gelir */}
+      {sifir && (
+        <Autocomplete
+          options={sifirModeller}
+          getOptionLabel={(m) => sifirAdi(m)}
+          isOptionEqualToValue={(o, v) => o.id === v.id}
+          value={sifirModeller.find((m) => m.id === form.sifir_motor_id) || null}
+          onChange={(e, val) => void secSifirMotor(val)}
+          renderOption={(props, m) => (
+            <li {...props} key={m.id}>
+              <Typography component="span" sx={{ flex: 1 }}>
+                {sifirAdi(m)}
+              </Typography>
+              <Typography component="span" variant="body2" sx={{ color: RENK.soluk, ml: 2 }}>
+                {m.gorsel_sayisi ? `${m.gorsel_sayisi} fotoğraf • ` : ''}₺{sayiYaz(m.liste_fiyati)}
+              </Typography>
+            </li>
+          )}
+          noOptionsText="Sıfır stokta model yok. Önce Motor Stok > Sıfır sekmesinden ekleyin."
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label="Sıfır Stoktan Seç"
+              helperText="Seçersen marka, model, fiyat, açıklama ve fotoğraflar sıfır stoktan gelir; stokta fiyat değişince ilan fiyatı da değişir."
+            />
+          )}
+        />
+      )}
+      {sifirGorselYukleniyor && (
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: RENK.soluk }}>
+          <CircularProgress size={16} />
+          <Typography variant="body2">Fotoğraflar sıfır stoktan getiriliyor…</Typography>
+        </Box>
+      )}
+      {sifir && form.sifir_motor_id && (
+        <Chip
+          label="Sıfır stoktan bağlandı — fiyat stokla birlikte güncellenir"
+          color="success"
+          variant="outlined"
+          onDelete={() => setForm((f) => ({ ...f, sifir_motor_id: null }))}
+          sx={{ alignSelf: 'flex-start' }}
+        />
+      )}
+      {/* İkinci el ilan: stoktan motor seç — temel bilgiler otomatik gelsin */}
+      {!sifir && (
+        <Autocomplete
+          options={stokMotorlar}
+          getOptionLabel={(m) => `${m.plaka || '—'} • ${[m.marka, m.model, m.yil].filter(Boolean).join(' ')}`.trim()}
+          isOptionEqualToValue={(o, v) => o.id === v.id}
+          value={stokMotorlar.find((m) => m.id === form.stok_motor_id) || null}
+          onChange={(e, val) => secStokMotor(val)}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label="Stoktan Motor Seç (opsiyonel)"
+              helperText="Seçersen marka, model, yıl, km ve ilan fiyatı stoktan otomatik gelir; sen sadece site bilgilerini düzenlersin."
+            />
+          )}
+        />
+      )}
       {form.stok_motor_id && (
         <Chip
           label="Stoktan bağlandı — temel bilgiler stoktan geliyor"
@@ -104,7 +161,7 @@ const MotorAlanlari = ({ f, stokMotorlar, segmentler }: { f: IlanFormuDurumu; st
         <Box sx={{ mt: -1.5 }}>
           <BelgeBolumu key={form.stok_motor_id} motorId={form.stok_motor_id} />
         </Box>
-      ) : (
+      ) : sifir ? null : (
         <Typography variant="caption" color="text.secondary">
           Belge eklemek için yukarıdan "Stoktan Motor Seç" ile ilanı bir stok motoruna bağlayın.
         </Typography>

@@ -28,6 +28,8 @@ export const MOTOR_TEMEL = [
   'vitrin_segment',
   'vitrin_cc',
   'vitrin_hasar',
+  'motor_durumu',
+  'sifir_motor_id',
 ];
 export const MOTOR_ALIS = ['alis_fiyati', 'noter_alis', 'masraflar'];
 export const MOTOR_SATIS = [
@@ -148,11 +150,13 @@ export const sanitizeOzet = (row: MotorSatiri, user: Kullanici): MotorSatiri => 
   if (user.rol === 'admin') return row;
   const o = { ...row };
   o.toplam_kar = null;
+  o.sifir_kar = null;
   const muhasebe = muhasebeMotorGorur(user);
   if (!(user.alis_fiyati_gor || user.motor_satis_yetkisi || muhasebe)) o.toplam_alis = null;
   if (!(user.satis_fiyati_gor || user.motor_satis_yetkisi || muhasebe)) {
     o.toplam_satis = null;
     o.toplam_satis_tutari = null;
+    o.sifir_satis = null;
   }
   return o;
 };

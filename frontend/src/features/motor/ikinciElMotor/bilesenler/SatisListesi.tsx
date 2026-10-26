@@ -1,5 +1,6 @@
 import React from 'react';
-import { IslemDugmesi, Plaka } from '../../../../shared/ui';
+import { IslemDugmesi } from '../../../../shared/ui';
+import PlakaVeSifir from '../../sifirMotor/bilesenler/PlakaVeSifir';
 import { RENK } from '../../../../app/tokenlar';
 import { Box, Paper, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Alert } from '@mui/material';
 
@@ -29,7 +30,7 @@ const SatisListesi = ({ filteredMotorlar, isMobile, canAlis, canKar, salt, isAdm
         return (
           <Paper key={m.id} sx={{ p: 1.5 }} onClick={() => onDetay(m.id)}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
-              <Plaka plaka={m.plaka} />
+              <PlakaVeSifir m={m} />
               <Typography variant="caption" color="text.secondary">
                 {tarihYaz(m.satis_tarihi || m.tarih)}
               </Typography>
@@ -101,7 +102,7 @@ const SatisListesi = ({ filteredMotorlar, isMobile, canAlis, canKar, salt, isAdm
             return (
               <TableRow key={m.id} hover>
                 <TableCell>
-                  <Plaka plaka={m.plaka} />
+                  <PlakaVeSifir m={m} />
                 </TableCell>
                 <TableCell>
                   <Box sx={{ fontWeight: 700 }}>{m.marka || '-'}</Box>

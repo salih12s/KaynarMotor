@@ -45,6 +45,9 @@ const motorAlanlari = {
   vitrin_segment: gevsekMetin,
   vitrin_cc: gevsekSayi,
   vitrin_hasar: gevsekMetin,
+  /** 'sifir' ise satış sıfır stoktaki bir modele (sifir_motor_id) bağlanır; yalnızca yeni kayıtta okunur. */
+  motor_durumu: gevsekMetin,
+  sifir_motor_id: gevsekSayi,
 };
 
 /** POST / gövdesi. */

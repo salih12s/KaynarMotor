@@ -149,7 +149,7 @@ const IlanKarti = ({ u, index, liste, isAdmin, isMotor, onDuzenle }: IlanKartiPr
             {isMotor &&
               (u.motor_durumu === 'sifir' ? <Chip size="small" label="Sıfır" color="primary" /> : <Chip size="small" label="İkinci El" variant="outlined" />)}
             {u.one_cikan ? <Chip size="small" label="★ Öne Çıkan" color="warning" /> : null}
-            {u.stok_motor_id ? <Chip size="small" label="Stok bağlı" color="success" variant="outlined" /> : null}
+            {u.stok_motor_id || u.sifir_motor_id ? <Chip size="small" label="Stok bağlı" color="success" variant="outlined" /> : null}
             {u.segment && <Chip size="small" label={u.segment} color="error" variant="outlined" />}
             {u.motor_cc ? <Chip size="small" label={`${u.motor_cc} cc`} variant="outlined" /> : null}
           </Box>

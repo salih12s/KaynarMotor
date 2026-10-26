@@ -8,6 +8,7 @@ import { FONT, RENK, TON, type TonAdi } from '../../../app/tokenlar';
 
 const SEKME_NO: Record<string, number> = {
   'Motor Satışları': 1,
+  'İçinden sıfır motor': 1,
   'İş Emirleri (Servis)': 2,
   'Aksesuar Satışları': 3,
   'E-Ticaret': 4,
@@ -42,6 +43,16 @@ const PayCubugu = ({ pay }: { pay: number }) => (
 
 const sagaSx = { textAlign: 'right' } as const;
 
+/** Kategori satırı. `alt`: bir üst satırın içindeki pay (bilgi içindir, toplama girmez). */
+interface Satir {
+  label: string;
+  count: number;
+  gelir: Sayi;
+  maliyet: Sayi;
+  kar: Sayi;
+  alt?: boolean;
+}
+
 // Genel Özet sekmesi: toplam kartları + kategori tablosu (satıra tıklamak o sekmeye geçirir).
 interface GenelOzetProps {
   rapor: AralikRaporu;
@@ -52,7 +63,12 @@ interface GenelOzetProps {
 
 const GenelOzet = ({ rapor, toplamlar, isMobile, onSekmeAc }: GenelOzetProps) => {
   const { hesaplananEticaretKar, duzeltilmisTotalKar, duzeltilmisTotalGelir, duzeltilmisTotalMaliyet } = toplamlar;
-  const satirlar = [
+  // Sıfır motor satışları Motor Satışları'nın İÇİNDEDİR; kârları ayrı görünsün diye altında bilgi satırı olarak verilir (toplama girmez).
+  const sifirAdet = sayiDegeri(rapor.motorSifirAdet);
+  const sifirSatiri: Satir | null = sifirAdet
+    ? { label: 'İçinden sıfır motor', count: sifirAdet, gelir: rapor.motorSifirGelir, maliyet: rapor.motorSifirMaliyet, kar: rapor.motorSifirKar, alt: true }
+    : null;
+  const satirlar: Satir[] = [
     { label: 'Motor Satışları', count: rapor.motorlar?.length || 0, gelir: rapor.motorGelir, maliyet: rapor.motorMaliyet, kar: rapor.motorKar },
     { label: 'İş Emirleri (Servis)', count: rapor.isEmirleri?.length || 0, gelir: rapor.isEmriGelir, maliyet: rapor.isEmriMaliyet, kar: rapor.isEmriKar },
     { label: 'Aksesuar Satışları', count: rapor.aksesuarlar?.length || 0, gelir: rapor.aksesuarGelir, maliyet: rapor.aksesuarMaliyet, kar: rapor.aksesuarKar },
@@ -67,6 +83,7 @@ const GenelOzet = ({ rapor, toplamlar, isMobile, onSekmeAc }: GenelOzetProps) =>
   ];
   const toplamIslem = satirlar.reduce((t, r) => t + r.count, 0);
   const satirGelirToplami = satirlar.reduce((t, r) => t + sayiDegeri(r.gelir), 0);
+  const gorunenSatirlar = sifirSatiri ? [satirlar[0], sifirSatiri, ...satirlar.slice(1)] : satirlar;
   const pay = (gelir: Sayi) => (satirGelirToplami > 0 ? (sayiDegeri(gelir) / satirGelirToplami) * 100 : 0);
 
   return (
@@ -81,8 +98,12 @@ const GenelOzet = ({ rapor, toplamlar, isMobile, onSekmeAc }: GenelOzetProps) =>
 
       {isMobile ? (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mb: 2 }}>
-          {satirlar.map((row) => (
-            <Paper key={row.label} sx={{ p: 1.5, cursor: 'pointer' }} onClick={() => onSekmeAc(SEKME_NO[row.label] || 0)}>
+          {gorunenSatirlar.map((row) => (
+            <Paper
+              key={row.label}
+              sx={{ p: 1.5, cursor: 'pointer', ...(row.alt && { ml: 2, bgcolor: RENK.yuzeyKoyu }) }}
+              onClick={() => onSekmeAc(SEKME_NO[row.label] || 0)}
+            >
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
                 <Typography variant="subtitle2" fontWeight="bold">
                   {row.label}
@@ -139,14 +160,17 @@ const GenelOzet = ({ rapor, toplamlar, isMobile, onSekmeAc }: GenelOzetProps) =>
               </TableRow>
             </TableHead>
             <TableBody>
-              {satirlar.map((row) => (
-                <TableRow key={row.label} hover sx={{ cursor: 'pointer' }} onClick={() => onSekmeAc(SEKME_NO[row.label] || 0)}>
-                  <TableCell sx={{ fontWeight: 700 }}>{row.label}</TableCell>
+              {gorunenSatirlar.map((row) => (
+                <TableRow
+                  key={row.label}
+                  hover
+                  sx={{ cursor: 'pointer', ...(row.alt && { '& td': { color: RENK.soluk, fontSize: 13.5 } }) }}
+                  onClick={() => onSekmeAc(SEKME_NO[row.label] || 0)}
+                >
+                  <TableCell sx={{ fontWeight: 700, ...(row.alt && { pl: 4, fontWeight: 600 }) }}>{row.label}</TableCell>
                   <TableCell sx={sagaSx}>{row.count}</TableCell>
                   <TableCell sx={{ ...sagaSx, fontWeight: 600 }}>{formatTL(row.gelir)} ₺</TableCell>
-                  <TableCell>
-                    <PayCubugu pay={pay(row.gelir)} />
-                  </TableCell>
+                  <TableCell>{row.alt ? null : <PayCubugu pay={pay(row.gelir)} />}</TableCell>
                   <TableCell sx={sagaSx}>{formatTL(row.maliyet)} ₺</TableCell>
                   <TableCell sx={{ ...sagaSx, color: karColor(row.kar), fontWeight: 700 }}>{formatTL(row.kar)} ₺</TableCell>
                   <TableCell sx={{ ...sagaSx, fontWeight: 700 }}>%{oranYaz(row.kar, row.gelir)}</TableCell>
