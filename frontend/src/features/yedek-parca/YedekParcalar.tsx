@@ -39,6 +39,7 @@ import { useKarGor } from '../auth/AuthContext';
 import { sayiYaz, sayiDegeri, type Sayi } from '../../shared/utils/bicim';
 import type { YedekParcaSatis, YedekParcaStok } from '../../shared/tipler';
 import { RENK, TON } from '../../app/tokenlar';
+import { metinIcerir } from '../../shared/utils/metin';
 
 // Hızlı yazarken eski aramanın yanıtı yeniyi ezmesin
 const sonAra = sonIstek();
@@ -109,12 +110,7 @@ const YedekParcalar = () => {
     navigate(location.pathname, { replace: true, state: {} });
   }, [location.state, location.pathname, navigate, parcalar]);
 
-  const filtered = parcalar.filter(
-    (p) =>
-      (p.urun_adi || '').toLowerCase().includes(search.toLowerCase()) ||
-      (p.musteri_adi || '').toLowerCase().includes(search.toLowerCase()) ||
-      (p.musteri_telefon || '').includes(search),
-  );
+  const filtered = parcalar.filter((p) => metinIcerir(p.urun_adi, search) || metinIcerir(p.musteri_adi, search) || (p.musteri_telefon || '').includes(search));
 
   const openDialog = (parca: YedekParcaSatis | null = null) => {
     setError('');

@@ -3,6 +3,7 @@
 import { sayiDegeri, tarihYaz, type TarihGirdisi } from '../../../shared/utils/bicim';
 import type { IsEmri } from '../../../shared/tipler';
 import type { TonAdi } from '../../../app/tokenlar';
+import { metinIcerir } from '../../../shared/utils/metin';
 
 /** Form alanı: kullanıcı yazarken metin, kayıttan gelirken sayı olabilir. */
 export type FormSayisi = string | number;
@@ -98,10 +99,10 @@ export const filtrele = (isEmirleri: ListeSatiri[], { search, startDate, endDate
   isEmirleri.filter((ie) => {
     const matchSearch =
       !search ||
-      (ie.musteri_ad_soyad?.toLowerCase() || '').includes(search.toLowerCase()) ||
+      metinIcerir(ie.musteri_ad_soyad, search) ||
       (ie.fis_no?.toString() || '').includes(search) ||
       (ie.telefon || '').includes(search) ||
-      (ie.marka?.toLowerCase() || '').includes(search.toLowerCase());
+      metinIcerir(ie.marka, search);
     const tarih = (ie.created_at || ie.tarih || '').split('T')[0];
     const matchStart = !startDate || tarih >= startDate;
     const matchEnd = !endDate || tarih <= endDate;

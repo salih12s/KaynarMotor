@@ -7,6 +7,7 @@ import { formatTL, formatDate, karColor, headerSx } from '../bicim';
 import { RENK, TON } from '../../../app/tokenlar';
 import KartItem from '../bilesenler/KartItem';
 import { sayiYaz, sayiDegeri } from '../../../shared/utils/bicim';
+import { kucukHarf } from '../../../shared/utils/metin';
 
 const SAYISAL = ['KM', 'Gelir', 'Maliyet', 'Kâr'];
 const sagaSx = { textAlign: 'right' } as const;
@@ -22,8 +23,8 @@ interface IsEmirleriProps {
 const IsEmirleri = ({ rapor, isMobile, seciliPersonel, onDetay }: IsEmirleriProps) => {
   const filtered = (rapor.isEmirleri || []).filter((ie) => {
     if (!seciliPersonel) return true;
-    const personel = (ie.teslim_eden_teknisyen || ie.olusturan_kisi || '').toLowerCase();
-    return personel === seciliPersonel.toLowerCase();
+    const personel = kucukHarf(ie.teslim_eden_teknisyen || ie.olusturan_kisi || '');
+    return personel === kucukHarf(seciliPersonel);
   });
   const fGelir = filtered.reduce((t, r) => t + sayiDegeri(r.gercek_toplam_ucret), 0);
   const fMaliyet = filtered.reduce((t, r) => t + sayiDegeri(r.toplam_maliyet), 0);

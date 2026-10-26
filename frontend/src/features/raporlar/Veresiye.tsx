@@ -37,6 +37,7 @@ import { veresiyeService } from './raporApi';
 import { sayiYaz, tarihYaz, type Sayi } from '../../shared/utils/bicim';
 import type { Borc, BorcKaynagi, VeresiyeOzeti } from '../../shared/tipler';
 import { FONT, RENK, TON } from '../../app/tokenlar';
+import { metinIcerir } from '../../shared/utils/metin';
 
 const KAYNAK_INFO: Record<BorcKaynagi, { label: string; color: string; bg: string; icon: ReactElement; path: string }> = {
   motor: { label: 'Motor Satış', color: RENK.kirmizi, bg: TON.kirmizi.bg, icon: <MotorIcon fontSize="small" />, path: '/ikinci-el-motor' },
@@ -74,8 +75,7 @@ const Veresiye = () => {
   const filtered = borclar.filter((b) => {
     if (kaynakFilter !== 'hepsi' && b.kaynak_key !== kaynakFilter) return false;
     if (!search) return true;
-    const q = search.toLowerCase();
-    return (b.musteri_adi || '').toLowerCase().includes(q) || (b.telefon || '').includes(search) || (b.aciklama || '').toLowerCase().includes(q);
+    return metinIcerir(b.musteri_adi, search) || (b.telefon || '').includes(search) || metinIcerir(b.aciklama, search);
   });
 
   const fmtTL = (v: Sayi) => `₺${sayiYaz(v)}`;

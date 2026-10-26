@@ -1,6 +1,7 @@
 // İkinci El Motor (satış) ekranının saf kuralları (ekran/durum yok, doğrudan test edilebilir): form dönüşümleri, süzme+sıralama, canlı kâr.
 import { bugunYerel } from '../../../shared/utils/tarih';
 import type { Motor } from '../../../shared/tipler';
+import { metinIcerir } from '../../../shared/utils/metin';
 
 /** Form alanı: kullanıcı yazarken metin, kayıttan gelirken sayı olabilir. */
 export type FormSayisi = string | number;
@@ -169,11 +170,11 @@ export const filtrele = (motorlar: Motor[], { search, tarihBaslangic, tarihBitis
       if (tarihBaslangic && mTarih < tarihBaslangic) return false;
       if (tarihBitis && mTarih > tarihBitis) return false;
       return (
-        (m.plaka || '').toLowerCase().includes(search.toLowerCase()) ||
-        (m.marka || '').toLowerCase().includes(search.toLowerCase()) ||
-        (m.model || '').toLowerCase().includes(search.toLowerCase()) ||
-        (m.alici_adi || '').toLowerCase().includes(search.toLowerCase()) ||
-        (m.satici_adi || '').toLowerCase().includes(search.toLowerCase())
+        metinIcerir(m.plaka, search) ||
+        metinIcerir(m.marka, search) ||
+        metinIcerir(m.model, search) ||
+        metinIcerir(m.alici_adi, search) ||
+        metinIcerir(m.satici_adi, search)
       );
     })
     .sort((a, b) => {

@@ -37,6 +37,7 @@ import { sayiYaz, tarihYaz, sayiDegeri } from '../../shared/utils/bicim';
 import type { Musteri, MusteriDetayi } from '../../shared/tipler';
 import type { TonAdi } from '../../app/tokenlar';
 import { MENU_RENK, RENK, TON } from '../../app/tokenlar';
+import { kucukHarf } from '../../shared/utils/metin';
 
 // Hızlı yazarken eski aramanın yanıtı yeniyi ezmesin
 const sonAra = sonIstek();
@@ -331,8 +332,8 @@ const Musteriler = () => {
                           </TableHead>
                           <TableBody>
                             {motorlar.map((m) => {
-                              const isSatici = m.satici_adi && m.satici_adi.toLowerCase() === (d.ad_soyad ?? '').toLowerCase();
-                              const isAlici = m.alici_adi && m.alici_adi.toLowerCase() === (d.ad_soyad ?? '').toLowerCase();
+                              const isSatici = m.satici_adi && kucukHarf(m.satici_adi) === kucukHarf(d.ad_soyad);
+                              const isAlici = m.alici_adi && kucukHarf(m.alici_adi) === kucukHarf(d.ad_soyad);
                               return (
                                 <TableRow key={m.id} hover>
                                   <TableCell>

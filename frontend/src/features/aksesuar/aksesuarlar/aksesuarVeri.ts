@@ -3,6 +3,7 @@
 import { bugunYerel } from '../../../shared/utils/tarih';
 import { sayiDegeri, type Sayi } from '../../../shared/utils/bicim';
 import type { AksesuarSatis } from '../../../shared/tipler';
+import { metinIcerir } from '../../../shared/utils/metin';
 
 /** Form alanı: kullanıcı yazarken metin, kayıttan gelirken sayı olabilir. */
 export type FormSayisi = string | number;
@@ -72,7 +73,7 @@ export interface AksesuarSuzgeci {
 // Ad/telefon araması ve satış (yoksa oluşturma) tarihi aralığı
 export const filtrele = (satislar: AksesuarSatis[], { aksSearch, aksStart, aksEnd }: AksesuarSuzgeci): AksesuarSatis[] =>
   satislar.filter((s) => {
-    const matchSearch = !aksSearch || (s.ad_soyad?.toLowerCase() || '').includes(aksSearch.toLowerCase()) || (s.telefon || '').includes(aksSearch);
+    const matchSearch = !aksSearch || metinIcerir(s.ad_soyad, aksSearch) || (s.telefon || '').includes(aksSearch);
     const tarih = (s.satis_tarihi || s.created_at || '').split('T')[0];
     const matchStart = !aksStart || tarih >= aksStart;
     const matchEnd = !aksEnd || tarih <= aksEnd;

@@ -2,6 +2,7 @@
 import { bugunYerel } from '../../../shared/utils/tarih';
 import { sayiDegeri } from '../../../shared/utils/bicim';
 import type { Motor } from '../../../shared/tipler';
+import { metinIcerir } from '../../../shared/utils/metin';
 
 /** Form alanı: kullanıcı yazarken metin, kayıttan gelirken sayı olabilir. */
 export type FormSayisi = string | number;
@@ -150,11 +151,11 @@ export const filtrele = (motorlar: Motor[], { isYatirimci, activeFilter, seconda
       if (secondaryFilter === 'odeme_bekliyor' && !(sayiDegeri(m.kalan_odeme) > 0)) return false;
 
       return (
-        (m.plaka || '').toLowerCase().includes(search.toLowerCase()) ||
-        (m.marka || '').toLowerCase().includes(search.toLowerCase()) ||
-        (m.model || '').toLowerCase().includes(search.toLowerCase()) ||
-        (m.satici_adi || '').toLowerCase().includes(search.toLowerCase()) ||
-        (m.alici_adi || '').toLowerCase().includes(search.toLowerCase())
+        metinIcerir(m.plaka, search) ||
+        metinIcerir(m.marka, search) ||
+        metinIcerir(m.model, search) ||
+        metinIcerir(m.satici_adi, search) ||
+        metinIcerir(m.alici_adi, search)
       );
     })
     .sort((a, b) => siraNo(a) - siraNo(b));

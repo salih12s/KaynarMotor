@@ -61,9 +61,12 @@ describe('filtrele', () => {
     expect(filtrele(liste, { ...hepsi, startDate: '2026-10-01', endDate: '2026-10-01' }).map((x) => x.id)).toEqual([3]);
   });
 
-  test('bilinen sınır: büyük "I" küçük "ı" ile eşleşmez (toLowerCase Türkçe değil): "YILMAZ" bulunmaz', () => {
-    expect(filtrele(liste, { ...hepsi, search: 'YILMAZ' }).map((x) => x.id)).toEqual([]);
+  // Regression: eskiden düz toLowerCase kullanılıyordu; büyük "I" küçük "ı" ile eşleşmiyor, büyük harfle yazılan "YILMAZ" bulunmuyordu
+  test('Türkçe harf: "YILMAZ", "yılmaz" ve "yilmaz" aynı kaydı bulur; aksan farkı yok sayılır ("ayse" = "Ayşe")', () => {
+    expect(filtrele(liste, { ...hepsi, search: 'YILMAZ' }).map((x) => x.id)).toEqual([1]);
     expect(filtrele(liste, { ...hepsi, search: 'yılmaz' }).map((x) => x.id)).toEqual([1]);
+    expect(filtrele(liste, { ...hepsi, search: 'yilmaz' }).map((x) => x.id)).toEqual([1]);
+    expect(filtrele(liste, { ...hepsi, search: 'ayse' }).map((x) => x.id)).toEqual([1]);
   });
 
   test('telefonu olmayan kayıt aramada hata vermez', () => {

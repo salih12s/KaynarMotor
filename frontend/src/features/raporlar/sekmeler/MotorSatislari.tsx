@@ -23,6 +23,7 @@ import {
 
 import { formatTL, formatDate, karColor, motorIsletmeKari, headerSx } from '../bicim';
 import KartItem from '../bilesenler/KartItem';
+import { kucukHarf } from '../../../shared/utils/metin';
 
 const SAYISAL = ['Alış', 'Satış', 'Masraf', 'Payınız', 'Kom. Tutar'];
 const sagaSx = { textAlign: 'right' } as const;
@@ -48,7 +49,7 @@ const MotorSatislari = ({ rapor, isMobile, motorSubTab, setMotorSubTab, komisyon
     a.localeCompare(b, 'tr'),
   );
   const komisyonluMotorlar = komisyoncuFilter
-    ? komisyonluAll.filter((m) => (m.komisyoncu_adi || '').trim().toLowerCase() === komisyoncuFilter.toLowerCase())
+    ? komisyonluAll.filter((m) => kucukHarf((m.komisyoncu_adi || '').trim()) === kucukHarf(komisyoncuFilter))
     : komisyonluAll;
   const shownMotorlar = motorSubTab === 1 ? komisyonluMotorlar : allMotorlar;
   const shownGelir = shownMotorlar.reduce((t, m) => t + sayiDegeri(m.satis_fiyati), 0);
@@ -83,7 +84,7 @@ const MotorSatislari = ({ rapor, isMobile, motorSubTab, setMotorSubTab, komisyon
             >
               <MenuItem value="">Tümü ({komisyonluAll.length})</MenuItem>
               {komisyoncuList.map((k) => {
-                const sayi = komisyonluAll.filter((m) => (m.komisyoncu_adi || '').trim().toLowerCase() === k.toLowerCase()).length;
+                const sayi = komisyonluAll.filter((m) => kucukHarf((m.komisyoncu_adi || '').trim()) === kucukHarf(k)).length;
                 return (
                   <MenuItem key={k} value={k}>
                     {k} ({sayi})
