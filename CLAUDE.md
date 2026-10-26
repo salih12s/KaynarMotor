@@ -37,7 +37,7 @@ npm run test:e2e                      # Playwright (gerçek Chrome + sıfırdan 
 - Bash araç satırında tek tırnak sayısı çift değilse komut ayrıştırılamaz: Türkçe metinli dosyaları Write aracıyla yaz.
 - MUI ikonları tek tek içe aktarılır: `import X from '@mui/icons-material/X'`.
 
-## Durum (2026-10-25)
+## Durum (2026-10-26)
 **Arayüz: Tasarım A "Servis Defteri" CANLIDA (2026-10-25, Hostinger build 01a173d1, arayüz main.95dd23dd.js; önceki yayın 01a17083, yedek `deploy/yedek/kaynarmotor-hostinger-2026-10-25-canli.zip`).**
 Kaynak dal `typescript` (= `tasarim-a`, yerel; GitHub'a push edilmedi). Müşterinin gördüğü sayfalar (`/site`, `/ilan`, `/taksit/:fiyat`, `/s/:token`) eski temada kaldı. Panel teması `PanelTema` (App.jsx);
 ortak parçalar `frontend/src/shared/ui`, belirteçler `frontend/src/app/tokenlar.js`, tema `tema.js`. Tasarım görselleri: `docs/tasarim-yonleri/`. Kalan cilalar: `docs/YOL-HARITASI.md` §D.
@@ -47,7 +47,7 @@ ode_modules\@hostinger\mcp\src\servers\<ad>.js` ile çalışmalı (npx @latest "
 `typescript` dalı (= `main`, GitHub'da) **canlıda**: kaynarmotor.com.tr 2026-10-25'te bu daldan yayına alındı (Hostinger build 01a17083; önceki yayın 21 Ekim).
 Doğrulama (vite-ts dalı, 2026-10-26): backend tsc + 248 birim + 213 API (kaynak ve paket), frontend `typecheck` + `lint` (0 uyarı) + 431 Vitest, 11 E2E (Playwright, `npm run test:e2e`). Tam frontend koşusu için
 `--maxWorkers=2` kullan (yavaş makinede 60 sn zaman aşımı flaky üretir, ~160 sn); geliştirirken `cd frontend && npm run test:hizli` (~16 sn). Frontend lint tip bilgili (~35 sn).
-**Vite+TS geçişi (dal `vite-ts`, main'in 57 commit önünde, canlıya ÇIKMADI, push edilmedi):** aşama 0-5 kodda bitti, rapor ve ölçüler `docs/VITE-TS-YOL-HARITASI.md`. Canlıya çıkış ayrıca onay ister.
+**CANLIDA (2026-10-26): Vite 8 + TypeScript geçişi ve güvenlik yamaları yayında** (Hostinger build 01a175d2, arayüz main.6684f1b6.js; önceki yayın 01a173f4, geri dönüş paketi `deploy/yedek/kaynarmotor-hostinger-2026-10-25-login-ortali.zip`). Kaynak `main` (= `vite-ts`) GitHub'da. Ayrıntı ve ölçüler `docs/VITE-TS-YOL-HARITASI.md`. Geri dönülürse önce `ALTER TABLE kullanicilar ADD COLUMN plain_sifre VARCHAR(255) NULL` (kolon bu yayında silindi, eski kod ona yazar).
 **Deploy (her seferinde kullanıcı onayı):** `npm run package:hostinger` → `cd backend && node --test tests/smoke/paket.smoke.test.js` → Hostinger MCP
 `hosting_deploy` (domain kaynarmotor.com.tr, path = deploy/hostinger/kaynarmotor-hostinger.zip, type nodejs, appType nest, nodeVersion 24,
 outputDirectory dist, buildScript build, entryFile main.cjs) → `hosting_get-deployment` ile bekle → `/api/health`, `/api/health/database`, anonim
