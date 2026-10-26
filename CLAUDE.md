@@ -15,7 +15,9 @@ açıktır: gerçek müşteri verisi, parola, token ve kullanıcı adı **commit
   `backend/modules/motor/ikinciElMotor/ikinciElMotor.gorunum.ts` + `core/middleware/yetki.ts` (`kariGizle`).
   **İstisna (2026-10-22): e-ticaret kârı, `eticaret_yetkisi` olan herkese açıktır** (`/api/eticaret` `kariGizle` dışında; arayüzde `karGor`).
 
-- **Sıfır motor (2026-10-26, `sifir-motor` dalı, CANLIDA DEĞİL):** sıfır stok bir MODEL listesidir (`sifir_motorlar` +
+- **Sıfır motor (CANLIDA 2026-10-27, Hostinger build 01a17a57, arayüz main.17b29eca.js; kaynak `sifir-motor` dalı a2fd23d,
+  GitHub'a push edilmedi; geri dönüş `deploy/yedek/kaynarmotor-hostinger-2026-10-26-vite-ts-canli.zip`, DB değişikliği yalnız ekleme
+  olduğu için geri dönüşte DB'ye dokunmak gerekmez):** sıfır stok bir MODEL listesidir (`sifir_motorlar` +
   `sifir_motor_gorseller`; `backend/modules/motor/sifirMotor/`, arayüz Motor Stok > Sıfır sekmesi). Adet tutulmaz: satış
   `ikinci_el_motorlar`'a `motor_durumu = 'sifir'` + `sifir_motor_id` ile yazılır, model stoktan DÜŞMEZ. Raporda sıfır satışlar
   adede/gelire/toplam kâra girer, kârı ayrı (`motorSifir*`, `sifir_kar` `KAR_ALANLARI`'nda). Vitrin ilanı `sifir_motor_id` ile
