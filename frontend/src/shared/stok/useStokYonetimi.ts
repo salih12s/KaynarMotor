@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { AxiosResponse } from 'axios';
 import { hataMesaji, type Govde } from '../api/istemci';
-import { useOnay } from '../ui';
+import { useOnay, bildir } from '../ui';
 import { sayiDegeri, type Sayi } from '../utils/bicim';
 import { sonIstek } from '../utils/sonIstek';
 
@@ -113,7 +113,7 @@ export const useStokYonetimi = <T extends StokSatiri, F extends { stok_kodu: str
       await servis.delete(id);
       loadData();
     } catch (err) {
-      alert(hataMesaji(err, 'Hata'));
+      bildir(hataMesaji(err, 'Hata'));
     }
   };
 

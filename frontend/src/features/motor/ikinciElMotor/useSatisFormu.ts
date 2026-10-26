@@ -6,6 +6,7 @@ import { ikinciElMotorService } from '../motorApi';
 import { musteriService } from '../../musteriler/musteriApi';
 import { bekleyenBelgeleriYukle } from '../SatisBelgeleri';
 import { ilkForm, bosForm, motordenForm, hesaplaCanliKar, type MotorSatisFormu } from './satisVeri';
+import { bildir } from '../../../shared/ui';
 
 // Hızlı yazarken eski aramanın yanıtı yeniyi ezmesin
 const sonAra = sonIstek();
@@ -76,7 +77,7 @@ export const useSatisFormu = ({ salt, yenile }: { salt: boolean; yenile: () => v
       setBekleyenBelgeler([]);
       yenile();
       if (belgeHatalari.length) {
-        alert(`Satış kaydedildi ancak şu belgeler yüklenemedi:\n${belgeHatalari.join('\n')}\n\nSatışın detayından tekrar ekleyebilirsiniz.`);
+        bildir(`Satış kaydedildi ancak şu belgeler yüklenemedi:\n${belgeHatalari.join('\n')}\n\nSatışın detayından tekrar ekleyebilirsiniz.`, 'uyari');
       }
     } catch (err) {
       setError(hataMesaji(err, 'Hata oluştu'));

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { hataMesaji } from '../../shared/api/istemci';
 import KisiIkon from '@mui/icons-material/PersonOutlined';
-import { BilgiKarti, BolumBasligi, Damga, DialogBasligi, IslemDugmesi, Plaka, sagaSutunlar, useOnay } from '../../shared/ui';
+import { BilgiKarti, BolumBasligi, Damga, DialogBasligi, IslemDugmesi, Plaka, sagaSutunlar, useOnay, bildir } from '../../shared/ui';
 import MotorIkon from '@mui/icons-material/TwoWheelerOutlined';
 import SepetIkon from '@mui/icons-material/ShoppingCartOutlined';
 import ServisIkon from '@mui/icons-material/BuildOutlined';
@@ -121,7 +121,7 @@ const Musteriler = () => {
       await musteriService.delete(id);
       loadData();
     } catch (err) {
-      alert(hataMesaji(err, 'Silme hatası'));
+      bildir(hataMesaji(err, 'Silme hatası'));
     }
   };
 

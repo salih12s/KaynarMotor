@@ -4,6 +4,7 @@ import type { Motor } from '../../../shared/tipler';
 import { ikinciElMotorService } from '../motorApi';
 import { bekleyenBelgeleriYukle } from '../SatisBelgeleri';
 import { bosForm, motordenForm, type MotorStokFormu } from './motorStokVeri';
+import { bildir } from '../../../shared/ui';
 
 interface MotorDialogDurumu {
   open: boolean;
@@ -46,7 +47,7 @@ export const useMotorFormu = ({ yenile }: { yenile: () => void }) => {
       setBekleyenBelgeler([]);
       yenile();
       if (belgeHatalari.length) {
-        alert(`Motor kaydedildi ancak şu belgeler yüklenemedi:\n${belgeHatalari.join('\n')}\n\nMotoru düzenleyerek tekrar ekleyebilirsiniz.`);
+        bildir(`Motor kaydedildi ancak şu belgeler yüklenemedi:\n${belgeHatalari.join('\n')}\n\nMotoru düzenleyerek tekrar ekleyebilirsiniz.`, 'uyari');
       }
     } catch (err) {
       setError(hataMesaji(err, 'Hata oluştu'));

@@ -1,4 +1,4 @@
-import { useOnay } from '../../../shared/ui';
+import { useOnay, bildir } from '../../../shared/ui';
 import { sayiDegeri } from '../../../shared/utils/bicim';
 import { hataMesaji } from '../../../shared/api/istemci';
 import { useState, useEffect, useCallback } from 'react';
@@ -126,7 +126,7 @@ export const useETicaret = () => {
       await eticaretService.deleteSale(id);
       loadData();
     } catch (err) {
-      alert(hataMesaji(err, 'Hata'));
+      bildir(hataMesaji(err, 'Hata'));
     }
   };
 
@@ -158,7 +158,7 @@ export const useETicaret = () => {
       await eticaretService.deletePlatform(id);
       loadData();
     } catch (err) {
-      alert(hataMesaji(err, 'Hata'));
+      bildir(hataMesaji(err, 'Hata'));
     }
   };
 

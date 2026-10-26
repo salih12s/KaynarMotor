@@ -1,4 +1,4 @@
-import { useOnay } from '../../../shared/ui';
+import { useOnay, bildir } from '../../../shared/ui';
 import { hataMesaji } from '../../../shared/api/istemci';
 import { useState, useEffect, useCallback, type KeyboardEvent } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -174,7 +174,7 @@ export const useAksesuarlar = () => {
       loadData();
       loadStok();
     } catch (err) {
-      alert(hataMesaji(err, 'Hata'));
+      bildir(hataMesaji(err, 'Hata'));
     }
   };
 

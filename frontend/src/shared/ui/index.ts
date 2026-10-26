@@ -7,5 +7,6 @@ export { default as BolumBasligi } from './BolumBasligi';
 export { BilgiKarti, SayiKutusu, Not } from './BilgiKartlari';
 export { plakaBicim } from './plakaBicim';
 export { OnayProvider, useOnay } from './Onay';
+export { BildirimProvider, bildir } from './Bildirim';
 export { sagaSutunlar } from './sagaSutunlar';
 export { default as MevcutStok } from './MevcutStok';

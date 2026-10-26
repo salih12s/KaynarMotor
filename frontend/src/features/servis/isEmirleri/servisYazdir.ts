@@ -4,6 +4,7 @@ import { escapeHtml } from '../../../shared/utils/htmlKacis';
 import type { IsEmriDetayi } from '../../../shared/tipler';
 import { servisGecmisiService } from '../servisApi';
 import { isEmriYazdirHtml } from '../isEmriYazdir';
+import { bildir } from '../../../shared/ui';
 
 // Motorun üzerine yapıştırılacak servis geçmişi QR etiketi — müşteri okutunca
 // sadece o plakanın servis geçmişini gösteren halka açık sayfa açılır.
@@ -14,7 +15,7 @@ export const printServisQr = async (plaka: string | null | undefined) => {
       .toUpperCase(),
   );
   if (!temiz) {
-    alert('Bu iş emrinde plaka kayıtlı değil. QR oluşturmak için önce plaka girin.');
+    bildir('Bu iş emrinde plaka kayıtlı değil. QR oluşturmak için önce plaka girin.', 'uyari');
     return;
   }
   try {
@@ -23,7 +24,7 @@ export const printServisQr = async (plaka: string | null | undefined) => {
     const dataUrl = await QRCode.toDataURL(url, { margin: 1, width: 400, errorCorrectionLevel: 'M' });
     const win = window.open('', '_blank', 'width=420,height=340');
     if (!win) {
-      alert('Yazdırma penceresi açılamadı. Tarayıcı pop-up engelleyicisini kapatın.');
+      bildir('Yazdırma penceresi açılamadı. Tarayıcı pop-up engelleyicisini kapatın.', 'uyari');
       return;
     }
     win.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Servis QR - ${temiz}</title>
@@ -48,7 +49,7 @@ export const printServisQr = async (plaka: string | null | undefined) => {
       </body></html>`);
     win.document.close();
   } catch (err) {
-    alert(hataMesaji(err, 'QR oluşturulamadı'));
+    bildir(hataMesaji(err, 'QR oluşturulamadı'));
   }
 };
 
@@ -56,7 +57,7 @@ export const printIsEmri = (data: IsEmriDetayi | null | undefined) => {
   if (!data) return;
   const win = window.open('', '_blank', 'width=900,height=700');
   if (!win) {
-    alert('Yazdırma penceresi açılamadı. Tarayıcı pop-up engelleyicisini kapatın.');
+    bildir('Yazdırma penceresi açılamadı. Tarayıcı pop-up engelleyicisini kapatın.', 'uyari');
     return;
   }
   win.document.write(isEmriYazdirHtml(data));

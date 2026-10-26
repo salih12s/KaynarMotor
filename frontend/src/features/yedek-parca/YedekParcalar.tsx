@@ -1,7 +1,7 @@
 import React, { useState, useEffect, type KeyboardEvent } from 'react';
 import { hataMesaji } from '../../shared/api/istemci';
 import AyarIkon from '@mui/icons-material/SettingsOutlined';
-import { IslemDugmesi, OzetSeridi, DialogBasligi } from '../../shared/ui';
+import { IslemDugmesi, OzetSeridi, DialogBasligi, bildir } from '../../shared/ui';
 import { useOnay } from '../../shared/ui';
 import { sonIstek } from '../../shared/utils/sonIstek';
 import {
@@ -248,7 +248,7 @@ const YedekParcalar = () => {
       await yedekParcaService.delete(id);
       loadData();
     } catch (err) {
-      alert(hataMesaji(err, 'Hata'));
+      bildir(hataMesaji(err, 'Hata'));
     }
   };
 

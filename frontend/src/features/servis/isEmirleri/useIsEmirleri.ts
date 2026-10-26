@@ -1,4 +1,4 @@
-import { useOnay } from '../../../shared/ui';
+import { useOnay, bildir } from '../../../shared/ui';
 import { useState } from 'react';
 import { useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { hataMesaji } from '../../../shared/api/istemci';
@@ -53,7 +53,7 @@ export const useIsEmirleri = () => {
       await isEmriService.delete(id);
       yenile();
     } catch (err) {
-      alert(hataMesaji(err, 'Silme hatası'));
+      bildir(hataMesaji(err, 'Silme hatası'));
     }
   };
 

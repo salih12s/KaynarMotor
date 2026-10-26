@@ -5,6 +5,7 @@ import { bugunYerel } from '../../../shared/utils/tarih';
 import type { Motor } from '../../../shared/tipler';
 import { ikinciElMotorService } from '../motorApi';
 import { parseOdeme, type FormSayisi, type OdemeKalemi } from './motorStokVeri';
+import { bildir } from '../../../shared/ui';
 
 /** Hızlı satış penceresinin form alanları. */
 export interface HizliSatisFormu {
@@ -89,7 +90,7 @@ export const useHizliSatis = ({ yenile }: { yenile: () => void }) => {
       setHizliSatis({ open: false, motor: null });
       yenile();
     } catch (err) {
-      alert(hataMesaji(err, 'Hata'));
+      bildir(hataMesaji(err, 'Hata'));
     }
     setSatisKaydediliyor(false);
   };

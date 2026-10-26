@@ -1,6 +1,7 @@
 import JsBarcode from 'jsbarcode';
 import { paraYaz, type Sayi } from './bicim';
 import { escapeHtml as kacis } from './htmlKacis';
+import { bildir } from '../ui/Bildirim';
 
 /** Etiketin ihtiyaç duyduğu stok alanları (aksesuar ve yedek parça stoğu ortak). */
 export interface EtiketStogu {
@@ -15,14 +16,14 @@ export interface EtiketStogu {
 export const stokEtiketiYazdir = (stok: EtiketStogu): void => {
   const kod = String(stok.stok_kodu || '').trim();
   if (!kod) {
-    alert('Bu ürünün stok kodu (barkod) yok. Lütfen önce stok kodu girin.');
+    bildir('Bu ürünün stok kodu (barkod) yok. Lütfen önce stok kodu girin.', 'uyari');
     return;
   }
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   try {
     JsBarcode(svg, kod, { format: 'CODE128', displayValue: true, fontSize: 16, height: 55, margin: 4, width: 2, font: 'monospace', fontOptions: 'bold' });
   } catch (e) {
-    alert('Barkod oluşturulamadı: ' + (e instanceof Error ? e.message : String(e)));
+    bildir('Barkod oluşturulamadı: ' + (e instanceof Error ? e.message : String(e)));
     return;
   }
   const svgStr = new XMLSerializer().serializeToString(svg);
@@ -30,7 +31,7 @@ export const stokEtiketiYazdir = (stok: EtiketStogu): void => {
   const altSatir = [stok.marka, `Stok kodu ${kod}`].filter(Boolean).join(' · ');
   const win = window.open('', '_blank', 'width=420,height=320');
   if (!win) {
-    alert('Yazdırma penceresi açılamadı. Tarayıcı pop-up engelleyicisini kapatın.');
+    bildir('Yazdırma penceresi açılamadı. Tarayıcı pop-up engelleyicisini kapatın.', 'uyari');
     return;
   }
   win.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Etiket - ${kacis(stok.stok_adi)}</title>

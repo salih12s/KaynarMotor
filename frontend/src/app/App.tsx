@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { QueryClientProvider } from '@tanstack/react-query';
-import { OnayProvider } from '../shared/ui';
+import { OnayProvider, BildirimProvider } from '../shared/ui';
 import { sorguIstemcisiOlustur } from '../shared/sorgu/sorguIstemcisi';
 import { AuthProvider, useAuth } from '../features/auth/AuthContext';
 import type { Kullanici } from '../shared/tipler';
@@ -234,7 +234,9 @@ const PanelTema = ({ children }: { children?: ReactNode }) => {
   return (
     <ThemeProvider theme={panelTheme}>
       <CssBaseline />
-      <OnayProvider>{children}</OnayProvider>
+      <BildirimProvider>
+        <OnayProvider>{children}</OnayProvider>
+      </BildirimProvider>
     </ThemeProvider>
   );
 };
