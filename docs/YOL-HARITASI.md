@@ -82,6 +82,6 @@ Backend, frontend, veritabanı, bağımlılık, test ve depo düzeni incelemesi.
 - **F6 yapıldı (kapsamı belirtilerek):** panelde tokenla birebir aynı 241 renk sabiti token başvurusuna çevrildi; 19 `alert()` uygulamanın bildirimine (`bildir`) geçti. Kalan: tokenı olmayan birkaç renk, müşteriye dönük sayfalar (bilerek eski tema) ve yazdırma HTML'leri.
 - **F7 yapıldı:** aksesuar/yedek parça stok, Müşteriler, Kullanıcılar, Veresiye, Belge Arşivi için yaklaşık 120 karakterizasyon testi; taksit önceki turda kapandı. Frontend toplam 568 test.
 - **F8 yarım:** `faz1..faz12` dosyaları konu adlarıyla yeniden adlandırıldı; dört karışık dosyanın (`describe` bazında) özelliğe göre bölünmesi yapılmadı.
-- **F10 yarım:** test sayıları ve Vite/TS maddesi güncellendi. Ekran görüntüleri/GIF'ler hâlâ eski tasarımdan (`readme-media` ile yenilenmeli); README dili karışık kaldı.
+- **F10 büyük ölçüde yapıldı:** test sayıları, Vite/TS maddesi, 13 ekran görüntüsü ve 4 demo GIF yeni tasarımla yenilendi (gerçek uygulamadan, geliştirme veritabanının atılabilir kopyasında kaydedildi; veri sentetik). Kalan: README dili karışık (İngilizce özet + Türkçe gövde, bilerek).
 - **F11 yapıldı:** B tasarımı görselleri depodan çıkarıldı, `docs/README.md` içindekiler eklendi.
 - **F13 (frontend) yapıldı:** `shared/utils/metin.ts`; büyük "YILMAZ" artık "Yılmaz" ile eşleşir (8 ekranın arama/eşitlik karşılaştırmaları). Sunucu tarafı arama (`LOWER ... LIKE`) doğrulanmadı.
