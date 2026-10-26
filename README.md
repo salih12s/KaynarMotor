@@ -40,9 +40,10 @@ I developed the React interface, the layered TypeScript (strict) / Express API w
 - Publishing and removing showroom listings automatically as inventory status changes
 - Exposing privacy-safe QR service history without leaking cost or customer data
 - Recovering cleanly from database cold starts and deployment-time connection delays
-- Migrating the whole backend to TypeScript and a routes/controller/service/repository layout without changing the HTTP contract: 203 API tests run against both the source and the bundled build
+- Migrating the whole backend to TypeScript and a routes/controller/service/repository layout without changing the HTTP contract: 204 API tests run against both the source and the bundled build
 - Refactoring the frontend safely: characterization tests first, then splitting a 1,563-line screen into a 126-line shell plus small components, verified by identical rendered HTML
 - Moving server state to TanStack Query without stale screens: cache keys per date range, invalidation after writes, "always refetch on page open" for lists, each rule pinned by a test that was proven to fail when the rule is removed (mutation check) and measured in a real browser
+- Moving the frontend from Create React App + JavaScript to Vite + TypeScript (strict, 100% of files, no `any`) in six measured stages, with every stage ending on the full verification chain: production build 145 s to about 1 s, test run roughly halved, typed lint rules; the type checker replaced two scan tests and found a latent form bug along the way
 - Browser end-to-end tests (Playwright, real Chrome + real MariaDB, a throw-away database rebuilt on every run) for login/roles, work orders and motorcycle sales; writing them exposed a real form bug that the 400+ component tests had missed, now fixed with a regression test
 
 **See it in action:** the [Nasıl Çalışır](#nasıl-çalışır) section has four end-to-end recordings: public showroom, service work order with QR history, inventory ↔ showroom sync, and role-based access. The [Mimari](#mimari) section has the C4 container view, the request lifecycle, and the listing lifecycle.
@@ -420,9 +421,9 @@ ve TC bilgileri uydurmadır.
 | Katman | Ne sınar | Sayı |
 |---|---|---|
 | Birim (backend) | Servis kuralları, kâr gizleme, komisyon/hesap fonksiyonları; sahte veritabanı (`tests/unit/sahteDb.js`) | 248 |
-| API (backend) | HTTP sözleşmesi, yetki, transaction/rollback, eşzamanlılık; **gerçek MariaDB**'ye karşı, hem kaynak koddan hem **esbuild paketinden** | 203 + 203 |
+| API (backend) | HTTP sözleşmesi, yetki, transaction/rollback, eşzamanlılık; **gerçek MariaDB**'ye karşı, hem kaynak koddan hem **esbuild paketinden** | 204 + 204 |
 | Duman (paket) | Canlıdaki gibi üretilen zip açılır, sunucu ayağa kalkar, sağlık ve giriş uçları denenir (`npm run package:hostinger` sonrası: `node --test tests/smoke/paket.smoke.test.js`) | ayrı çalıştırılır |
-| Frontend | Sekiz büyük ekran (Raporlar, İş Emirleri, Vitrin yönetimi, Motor stok, İkinci el motor, Mağaza, E-Ticaret, Aksesuar) için bileşen testleri (roller, süzgeçler, formlar, sıralama, detay/yazdırma, mobil, **önbellek davranışı**), saf fonksiyonlar (para/tarih biçimleme, taksit hesabı dahil). Servis çağrısı ve tanımsız değişken hataları artık test değil derleyici (`tsc`) tarafından yakalanır | 431 |
+| Frontend | Büyük ekranlar (Raporlar, İş Emirleri, Vitrin yönetimi, Motor stok, İkinci el motor, Mağaza, E-Ticaret, Aksesuar) ile Müşteriler, Kullanıcılar, Veresiye, Belge Arşivi ve stok sayfaları için bileşen testleri (roller, süzgeçler, formlar, sıralama, detay/yazdırma, mobil, **önbellek davranışı**), saf fonksiyonlar (para/tarih biçimleme, taksit hesabı dahil). Servis çağrısı ve tanımsız değişken hataları artık test değil derleyici (`tsc`) tarafından yakalanır | 568 |
 | **E2E** (Playwright) | Gerçek Chrome + gerçek frontend + gerçek backend + her koşuda sıfırdan kurulan tek kullanımlık veritabanı: giriş ve rol kısıtı, iş emri oluştur/düzenle/tamamla, motor satışı (ekranda ve sunucuda). Üç tur üst üste 27/27 yeşil (flaky yok) | 11 |
 
 Test piramidi: çok sayıda hızlı birim ve bileşen testi, daha az API testi, **yalnızca kritik akışlar için** birkaç E2E. E2E bunların yerine değil üstüne gelir:
