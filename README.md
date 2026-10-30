@@ -352,8 +352,8 @@ flowchart LR
 **Gereksinimler:** Node.js 20+ ve MariaDB 10.5+ (11.8 ile denendi; `INSERT ... RETURNING` ve `SEQUENCE` gerekir)
 
 ```bash
-git clone https://github.com/salih12s/KaynarMotorCRM.git
-cd KaynarMotorCRM
+git clone https://github.com/salih12s/KaynarMotor.git
+cd KaynarMotor
 npm run install:all
 ```
 
@@ -459,7 +459,7 @@ yük/stres testleri (load, stress) yok (eşzamanlılık API testlerinde var), E2
 ## Proje Yapısı
 
 ```
-KaynarMotorCRM/
+KaynarMotor/
 ├── backend/                     # TypeScript (strict) + Express; her özellik routes/controller/service/repository/schemas
 │   ├── server.ts                # Express app, CORS, route mount, DB init
 │   ├── core/                    # Altyapı: hiçbir iş alanına bağlı değil
