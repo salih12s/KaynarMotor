@@ -6,6 +6,8 @@
  * gövdedeki iç içe nesne ve dizilere (parcalar, odeme_detaylari) de bakılır. Büyük metin değerleri (vitrin medyası)
  * taranmaz: yalnızca anahtar adları gezilir.
  *
+ * Yüzde alanları (komisyon_orani, kdv_orani) ayrıca 100'den büyük olamaz: %150 komisyon kâr hesabını anlamsız bir eksiye çeviriyordu.
+ *
  * Bilerek dışarıda: kar, yatirimci_kar (zararına satışta eksi olabilir).
  */
 import type { NextFunction, Request, Response } from 'express';
@@ -33,6 +35,12 @@ const TUTAR_ALANLARI = new Set([
   'giren_miktar',
 ]);
 
+/** Yüzde alanları: 0-100 arası. */
+const ORAN_ALANLARI = new Set(['komisyon_orani', 'kdv_orani']);
+
+const doluSayi = (v: unknown): v is number | string => typeof v === 'number' || (typeof v === 'string' && v.trim() !== '');
+
+/** Sınır dışı (negatif tutar ya da %100 üstü oran) ilk alanın adını döndürür; yoksa null. Ad, 400 mesajında kullanılır. */
 export const negatifBul = (deger: unknown, derinlik = 0): string | null => {
   if (derinlik > 6 || deger === null || typeof deger !== 'object') return null;
   if (Array.isArray(deger)) {
@@ -43,7 +51,8 @@ export const negatifBul = (deger: unknown, derinlik = 0): string | null => {
     return null;
   }
   for (const [anahtar, v] of Object.entries(deger as Record<string, unknown>)) {
-    if (TUTAR_ALANLARI.has(anahtar) && (typeof v === 'number' || (typeof v === 'string' && v.trim() !== '')) && Number(v) < 0) return anahtar;
+    if (TUTAR_ALANLARI.has(anahtar) && doluSayi(v) && Number(v) < 0) return anahtar;
+    if (ORAN_ALANLARI.has(anahtar) && doluSayi(v) && Number(v) > 100) return anahtar;
     if (v !== null && typeof v === 'object') {
       const b = negatifBul(v, derinlik + 1);
       if (b) return b;
@@ -55,6 +64,9 @@ export const negatifBul = (deger: unknown, derinlik = 0): string | null => {
 export const negatifTutarEngelle = (req: Request, res: Response, next: NextFunction) => {
   if (!YAZMA.has(req.method) || !req.body || typeof req.body !== 'object') return next();
   const alan = negatifBul(req.body);
-  if (alan) return res.status(400).json({ message: `${alan} negatif olamaz` });
+  if (alan) {
+    const oranMi = ORAN_ALANLARI.has(alan);
+    return res.status(400).json({ message: oranMi ? `${alan} 100'den büyük olamaz` : `${alan} negatif olamaz` });
+  }
   next();
 };

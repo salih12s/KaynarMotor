@@ -134,6 +134,34 @@ describe('rapor servisi: tarih ve erişim kuralları', () => {
     assert.deepEqual(db2.cagrilar[0].params, ['2026-01-05']);
   });
 
+  // Regression (E17): tarih biçimi ve sırası doğrulanmıyordu; "2026-02-31" gibi değerler ya da bitişi başlangıçtan önce olan aralık sessizce
+  // boş rapor döndürüyordu (hata mı "kayıt yok" mu ayırt edilemiyordu). Not: Date.parse("2026-02-31") hata VERMEZ, 3 Mart'a kayar:
+  // takvim doğrulaması gün/ay/yıl geri karşılaştırmasıyla yapılır.
+  it('tarih biçimi ve takvim geçerliliği: bozuk tarih 400, veritabanına gidilmez', async () => {
+    for (const kotu of ['2026/10/01', '01.10.2026', 'abc', '2026-2-1', '2026-02-31', '2026-13-01', '2026-10-5x']) {
+      const db = sahteDb();
+      await assert.rejects(servis.aralik(db, { baslangic: kotu, bitis: '2026-10-31' }), (h) => h.status === 400 && /baslangic/.test(h.message), kotu);
+      await assert.rejects(servis.aralik(db, { baslangic: '2026-10-01', bitis: kotu }), (h) => h.status === 400 && /bitis/.test(h.message), kotu);
+      await assert.rejects(servis.gunluk(db, { tarih: kotu }), (h) => h.status === 400 && /tarih/.test(h.message), kotu);
+      await assert.rejects(servis.fisKar(db, { baslangic: kotu }), (h) => h.status === 400, kotu);
+      await assert.rejects(servis.yatirimciOzet(db, { bitis: kotu }), (h) => h.status === 400, kotu);
+      assert.equal(db.cagrilar.length, 0);
+    }
+  });
+
+  it('başlangıç bitişten sonra olamaz (400); aynı gün ve artık yıl 29 Şubat geçerli', async () => {
+    const db = sahteDb();
+    await assert.rejects(
+      servis.aralik(db, { baslangic: '2026-10-31', bitis: '2026-10-01' }),
+      (h) => h.status === 400 && h.message === 'Başlangıç tarihi bitiş tarihinden sonra olamaz',
+    );
+    assert.equal(db.cagrilar.length, 0);
+    const stoklu = () => sahteDb([['toplam_alis', [{ toplam_alis: 0 }]]]);
+    await servis.aralik(stoklu(), { baslangic: '2026-10-05', bitis: '2026-10-05' });
+    await servis.aralik(stoklu(), { baslangic: '2028-02-29', bitis: '2028-03-01' }); // 2028 artık yıl
+    await assert.rejects(servis.aralik(sahteDb(), { baslangic: '2027-02-29', bitis: '2027-03-01' }), (h) => h.status === 400); // 2027 değil
+  });
+
   it('aralık: başlangıç ya da bitiş eksikse 400 (veritabanına gidilmez)', async () => {
     const db = sahteDb();
     await assert.rejects(servis.aralik(db, { baslangic: '2026-10-01' }), (h) => h.status === 400 && h.message === 'Başlangıç ve bitiş tarihi gerekli');

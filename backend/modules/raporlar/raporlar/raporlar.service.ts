@@ -12,8 +12,39 @@ import type { AralikSorgusu, FisKarSorgusu, GunlukSorgusu, YatirimciOzetSorgusu,
 /** Bugünün UTC tarihi (YYYY-AA-GG). Test için saat dışarıdan verilebilir. */
 const bugunUtc = (simdi: Date): string => simdi.toISOString().split('T')[0];
 
+const TARIH_BICIMI = /^(\d{4})-(\d{2})-(\d{2})$/;
+
+/**
+ * YYYY-AA-GG biçiminde GERÇEK bir takvim günü mü? `Date.parse('2026-02-31')` hata vermez, 3 Mart'a kayar; bu yüzden gün/ay/yıl
+ * geri karşılaştırılır (artık yıl dahil doğru çalışır).
+ */
+const gecerliTarihMi = (deger: unknown): boolean => {
+  if (typeof deger !== 'string') return false;
+  const m = TARIH_BICIMI.exec(deger);
+  if (!m) return false;
+  const [y, a, g] = [Number(m[1]), Number(m[2]), Number(m[3])];
+  const d = new Date(Date.UTC(y, a - 1, g));
+  return d.getUTCFullYear() === y && d.getUTCMonth() === a - 1 && d.getUTCDate() === g;
+};
+
+/** Verilmişse (boş değilse) tarih geçerli olmalı; hata mesajı alan adını söyler. Boş/yok: çağıranın kuralı (varsayılan ya da "gerekli"). */
+const tarihKontrol = (alan: string, deger: unknown) => {
+  if (deger === undefined || deger === null || deger === '') return;
+  if (!gecerliTarihMi(deger)) throw new GecersizIstek(`${alan} geçerli bir tarih olmalı (YYYY-AA-GG)`);
+};
+
+/** İsteğe bağlı başlangıç/bitiş çifti: biçim ve sıra. Önceden bozuk tarih sessizce boş rapor döndürüyordu (hata mı "kayıt yok" mu belli değildi). */
+const aralikKontrol = (baslangic: unknown, bitis: unknown) => {
+  tarihKontrol('baslangic', baslangic);
+  tarihKontrol('bitis', bitis);
+  if (typeof baslangic === 'string' && typeof bitis === 'string' && baslangic && bitis && baslangic > bitis) {
+    throw new GecersizIstek('Başlangıç tarihi bitiş tarihinden sonra olamaz');
+  }
+};
+
 /** Günlük rapor: o gün tamamlanan iş emri, aksesuar, motor satışı ve o güne ait e-ticaret satışları. */
 export const gunluk = async (db: Veritabani, sorgu: GunlukSorgusu, simdi: Date = new Date()) => {
+  tarihKontrol('tarih', sorgu.tarih);
   const hedefTarih = sorgu.tarih || bugunUtc(simdi);
   return gunlukHesapla(hedefTarih, {
     isEmirleri: await repo.gunlukIsEmirleri(db, hedefTarih),
@@ -27,6 +58,7 @@ export const gunluk = async (db: Veritabani, sorgu: GunlukSorgusu, simdi: Date =
 export const aralik = async (db: Veritabani, sorgu: AralikSorgusu) => {
   const { baslangic, bitis } = sorgu;
   if (!baslangic || !bitis) throw new GecersizIstek('Başlangıç ve bitiş tarihi gerekli');
+  aralikKontrol(baslangic, bitis);
 
   const isEmirleri = await parcalariEkle(
     db,
@@ -69,7 +101,10 @@ export const genel = async (db: Veritabani) =>
     yedekParcalar: await repo.genelYedekParcalar(db),
   });
 
-export const fisKar = (db: Veritabani, sorgu: FisKarSorgusu) => repo.fisKar(db, sorgu.baslangic, sorgu.bitis);
+export const fisKar = async (db: Veritabani, sorgu: FisKarSorgusu) => {
+  aralikKontrol(sorgu.baslangic, sorgu.bitis);
+  return repo.fisKar(db, sorgu.baslangic, sorgu.bitis);
+};
 
 export const personeller = (db: Veritabani) => repo.personeller(db);
 
@@ -78,6 +113,7 @@ export const personeller = (db: Veritabani) => repo.personeller(db);
  * birini görebilir; diğer roller göremez.
  */
 export const yatirimciRaporu = async (db: Veritabani, kullanici: Kullanici, sorgu: YatirimciRaporSorgusu) => {
+  aralikKontrol(sorgu.baslangic, sorgu.bitis);
   let yatirimciId: number | null;
   if (kullanici.rol === 'yatirimci') {
     yatirimciId = kullanici.id;
@@ -92,4 +128,7 @@ export const yatirimciRaporu = async (db: Veritabani, kullanici: Kullanici, sorg
   return yatirimciRaporuHesapla(stoktakiler, satilanlar);
 };
 
-export const yatirimciOzet = (db: Veritabani, sorgu: YatirimciOzetSorgusu) => repo.yatirimciOzetleri(db, sorgu.baslangic, sorgu.bitis);
+export const yatirimciOzet = async (db: Veritabani, sorgu: YatirimciOzetSorgusu) => {
+  aralikKontrol(sorgu.baslangic, sorgu.bitis);
+  return repo.yatirimciOzetleri(db, sorgu.baslangic, sorgu.bitis);
+};
