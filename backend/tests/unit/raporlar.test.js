@@ -124,11 +124,16 @@ describe('yatırımcı raporu hesabı', () => {
 });
 
 describe('rapor servisi: tarih ve erişim kuralları', () => {
-  it('günlük: tarih verilmezse BUGÜN (UTC), verilirse o tarih kullanılır', async () => {
+  // Rapor günü TÜRKİYE gününe göre (sabit UTC+3). Eskiden UTC günüydü ve bu test onu "bilerek" sabitliyordu: 23:30Z = TR ertesi gün 02:30,
+  // yani TR'de 19 Ekim; veritabanı filtresi (trGunu) ve varsayılan gün artık aynı kuralı kullanır.
+  it('günlük: tarih verilmezse BUGÜN (Türkiye günü), verilirse o tarih kullanılır', async () => {
     const db = sahteDb();
     const r = await servis.gunluk(db, {}, new Date('2026-10-18T23:30:00Z'));
-    assert.equal(r.tarih, '2026-10-18');
-    assert.deepEqual(db.cagrilar[0].params, ['2026-10-18']);
+    assert.equal(r.tarih, '2026-10-19');
+    assert.deepEqual(db.cagrilar[0].params, ['2026-10-19']);
+    // sınır: 20:59:59Z hâlâ aynı TR günü, 21:00:00Z TR gece yarısı = yeni gün
+    assert.equal((await servis.gunluk(sahteDb(), {}, new Date('2026-10-18T20:59:59Z'))).tarih, '2026-10-18');
+    assert.equal((await servis.gunluk(sahteDb(), {}, new Date('2026-10-18T21:00:00Z'))).tarih, '2026-10-19');
     const db2 = sahteDb();
     assert.equal((await servis.gunluk(db2, { tarih: '2026-01-05' })).tarih, '2026-01-05');
     assert.deepEqual(db2.cagrilar[0].params, ['2026-01-05']);

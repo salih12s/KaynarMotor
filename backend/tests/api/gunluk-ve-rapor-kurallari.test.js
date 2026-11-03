@@ -19,7 +19,8 @@ let s,
 const benzersiz = (onek) => `${onek}${SON}${++sayac}`;
 const sql = async (q, p) => (await pool.query(q, p)).rows;
 const bekle = (ms) => new Promise((c) => setTimeout(c, ms));
-const bugunUtc = () => new Date().toISOString().slice(0, 10);
+// Rapor günü TÜRKİYE günüdür (sabit UTC+3). UTC günü kullanılırsa UTC 21:00-24:00 arasında test yanlış güne bakardı (saate bağlı flaky).
+const bugunTr = () => new Date(Date.now() + 3 * 3600 * 1000).toISOString().slice(0, 10);
 
 // Günlük işlemden sonra yazılabilir: kayıt görünene kadar kısa süre bekle
 const logBul = async (tablo, hedefId, tip) => {
@@ -107,7 +108,7 @@ describe('#43 doğrudan "tamamlandı" iş emri tamamlama tarihi alır', () => {
     assert.ok(tamam.govde.tamamlama_tarihi, 'tamamlandı olarak açılan iş emrinde tamamlama_tarihi boş kalmamalı');
     assert.equal(bekleyen.govde.tamamlama_tarihi, null);
 
-    const rapor = await api('GET', `/api/raporlar/gunluk?tarih=${bugunUtc()}`, undefined, admin);
+    const rapor = await api('GET', `/api/raporlar/gunluk?tarih=${bugunTr()}`, undefined, admin);
     assert.equal(rapor.durum, 200);
     const idler = rapor.govde.is_emirleri.kayitlar.map((r) => r.id);
     assert.ok(idler.includes(tamam.govde.id), 'günlük rapor tamamlanan iş emrini göstermeli');
@@ -122,7 +123,7 @@ describe('#44 aralık raporu bekleyen aksesuar satışını gelire katmaz', () =
     const tam = await api('POST', '/api/aksesuarlar', { ad_soyad: benzersiz('F7 tam '), durum: 'tamamlandi', parcalar: parca }, admin);
     assert.equal(bek.durum, 201);
     assert.equal(tam.durum, 201);
-    const gun = bugunUtc();
+    const gun = bugunTr();
     const r = await api('GET', `/api/raporlar/aralik?baslangic=${gun}&bitis=${gun}`, undefined, admin);
     assert.equal(r.durum, 200);
     const idler = r.govde.aksesuarlar.map((a) => a.id);

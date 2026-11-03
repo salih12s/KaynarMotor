@@ -1,20 +1,20 @@
 /* Rapor sorguları (yalnızca okuma). İş kuralı/toplam hesabı yok: toplamlar raporlar.hesap.ts'te. */
-import { orderByText } from '../database/sqlText';
+import { orderByText, trGunu } from '../database/sqlText';
 import type { Veritabani } from '../lib/tipler';
 
 // Eski (aktarılmış) motor kayıtları 2026'dan önceki tamamlama tarihleriyle rapora girmez; yeni kayıtlar her zaman girer.
-const MOTOR_RAPORA_GIRER = `durum = 'tamamlandi' AND tamamlama_tarihi IS NOT NULL AND (eski_kayit IS NOT TRUE OR DATE(tamamlama_tarihi) >= '2026-01-01')`;
+const MOTOR_RAPORA_GIRER = `durum = 'tamamlandi' AND tamamlama_tarihi IS NOT NULL AND (eski_kayit IS NOT TRUE OR ${trGunu('tamamlama_tarihi')} >= '2026-01-01')`;
 
 // ============ GÜNLÜK ============
 
 export const gunlukIsEmirleri = async (db: Veritabani, tarih: string) =>
-  (await db.query(`SELECT * FROM is_emirleri WHERE durum = 'tamamlandi' AND DATE(tamamlama_tarihi) = $1`, [tarih])).rows;
+  (await db.query(`SELECT * FROM is_emirleri WHERE durum = 'tamamlandi' AND ${trGunu('tamamlama_tarihi')} = $1`, [tarih])).rows;
 
 export const gunlukAksesuarlar = async (db: Veritabani, tarih: string) =>
-  (await db.query(`SELECT * FROM aksesuarlar WHERE durum = 'tamamlandi' AND DATE(tamamlama_tarihi) = $1`, [tarih])).rows;
+  (await db.query(`SELECT * FROM aksesuarlar WHERE durum = 'tamamlandi' AND ${trGunu('tamamlama_tarihi')} = $1`, [tarih])).rows;
 
 export const gunlukMotorlar = async (db: Veritabani, tarih: string) =>
-  (await db.query(`SELECT * FROM ikinci_el_motorlar WHERE ${MOTOR_RAPORA_GIRER} AND DATE(tamamlama_tarihi) = $1 ORDER BY tamamlama_tarihi DESC`, [tarih])).rows;
+  (await db.query(`SELECT * FROM ikinci_el_motorlar WHERE ${MOTOR_RAPORA_GIRER} AND ${trGunu('tamamlama_tarihi')} = $1 ORDER BY tamamlama_tarihi DESC`, [tarih])).rows;
 
 export const gunlukEticaret = async (db: Veritabani, tarih: string) =>
   (
@@ -32,7 +32,7 @@ export const aralikIsEmirleri = async (db: Veritabani, baslangic: string, bitis:
   (
     await db.query(
       `SELECT ie.*
-     FROM is_emirleri ie WHERE ie.durum = 'tamamlandi' AND DATE(COALESCE(ie.tamamlama_tarihi, ie.created_at)) BETWEEN $1 AND $2 ORDER BY ie.created_at DESC`,
+     FROM is_emirleri ie WHERE ie.durum = 'tamamlandi' AND ${trGunu('COALESCE(ie.tamamlama_tarihi, ie.created_at)')} BETWEEN $1 AND $2 ORDER BY ie.created_at DESC`,
       [baslangic, bitis],
     )
   ).rows;
@@ -42,7 +42,7 @@ export const aralikAksesuarlar = async (db: Veritabani, baslangic: string, bitis
     await db.query(
       `SELECT a.*
      FROM aksesuarlar a
-     WHERE a.durum = 'tamamlandi' AND DATE(COALESCE(a.tamamlama_tarihi, a.created_at)) BETWEEN $1 AND $2
+     WHERE a.durum = 'tamamlandi' AND ${trGunu('COALESCE(a.tamamlama_tarihi, a.created_at)')} BETWEEN $1 AND $2
      ORDER BY a.created_at DESC`,
       [baslangic, bitis],
     )
@@ -51,7 +51,7 @@ export const aralikAksesuarlar = async (db: Veritabani, baslangic: string, bitis
 export const aralikMotorlar = async (db: Veritabani, baslangic: string, bitis: string) =>
   (
     await db.query(
-      `SELECT * FROM ikinci_el_motorlar WHERE ${MOTOR_RAPORA_GIRER} AND DATE(COALESCE(satis_tarihi, tamamlama_tarihi)) BETWEEN $1 AND $2 ORDER BY COALESCE(satis_tarihi, tamamlama_tarihi) DESC`,
+      `SELECT * FROM ikinci_el_motorlar WHERE ${MOTOR_RAPORA_GIRER} AND COALESCE(satis_tarihi, ${trGunu('tamamlama_tarihi')}) BETWEEN $1 AND $2 ORDER BY COALESCE(satis_tarihi, tamamlama_tarihi) DESC`,
       [baslangic, bitis],
     )
   ).rows;
@@ -67,7 +67,7 @@ export const aralikEticaret = async (db: Veritabani, baslangic: string, bitis: s
   ).rows;
 
 export const aralikYedekParcalar = async (db: Veritabani, baslangic: string, bitis: string) =>
-  (await db.query(`SELECT * FROM yedek_parcalar WHERE DATE(created_at) BETWEEN $1 AND $2 ORDER BY ${orderByText('urun_adi')}`, [baslangic, bitis])).rows;
+  (await db.query(`SELECT * FROM yedek_parcalar WHERE ${trGunu('created_at')} BETWEEN $1 AND $2 ORDER BY ${orderByText('urun_adi')}`, [baslangic, bitis])).rows;
 
 /** Motor stok toplam değeri: stoktaki motorların alım fiyatları toplamı. */
 export const motorStokToplami = async (db: Veritabani) =>
@@ -128,11 +128,11 @@ export const fisKar = async (db: Veritabani, baslangic?: string, bitis?: string)
   const params: unknown[] = [];
   if (baslangic) {
     params.push(baslangic);
-    sorgu += ` AND DATE(tamamlama_tarihi) >= $${params.length}`;
+    sorgu += ` AND ${trGunu('tamamlama_tarihi')} >= $${params.length}`;
   }
   if (bitis) {
     params.push(bitis);
-    sorgu += ` AND DATE(tamamlama_tarihi) <= $${params.length}`;
+    sorgu += ` AND ${trGunu('tamamlama_tarihi')} <= $${params.length}`;
   }
   sorgu += ' ORDER BY fis_no DESC';
   return (await db.query(sorgu, params)).rows;
@@ -177,11 +177,11 @@ export const yatirimciSatilanlar = async (db: Veritabani, yatirimciId: number, b
   const params: unknown[] = [yatirimciId];
   if (baslangic) {
     params.push(baslangic);
-    sorgu += ` AND DATE(COALESCE(satis_tarihi, tamamlama_tarihi)) >= $${params.length}`;
+    sorgu += ` AND COALESCE(satis_tarihi, ${trGunu('tamamlama_tarihi')}) >= $${params.length}`;
   }
   if (bitis) {
     params.push(bitis);
-    sorgu += ` AND DATE(COALESCE(satis_tarihi, tamamlama_tarihi)) <= $${params.length}`;
+    sorgu += ` AND COALESCE(satis_tarihi, ${trGunu('tamamlama_tarihi')}) <= $${params.length}`;
   }
   sorgu += ` ORDER BY COALESCE(satis_tarihi, tamamlama_tarihi) DESC`;
   return (await db.query(sorgu, params)).rows;
@@ -193,8 +193,8 @@ export const yatirimciSatilanlar = async (db: Veritabani, yatirimciId: number, b
  */
 export const yatirimciOzetleri = async (db: Veritabani, baslangic?: string, bitis?: string) => {
   const satisKosulu = `m.durum = 'tamamlandi'
-          AND ($1 IS NULL OR DATE(COALESCE(m.satis_tarihi, m.tamamlama_tarihi)) >= CAST($1 AS DATE))
-          AND ($2 IS NULL OR DATE(COALESCE(m.satis_tarihi, m.tamamlama_tarihi)) <= CAST($2 AS DATE))`;
+          AND ($1 IS NULL OR COALESCE(m.satis_tarihi, ${trGunu('m.tamamlama_tarihi')}) >= CAST($1 AS DATE))
+          AND ($2 IS NULL OR COALESCE(m.satis_tarihi, ${trGunu('m.tamamlama_tarihi')}) <= CAST($2 AS DATE))`;
   return (
     await db.query(
       `

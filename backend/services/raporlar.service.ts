@@ -5,12 +5,13 @@
 import { GecersizIstek, YetkiHatasi } from '../lib/dogrulama/dogrula';
 import type { Kullanici, Veritabani } from '../lib/tipler';
 import { parcalariEkle } from '../lib/altKayitlar';
+import { TR_SAAT_FARKI } from '../database/sqlText';
 import { aralikHesapla, genelHesapla, gunlukHesapla, yatirimciRaporuHesapla } from '../rules/raporlar.hesap';
 import * as repo from '../repositories/raporlar.repository';
 import type { AralikSorgusu, FisKarSorgusu, GunlukSorgusu, YatirimciOzetSorgusu, YatirimciRaporSorgusu } from '../schemas/raporlar.schemas';
 
-/** Bugünün UTC tarihi (YYYY-AA-GG). Test için saat dışarıdan verilebilir. */
-const bugunUtc = (simdi: Date): string => simdi.toISOString().split('T')[0];
+/** Bugünün TÜRKİYE tarihi (YYYY-AA-GG; sabit UTC+3). Test için saat dışarıdan verilebilir. */
+const bugunTr = (simdi: Date): string => new Date(simdi.getTime() + TR_SAAT_FARKI * 3_600_000).toISOString().split('T')[0];
 
 const TARIH_BICIMI = /^(\d{4})-(\d{2})-(\d{2})$/;
 
@@ -45,7 +46,7 @@ const aralikKontrol = (baslangic: unknown, bitis: unknown) => {
 /** Günlük rapor: o gün tamamlanan iş emri, aksesuar, motor satışı ve o güne ait e-ticaret satışları. */
 export const gunluk = async (db: Veritabani, sorgu: GunlukSorgusu, simdi: Date = new Date()) => {
   tarihKontrol('tarih', sorgu.tarih);
-  const hedefTarih = sorgu.tarih || bugunUtc(simdi);
+  const hedefTarih = sorgu.tarih || bugunTr(simdi);
   return gunlukHesapla(hedefTarih, {
     isEmirleri: await repo.gunlukIsEmirleri(db, hedefTarih),
     aksesuarlar: await repo.gunlukAksesuarlar(db, hedefTarih),

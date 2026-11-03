@@ -653,10 +653,10 @@ describe('#52 raporlar ve veresiye: HTTP sözleşmesi', () => {
 
   before(async () => {
     yat = await kullaniciOlustur(api, admin, benzersiz('f10_yat_'), 'yatirimci');
-    bugun = new Date().toISOString().split('T')[0];
+    bugun = new Date(Date.now() + 3 * 3600 * 1000).toISOString().split('T')[0]; // Türkiye günü (sabit UTC+3)
   });
 
-  it('günlük rapor: dört kaynak + toplam; tarih verilmezse bugün (UTC)', async () => {
+  it('günlük rapor: dört kaynak + toplam; tarih verilmezse bugün (Türkiye günü)', async () => {
     const r = await api('GET', '/api/raporlar/gunluk', undefined, admin);
     assert.equal(r.durum, 200);
     assert.equal(r.govde.tarih, bugun);

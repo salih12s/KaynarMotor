@@ -4,7 +4,7 @@
  */
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { aramaIcerir, aramaDeseni } = require('../../database/sqlText');
+const { aramaIcerir, aramaDeseni, trGunu, TR_SAAT_FARKI } = require('../../database/sqlText');
 
 test('aramaIcerir: düz metin %...% içine alınır; Türkçe küçük harf ve ı → i kuralı aramaDeseni ile aynı', () => {
   assert.equal(aramaIcerir('YILMAZ'), '%yilmaz%');
@@ -25,4 +25,11 @@ test('aramaIcerir: ters eğik çizgi de kaçışlanır (yoksa kullanıcı kendi 
 
 test('aramaIcerir: boş metin her şeyi eşler (çağıranlar kısa sorguyu kendileri eler)', () => {
   assert.equal(aramaIcerir(''), '%%');
+});
+
+// Regression (E17): DATETIME kolonları UTC saklanır; DATE(kolon) UTC gününü verir, Türkiye saatiyle 00:00-03:00 arası kayıtlar önceki güne düşerdi.
+test('trGunu: DATETIME kolonunu Türkiye gününe çevirir (UTC+3 eklenir); ifade ve sabit tutarlı', () => {
+  assert.equal(TR_SAAT_FARKI, 3);
+  assert.equal(trGunu('tamamlama_tarihi'), 'DATE(tamamlama_tarihi + INTERVAL 3 HOUR)');
+  assert.equal(trGunu("COALESCE(a.tamamlama_tarihi, a.created_at)"), 'DATE(COALESCE(a.tamamlama_tarihi, a.created_at) + INTERVAL 3 HOUR)');
 });

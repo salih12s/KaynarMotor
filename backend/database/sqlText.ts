@@ -84,3 +84,15 @@ export function aramaDeseni(metin: string): string {
 export function aramaIcerir(metin: string): string {
   return `%${aramaDeseni(metin).replace(/[\\%_]/g, '\\$&')}%`;
 }
+
+/** Türkiye sabit UTC+3'tür (2016'dan beri yaz saati uygulaması yok). */
+export const TR_SAAT_FARKI = 3;
+
+/**
+ * DATETIME kolonunun TÜRKİYE takvim günü. Veritabanı DATETIME değerlerini UTC saklar (oturum +00:00); `DATE(kolon)` UTC gününü verir ve
+ * Türkiye saatiyle 00:00-03:00 arası kayıtlar bir önceki güne düşerdi. DATE kolonlarına (satis_tarihi, e-ticaret tarih) UYGULANMAZ: onlar
+ * zaten takvim günüdür, saat dilimi yoktur.
+ */
+export function trGunu(kolon: string): string {
+  return `DATE(${kolon} + INTERVAL ${TR_SAAT_FARKI} HOUR)`;
+}
