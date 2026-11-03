@@ -309,6 +309,10 @@ describe('#48 iş emirleri ve servis geçmişi: HTTP sözleşmesi', () => {
     const bos = await api('POST', '/api/is-emirleri/qr-token', { plaka: ' - ' }, admin);
     assert.equal(bos.durum, 400);
     assert.equal(bos.govde.message, 'Plaka gerekli');
+    // Regression: 25 karakterli plaka eskiden 200 + boş gövde dönüyordu (INSERT IGNORE değeri 20'ye kesiyordu)
+    const uzun = await api('POST', '/api/is-emirleri/qr-token', { plaka: 'Z'.repeat(25) }, admin);
+    assert.equal(uzun.durum, 400);
+    assert.equal(uzun.govde.message, 'Plaka en fazla 20 karakter olabilir');
 
     const gecmis = await api('GET', `/api/servis-gecmisi/${ilk.govde.token}`);
     assert.equal(gecmis.durum, 200);

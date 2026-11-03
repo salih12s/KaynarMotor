@@ -177,6 +177,17 @@ describe('QR token ve müşteriye açık servis geçmişi', () => {
     await assert.rejects(gecmis.qrTokenAl(sahteDb(), '  -- '), (h) => h.status === 400 && h.message === 'Plaka gerekli');
   });
 
+  // Regression (E05'te ölçüldü): sütun 20 karakter; INSERT IGNORE fazlayı sessizce keserdi, ardından 25 karakterlik plaka aranınca
+  // kayıt bulunamaz, uç boş gövdeyle 200 dönerdi. Sınır açıkça doğrulanır; tam 20 karakter kabul edilir.
+  it('20 karakterden uzun plaka 400, veritabanına gidilmez; tam 20 karakter kabul edilir', async () => {
+    const db = sahteDb();
+    await assert.rejects(gecmis.qrTokenAl(db, 'A'.repeat(21)), (h) => h.status === 400 && h.message === 'Plaka en fazla 20 karakter olabilir');
+    assert.equal(db.cagrilar.length, 0);
+    const sinirda = sahteDb([['SELECT plaka, token', [{ plaka: 'A'.repeat(20), token: 'x' }]]]);
+    await gecmis.qrTokenAl(sinirda, 'A'.repeat(20));
+    assert.equal(sorgular(sinirda, 'INSERT IGNORE').length, 1);
+  });
+
   it('geçmiş: boş token 400, bilinmeyen token 404', async () => {
     await assert.rejects(gecmis.gecmisiGetir(sahteDb(), ' '), (h) => h.status === 400 && h.message === 'Geçersiz bağlantı');
     await assert.rejects(gecmis.gecmisiGetir(sahteDb(), 'yok'), (h) => h.status === 404 && h.message === 'Geçersiz veya süresi dolmuş bağlantı');

@@ -7,12 +7,17 @@ import { BulunamadiHatasi, GecersizIstek } from '../../../core/dogrulama/dogrula
 import type { Veritabani } from '../../../core/tipler';
 import * as repo from './servisGecmisi.repository';
 
+/** servis_qr_tokenler.plaka sütun uzunluğu (is_emirleri.plaka ile aynı). */
+const PLAKA_EN_FAZLA = 20;
+
 /** Plakaya bağlı QR token'ı (yoksa oluşturur). Plaka büyük harfe ve A-Z0-9'a indirgenir. */
 export const qrTokenAl = async (db: Veritabani, hamPlaka: unknown) => {
   const plaka = String(hamPlaka || '')
     .toUpperCase()
     .replace(/[^A-Z0-9]/g, '');
   if (!plaka) throw new GecersizIstek('Plaka gerekli');
+  // INSERT IGNORE fazla uzun değeri hata vermeden keser; uzun plaka ile arama sonradan boş dönerdi. Sınır açıkça doğrulanır.
+  if (plaka.length > PLAKA_EN_FAZLA) throw new GecersizIstek(`Plaka en fazla ${PLAKA_EN_FAZLA} karakter olabilir`);
   await repo.tokenEkleYoksa(db, plaka, crypto.randomBytes(8).toString('hex'));
   return repo.tokenOku(db, plaka);
 };
