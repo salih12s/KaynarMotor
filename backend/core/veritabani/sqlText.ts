@@ -74,3 +74,13 @@ export function aramaKolonu(column: string): string {
 export function aramaDeseni(metin: string): string {
   return metin.toLocaleLowerCase('tr').replace(/ı/g, 'i');
 }
+
+/**
+ * Kullanıcının yazdığı arama metni için "içerir" deseni: `aramaKolonu(...) LIKE $1` ile kullanılır.
+ * LIKE'ta `%` ve `_` jokerdir; kullanıcı bunları yazınca bütün kayıtlar eşleşirdi (`/ara/%`). Düz karakter sayılmaları için
+ * `\` ile kaçışlanır (`\` MariaDB'de varsayılan kaçış karakteridir; oturumda NO_BACKSLASH_ESCAPES yok, bkz. SESSION_SETUP).
+ * Başındaki ve sonundaki `%` bilerek kaçışsızdır: "içerir" araması.
+ */
+export function aramaIcerir(metin: string): string {
+  return `%${aramaDeseni(metin).replace(/[\\%_]/g, '\\$&')}%`;
+}

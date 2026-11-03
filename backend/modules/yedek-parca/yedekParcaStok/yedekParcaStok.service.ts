@@ -22,7 +22,7 @@ export const listele = (db: Veritabani) => repo.hepsiniListele(db);
 
 export const ara = async (db: Veritabani, q: unknown) => {
   if (typeof q !== 'string' || q.length < 2) return [];
-  return repo.ara(db, `%${q}%`);
+  return repo.ara(db, q);
 };
 
 /** Barkod (stok kodu) ile tek ürün. */

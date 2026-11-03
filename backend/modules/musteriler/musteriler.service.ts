@@ -15,7 +15,7 @@ import type { MusteriSatiri } from './musteriler.repository';
 
 export const listele = (db: Veritabani) => repo.hepsiniListele(db);
 
-export const ara = (db: Veritabani, sorgu: string) => repo.adVeyaTelefonaGoreAra(db, `%${sorgu}%`);
+export const ara = (db: Veritabani, sorgu: string) => repo.adVeyaTelefonaGoreAra(db, sorgu);
 
 /** Telefon numarasına göre müşteri bul (son 10 hane ile eşleşme). Çok kısa/boş numara için null. */
 export const telefonaGoreBul = async (db: Veritabani, telefon: string): Promise<MusteriSatiri | null> => {

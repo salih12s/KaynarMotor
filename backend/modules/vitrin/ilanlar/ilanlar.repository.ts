@@ -1,5 +1,5 @@
 /* Vitrin ilanları, görselleri ve videoları için SQL. İş kuralı yok: yalnızca sorgular. */
-import { orderByText, aramaKolonu, aramaDeseni } from '../../../core/veritabani/sqlText';
+import { orderByText, aramaKolonu, aramaIcerir } from '../../../core/veritabani/sqlText';
 import type { SqlSonuc, Veritabani } from '../../../core/tipler';
 
 /** INSERT/UPDATE için hazır (normalize edilmiş) ilan alanları. */
@@ -78,7 +78,7 @@ export const ilanlariListele = async (db: Veritabani, f: ListeFiltresi) => {
     sorgu += ` AND km <= $${params.length}`;
   }
   if (f.q) {
-    params.push(aramaDeseni(`%${f.q}%`));
+    params.push(aramaIcerir(f.q));
     sorgu += ` AND (${aramaKolonu('baslik')} LIKE $${params.length} OR ${aramaKolonu('aciklama')} LIKE $${params.length} OR ${aramaKolonu('marka')} LIKE $${params.length} OR ${aramaKolonu('model')} LIKE $${params.length})`;
   }
 
