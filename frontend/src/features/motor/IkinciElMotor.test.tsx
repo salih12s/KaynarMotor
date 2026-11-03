@@ -341,6 +341,24 @@ describe('İkinci El Motor: Excel dışa aktarma', () => {
 
 // ---- Detay -------------------------------------------------------------------------------------------------------
 describe('İkinci El Motor: detay penceresi', () => {
+  // Regression: detay isteği hata verince hata yutuluyor, tıklayana hiçbir şey olmuyordu.
+  test('detay isteği hata verirse pencere açılmaz ve "Detay açılamadı" bildirilir', async () => {
+    const user = await ekranAc();
+    vi.mocked(ikinciElMotorService.getById).mockRejectedValue(new Error('ağ'));
+    await user.click(ikon(satir('34SAT111'), 'VisibilityIcon'));
+    await waitFor(() => expect(window.alert).toHaveBeenCalledWith('Detay açılamadı'));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  test('konumdaki openDetailId kaydı açılamazsa "Detay açılamadı" bildirilir (sayfa çökmez)', async () => {
+    mockLocation = { pathname: '/ikinci-el-motor', state: { openDetailId: 1 } };
+    kur();
+    vi.mocked(ikinciElMotorService.getById).mockRejectedValue(new Error('ağ'));
+    sonEkran = sorguluRender(<IkinciElMotor />);
+    await waitFor(() => expect(window.alert).toHaveBeenCalledWith('Detay açılamadı'));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
   test('admin: tüm bölümler, finansal kutular ve NET KÂR; belge bölümü var', async () => {
     const user = await ekranAc();
     await user.click(ikon(satir('34SAT111'), 'VisibilityIcon'));

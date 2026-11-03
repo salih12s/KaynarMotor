@@ -359,6 +359,15 @@ describe('Motor Stok: sayaçlar ve süzgeçler', () => {
 
 // ---- Detay penceresi ---------------------------------------------------------------------------------------------
 describe('Motor Stok: detay penceresi', () => {
+  // Regression: detay isteği hata verince hata yutuluyor, tıklayana hiçbir şey olmuyordu.
+  test('detay isteği hata verirse pencere açılmaz ve "Detay açılamadı" bildirilir', async () => {
+    const user = await ekranAc();
+    vi.mocked(ikinciElMotorService.getById).mockRejectedValue(new Error('ağ'));
+    await user.click(ikon(satir('07FFF666'), 'VisibilityIcon'));
+    await waitFor(() => expect(window.alert).toHaveBeenCalledWith('Detay açılamadı'));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
   test('admin: fiyat kutuları, yatırımcı/işletme kârı, ödeme dağılımı, açıklama ve belge bölümü', async () => {
     const user = await ekranAc();
     await user.click(ikon(satir('07FFF666'), 'VisibilityIcon'));

@@ -49,7 +49,9 @@ export const useSatisListesi = () => {
       try {
         const res = await ikinciElMotorService.getById(id);
         setDetayModal({ open: true, data: res.data });
-      } catch {}
+      } catch (err) {
+        bildir(hataMesaji(err, 'Detay açılamadı'));
+      }
     })();
     navigate(location.pathname, { replace: true, state: {} });
   }, [location.state, location.pathname, navigate]);
@@ -68,7 +70,9 @@ export const useSatisListesi = () => {
     try {
       const res = await ikinciElMotorService.getById(id);
       setDetayModal({ open: true, data: res.data });
-    } catch {}
+    } catch (err) {
+      bildir(hataMesaji(err, 'Detay açılamadı'));
+    }
   }, []);
   const detayKapat = () => setDetayModal({ open: false, data: null });
 

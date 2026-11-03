@@ -67,7 +67,9 @@ const MotorStok = () => {
     try {
       const res = await ikinciElMotorService.getById(id);
       setDetayModal({ open: true, data: res.data });
-    } catch {}
+    } catch (err) {
+      bildir(hataMesaji(err, 'Detay açılamadı'));
+    }
   };
 
   const filteredMotorlar = filtrele(motorlar, { isYatirimci, activeFilter, secondaryFilter, search });

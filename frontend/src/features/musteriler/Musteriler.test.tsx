@@ -138,6 +138,14 @@ describe('Müşteriler: arama', () => {
     expect(screen.getByText('Toplam: 2 müşteri')).toBeInTheDocument();
   });
 
+  // Regression: arama hatası yutuluyor, eski liste "sonuç" gibi ekranda kalıyordu.
+  test('arama isteği hata verirse "Arama yapılamadı" bildirilir', async () => {
+    const user = await ekranAc();
+    vi.mocked(musteriService.search).mockRejectedValue(new Error('ağ'));
+    await user.type(screen.getByPlaceholderText(ARAMA), 'ayşe');
+    await waitFor(() => expect(window.alert).toHaveBeenCalledWith('Arama yapılamadı'));
+  });
+
   test('sadece boşluk yazmak aramaya gitmez', async () => {
     const user = await ekranAc();
     await user.type(screen.getByPlaceholderText(ARAMA), '   ');
@@ -317,11 +325,12 @@ describe('Müşteriler: detay penceresi', () => {
     expect(screen.getByLabelText(/Ad Soyad/)).toHaveValue('Veli Demir');
   });
 
-  test('detay isteği hata verirse pencere açılmaz, sessiz kalınır', async () => {
+  // Eskiden "sessiz kalınır" diye sabitlenmişti: tıklayan kişi hata olduğunu anlayamıyordu.
+  test('detay isteği hata verirse pencere açılmaz ve "Detay açılamadı" bildirilir', async () => {
     vi.mocked(musteriService.getById).mockRejectedValue(new Error('yok'));
     const user = await ekranAc();
     await user.click(ikon(satir('Ayşe Yılmaz'), 'VisibilityIcon'));
-    await new Promise((c) => setTimeout(c, 100));
+    await waitFor(() => expect(window.alert).toHaveBeenCalledWith('Detay açılamadı'));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 });

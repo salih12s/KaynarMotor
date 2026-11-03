@@ -56,7 +56,9 @@ const Musteriler = () => {
     try {
       const res = await musteriService.getById(musteri.id);
       setDetayDialog({ open: true, data: res.data });
-    } catch {}
+    } catch (err) {
+      bildir(hataMesaji(err, 'Detay açılamadı'));
+    }
   };
 
   const loadData = useCallback(async () => {
@@ -80,7 +82,9 @@ const Musteriler = () => {
     try {
       const res = await sonAra(musteriService.search(search));
       if (res) setMusteriler(res.data);
-    } catch {}
+    } catch (err) {
+      bildir(hataMesaji(err, 'Arama yapılamadı'));
+    }
   }, [search, loadData]);
 
   useEffect(() => {
