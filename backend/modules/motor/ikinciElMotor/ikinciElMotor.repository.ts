@@ -291,6 +291,5 @@ export const vitrinBaglantisiniKopar = async (db: Veritabani, motorId: number) =
   await db.query('UPDATE vitrin_urunleri SET stok_motor_id = NULL, yayinda = FALSE, updated_at = CURRENT_TIMESTAMP WHERE stok_motor_id = $1', [motorId]);
 };
 
-export const sil = async (db: Veritabani, id: number) => {
-  await db.query('DELETE FROM ikinci_el_motorlar WHERE id = $1', [id]);
-};
+export const sil = async (db: Veritabani, id: number): Promise<number> =>
+  (await db.query('DELETE FROM ikinci_el_motorlar WHERE id = $1', [id])).rowCount;

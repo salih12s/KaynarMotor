@@ -279,6 +279,5 @@ export const videoyuKaldir = async (db: Veritabani, urunId: number) => {
 };
 
 /** Görseller ve videolar cascade silinir. */
-export const ilanSil = async (db: Veritabani, id: number) => {
-  await db.query('DELETE FROM vitrin_urunleri WHERE id = $1', [id]);
-};
+export const ilanSil = async (db: Veritabani, id: number): Promise<number> =>
+  (await db.query('DELETE FROM vitrin_urunleri WHERE id = $1', [id])).rowCount;

@@ -47,17 +47,15 @@ export const guncelle = sarmala('Aksesuar güncelleme hatası:', async (req, res
 
 export const sil = sarmala('Aksesuar silme hatası:', async (req, res) => {
   const id = Number(req.params.id);
-  const vardi = await servis.sil(pool, id);
-  // Para içeren bir satışın silinmesi iz bırakır (olmayan kayıt için günlük yazılmaz)
-  if (vardi) {
-    await logAktivite({
-      kullanici_id: req.user.id,
-      kullanici_adi: req.user.kullanici_adi,
-      islem_tipi: ISLEM_TIPLERI.AKSESUAR_SIL,
-      islem_detay: `Aksesuar satış #${id} silindi`,
-      hedef_tablo: 'aksesuarlar',
-      hedef_id: id,
-    });
-  }
+  await servis.sil(pool, id); // olmayan kayıtta BulunamadiHatasi (404): günlük yazılmaz
+  // Para içeren bir satışın silinmesi iz bırakır
+  await logAktivite({
+    kullanici_id: req.user.id,
+    kullanici_adi: req.user.kullanici_adi,
+    islem_tipi: ISLEM_TIPLERI.AKSESUAR_SIL,
+    islem_detay: `Aksesuar satış #${id} silindi`,
+    hedef_tablo: 'aksesuarlar',
+    hedef_id: id,
+  });
   res.json({ message: 'Aksesuar satışı silindi' });
 });

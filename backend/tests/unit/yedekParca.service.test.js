@@ -152,11 +152,11 @@ describe('satış: stok düşümü ve iadesi', () => {
     assert.equal(iade[0].params[0], -4);
   });
 
-  it('olmayan satışı silmek sessizce başarılı (eski davranış), stok iadesi yok', async () => {
+  it('olmayan satışı silmek 404 "Yedek parça satışı bulunamadı"; stok iadesi yok, transaction geri alınır', async () => {
     const db = sahteDb();
-    await satis.sil(db, 1);
+    await assert.rejects(satis.sil(db, 1), (h) => h.status === 404 && h.message === 'Yedek parça satışı bulunamadı');
     assert.equal(sorgular(db, 'UPDATE yedek_parca_stok').length, 0);
-    assert.deepEqual(db.olaylar, ['BEGIN', 'COMMIT']);
+    assert.deepEqual(db.olaylar, ['BEGIN', 'ROLLBACK']);
   });
 
   it('güncelleme: önce ESKİ düşüm iade, sonra yenisi düşer; olmayan satış 404', async () => {

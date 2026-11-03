@@ -115,6 +115,5 @@ export const isEmirleriniAyir = async (db: Veritabani, musteriId: number) => {
   await db.query('UPDATE is_emirleri SET musteri_id = NULL WHERE musteri_id = $1', [musteriId]);
 };
 
-export const sil = async (db: Veritabani, id: number) => {
-  await db.query('DELETE FROM musteriler WHERE id = $1', [id]);
-};
+export const sil = async (db: Veritabani, id: number): Promise<number> =>
+  (await db.query('DELETE FROM musteriler WHERE id = $1', [id])).rowCount;

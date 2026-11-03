@@ -56,7 +56,7 @@ describe('#41 aksesuar satışı düzenleme ve silme günlüğe düşer', () => 
     assert.equal((await api('DELETE', `/api/aksesuarlar/${id}`, undefined, admin)).durum, 200);
     assert.equal((await logBul('aksesuarlar', id, 'AKSESUAR_SIL')).length, 1);
 
-    assert.equal((await api('DELETE', '/api/aksesuarlar/987655', undefined, admin)).durum, 200);
+    assert.equal((await api('DELETE', '/api/aksesuarlar/987655', undefined, admin)).durum, 404); // olmayan kayıt: eskiden 200 dönüyordu
     await bekle(300);
     assert.equal(await logSay('aksesuarlar', 987655), 0, 'olmayan kayıt için günlük yazılmamalı');
   });

@@ -290,6 +290,6 @@ export const sil = async (db: BaglamDb, id: number, kullanici: Kullanici) => {
   if (kullanici.rol !== 'admin') throw new YetkiHatasi('Silme yetkiniz yok');
   await db.withTransaction(async (tx) => {
     await repo.vitrinBaglantisiniKopar(tx, id);
-    await repo.sil(tx, id);
+    if ((await repo.sil(tx, id)) === 0) throw new BulunamadiHatasi('Motor bulunamadı');
   });
 };

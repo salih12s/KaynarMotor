@@ -96,9 +96,8 @@ export const guncelle = async (db: Veritabani, id: number, s: StokGirdisi) =>
     )
   ).rows[0] ?? null;
 
-export const sil = async (db: Veritabani, id: number) => {
-  await db.query('DELETE FROM aksesuar_stok WHERE id = $1', [id]);
-};
+export const sil = async (db: Veritabani, id: number): Promise<number> =>
+  (await db.query('DELETE FROM aksesuar_stok WHERE id = $1', [id])).rowCount;
 
 /** Var olan koda tekrar aktarım: çıkan (satılan) miktar korunur → mevcut = giren − çıkan; boş marka mevcut markayı silmez. */
 export const topluEkleVeyaGuncelle = async (db: Veritabani, s: TopluStokGirdisi, envanter: number) => {

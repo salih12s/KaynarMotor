@@ -137,13 +137,16 @@ export const personelListesi = (db: Veritabani) => repo.personelListesi(db);
 export const kullanicilar = (db: Veritabani) => repo.kullanicilar(db);
 
 export const onayla = async (db: Veritabani, id: number) => {
+  if ((await repo.rolBul(db, id)) === null) throw new BulunamadiHatasi('Kullanıcı bulunamadı');
   await repo.onayDurumuAyarla(db, id, 'onaylandi');
   kullaniciOnbellegiTemizle(id);
 };
 
 /** Reddedilen kullanıcının açık oturumu hemen geçersiz olur (önbellek temizlenir). Admin hesabı reddedilemez (girişi kapanırdı). */
 export const reddet = async (db: Veritabani, id: number) => {
-  if ((await repo.rolBul(db, id)) === 'admin') throw new GecersizIstek('Admin hesabı reddedilemez');
+  const rol = await repo.rolBul(db, id);
+  if (rol === null) throw new BulunamadiHatasi('Kullanıcı bulunamadı');
+  if (rol === 'admin') throw new GecersizIstek('Admin hesabı reddedilemez');
   await repo.onayDurumuAyarla(db, id, 'reddedildi');
   kullaniciOnbellegiTemizle(id);
 };
@@ -155,7 +158,9 @@ export const reddet = async (db: Veritabani, id: number) => {
  */
 export const kullaniciSil = async (db: BaglamDb, id: number, silen: Kullanici) => {
   if (id === silen.id) throw new GecersizIstek('Kendinizi silemezsiniz');
-  if ((await repo.rolBul(db, id)) === 'admin') throw new GecersizIstek('Admin hesabı silinemez');
+  const rol = await repo.rolBul(db, id);
+  if (rol === null) throw new BulunamadiHatasi('Kullanıcı bulunamadı');
+  if (rol === 'admin') throw new GecersizIstek('Admin hesabı silinemez');
   await db.withTransaction(async (tx) => {
     await repo.isEmirleriBaginiKopar(tx, id);
     await repo.kullaniciSil(tx, id);

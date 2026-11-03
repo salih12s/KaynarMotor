@@ -3,7 +3,7 @@
  * Fiş numarası üretimi, parça toplamları/kâr, yedek parça stoğuyla bağlantı ve müşteri otomatik kaydı burada.
  * Denetim günlüğü (kim ne yaptı) HTTP katmanında, controller'da yazılır.
  */
-import { BulunamadiHatasi, YetkiHatasi, adetCoz, bosuNull } from '../../../core/dogrulama/dogrula';
+import { BulunamadiHatasi, GecersizIstek, YetkiHatasi, adetCoz, bosuNull } from '../../../core/dogrulama/dogrula';
 import { bosuSifir } from '../../../core/dogrulama/sayi';
 import type { BaglamDb, Kullanici, Veritabani } from '../../../core/tipler';
 import { stokAyarla } from '../../../shared/stok';
@@ -71,7 +71,13 @@ export const detay = async (db: Veritabani, id: number) => {
   return { ...isEmri, parcalar: await repo.parcalariListele(db, id) };
 };
 
+/** Müşteri adı zorunlu (arayüz de ister). Transaction'dan ÖNCE çağrılır: reddedilen istek fiş numarası kilidini boşuna almaz. */
+const musteriAdiZorunluKil = (govde: { musteri_ad_soyad?: unknown }) => {
+  if (!String(govde.musteri_ad_soyad ?? '').trim()) throw new GecersizIstek('Müşteri adı zorunludur');
+};
+
 export const olustur = async (db: BaglamDb, govde: IsEmriOlusturGovdesi, kullanici: Kullanici) => {
+  musteriAdiZorunluKil(govde);
   const isEmriId = await db.withTransaction(async (tx) => {
     // Fiş numarası: kilit alınır, sonra MAX+1 (numaralama mantığı bilinçli olarak korunmuştur)
     await repo.fisNoKilidiniAl(tx);
@@ -118,6 +124,7 @@ export const olustur = async (db: BaglamDb, govde: IsEmriOlusturGovdesi, kullani
 };
 
 export const guncelle = async (db: BaglamDb, id: number, govde: IsEmriGuncelleGovdesi, kullanici: Kullanici) => {
+  musteriAdiZorunluKil(govde);
   await db.withTransaction(async (tx) => {
     // Tamamlanan iş emrini personel düzenleyemez. Kilitli okuma: aynı kayda aynı anda gelen ikinci düzenleme
     // birincinin commit'ini bekler ve onun sonucunu görür.
@@ -173,7 +180,7 @@ export const guncelle = async (db: BaglamDb, id: number, govde: IsEmriGuncelleGo
 export const sil = async (db: BaglamDb, id: number, kullanici: Kullanici) => {
   if (kullanici.rol !== 'admin') throw new YetkiHatasi('Admin yetkisi gerekli');
   await db.withTransaction(async (tx) => {
-    await repo.kilitle(tx, id); // eşzamanlı silme/düzenleme sıraya girer
+    if (!(await repo.kilitle(tx, id))) throw new BulunamadiHatasi('İş emri bulunamadı'); // kilit: eşzamanlı silme/düzenleme sıraya girer
     await yedekParcaStokAyarla(tx, await repo.parcaKodlariniOku(tx, id), -1);
     await repo.sil(tx, id);
   });

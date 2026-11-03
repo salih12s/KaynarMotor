@@ -77,7 +77,9 @@ export const guncelle = async (db: Veritabani, id: number, govde: StokGovdesi) =
   }
 };
 
-export const sil = (db: Veritabani, id: number) => repo.sil(db, id);
+export const sil = async (db: Veritabani, id: number) => {
+  if ((await repo.sil(db, id)) === 0) throw new BulunamadiHatasi('Stok bulunamadı');
+};
 
 /** Toplu ekleme: ya hep ya hiç (ortadaki hatalı satır yüzünden yarım içe aktarma kalmasın). Eklenen/güncellenen sayısı döner. */
 export const topluEkle = async (db: BaglamDb, govde: TopluStokGovdesi): Promise<number> => {

@@ -57,6 +57,7 @@ export const guncelle = (db: BaglamDb, id: number, govde: SatisGovdesi) =>
 export const sil = (db: BaglamDb, id: number) =>
   db.withTransaction(async (tx) => {
     const eski = await repo.kilitleyerekOku(tx, id);
+    if (!eski) throw new BulunamadiHatasi('Yedek parça satışı bulunamadı');
     await repo.sil(tx, id);
-    if (eski) await stokAyarla(tx, eski.stok_id, eski.adet || 1, -1);
+    await stokAyarla(tx, eski.stok_id, eski.adet || 1, -1);
   });

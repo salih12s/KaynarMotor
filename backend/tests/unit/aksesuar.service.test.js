@@ -128,13 +128,13 @@ describe('satış: düzenleme ve silme', () => {
     assert.equal(sorgular(db, 'UPDATE aksesuarlar SET')[0].params[10], null);
   });
 
-  it('silme: kayıt vardıysa true (günlük yazılır) ve tamamlanmışsa stok iade edilir; yoksa false', async () => {
+  it('silme: kayıt varsa ve tamamlanmışsa stok iade edilir; yoksa 404 ve transaction geri alınır (günlük yazılmaz)', async () => {
     const var1 = eskiTamam();
-    assert.equal(await satis.sil(var1, 21), true);
+    await satis.sil(var1, 21);
     assert.deepEqual(dusumler(var1), [[-2, 5]]);
     const yok = sahteDb();
-    assert.equal(await satis.sil(yok, 21), false);
-    assert.deepEqual(yok.olaylar, ['BEGIN', 'COMMIT']);
+    await assert.rejects(satis.sil(yok, 21), (h) => h.status === 404 && h.message === 'Aksesuar satışı bulunamadı');
+    assert.deepEqual(yok.olaylar, ['BEGIN', 'ROLLBACK']);
   });
 
   it('detay: olmayan satış 404 "Aksesuar bulunamadı"', async () => {

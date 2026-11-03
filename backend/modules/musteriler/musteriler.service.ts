@@ -7,7 +7,7 @@
  * müşteri dizinini tarayabiliyordu. Toplu listeleme ve yönetim uçları yalnızca admin'e açıktır. (Kural route'ta.)
  */
 import { pool } from '../../core/veritabani/db';
-import { BulunamadiHatasi } from '../../core/dogrulama/dogrula';
+import { BulunamadiHatasi, GecersizIstek } from '../../core/dogrulama/dogrula';
 import type { BaglamDb, Veritabani } from '../../core/tipler';
 import type { MusteriGovdesi } from './musteriler.schemas';
 import * as repo from './musteriler.repository';
@@ -36,10 +36,19 @@ export const detay = async (db: Veritabani, id: number) => {
   return { ...musteri, motorlar, aksesuarlar, isEmirleri };
 };
 
+/** Ad soyad zorunlu: arayüz de ister; sistemin geri kalanı adsız müşteriyi geçersiz sayar (`upsertMusteri` adsız kaydı oluşturmaz). */
+const adiZorunluKil = (govde: MusteriGovdesi) => {
+  if (!metin(govde.ad_soyad)) throw new GecersizIstek('Ad soyad zorunludur');
+};
+
 /** Müşteri yönetim ekranından ekleme. Diğer modüller kaydı `upsertMusteri` ile otomatik oluşturur. */
-export const ekle = (db: Veritabani, govde: MusteriGovdesi) => repo.ekle(db, govde.ad_soyad, govde.adres, govde.telefon);
+export const ekle = async (db: Veritabani, govde: MusteriGovdesi) => {
+  adiZorunluKil(govde);
+  return repo.ekle(db, govde.ad_soyad, govde.adres, govde.telefon);
+};
 
 export const guncelle = async (db: Veritabani, id: number, govde: MusteriGovdesi) => {
+  adiZorunluKil(govde);
   const musteri = await repo.guncelle(db, id, govde.ad_soyad, govde.adres, govde.telefon);
   if (!musteri) throw new BulunamadiHatasi('Müşteri bulunamadı');
   return musteri;
@@ -52,7 +61,7 @@ export const guncelle = async (db: Veritabani, id: number, govde: MusteriGovdesi
 export const sil = (db: BaglamDb, id: number) =>
   db.withTransaction(async (tx) => {
     await repo.isEmirleriniAyir(tx, id);
-    await repo.sil(tx, id);
+    if ((await repo.sil(tx, id)) === 0) throw new BulunamadiHatasi('Müşteri bulunamadı'); // hata transaction'ı geri alır
   });
 
 // ---------------------------------------------------------------------------------------------------------------

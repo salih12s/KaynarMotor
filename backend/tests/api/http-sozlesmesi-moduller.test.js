@@ -96,6 +96,20 @@ describe('#45 müşteriler: HTTP sözleşmesi', () => {
     assert.match(r.govde.message, /Geçersiz değer/);
   });
 
+  // Regression (E03/E04): POST {} adsız müşteri ve adsız iş emri oluşturuyordu (201).
+  it('adsız müşteri ve adsız iş emri oluşturulamaz: boş gövde 400; PUT ile adı boşaltmak 400', async () => {
+    const m = await api('POST', '/api/musteriler', {}, admin);
+    assert.equal(m.durum, 400);
+    assert.equal(m.govde.message, 'Ad soyad zorunludur');
+    assert.equal((await api('POST', '/api/musteriler', { ad_soyad: '   ', telefon: '0555' }, admin)).durum, 400);
+    const bos = await api('PUT', `/api/musteriler/${musteriId}`, { ad_soyad: '', telefon: '0555' }, admin);
+    assert.equal(bos.durum, 400);
+    const ie = await api('POST', '/api/is-emirleri', {}, admin);
+    assert.equal(ie.durum, 400);
+    assert.equal(ie.govde.message, 'Müşteri adı zorunludur');
+    assert.equal((await api('PUT', '/api/is-emirleri/1', { musteri_ad_soyad: ' ' }, admin)).durum, 400);
+  });
+
   it('arama ve telefon uçları servis yetkilisine açık; telefon çok kısaysa 200 + null', async () => {
     const ara = await api('GET', `/api/musteriler/ara/${encodeURIComponent(ad.slice(0, 12))}`, undefined, k.servis.token);
     assert.equal(ara.durum, 200);

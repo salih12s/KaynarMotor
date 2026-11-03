@@ -187,7 +187,7 @@ describe('admin: kullanıcı oluşturma ve şifre sıfırlama', () => {
 describe('admin: silme, onay ve yetki', () => {
   it('kendini silemez (400); başkasını silerken iş emri bağlantısı ÖNCE boşaltılır, sonra kullanıcı silinir (tek transaction)', async () => {
     await assert.rejects(servis.kullaniciSil(sahteDb(), 5, { id: 5 }), (h) => h.status === 400 && h.message === 'Kendinizi silemezsiniz');
-    const db = sahteDb();
+    const db = sahteDb([['SELECT rol FROM kullanicilar', [{ rol: 'personel' }]]]);
     await servis.kullaniciSil(db, 9, { id: 5 });
     const sqller = db.cagrilar.map((c) => c.sql);
     const kopar = sqller.findIndex((q) => /UPDATE is_emirleri SET olusturan_kullanici_id = NULL/.test(q));
@@ -197,10 +197,10 @@ describe('admin: silme, onay ve yetki', () => {
   });
 
   it('onay ve red onay durumunu yazar', async () => {
-    const onay = sahteDb();
+    const onay = sahteDb([['SELECT rol FROM kullanicilar', [{ rol: 'personel' }]]]);
     await servis.onayla(onay, 4);
     assert.deepEqual(sorgular(onay, 'UPDATE kullanicilar SET onay_durumu')[0].params, ['onaylandi', 4]);
-    const red = sahteDb();
+    const red = sahteDb([['SELECT rol FROM kullanicilar', [{ rol: 'personel' }]]]);
     await servis.reddet(red, 4);
     assert.deepEqual(sorgular(red, 'UPDATE kullanicilar SET onay_durumu')[0].params, ['reddedildi', 4]);
   });

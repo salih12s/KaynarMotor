@@ -42,16 +42,15 @@ export const platformGuncelle = sarmala('Platform işlemi hatası:', async (req,
 
 export const platformSil = sarmala('Platform silme hatası:', async (req, res) => {
   const id = Number(req.params.id);
-  if (await servis.platformSil(pool, id, req.user)) {
-    await logAktivite({
-      kullanici_id: req.user.id,
-      kullanici_adi: req.user.kullanici_adi,
-      islem_tipi: ISLEM_TIPLERI.DELETE,
-      islem_detay: `E-ticaret platformu #${id} silindi`,
-      hedef_tablo: 'eticaret_platformlar',
-      hedef_id: id,
-    });
-  }
+  await servis.platformSil(pool, id, req.user); // olmayan kayıtta BulunamadiHatasi (404): günlük yazılmaz
+  await logAktivite({
+    kullanici_id: req.user.id,
+    kullanici_adi: req.user.kullanici_adi,
+    islem_tipi: ISLEM_TIPLERI.DELETE,
+    islem_detay: `E-ticaret platformu #${id} silindi`,
+    hedef_tablo: 'eticaret_platformlar',
+    hedef_id: id,
+  });
   res.json({ message: 'Platform silindi' });
 });
 
@@ -99,15 +98,14 @@ export const satisGuncelle = sarmala('E-ticaret satış güncelleme hatası:', a
 
 export const satisSil = sarmala('E-ticaret satış silme hatası:', async (req, res) => {
   const id = Number(req.params.id);
-  if (await servis.satisSil(pool, id)) {
-    await logAktivite({
-      kullanici_id: req.user.id,
-      kullanici_adi: req.user.kullanici_adi,
-      islem_tipi: ISLEM_TIPLERI.ETICARET_SATIS_SIL,
-      islem_detay: `E-ticaret satış #${id} silindi`,
-      hedef_tablo: 'eticaret_satislar',
-      hedef_id: id,
-    });
-  }
+  await servis.satisSil(pool, id); // olmayan kayıtta BulunamadiHatasi (404): günlük yazılmaz
+  await logAktivite({
+    kullanici_id: req.user.id,
+    kullanici_adi: req.user.kullanici_adi,
+    islem_tipi: ISLEM_TIPLERI.ETICARET_SATIS_SIL,
+    islem_detay: `E-ticaret satış #${id} silindi`,
+    hedef_tablo: 'eticaret_satislar',
+    hedef_id: id,
+  });
   res.json({ message: 'E-ticaret satışı silindi' });
 });

@@ -182,14 +182,14 @@ export const guncelle = async (db: BaglamDb, id: number, govde: SatisGovdesi) =>
  * Satışı siler; tamamlanmış satışın stoğu geri eklenir. Satışın var olup olmadığını döner (olmayan kayıt için
  * işlem sessizce başarılıdır ama günlük yazılmaz).
  */
-export const sil = (db: BaglamDb, id: number): Promise<boolean> =>
+export const sil = (db: BaglamDb, id: number): Promise<void> =>
   db.withTransaction(async (tx) => {
     const durum = await repo.durumunuKilitleyerekOku(tx, id);
+    if (durum === null) throw new BulunamadiHatasi('Aksesuar satışı bulunamadı');
     if (durum === 'tamamlandi') {
       for (const p of await repo.parcalariOku(tx, id)) {
         await aksesuarStokAyarla(tx, { stokId: p.stok_id, urunAdi: p.urun_adi }, p.adet, -1);
       }
     }
     await repo.sil(tx, id);
-    return durum !== null;
   });

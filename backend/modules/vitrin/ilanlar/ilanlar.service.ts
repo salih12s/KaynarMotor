@@ -260,5 +260,5 @@ export const ilanGuncelle = async (db: BaglamDb, id: number, govde: IlanGuncelle
 export const ilanSil = async (db: Veritabani, id: number, kullanici: Kullanici) => {
   const kategori = await repo.kategoriBul(db, id);
   if (kategori !== null && !kategoriYetkiliMi(kullanici, kategori)) throw new YetkiHatasi('Bu kategori için vitrin yetkiniz yok');
-  await repo.ilanSil(db, id);
+  if ((await repo.ilanSil(db, id)) === 0) throw new BulunamadiHatasi('İlan bulunamadı');
 };

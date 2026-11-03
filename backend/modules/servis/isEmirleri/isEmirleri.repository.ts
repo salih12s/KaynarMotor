@@ -146,9 +146,9 @@ export const durumunuKilitleyerekOku = async (db: Veritabani, id: number): Promi
   return sonuc.rows[0] ? sonuc.rows[0].durum : null;
 };
 
-export const kilitle = async (db: Veritabani, id: number) => {
-  await db.query('SELECT id FROM is_emirleri WHERE id = $1 FOR UPDATE', [id]);
-};
+/** Satırı kilitler; kayıt varsa true. */
+export const kilitle = async (db: Veritabani, id: number): Promise<boolean> =>
+  (await db.query('SELECT id FROM is_emirleri WHERE id = $1 FOR UPDATE', [id])).rows.length > 0;
 
 export const guncelle = async (db: Veritabani, id: number, e: IsEmriGuncelleme) => {
   await db.query(

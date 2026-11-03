@@ -43,9 +43,9 @@ export const platformGuncelle = async (db: Veritabani, id: number, govde: Platfo
 };
 
 /** Platformu siler; kayıt vardıysa true (günlük yazılır), yoksa false. */
-export const platformSil = async (db: Veritabani, id: number, kullanici: Kullanici): Promise<boolean> => {
+export const platformSil = async (db: Veritabani, id: number, kullanici: Kullanici): Promise<void> => {
   yalnizAdmin(kullanici);
-  return (await repo.platformSil(db, id)) > 0;
+  if ((await repo.platformSil(db, id)) === 0) throw new BulunamadiHatasi('Platform bulunamadı');
 };
 
 // ============ SATIŞLAR ============
@@ -123,10 +123,10 @@ export const satisGuncelle = async (db: BaglamDb, id: number, govde: SatisGovdes
 };
 
 /** Satışı siler, stok geri eklenir. Kayıt vardıysa true (günlük yazılır). */
-export const satisSil = (db: BaglamDb, id: number): Promise<boolean> =>
+export const satisSil = (db: BaglamDb, id: number): Promise<void> =>
   db.withTransaction(async (tx) => {
     const mevcut = await repo.satisiKilitleyerekOku(tx, id);
-    if (mevcut && mevcut.stok_id) await stokAyarla(tx, 'aksesuar_stok', 'id = $2', mevcut.stok_id, -mevcut.adet);
+    if (!mevcut) throw new BulunamadiHatasi('Satış bulunamadı');
+    if (mevcut.stok_id) await stokAyarla(tx, 'aksesuar_stok', 'id = $2', mevcut.stok_id, -mevcut.adet);
     await repo.satisSil(tx, id);
-    return mevcut !== null;
   });

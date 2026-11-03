@@ -156,11 +156,37 @@ describe('iş emri sil', () => {
   });
 
   it('admin: stok iade edilir, sonra silinir, tek transaction', async () => {
-    const db = sahteDb([['SELECT parca_kodu, adet FROM parcalar', [{ parca_kodu: 'K1', adet: 4 }]]]);
+    const db = sahteDb([
+      ['SELECT id FROM is_emirleri', [{ id: 5 }]],
+      ['SELECT parca_kodu, adet FROM parcalar', [{ parca_kodu: 'K1', adet: 4 }]],
+    ]);
     await isEmri.sil(db, 5, ADMIN);
     assert.deepEqual(db.cagrilar.find((c) => c.sql.includes('UPDATE yedek_parca_stok')).params, [-4, 'K1']);
     assert.ok(sira(db, 'UPDATE yedek_parca_stok') < sira(db, 'DELETE FROM is_emirleri'));
     assert.deepEqual(db.olaylar, ['BEGIN', 'COMMIT']);
+  });
+});
+
+// Regression (E04): POST {} adsız iş emri açıyordu (arayüz adı kontrol ediyor ama API etmiyordu). Doğrulama transaction'dan ÖNCE yapılır:
+// fiş numarası kilidi alınıp boşa harcanmaz.
+describe('iş emri: müşteri adı zorunlu', () => {
+  const adsizlar = [undefined, null, '', '   '];
+
+  it('oluştur: ad yok/boş ise 400 "Müşteri adı zorunludur", transaction ve fiş numarası kilidi hiç açılmaz', async () => {
+    for (const ad of adsizlar) {
+      const db = kayitDb();
+      await assert.rejects(isEmri.olustur(db, { musteri_ad_soyad: ad, parcalar: [] }, ADMIN), (h) => h.status === 400 && h.message === 'Müşteri adı zorunludur', JSON.stringify(ad));
+      assert.equal(db.olaylar.length, 0);
+      assert.equal(db.cagrilar.length, 0);
+    }
+  });
+
+  it('güncelle: adı boşaltmak 400, veritabanına gidilmez', async () => {
+    for (const ad of adsizlar) {
+      const db = sahteDb();
+      await assert.rejects(isEmri.guncelle(db, 5, { musteri_ad_soyad: ad, parcalar: [] }, ADMIN), (h) => h.status === 400 && h.message === 'Müşteri adı zorunludur', JSON.stringify(ad));
+      assert.equal(db.cagrilar.length, 0);
+    }
   });
 });
 

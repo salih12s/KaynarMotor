@@ -45,12 +45,12 @@ describe('platform yönetimi', () => {
     assert.equal(sorgular(sifir, 'INSERT')[0].params[2], 0);
   });
 
-  it('olmayan platform güncelleme: 404; silme: kayıt vardıysa true, yoksa false', async () => {
+  it('olmayan platform güncelleme: 404; silme: kayıt varsa silinir, yoksa 404', async () => {
     await assert.rejects(servis.platformGuncelle(sahteDb(), 9, platform, ADMIN), (h) => h.status === 404 && h.message === 'Platform bulunamadı');
     const var1 = { query: async () => ({ rows: [], rowCount: 1 }) };
     const yok = { query: async () => ({ rows: [], rowCount: 0 }) };
-    assert.equal(await servis.platformSil(var1, 1, ADMIN), true);
-    assert.equal(await servis.platformSil(yok, 1, ADMIN), false);
+    await servis.platformSil(var1, 1, ADMIN);
+    await assert.rejects(servis.platformSil(yok, 1, ADMIN), (h) => h.status === 404 && h.message === 'Platform bulunamadı');
   });
 });
 
@@ -118,15 +118,16 @@ describe('satış: stok düşümü ve iadesi', () => {
     assert.deepEqual(db.olaylar, ['BEGIN', 'ROLLBACK']);
   });
 
-  it('silme: stoğa bağlıysa iade edilir ve true döner; kayıt yoksa false', async () => {
+  it('silme: stoğa bağlıysa iade edilir; kayıt yoksa 404 ve stok değişmez', async () => {
     const var1 = sahteDb([['FOR UPDATE', [{ id: 7, stok_id: 5, adet: 4 }]]]);
-    assert.equal(await servis.satisSil(var1, 7), true);
+    await servis.satisSil(var1, 7);
     assert.deepEqual(
       sorgular(var1, 'UPDATE aksesuar_stok').map((c) => c.params),
       [[-4, 5]],
     );
     const yok = sahteDb();
-    assert.equal(await servis.satisSil(yok, 7), false);
+    await assert.rejects(servis.satisSil(yok, 7), (h) => h.status === 404 && h.message === 'Satış bulunamadı');
+    assert.equal(sorgular(yok, 'UPDATE aksesuar_stok').length, 0);
   });
 
   it('detay: olmayan satış 404 "Satış bulunamadı"', async () => {

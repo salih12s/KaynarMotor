@@ -349,13 +349,15 @@ describe('ilan yazma doğrulamaları (veritabanına gitmeden reddedilenler)', ()
     );
   });
 
-  it('silme: personel başka kategorideki ilanı silemez (403); olmayan ilan sessizce başarılı', async () => {
+  it('silme: personel başka kategorideki ilanı silemez (403); olmayan ilan 404', async () => {
     const aksesuar = sahteDb([['SELECT kategori', [{ kategori: 'aksesuar' }]]]);
     await assert.rejects(servis.ilanSil(aksesuar, 5, MOTORCU), (h) => h.status === 403);
     assert.equal(sorgular(aksesuar, 'DELETE').length, 0);
     const yok = sahteDb();
-    await servis.ilanSil(yok, 5, MOTORCU);
-    assert.equal(sorgular(yok, 'DELETE FROM vitrin_urunleri').length, 1);
+    await assert.rejects(servis.ilanSil(yok, 5, MOTORCU), (h) => h.status === 404 && h.message === 'İlan bulunamadı');
+    const var1 = sahteDb([['DELETE FROM vitrin_urunleri', [{}]]]);
+    await servis.ilanSil(var1, 5, MOTORCU);
+    assert.equal(sorgular(var1, 'DELETE FROM vitrin_urunleri').length, 1);
   });
 });
 

@@ -262,7 +262,7 @@ describe('sil', () => {
   });
 
   it('admin: ilan bağlantısı ÖNCE koparılır, sonra motor silinir; tek transaction', async () => {
-    const db = sahteDb();
+    const db = sahteDb([['DELETE FROM ikinci_el_motorlar', [{}]]]);
     await servis.sil(db, 5, ADMIN);
     assert.match(db.cagrilar[0].sql, /SET stok_motor_id = NULL, yayinda = FALSE/);
     assert.match(db.cagrilar[1].sql, /DELETE FROM ikinci_el_motorlar/);

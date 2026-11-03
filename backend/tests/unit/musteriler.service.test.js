@@ -98,6 +98,34 @@ describe('telefonaGoreBul', () => {
   });
 });
 
+// Regression (E03): ad_soyad zod'da gevşek ve arayüzdeki "required" <form> dışında etkisizdi; POST {} adsız müşteri oluşturuyordu.
+// Sistemin geri kalanı da adsız müşteriyi geçersiz sayar (upsertMusteri adsız kaydı hiç oluşturmaz).
+describe('ekle ve güncelle: ad soyad zorunlu', () => {
+  const adsizlar = [undefined, null, '', '   '];
+
+  it('ekle: ad yok/boş/boşluk ise 400 "Ad soyad zorunludur", veritabanına gidilmez', async () => {
+    for (const ad of adsizlar) {
+      const db = sahteDb();
+      await assert.rejects(servis.ekle(db, { ad_soyad: ad, telefon: '0555', adres: 'x' }), (h) => h.status === 400 && h.message === 'Ad soyad zorunludur', JSON.stringify(ad));
+      assert.equal(db.cagrilar.length, 0);
+    }
+  });
+
+  it('güncelle: adı boşaltmak 400, veritabanına gidilmez', async () => {
+    for (const ad of adsizlar) {
+      const db = sahteDb();
+      await assert.rejects(servis.guncelle(db, 5, { ad_soyad: ad, telefon: '0555', adres: 'x' }), (h) => h.status === 400 && h.message === 'Ad soyad zorunludur', JSON.stringify(ad));
+      assert.equal(db.cagrilar.length, 0);
+    }
+  });
+
+  it('ad doluysa kayıt yazılır (telefon ve adres boş olabilir)', async () => {
+    const db = sahteDb([['INSERT INTO musteriler', [{ id: 3, ad_soyad: 'Ali' }]]]);
+    await servis.ekle(db, { ad_soyad: 'Ali', telefon: null, adres: null });
+    assert.equal(db.cagrilar.filter((c) => c.sql.includes('INSERT INTO musteriler')).length, 1);
+  });
+});
+
 describe('detay ve sil', () => {
   it('olmayan müşteri: 404 BulunamadiHatasi (HTTP bilmeden)', async () => {
     const db = sahteDb();
@@ -105,7 +133,7 @@ describe('detay ve sil', () => {
   });
 
   it('sil: iş emri bağlantısı boşaltılır SONRA müşteri silinir, tek transaction (COMMIT)', async () => {
-    const db = sahteDb();
+    const db = sahteDb([['DELETE FROM musteriler', [{}]]]);
     await servis.sil(db, 42);
     assert.deepEqual(db.olaylar, ['BEGIN', 'COMMIT']);
     assert.match(db.cagrilar[0].sql, /UPDATE is_emirleri SET musteri_id = NULL/);

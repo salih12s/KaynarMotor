@@ -66,9 +66,8 @@ export const parcaKodlariniTasi = async (db: Veritabani, yeniKod: unknown, eskiK
   await db.query('UPDATE parcalar SET parca_kodu = $1 WHERE parca_kodu = $2', [yeniKod, eskiKod]);
 };
 
-export const sil = async (db: Veritabani, id: number) => {
-  await db.query('DELETE FROM yedek_parca_stok WHERE id = $1', [id]);
-};
+export const sil = async (db: Veritabani, id: number): Promise<number> =>
+  (await db.query('DELETE FROM yedek_parca_stok WHERE id = $1', [id])).rowCount;
 
 /** Var olan koda tekrar aktarım: çıkan (satılan) miktar korunur → mevcut = giren − çıkan. */
 export const topluEkleVeyaGuncelle = async (db: Veritabani, s: StokGirdisi, envanter: number) => {
