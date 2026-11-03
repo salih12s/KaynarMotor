@@ -143,6 +143,14 @@ afterEach(() => {
 
 // ---- Liste ve roller ---------------------------------------------------------------------------------------------
 describe('E-Ticaret: satışlar', () => {
+  // Regression: yükleme hatası yutuluyor, ekran sessizce boş kalıyordu.
+  test('veriler yüklenemezse "Veriler yüklenemedi" bildirilir', async () => {
+    kur();
+    vi.mocked(eticaretService.getSales).mockRejectedValue(new Error('ağ'));
+    render(<ETicaret />);
+    await waitFor(() => expect(window.alert).toHaveBeenCalledWith('Veriler yüklenemedi'));
+  });
+
   test('admin: sütunlar (kâr dahil), satır içeriği hesaplaKomisyon sonuçlarıyla, Yeni Satış düğmesi', async () => {
     await ekranAc();
     expect(basliklar()).toEqual([

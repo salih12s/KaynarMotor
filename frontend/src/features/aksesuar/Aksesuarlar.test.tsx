@@ -134,6 +134,14 @@ afterEach(() => {
 
 // ---- Liste -------------------------------------------------------------------------------------------------------
 describe('Aksesuarlar: liste', () => {
+  // Regression: yükleme hatası yutuluyor, ekran sessizce boş kalıyordu (hata ile "satış yok" ayırt edilemiyordu).
+  test('liste yüklenemezse "Satışlar yüklenemedi" bildirilir', async () => {
+    kur();
+    vi.mocked(aksesuarService.getAll).mockRejectedValue(new Error('ağ'));
+    render(<Aksesuarlar />);
+    await waitFor(() => expect(window.alert).toHaveBeenCalledWith('Satışlar yüklenemedi'));
+  });
+
   test('istatistik çipleri; kâr çipi yalnızca kâr yetkisi olana', async () => {
     await ekranAc();
     for (const [etiket, deger] of [

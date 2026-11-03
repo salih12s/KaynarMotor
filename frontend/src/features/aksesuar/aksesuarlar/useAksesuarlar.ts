@@ -65,7 +65,9 @@ export const useAksesuarlar = () => {
       const [satisRes, statsRes] = await Promise.all([aksesuarService.getAll(), aksesuarService.getStats()]);
       setSatislar(satisRes.data);
       setStats(statsRes.data);
-    } catch {}
+    } catch (err) {
+      bildir(hataMesaji(err, 'Satışlar yüklenemedi'));
+    }
   }, []);
 
   const loadStok = useCallback(async () => {

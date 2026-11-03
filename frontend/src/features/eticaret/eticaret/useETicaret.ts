@@ -62,7 +62,9 @@ export const useETicaret = () => {
       setPlatformlar(platformRes.data);
       setStats(statsRes.data);
       setStokOptions(stokRes.data);
-    } catch {}
+    } catch (err) {
+      bildir(hataMesaji(err, 'Veriler yüklenemedi'));
+    }
   }, []);
 
   useEffect(() => {

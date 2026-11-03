@@ -89,6 +89,17 @@ beforeEach(() => {
 
 // ---- Liste -------------------------------------------------------------------------------------------------------
 describe('Müşteriler: liste', () => {
+  // Regression: yükleme hatası yutuluyor, ekran sessizce boş kalıyordu.
+  test('liste yüklenemezse "Müşteriler yüklenemedi" bildirilir', async () => {
+    vi.mocked(musteriService.getAll).mockRejectedValue(new Error('ağ'));
+    render(
+      <OnayProvider>
+        <Musteriler />
+      </OnayProvider>,
+    );
+    await waitFor(() => expect(window.alert).toHaveBeenCalledWith('Müşteriler yüklenemedi'));
+  });
+
   test('tablo sütunları, satır değerleri ("-" boş alanlar için) ve toplam sayaç', async () => {
     await ekranAc();
     expect(screen.getAllByRole('columnheader').map((h) => h.textContent)).toEqual(['Ad Soyad', 'Telefon', 'Adres', 'İşlemler']);

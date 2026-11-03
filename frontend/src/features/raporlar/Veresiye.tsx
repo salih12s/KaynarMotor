@@ -52,6 +52,7 @@ const Veresiye = () => {
   const [borclar, setBorclar] = useState<Borc[]>([]);
   const [ozet, setOzet] = useState<VeresiyeOzeti>({ motor: 0, servis: 0, aksesuar: 0, yedek_parca: 0, toplam: 0, kayit_sayisi: 0 });
   const [loading, setLoading] = useState(true);
+  const [hata, setHata] = useState(false); // yükleme hatası "borç yok" ile karışmasın
   const [search, setSearch] = useState('');
   const [kaynakFilter, setKaynakFilter] = useState<BorcKaynagi | 'hepsi'>('hepsi');
   const [detayModal, setDetayModal] = useState<{ open: boolean; borc: Borc | null }>({ open: false, borc: null });
@@ -60,11 +61,14 @@ const Veresiye = () => {
 
   const load = useCallback(async () => {
     setLoading(true);
+    setHata(false);
     try {
       const res = await veresiyeService.getAll();
       setBorclar(res.data.borclar || []);
       setOzet(res.data.ozet || ({} as VeresiyeOzeti));
-    } catch {}
+    } catch {
+      setHata(true);
+    }
     setLoading(false);
   }, []);
 
@@ -87,6 +91,22 @@ const Veresiye = () => {
     { key: 'aksesuar', label: 'Aksesuar', value: ozet.aksesuar, color: KAYNAK_INFO.aksesuar.color, bg: KAYNAK_INFO.aksesuar.bg },
     { key: 'yedek_parca', label: 'Yedek Parça', value: ozet.yedek_parca, color: KAYNAK_INFO.yedek_parca.color, bg: KAYNAK_INFO.yedek_parca.bg },
   ];
+
+  // Yükleme başarısızsa ₺0 özet kartları ve yeşil "borç yok" göstermek yanlış olur (borç takibinde hata ≠ borç yok)
+  if (hata && !loading) {
+    return (
+      <Alert
+        severity="error"
+        action={
+          <Button color="inherit" size="small" onClick={load}>
+            Tekrar dene
+          </Button>
+        }
+      >
+        Borçlar yüklenemedi
+      </Alert>
+    );
+  }
 
   return (
     <Box>

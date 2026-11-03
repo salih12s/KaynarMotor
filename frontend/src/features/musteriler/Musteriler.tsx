@@ -63,7 +63,9 @@ const Musteriler = () => {
     try {
       const res = await musteriService.getAll();
       setMusteriler(res.data);
-    } catch {}
+    } catch (err) {
+      bildir(hataMesaji(err, 'Müşteriler yüklenemedi')); // `error` durumu yalnız "Yeni Müşteri" penceresinde çizilir, sayfada görünmez
+    }
   }, []);
 
   useEffect(() => {

@@ -146,10 +146,25 @@ describe('Veresiye: özet ve liste', () => {
     expect(screen.getByText('0 kayıt')).toBeInTheDocument();
   });
 
-  test('istek hata verirse sessizce boş duruma düşer (çökmez)', async () => {
+  // Regression: yükleme hatası eskiden yutulup yeşil "Açık borç bulunmuyor" gösteriliyordu: borç takibinde HATA ile "borç yok" ayırt edilemiyordu.
+  test('istek hata verirse "Borçlar yüklenemedi" uyarısı çıkar; yeşil "Açık borç bulunmuyor" ve ₺0 özet kartları ÇIKMAZ', async () => {
     vi.mocked(veresiyeService.getAll).mockRejectedValue(new Error('ağ'));
     render(<Veresiye />);
-    expect(await screen.findByText('Açık borç bulunmuyor')).toBeInTheDocument();
+    expect(await screen.findByText('Borçlar yüklenemedi')).toBeInTheDocument();
+    expect(screen.queryByText('Açık borç bulunmuyor')).not.toBeInTheDocument();
+    expect(screen.queryByText('Toplam Borç')).not.toBeInTheDocument();
+  });
+
+  test('hata sonrası "Tekrar dene" yeniden yükler: uyarı kalkar, liste gelir', async () => {
+    vi.mocked(veresiyeService.getAll)
+      .mockRejectedValueOnce(new Error('ağ'))
+      .mockResolvedValue({ data: YANIT } as never);
+    const user = userEvent.setup();
+    render(<Veresiye />);
+    await user.click(await screen.findByRole('button', { name: 'Tekrar dene' }));
+    expect(await screen.findByText('Ayşe Yılmaz')).toBeInTheDocument();
+    expect(screen.queryByText('Borçlar yüklenemedi')).not.toBeInTheDocument();
+    expect(veresiyeService.getAll).toHaveBeenCalledTimes(2);
   });
 });
 
