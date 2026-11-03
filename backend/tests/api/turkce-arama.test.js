@@ -34,9 +34,11 @@ describe('müşteri araması: Türkçe I/ı', () => {
     assert.equal(r.durum, 201);
   });
 
+  // Aramalar en fazla 20 kayıt döndürür ve test veritabanı koşulardan koşuya birikir: yalnız "YILMAZ" aransaydı yeni kayıt bir gün
+  // ilk 20'ye giremezdi (flaky). Benzersiz öneki sorguya katıp sonucu bu koşunun tek kaydına indiriyoruz; Türkçe I/ı farkı soyadda sınanır.
   for (const sorgu of ['YILMAZ', 'yılmaz', 'yilmaz', 'Yılmaz']) {
     it(`"${sorgu}" araması kaydı bulur`, async () => {
-      const r = await ara('/api/musteriler/ara/', `${sorgu}`);
+      const r = await ara('/api/musteriler/ara/', `${ad} ${sorgu}`);
       assert.equal(r.durum, 200);
       assert.ok(
         r.govde.some((m) => m.ad_soyad === `${ad} Yılmaz`),
@@ -49,7 +51,7 @@ describe('müşteri araması: Türkçe I/ı', () => {
     const buyuk = benzersiz('ISPARTA ');
     const e = await api('POST', '/api/musteriler', { ad_soyad: `${buyuk} IŞIK`, telefon: '05550000002' }, admin);
     assert.equal(e.durum, 201);
-    const r = await ara('/api/musteriler/ara/', 'ışık');
+    const r = await ara('/api/musteriler/ara/', `${buyuk} IŞIK`.toLocaleLowerCase('tr-TR'));
     assert.ok(r.govde.some((m) => m.ad_soyad === `${buyuk} IŞIK`));
   });
 
@@ -65,7 +67,7 @@ describe('stok aramaları: Türkçe I/ı', () => {
     const ad = benzersiz('Işık Kask ');
     const e = await api('POST', '/api/aksesuar-stok', { stok_kodu: kod, stok_adi: ad, giren_miktar: 1, satis_fiyati: 100 }, admin);
     assert.equal(e.durum, 201);
-    for (const q of ['ışık kask', 'IŞIK KASK']) {
+    for (const q of [ad.toLocaleLowerCase('tr-TR'), ad.toLocaleUpperCase('tr-TR')]) {
       const r = await api('GET', `/api/aksesuar-stok/ara?q=${encodeURIComponent(q)}`, undefined, admin);
       assert.ok(
         r.govde.some((x) => x.stok_adi === ad),
@@ -79,7 +81,7 @@ describe('stok aramaları: Türkçe I/ı', () => {
     const ad = benzersiz('Sıkıştırma Segmanı ');
     const e = await api('POST', '/api/yedek-parca-stok', { stok_kodu: kod, stok_adi: ad, giren_miktar: 1, satis_fiyati: 100 }, admin);
     assert.equal(e.durum, 201);
-    for (const q of ['SIKIŞTIRMA SEGMANI', 'sıkıştırma segmanı', 'sikiştirma segmani']) {
+    for (const q of [ad.toLocaleUpperCase('tr-TR'), ad.toLocaleLowerCase('tr-TR'), ad.toLocaleLowerCase('tr-TR').replace(/ı/g, 'i')]) {
       const r = await api('GET', `/api/yedek-parca-stok/ara?q=${encodeURIComponent(q)}`, undefined, admin);
       assert.ok(
         r.govde.some((x) => x.stok_adi === ad),
@@ -94,7 +96,7 @@ describe('vitrin ilan araması: Türkçe I/ı', () => {
     const baslik = benzersiz('Işıklı Chopper ');
     const e = await api('POST', '/api/vitrin', { kategori: 'motor', baslik, segment: 'Chopper', marka: 'Test' }, admin);
     assert.equal(e.durum, 201, JSON.stringify(e.govde));
-    for (const q of ['ışıklı chopper', 'IŞIKLI CHOPPER']) {
+    for (const q of [baslik.toLocaleLowerCase('tr-TR'), baslik.toLocaleUpperCase('tr-TR')]) {
       const r = await api('GET', `/api/vitrin?kategori=motor&q=${encodeURIComponent(q)}`);
       assert.equal(r.durum, 200);
       assert.ok(
