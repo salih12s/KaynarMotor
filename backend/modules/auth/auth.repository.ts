@@ -44,6 +44,10 @@ export const personelListesi = async (db: Veritabani) =>
 export const kullanicilar = async (db: Veritabani) =>
   (await db.query(`SELECT id, kullanici_adi, ad_soyad, rol, onay_durumu, ${YETKI_KOLONLARI}, created_at FROM kullanicilar ORDER BY created_at DESC`)).rows;
 
+/** Kullanıcının rolü; kullanıcı yoksa null. */
+export const rolBul = async (db: Veritabani, id: number): Promise<string | null> =>
+  (await db.query<{ rol: string }>('SELECT rol FROM kullanicilar WHERE id = $1', [id])).rows[0]?.rol ?? null;
+
 export const onayDurumuAyarla = async (db: Veritabani, id: number, durum: 'onaylandi' | 'reddedildi') => {
   await db.query('UPDATE kullanicilar SET onay_durumu = $1 WHERE id = $2', [durum, id]);
 };
@@ -73,7 +77,7 @@ export const onayliYatirimcilar = async (db: Veritabani) =>
  * Yetki bayraklarını günceller. Alan adları service'te izinli listeden süzülür (SQL'e kullanıcı girdisi yazılmaz:
  * yalnızca sabit liste elemanları kolon adı olur).
  */
-export const yetkiGuncelle = async (db: Veritabani, id: number, alanlar: Array<[kolon: string, deger: boolean]>) => {
+export const yetkiGuncelle = async (db: Veritabani, id: number, alanlar: Array<[kolon: string, deger: boolean]>): Promise<number> => {
   const set: string[] = [];
   const params: unknown[] = [];
   for (const [kolon, deger] of alanlar) {
@@ -81,7 +85,7 @@ export const yetkiGuncelle = async (db: Veritabani, id: number, alanlar: Array<[
     set.push(`${kolon} = $${params.length}`);
   }
   params.push(id);
-  await db.query(`UPDATE kullanicilar SET ${set.join(', ')} WHERE id = $${params.length}`, params);
+  return (await db.query(`UPDATE kullanicilar SET ${set.join(', ')} WHERE id = $${params.length}`, params)).rowCount;
 };
 
 export const sonAktiviteler = async (db: Veritabani) => (await db.query('SELECT * FROM aktivite_log ORDER BY created_at DESC LIMIT 200')).rows;

@@ -141,18 +141,21 @@ export const onayla = async (db: Veritabani, id: number) => {
   kullaniciOnbellegiTemizle(id);
 };
 
-/** Reddedilen kullanıcının açık oturumu hemen geçersiz olur (önbellek temizlenir). */
+/** Reddedilen kullanıcının açık oturumu hemen geçersiz olur (önbellek temizlenir). Admin hesabı reddedilemez (girişi kapanırdı). */
 export const reddet = async (db: Veritabani, id: number) => {
+  if ((await repo.rolBul(db, id)) === 'admin') throw new GecersizIstek('Admin hesabı reddedilemez');
   await repo.onayDurumuAyarla(db, id, 'reddedildi');
   kullaniciOnbellegiTemizle(id);
 };
 
 /**
- * Kullanıcıyı siler (kendini silemez). Oluşturduğu iş emirleri KORUNUR: yalnızca bağlantı boşaltılır (eskiden FK yüzünden
- * "Sunucu hatası" veriyor ve kullanıcı silinemiyordu). Silinen kullanıcının token'ı hemen geçersiz olur.
+ * Kullanıcıyı siler (kendini ve admin hesaplarını silemez: arayüzdeki kuralın sunucudaki karşılığı). Oluşturduğu iş emirleri
+ * KORUNUR: yalnızca bağlantı boşaltılır (eskiden FK yüzünden "Sunucu hatası" veriyor ve kullanıcı silinemiyordu).
+ * Silinen kullanıcının token'ı hemen geçersiz olur.
  */
 export const kullaniciSil = async (db: BaglamDb, id: number, silen: Kullanici) => {
   if (id === silen.id) throw new GecersizIstek('Kendinizi silemezsiniz');
+  if ((await repo.rolBul(db, id)) === 'admin') throw new GecersizIstek('Admin hesabı silinemez');
   await db.withTransaction(async (tx) => {
     await repo.isEmirleriBaginiKopar(tx, id);
     await repo.kullaniciSil(tx, id);
@@ -162,13 +165,17 @@ export const kullaniciSil = async (db: BaglamDb, id: number, silen: Kullanici) =
 
 const GECERLI_ROLLER = ['personel', 'yatirimci', 'muhasebeci'];
 
-/** Admin kullanıcı/yatırımcı/muhasebeci oluşturur (hesap hemen onaylı). Geçersiz rol "personel" olur. */
+/**
+ * Admin kullanıcı/yatırımcı/muhasebeci oluşturur (hesap hemen onaylı). Rol verilmezse "personel"; bilinmeyen rol (admin dahil:
+ * API ile admin oluşturulamaz) sessizce başka role çevrilmez, açıkça reddedilir.
+ */
 export const kullaniciOlustur = async (db: Veritabani, govde: KullaniciOlusturGovdesi) => {
   const { kullanici_adi, sifre, ad_soyad, rol } = govde;
   if (!adlarGecerli(kullanici_adi, ad_soyad) || !sifre) throw new GecersizIstek('Kullanıcı adı, şifre ve ad soyad zorunludur');
   const sifreHatasi = sifreSorunu(sifre);
   if (sifreHatasi) throw new GecersizIstek(sifreHatasi);
-  const yeniRol = GECERLI_ROLLER.includes(rol as string) ? (rol as string) : 'personel';
+  const yeniRol = rol === undefined || rol === null ? 'personel' : (rol as string);
+  if (!GECERLI_ROLLER.includes(yeniRol)) throw new GecersizIstek('Geçersiz rol');
 
   if (await repo.kullaniciAdiVarMi(db, kullanici_adi as string)) throw new GecersizIstek(KULLANICI_ADI_ALINMIS);
 
@@ -194,14 +201,32 @@ export const sifreSifirla = async (db: Veritabani, id: number, govde: SifreGovde
 
 export const yatirimcilar = (db: Veritabani) => repo.onayliYatirimcilar(db);
 
-/** Alan bazlı yetki bayraklarını günceller; yalnızca bilinen alanlar işlenir, değerler boolean'a çevrilir. Etki anında. */
+const BOOLEAN_METINLERI = new Map<string, boolean>([
+  ['true', true],
+  ['false', false],
+  ['1', true],
+  ['0', false],
+]);
+
+/**
+ * Yetki bayrağı değeri: true/false, 1/0 ya da "true"/"false"/"1"/"0" metni. Eskiden `!!değer` kullanılıyordu: "false" metni doğru
+ * sayılıp yetki VERİYORDU. Anlaşılmayan değer sessizce true/false olmaz, 400 döner.
+ */
+const yetkiDegeri = (alan: string, deger: unknown): boolean => {
+  if (typeof deger === 'boolean') return deger;
+  if (deger === 1 || deger === 0) return deger === 1;
+  if (typeof deger === 'string' && BOOLEAN_METINLERI.has(deger)) return BOOLEAN_METINLERI.get(deger) as boolean;
+  throw new GecersizIstek(`${alan} true ya da false olmalı`);
+};
+
+/** Alan bazlı yetki bayraklarını günceller; yalnızca bilinen alanlar işlenir, değerler açıkça boolean'a çevrilir. Etki anında. */
 export const yetkileriGuncelle = async (db: Veritabani, id: number, govde: YetkiGovdesi) => {
   const alanlar: Array<[string, boolean]> = [];
   for (const alan of YETKI_ALANLARI) {
-    if (alan in govde) alanlar.push([alan, !!(govde as Record<string, unknown>)[alan]]);
+    if (alan in govde) alanlar.push([alan, yetkiDegeri(alan, (govde as Record<string, unknown>)[alan])]);
   }
   if (alanlar.length === 0) throw new GecersizIstek('Güncellenecek geçerli alan yok');
-  await repo.yetkiGuncelle(db, id, alanlar);
+  if ((await repo.yetkiGuncelle(db, id, alanlar)) === 0) throw new BulunamadiHatasi('Kullanıcı bulunamadı');
   kullaniciOnbellegiTemizle(id); // yetki değişikliği (alma ve verme) anında uygulanır
 };
 

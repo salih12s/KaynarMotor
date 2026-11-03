@@ -140,12 +140,11 @@ describe('kayıt (herkese açık)', () => {
 describe('admin: kullanıcı oluşturma ve şifre sıfırlama', () => {
   const gecerli = { kullanici_adi: 'muh1', sifre: SIFRE, ad_soyad: 'Muhasebe Kişisi' };
 
-  it('rol: personel/yatırımcı/muhasebeci geçerli; bilinmeyen rol (admin dahil!) "personel" olur; hesap hemen onaylı', async () => {
+  it('rol: personel/yatırımcı/muhasebeci geçerli, rol verilmezse "personel"; hesap hemen onaylı', async () => {
     for (const [istenen, beklenen] of [
       ['muhasebeci', 'muhasebeci'],
       ['yatirimci', 'yatirimci'],
-      ['admin', 'personel'],
-      ['x', 'personel'],
+      ['personel', 'personel'],
       [undefined, 'personel'],
     ]) {
       const db = sahteDb([['INSERT INTO kullanicilar', [{ id: 9, rol: beklenen }]]]);
@@ -153,6 +152,16 @@ describe('admin: kullanıcı oluşturma ve şifre sıfırlama', () => {
       const ekleme = sorgular(db, 'INSERT INTO kullanicilar')[0];
       assert.equal(ekleme.params[3], beklenen, `${istenen} -> ${beklenen}`);
       assert.match(ekleme.sql, /'onaylandi'/);
+    }
+  });
+
+  // Regression (E18): bilinmeyen rol eskiden sessizce "personel" oluyordu ("admin" isteyen de). İstenen ile oluşan farklıysa istemci
+  // bunu bilmeli: açık 400. (Arayüz yalnız yatırımcı/personel/muhasebeci sunar; API ile admin oluşturulamaz.)
+  it('geçersiz rol (admin dahil) sessizce personel olmaz: 400 "Geçersiz rol", kayıt yazılmaz', async () => {
+    for (const rol of ['admin', 'x', '', 5]) {
+      const db = sahteDb();
+      await assert.rejects(servis.kullaniciOlustur(db, { ...gecerli, rol }), (h) => h.status === 400 && h.message === 'Geçersiz rol', `rol: ${JSON.stringify(rol)}`);
+      assert.equal(sorgular(db, 'INSERT INTO kullanicilar').length, 0);
     }
   });
 
@@ -180,22 +189,46 @@ describe('admin: silme, onay ve yetki', () => {
     await assert.rejects(servis.kullaniciSil(sahteDb(), 5, { id: 5 }), (h) => h.status === 400 && h.message === 'Kendinizi silemezsiniz');
     const db = sahteDb();
     await servis.kullaniciSil(db, 9, { id: 5 });
-    assert.match(db.cagrilar[0].sql, /UPDATE is_emirleri SET olusturan_kullanici_id = NULL/);
-    assert.match(db.cagrilar[1].sql, /DELETE FROM kullanicilar/);
+    const sqller = db.cagrilar.map((c) => c.sql);
+    const kopar = sqller.findIndex((q) => /UPDATE is_emirleri SET olusturan_kullanici_id = NULL/.test(q));
+    const sil = sqller.findIndex((q) => /DELETE FROM kullanicilar/.test(q));
+    assert.ok(kopar >= 0 && sil > kopar, 'bağlantı silmeden ÖNCE boşaltılmalı');
     assert.deepEqual(db.olaylar, ['BEGIN', 'COMMIT']);
   });
 
   it('onay ve red onay durumunu yazar', async () => {
     const onay = sahteDb();
     await servis.onayla(onay, 4);
-    assert.deepEqual(onay.cagrilar[0].params, ['onaylandi', 4]);
+    assert.deepEqual(sorgular(onay, 'UPDATE kullanicilar SET onay_durumu')[0].params, ['onaylandi', 4]);
     const red = sahteDb();
     await servis.reddet(red, 4);
-    assert.deepEqual(red.cagrilar[0].params, ['reddedildi', 4]);
+    assert.deepEqual(sorgular(red, 'UPDATE kullanicilar SET onay_durumu')[0].params, ['reddedildi', 4]);
+  });
+
+  // Regression (E18): arayüz admin satırında Sil düğmesini gizler ve yalnız bekleyen hesapta Reddet gösterir; sunucu bu kuralı
+  // uygulamıyordu: API ile admin hesabı silinebilir ya da reddedilip girişi kapatılabilirdi.
+  it('admin hesabı silinemez ve reddedilemez (400); hiçbir yazma sorgusu çalışmaz', async () => {
+    const adminDb = () => sahteDb([['SELECT rol FROM kullanicilar', [{ rol: 'admin' }]]]);
+    const silDb = adminDb();
+    await assert.rejects(servis.kullaniciSil(silDb, 9, { id: 5 }), (h) => h.status === 400 && h.message === 'Admin hesabı silinemez');
+    assert.equal(silDb.olaylar.length, 0, 'transaction hiç açılmaz');
+    assert.equal(sorgular(silDb, 'DELETE').length, 0);
+    const redDb = adminDb();
+    await assert.rejects(servis.reddet(redDb, 9), (h) => h.status === 400 && h.message === 'Admin hesabı reddedilemez');
+    assert.equal(sorgular(redDb, 'UPDATE').length, 0);
+  });
+
+  it('admin olmayan hesap silinir ve reddedilir (koruma yalnız admin için)', async () => {
+    const db = sahteDb([['SELECT rol FROM kullanicilar', [{ rol: 'personel' }]]]);
+    await servis.kullaniciSil(db, 9, { id: 5 });
+    assert.equal(sorgular(db, 'DELETE FROM kullanicilar').length, 1);
+    const red = sahteDb([['SELECT rol FROM kullanicilar', [{ rol: 'yatirimci' }]]]);
+    await servis.reddet(red, 9);
+    assert.equal(sorgular(red, 'UPDATE kullanicilar SET onay_durumu').length, 1);
   });
 
   it('yetkiler: YALNIZCA bilinen alanlar işlenir, değerler boolean olur; bilinmeyen alan (rol dahil) yok sayılır', async () => {
-    const db = sahteDb();
+    const db = sahteDb([['UPDATE kullanicilar SET', [{}]]]);
     await servis.yetkileriGuncelle(db, 4, { motor_satis_gor: 'true', servis_yetkisi: 0, rol: 'admin', sifre: 'x', kar_gor: 1 });
     const guncelleme = db.cagrilar[0];
     assert.ok(!/rol|sifre/.test(guncelleme.sql), 'rol/şifre kolonu asla yazılmaz');
@@ -209,6 +242,32 @@ describe('admin: silme, onay ve yetki', () => {
     assert.equal(eslesme.servis_yetkisi, false);
     assert.equal(eslesme.kar_gor, true);
     assert.equal(guncelleme.params.at(-1), 4);
+  });
+
+  // Regression (E19): değerler `!!` ile boolean'a çevriliyordu; metin "false" doğru sayılıp YETKİ VERİYORDU (reddetmek isteyen istek yetki verirdi).
+  it('yetki değeri: "false"/"0" metni yetkiyi VERMEZ; anlaşılmayan değer 400, yazma yok', async () => {
+    const param = (db) => db.cagrilar[0].params[0];
+    for (const [girdi, beklenen] of [
+      ['false', false],
+      ['0', false],
+      [false, false],
+      ['true', true],
+      ['1', true],
+      [true, true],
+    ]) {
+      const db = sahteDb([['UPDATE kullanicilar SET', [{}]]]);
+      await servis.yetkileriGuncelle(db, 4, { kar_gor: girdi });
+      assert.equal(param(db), beklenen, `${JSON.stringify(girdi)} -> ${beklenen}`);
+    }
+    for (const kotu of ['evet', null, {}, [], 'FALSE ']) {
+      const db = sahteDb();
+      await assert.rejects(servis.yetkileriGuncelle(db, 4, { kar_gor: kotu }), (h) => h.status === 400 && /kar_gor/.test(h.message), JSON.stringify(kotu));
+      assert.equal(db.cagrilar.length, 0);
+    }
+  });
+
+  it('olmayan kullanıcıya yetki yazılamaz: 404 "Kullanıcı bulunamadı"', async () => {
+    await assert.rejects(servis.yetkileriGuncelle(sahteDb(), 99, { kar_gor: true }), (h) => h.status === 404 && h.message === 'Kullanıcı bulunamadı');
   });
 
   it('geçerli alan yoksa 400 "Güncellenecek geçerli alan yok"', async () => {
