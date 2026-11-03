@@ -285,7 +285,7 @@ sequenceDiagram
     actor U as Servis personeli
     participant P as Panel (React)
     participant M as Middleware zinciri
-    participant R as servis/isEmirleri.routes.ts
+    participant R as servis/isEmirleri/isEmirleri.routes.ts
     participant DB as MariaDB
 
     U->>P: Yeni iş emri: müşteri, plaka, parçalar
@@ -467,13 +467,13 @@ KaynarMotor/
 │   │   ├── middleware/          #   auth (JWT), yetki (modül/rol/kâr gizleme), rateLimit, idDogrula, tutarDogrula
 │   │   ├── medya/               #   görsel/video ortak kuralları, LRU önbellek, sunum başlıkları (vitrin ve sıfır motor kullanır)
 │   │   └── lib/                 #   env (.env yükleme + JWT_SECRET), tipler, dogrulama/, http/ (sarmala), gunluk/, stok, altKayitlar
-│   ├── auth/  musteriler/       # Her modülde: index.ts (genel arayüz), X.routes / X.controller / X.service / X.repository / X.schemas
-│   ├── servis/                  #   iş emirleri + müşteri servis geçmişi (QR)
-│   ├── aksesuar/  yedek-parca/  #   satış + stok
-│   ├── motor/                   #   ikinci el motor + sıfır motor stoğu + satış belgeleri (X.gorunum: kim neyi görür)
+│   ├── auth/  musteriler/       # Tek özellikli modül düz: index.ts (genel arayüz), X.routes / X.controller / X.service / X.repository / X.schemas
+│   ├── servis/                  #   isEmirleri/ + servisGecmisi/ (QR); çok özellikli modülde her özellik kendi klasöründe, kökte yalnız index.ts
+│   ├── aksesuar/  yedek-parca/  #   satış (aksesuarlar/, yedekParcalar/) + stok (aksesuarStok/, yedekParcaStok/)
+│   ├── motor/                   #   ikinciElMotor/ + sifirMotor/ + satisBelgeleri/ (X.gorunum: kim neyi görür)
 │   ├── eticaret/                #   satışlar + komisyon hesabı
-│   ├── vitrin/                  #   ilanlar + medya + hizmet sayfası (iletişim)
-│   ├── raporlar/                #   raporlar (X.hesap: saf toplamlar) + veresiye
+│   ├── vitrin/                  #   ilanlar/ + medya/ + iletisim/ (hizmet sayfası); kökte vitrinOrtak.ts (modül içi ortak kurallar)
+│   ├── raporlar/                #   raporlar/ (X.hesap: saf toplamlar) + veresiye/
 │   ├── tests/                   # unit (Fake veritabanı; mimari.test.js bağımlılık kurallarını zorlar) / api / smoke
 │   └── scripts/                 # seed, paketleme/test yardımcıları, MariaDB araçları (bkz. docs/TS-GECISI.md)
 ├── frontend/

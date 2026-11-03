@@ -30,12 +30,13 @@ uygular (`exports` = genel arayüz). Kuralları `backend/tests/unit/mimari.test.
 backend/
 ├─ server.ts           uygulamayı kurar; her modülün yolunu yetkisiyle bağlar (yetki haritası tek yerde)
 ├─ platform/           iş alanı bilmeyen altyapı: database/ middleware/ lib/ medya/   (modüllere BAĞLANMAZ)
-├─ auth/  musteriler/  servis/  aksesuar/  yedek-parca/  motor/  eticaret/  vitrin/  raporlar/    (iş modülleri)
+├─ auth/  musteriler/  servis/  aksesuar/  yedek-parca/  motor/  eticaret/  vitrin/  raporlar/    (iş modülleri; çok özellikli olanlarda özellik klasörleri)
 └─ scripts/  tests/
 ```
 
-Modül içi **düz tek seviyedir** (alt klasör yok); özellik, dosya adı önekiyle ayrışır (`servis/isEmirleri.service.ts`, `servis/servisGecmisi.service.ts`).
-Bir modül ~20 dosyayı geçerse alt klasöre bölünür (şu an en büyüğü `motor`, 17 dosya).
+Çok özellikli modülde **her özellik kendi klasöründedir** (en fazla bir seviye): `vitrin/ilanlar/`, `vitrin/iletisim/`, `vitrin/medya/`; `servis/isEmirleri/`, `servis/servisGecmisi/`.
+Kökte yalnız `index.ts` ve modülün ortak yardımcısı kalır (`vitrin/vitrinOrtak.ts`). Tek özellikli modüller (`auth`, `musteriler`, `eticaret`) düz kalır: içine
+klasör açmak yalnızca bir seviye daha yürümek olurdu. Bir modülün özellikleri birbirini kullanabilir (`ilanlar` → `iletisim`); modüller arası ise yalnız `index.ts` (R6).
 
 | Dosya | Görevi | Neden ayrı |
 |---|---|---|
@@ -61,7 +62,7 @@ Ortak: `platform/lib/tipler.ts` (`Kullanici`, `req.user`, `BaglamDb`), `platform
 (gevşek zod parçaları), `platform/lib/dogrulama/sayi.ts`, `platform/lib/env.ts` (.env'i HER ŞEYDEN önce yükler; `server.ts` ilk içe aktarır).
 
 ### Yeni özellik eklemek
-(Önce hangi modüle ait olduğuna karar ver; yoksa yeni klasör aç ve `index.ts` ekle. Dosyalar modül klasörüne düz yazılır:
+(Önce hangi modüle ait olduğuna karar ver; yoksa yeni klasör aç ve `index.ts` ekle. Modülde özellik klasörleri varsa yeni özellik kendi klasörüne (`<modül>/<özellik>/`), yoksa modül köküne yazılır:
 `X.schemas.ts`, `X.repository.ts`, `X.service.ts`, `X.controller.ts`, `X.routes.ts`; katman ya da modül sınırı ihlali `mimari.test.js`'te kırmızı olur.)
 1. `schemas.ts`: gövde/sorgu alanlarını yaz (sözleşmeyi bozmamak için türleri gevşek tut, özel mesajları service'te ver).
 2. `repository.ts`: SQL fonksiyonları (`db: Veritabani` alır; transaction içinde `tx` aynı arayüzdür).
