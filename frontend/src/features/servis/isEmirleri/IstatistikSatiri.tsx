@@ -12,9 +12,7 @@ const IstatistikSatiri = ({ istatistik: s, karGor }: { istatistik: IsEmriIstatis
     { etiket: 'Bugün', deger: s.bugun },
     { etiket: 'Beklemede', deger: s.beklemede, ton: 'bekle' },
     { etiket: 'İşlemde', deger: s.islemde, ton: 'mavi' },
-    { etiket: 'Ödeme bekl.', deger: 0 },
     { etiket: 'Tamamlandı', deger: s.tamamlandi, ton: 'yesil' },
-    { etiket: 'İptal', deger: 0 },
     { etiket: 'Ciro', deger: `₺${sayiYaz(s.tutar)}` },
     ...(karGor ? [{ etiket: 'Kâr', deger: `₺${sayiYaz(s.kar)}`, ton: 'yesil' as const }] : []),
   ];

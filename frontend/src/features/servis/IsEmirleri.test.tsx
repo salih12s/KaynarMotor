@@ -171,10 +171,18 @@ afterEach(() => {
 describe('İş Emirleri: liste', () => {
   test('istatistik çipleri sayıları ve toplamı gösterir; kâr çipi yalnızca admin için', async () => {
     await ekranAc();
-    const beklenen = { Toplam: '3', Bugün: '1', Beklemede: '1', İşlemde: '1', 'Ödeme bekl.': '0', Tamamlandı: '1', İptal: '0', Ciro: '₺5.000', Kâr: '₺2.000' };
+    const beklenen = { Toplam: '3', Bugün: '1', Beklemede: '1', İşlemde: '1', Tamamlandı: '1', Ciro: '₺5.000', Kâr: '₺2.000' };
     for (const [etiket, deger] of Object.entries(beklenen)) {
       expect(ozet(etiket)).toBe(deger);
     }
+  });
+
+  // Regression: "Ödeme bekl." ve "İptal" çipleri koda sabit 0 yazılıydı. İş emrinin yalnız üç durumu var (süzgeç ve form bunları sunar);
+  // olmayan bir durumu "0" diye göstermek ödeme/iptal takibi varmış izlenimi veriyordu.
+  test('özet şeridi var olmayan durumlar için (Ödeme bekl., İptal) sabit 0 çipi göstermez', async () => {
+    await ekranAc();
+    expect(ozetYok('Ödeme bekl.')).toBeNull();
+    expect(ozetYok('İptal')).toBeNull();
   });
 
   test('personel: kâr çipi, Kar sütunu ve silme düğmesi görünmez', async () => {
