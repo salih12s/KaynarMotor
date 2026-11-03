@@ -68,7 +68,7 @@ Projenin bütünü (backend, frontend, veri modeli, testler, işletim, belgeler)
   - Emek: 2 gün.
 
 - [ ] **D6 · Şema değişikliklerinin sürüm kaydı (F3)**
-  - Sorun: `backend/database/initDb.ts` her açılışta `ALTER` ve veri düzeltme cümlelerini yeniden çalıştırıyor; hangi değişikliğin ne zaman uygulandığı bilinmiyor, geri dönüş zor (2026-10-26 `plain_sifre` silinmesinde yaşandı).
+  - Sorun: `backend/platform/database/initDb.ts` her açılışta `ALTER` ve veri düzeltme cümlelerini yeniden çalıştırıyor; hangi değişikliğin ne zaman uygulandığı bilinmiyor, geri dönüş zor (2026-10-26 `plain_sifre` silinmesinde yaşandı).
   - Yapılacak: `sema_surumu` tablosu, numaralı ve bir kez çalışan geçiş dosyaları (`001_...`), açılışta yalnız uygulanmamış olanlar; mevcut durum "0. sürüm" olarak işaretlenir.
   - Bitti sayılır: yeni bir kolon eklemek tek dosya; API testleri sıfırdan kurulan ve mevcut veritabanında aynı şemayı doğruluyor.
   - Emek: 1 gün.

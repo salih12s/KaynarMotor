@@ -6,14 +6,17 @@ açıktır: gerçek müşteri verisi, parola, token ve kullanıcı adı **commit
 
 ## Mimari
 - `backend/`: Express + **TypeScript (strict)** + mysql2 + zod; `tsx` ile çalışır, `esbuild` tek dosyaya paketler.
-  **Katman klasörleri** (2026-11-03, özellik başına klasör yerine): `routes/ controllers/ services/ repositories/ schemas/` + `rules/` (saf kurallar:
-  `*.gorunum.ts`, `*.hesap.ts`, `komisyon.ts`); altyapı `middleware/ database/ lib/`. Bir özelliğin dosyaları katman klasörlerine dağılır, adı aynı kalır
-  (`services/musteriler.service.ts`, `repositories/musteriler.repository.ts` ...). service express bilmez (hata `IstemciHatasi` sınıflarıyla), denetim günlüğü
-  controller'da. **Katman kuralı `backend/tests/unit/mimari.test.js` ile zorlanır** (R1-R5: sıra, express, altyapı, doğru klasör, eski klasörler yok).
+  **Modüler düzen** (2026-11-04; önceki iki deneme `modules/core` ve katman klasörleriydi, ikisi de bırakıldı): iş alanı başına bir klasör,
+  `auth/ musteriler/ servis/ aksesuar/ yedek-parca/ motor/ eticaret/ vitrin/ raporlar/`; altyapı `platform/` (`database/ middleware/ lib/ medya/`).
+  Modülün içi **düz tek seviyedir**: `X.routes → X.controller → X.service → X.repository` (+ `X.schemas`, saf kurallar `X.gorunum`/`X.hesap`).
+  Her modülün `index.ts` dosyası onun **genel arayüzüdür**: `server.ts` ve başka modüller ona YALNIZCA oradan erişir (`import { upsertMusteri } from '../musteriler'`).
+  Modüller arası tek bağ: aksesuar, motor, servis → musteriler. service express bilmez (hata `IstemciHatasi` sınıflarıyla), denetim günlüğü
+  controller'da. Medya (görsel/video) kuralları iki modülün ortak ihtiyacı olduğundan `platform/medya/` içindedir.
+  **Kurallar `backend/tests/unit/mimari.test.js` ile zorlanır** (R1-R8: katman sırası, express, platform bağımsız, klasör düzeni, eski klasörler yok, modül sınırı, bağ listesi + döngü yok, index.ts sade).
   **Ayrıntı ve "yeni özellik ekleme" adımları: `docs/TS-GECISI.md`.**
 - `frontend/`: **Vite 8** (derleme + `npm start`, port 3100, `vite.config.mjs`; testler **Vitest** + jsdom, `npm test`; ESLint 9 düz yapılandırma `eslint.config.mjs`, tip bilgili kurallar; **TypeScript strict, %100 `.ts/.tsx`, `allowJs: false`, `any` yok**: `npm run typecheck`) + React + MUI, rota bazlı `React.lazy` kod bölme; geçiş planı `docs/VITE-TS-YOL-HARITASI.md`. `src/features/<alan>/`. Bölme sürüyor (bkz. `docs/FRONTEND-BOLME-RAPORU.md`): **büyük dosyaların hepsi bölündü** (Raporlar, IsEmirleri, Vitrin, MotorStok, IkinciElMotor, Storefront, ETicaret, Aksesuarlar)
 - Roller: admin, personel (modül yetkileri), yatırımcı, muhasebeci. **Kâr yalnızca admin görür.** Alan düzeyinde görünürlük:
-  `backend/rules/ikinciElMotor.gorunum.ts` + `middleware/yetki.ts` (`kariGizle`).
+  `backend/motor/ikinciElMotor.gorunum.ts` + `platform/middleware/yetki.ts` (`kariGizle`).
   **İstisna (2026-10-22): e-ticaret kârı, `eticaret_yetkisi` olan herkese açıktır** (`/api/eticaret` `kariGizle` dışında; arayüzde `karGor`).
   **Alış fiyatı ≠ maliyet; görünürlük kararı (Salih, 2026-11-04), kod buna göre BİLEREK böyledir:**
   (1) **Motorun alış fiyatı** (`ikinci_el_motorlar`/`sifir_motorlar` `alis_fiyati`) ve masrafı: admin, `alis_fiyati_gor` VE **Motor Satış yetkisi** (okuma + düzenleme); kâr kapsam dışı.

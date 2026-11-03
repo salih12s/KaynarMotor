@@ -40,7 +40,7 @@ I developed the React interface, the layered TypeScript (strict) / Express API w
 - Publishing and removing showroom listings automatically as inventory status changes
 - Exposing privacy-safe QR service history without leaking cost or customer data
 - Recovering cleanly from database cold starts and deployment-time connection delays
-- Migrating the whole backend to TypeScript and a routes/controller/service/repository layout without changing the HTTP contract: 213 API tests run against both the source and the bundled build
+- Migrating the whole backend to TypeScript and a modular routes/controller/service/repository layout without changing the HTTP contract: 213 API tests run against both the source and the bundled build
 - Refactoring the frontend safely: characterization tests first, then splitting a 1,563-line screen into a 126-line shell plus small components, verified by identical rendered HTML
 - Moving server state to TanStack Query without stale screens: cache keys per date range, invalidation after writes, "always refetch on page open" for lists, each rule pinned by a test that was proven to fail when the rule is removed (mutation check) and measured in a real browser
 - Moving the frontend from Create React App + JavaScript to Vite + TypeScript (strict, 100% of files, no `any`) in six measured stages, with every stage ending on the full verification chain: production build 145 s to about 1 s, test run roughly halved, typed lint rules; the type checker replaced two scan tests and found a latent form bug along the way
@@ -185,7 +185,7 @@ kim tarafından ne zaman yapıldığını kaydeden aktivite logu.
 |---|---|
 | **Frontend** | React 19, **TypeScript (strict, %100)**, **Vite 8**, React Router 7, Material UI 7, **TanStack Query 5** (sunucu verisi önbelleği), Axios, jsbarcode, qrcode, react-to-print; testler: **Vitest** + Testing Library |
 | **Backend** | Node.js (>=20), Express 4, **TypeScript (strict)**, **zod** (girdi doğrulama), JSON Web Token, bcryptjs, helmet, express-rate-limit; `tsx` ile çalışır, `esbuild` ile tek dosyaya paketlenir |
-| **Veritabanı** | MariaDB 11 — ORM kullanılmadan, `mysql2` ile doğrudan parametreli SQL (`$1` tarzı parametreleri MariaDB'ye çeviren ince katman: `backend/core/veritabani/`) |
+| **Veritabanı** | MariaDB 11 — ORM kullanılmadan, `mysql2` ile doğrudan parametreli SQL (`$1` tarzı parametreleri MariaDB'ye çeviren ince katman: `backend/platform/database/`) |
 | **Test** | Birim (sahte veritabanıyla), API (gerçek MariaDB'ye karşı, kaynak ve paket), paket duman testi, frontend bileşen testleri, **Playwright E2E** (gerçek Chrome + gerçek backend + tek kullanımlık veritabanı) |
 | **Kalite** | ESLint 9 (tip bilgili `typescript-eslint`, react-hooks dahil; `any` yasak), Prettier, `.editorconfig` + `.gitattributes` (LF), TypeScript strict (backend ve frontend, `allowJs: false`) |
 | **Altyapı** | Hostinger Node.js barındırma (tek uygulama + MariaDB) |
@@ -285,7 +285,7 @@ sequenceDiagram
     actor U as Servis personeli
     participant P as Panel (React)
     participant M as Middleware zinciri
-    participant R as routes/isEmirleri.routes.ts
+    participant R as servis/isEmirleri.routes.ts
     participant DB as MariaDB
 
     U->>P: Yeni iş emri: müşteri, plaka, parçalar
@@ -337,8 +337,8 @@ flowchart LR
 
 ### Tasarım kararları
 
-- **Şema kod içinde yönetilir.** ORM yoktur. Tablolar ve migration'lar `database/initDb.ts` içinde `CREATE TABLE IF NOT EXISTS` ve kademeli `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` ile tanımlanır. Sunucu her açılışta şemayı eksiksiz hâle getirir, bu da deploy'u tek adıma indirir.
-- **Yetkilendirme sunucu tarafındadır.** Arayüzdeki route guard'lar yalnızca gezinmeyi düzenler; asıl kontrol `backend/middleware/yetki.ts` içindedir ve API'ye bağlıdır. Hassas alanlar (kâr, alış fiyatı, müşteri bilgisi) yetkisi olmayan kullanıcının yanıtından sunucuda temizlenir. Gizleme arayüzde değil, veri katmanında yapılır.
+- **Şema kod içinde yönetilir.** ORM yoktur. Tablolar ve migration'lar `platform/database/initDb.ts` içinde `CREATE TABLE IF NOT EXISTS` ve kademeli `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` ile tanımlanır. Sunucu her açılışta şemayı eksiksiz hâle getirir, bu da deploy'u tek adıma indirir.
+- **Yetkilendirme sunucu tarafındadır.** Arayüzdeki route guard'lar yalnızca gezinmeyi düzenler; asıl kontrol `backend/platform/middleware/yetki.ts` içindedir ve API'ye bağlıdır. Hassas alanlar (kâr, alış fiyatı, müşteri bilgisi) yetkisi olmayan kullanıcının yanıtından sunucuda temizlenir. Gizleme arayüzde değil, veri katmanında yapılır.
 - **Okuma serbest, yazma yetkili.** Stok gibi birçok ekranın aradığı uçlarda GET istekleri açıktır, POST/PUT/PATCH/DELETE ise modül yetkisine bağlıdır (`yazmaYetkisi`).
 - **Veritabanına dayanıklı başlangıç.** Backend veritabanı henüz hazır değilken de ayağa kalkar (`/api/health` yanıt verir) ve bağlantıyı artan gecikmelerle yeniden dener. Bu, barındırmadaki soğuk başlatma senaryolarına karşı dayanıklılık sağlar.
 - **Para ve stok işlemleri transaction içindedir.** Çok adımlı yazma işlemleri (iş emri + parçalar + stok düşümü) tek transaction'da yürür. Fiş numarası üretimi tek satırlık bir kilit tablosunda satır kilidiyle (`SELECT … FOR UPDATE`) serileştirilir.
@@ -460,19 +460,21 @@ yük/stres testleri (load, stress) yok (eşzamanlılık API testlerinde var), E2
 
 ```
 KaynarMotor/
-├── backend/                     # TypeScript (strict) + Express; KATMAN klasörleri: routes → controllers → services → repositories
-│   ├── server.ts                # Express app, CORS, route mount, DB init
-│   ├── routes/                  # URL → middleware → controller (auth, musteriler, isEmirleri, aksesuarlar, aksesuarStok, yedekParcalar, yedekParcaStok,
-│   │                            #   ikinciElMotor, sifirMotor, satisBelgeleri, eticaret, ilanlar, medya, iletisim, raporlar, veresiye, servisGecmisi)
-│   ├── controllers/             # HTTP: isteği oku, doğrula, servisi çağır, denetim günlüğü, yanıtı yaz
-│   ├── services/                # İş kuralları; express bilmez, hatayı IstemciHatasi sınıflarıyla bildirir
-│   ├── repositories/            # Yalnızca SQL; iş kuralı yok
-│   ├── schemas/                 # zod gövde/sorgu şemaları
-│   ├── rules/                   # Saf kurallar (DB'siz): kim neyi görür (*.gorunum), rapor toplamları (*.hesap), komisyon hesabı, vitrinOrtak
-│   ├── middleware/              # auth (JWT), yetki (modül/rol/kâr gizleme), rateLimit, idDogrula, tutarDogrula
-│   ├── database/                # db (havuz, transaction), sqlParams ($1 → MariaDB), sqlText, initDb (şema/migration)
-│   ├── lib/                     # env (.env yükleme + JWT_SECRET), tipler, dogrulama/, http/ (sarmala), gunluk/, onbellek/ (LRU), stok, altKayitlar
-│   ├── tests/                   # unit (Fake veritabanı) / api / smoke
+├── backend/                     # TypeScript (strict) + Express; MODÜLLER (iş alanı başına klasör), her modülün içi routes → controller → service → repository
+│   ├── server.ts                # Express app, CORS, modüllerin yollarını yetkileriyle bağlar, DB init
+│   ├── platform/                # Hiçbir iş alanına ait olmayan altyapı (modüllere bağlanmaz)
+│   │   ├── database/            #   db (havuz, transaction), sqlParams ($1 → MariaDB), sqlText, initDb (şema/migration)
+│   │   ├── middleware/          #   auth (JWT), yetki (modül/rol/kâr gizleme), rateLimit, idDogrula, tutarDogrula
+│   │   ├── medya/               #   görsel/video ortak kuralları, LRU önbellek, sunum başlıkları (vitrin ve sıfır motor kullanır)
+│   │   └── lib/                 #   env (.env yükleme + JWT_SECRET), tipler, dogrulama/, http/ (sarmala), gunluk/, stok, altKayitlar
+│   ├── auth/  musteriler/       # Her modülde: index.ts (genel arayüz), X.routes / X.controller / X.service / X.repository / X.schemas
+│   ├── servis/                  #   iş emirleri + müşteri servis geçmişi (QR)
+│   ├── aksesuar/  yedek-parca/  #   satış + stok
+│   ├── motor/                   #   ikinci el motor + sıfır motor stoğu + satış belgeleri (X.gorunum: kim neyi görür)
+│   ├── eticaret/                #   satışlar + komisyon hesabı
+│   ├── vitrin/                  #   ilanlar + medya + hizmet sayfası (iletişim)
+│   ├── raporlar/                #   raporlar (X.hesap: saf toplamlar) + veresiye
+│   ├── tests/                   # unit (Fake veritabanı; mimari.test.js bağımlılık kurallarını zorlar) / api / smoke
 │   └── scripts/                 # seed, paketleme/test yardımcıları, MariaDB araçları (bkz. docs/TS-GECISI.md)
 ├── frontend/
 │   └── src/
