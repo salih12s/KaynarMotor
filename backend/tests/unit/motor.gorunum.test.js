@@ -4,7 +4,7 @@
  */
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
-const { sanitizeMotor, sanitizeOzet, motorKapsami, muhasebeMotorGorur } = require('../../motor/ikinciElMotor.gorunum');
+const { sanitizeMotor, sanitizeOzet, motorKapsami, muhasebeMotorGorur } = require('../../motor/ikinciElMotor/ikinciElMotor.gorunum');
 
 const kul = (rol, ek = {}) => ({
   id: 10,

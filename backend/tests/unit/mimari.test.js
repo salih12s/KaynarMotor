@@ -2,7 +2,8 @@
  * MİMARİ testi: backend klasör düzenini ve bağımlılık kurallarını makineye zorlatır (yeni kod kuralı sessizce bozamasın).
  *
  * Düzen: iş alanı başına bir MODÜL klasörü (auth, musteriler, servis, aksesuar, yedek-parca, motor, eticaret, vitrin, raporlar),
- * hepsinin altyapısı platform/ içinde. Modülün içi düz tek seviyedir ve katmanlıdır:
+ * hepsinin altyapısı platform/ içinde. Çok özellikli modülde her özellik kendi klasöründedir (vitrin/ilanlar/, vitrin/iletisim/, vitrin/medya/),
+ * tek özellikli modül (auth, musteriler, eticaret) düzdür. Özelliğin içi katmanlıdır:
  *
  *   X.routes.ts → X.controller.ts → X.service.ts → X.repository.ts → platform/database
  *   (HTTP)        (istek/yanıt)      (iş kuralı)     (SQL)
@@ -12,7 +13,8 @@
  *     repository → (başka katman yok) · gorunum/hesap saf kuraldır → yalnızca gorunum, hesap
  * R2  `express` yalnızca routes ve controller'da (service/repository/saf kurallar HTTP bilmez; tip olarak bile). platform serbest.
  * R3  platform/ hiçbir modüle bağlanmaz (bağımlılık içeriden dışarı akmaz) ve içinde katman dosyası (X.service.ts ...) bulunmaz.
- * R4  Her üst klasör ya modüldür (index.ts var) ya da sistem klasörüdür (platform, scripts, tests); modül içinde alt klasör yoktur.
+ * R4  Her üst klasör ya modüldür (index.ts var) ya da sistem klasörüdür (platform, scripts, tests). Modül içinde en fazla bir seviye özellik
+ *     klasörü olur; dosya adı klasör adıyla başlar (ilanlar/ilanlar.service.ts); özellik klasörü olan modülün kökünde katman dosyası durmaz.
  * R5  Eski klasörler (modules/, core/, shared/ ve katman klasörleri: routes/, services/ ...) kökte geri gelmez.
  * R6  Modül sınırı: bir modül (ve server.ts) başka modüle YALNIZCA onun index.ts dosyası üzerinden erişir (iç dosyaya import yasak).
  * R7  Modüller arası bağlar yalnızca MODUL_BAGLARI'nda yazılanlardır ve döngü oluşturmaz. Yeni bağ = bilinçli karar (listeye gerekçeyle yazılır).
@@ -181,8 +183,21 @@ const yerlesimIhlalleri = () => {
       ihlal.push(`R4 ${k}/ ne modül (index.ts yok) ne sistem klasörü (${SISTEM_KLASORLERI.filter((s) => s !== 'node_modules' && s !== 'dist').join(', ')})`);
   }
   for (const m of moduller()) {
-    for (const e of fs.readdirSync(path.join(KOK, m), { withFileTypes: true })) {
-      if (e.isDirectory()) ihlal.push(`R4 ${m}/${e.name}/ (modül içinde alt klasör yok; düz tek seviye)`);
+    const girdiler = fs.readdirSync(path.join(KOK, m), { withFileTypes: true });
+    const ozellikKlasorleri = girdiler.filter((e) => e.isDirectory());
+    for (const e of ozellikKlasorleri) {
+      const altGirdiler = fs.readdirSync(path.join(KOK, m, e.name), { withFileTypes: true });
+      for (const a of altGirdiler) {
+        if (a.isDirectory()) ihlal.push(`R4 ${m}/${e.name}/${a.name}/ (özellik klasörünün içinde klasör yok; en fazla bir seviye)`);
+        else if (a.name.split('.')[0] !== e.name) ihlal.push(`R4 ${m}/${e.name}/${a.name} (dosya adı "${e.name}." ile başlamalı; yanlış özellik klasöründe)`);
+      }
+      if (!altGirdiler.some((a) => a.isFile())) ihlal.push(`R4 ${m}/${e.name}/ (boş özellik klasörü)`);
+    }
+    // Özellik klasörleri olan modülde katman dosyası (X.service.ts ...) kökte durmaz; kökte yalnızca index.ts ve modül ortak yardımcıları olur.
+    if (ozellikKlasorleri.length > 0) {
+      for (const e of girdiler) {
+        if (e.isFile() && katman(e.name)) ihlal.push(`R4 ${m}/${e.name} (katman dosyası bir özellik klasöründe olmalı: ${m}/${e.name.split('.')[0]}/)`);
+      }
     }
   }
   return ihlal;
@@ -312,7 +327,7 @@ test('R3: platform/ modüllere bağlanmıyor ve içinde katman dosyası yok', ()
   assert.deepEqual(platformIhlalleri(), []);
 });
 
-test('R4: her üst klasör modül ya da sistem klasörü; modül içinde alt klasör yok', () => {
+test('R4: her üst klasör modül ya da sistem klasörü; özellikler kendi klasöründe, en fazla bir seviye', () => {
   assert.deepEqual(yerlesimIhlalleri(), []);
 });
 

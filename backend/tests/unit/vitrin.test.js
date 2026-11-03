@@ -8,9 +8,9 @@ const assert = require('node:assert/strict');
 const { sahteDb } = require('./sahteDb');
 const ortak = require('../../vitrin/vitrinOrtak');
 const medyaKurallari = require('../../platform/medya/medya');
-const servis = require('../../vitrin/ilanlar.service');
-const iletisim = require('../../vitrin/iletisim.service');
-const medya = require('../../vitrin/medya.service');
+const servis = require('../../vitrin/ilanlar/ilanlar.service');
+const iletisim = require('../../vitrin/iletisim/iletisim.service');
+const medya = require('../../vitrin/medya/medya.service');
 
 const kul = (rol, ek = {}) => ({ id: 1, rol, motor_vitrin_yetkisi: false, aksesuar_vitrin_yetkisi: false, ...ek });
 const ADMIN = kul('admin');

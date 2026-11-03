@@ -9,14 +9,14 @@ const assert = require('node:assert/strict');
 const { sahteDb } = require('./sahteDb');
 
 const musteriler = require('../../musteriler/musteriler.service');
-const isEmirleri = require('../../servis/isEmirleri.service');
-const aksesuarlar = require('../../aksesuar/aksesuarlar.service');
-const aksesuarStok = require('../../aksesuar/aksesuarStok.service');
-const yedekParcalar = require('../../yedek-parca/yedekParcalar.service');
-const yedekParcaStok = require('../../yedek-parca/yedekParcaStok.service');
+const isEmirleri = require('../../servis/isEmirleri/isEmirleri.service');
+const aksesuarlar = require('../../aksesuar/aksesuarlar/aksesuarlar.service');
+const aksesuarStok = require('../../aksesuar/aksesuarStok/aksesuarStok.service');
+const yedekParcalar = require('../../yedek-parca/yedekParcalar/yedekParcalar.service');
+const yedekParcaStok = require('../../yedek-parca/yedekParcaStok/yedekParcaStok.service');
 const eticaret = require('../../eticaret/eticaret.service');
-const motor = require('../../motor/ikinciElMotor.service');
-const ilanlar = require('../../vitrin/ilanlar.service');
+const motor = require('../../motor/ikinciElMotor/ikinciElMotor.service');
+const ilanlar = require('../../vitrin/ilanlar/ilanlar.service');
 const auth = require('../../auth/auth.service');
 
 const ADMIN = { id: 1, kullanici_adi: 'admin', ad_soyad: 'Admin', rol: 'admin' };
