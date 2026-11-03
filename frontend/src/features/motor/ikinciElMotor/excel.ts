@@ -3,6 +3,19 @@ import { bugunYerel } from '../../../shared/utils/tarih';
 import { sayiYaz, tarihYaz, type Sayi, type TarihGirdisi } from '../../../shared/utils/bicim';
 import type { Motor } from '../../../shared/tipler';
 
+const FORMUL_BASLANGICI = /^[=+\-@\t\r]/;
+const SAYI_GIBI = /^[+-]?[\d\s().,-]+$/;
+
+/**
+ * Formül enjeksiyonu önlemi: hücre metni `=`, `+`, `-`, `@` (ya da TAB/CR) ile başlarsa Excel bunu FORMÜL sayabilir; alıcı adı gibi serbest metin
+ * alanları saldırgan girdisi taşıyabilir. Tehlikeli hücrenin başına tek tırnak konur. Yalnızca rakam/ayraçtan oluşan değerler (telefon
+ * "+90 555 111 22 33", negatif tutar "-1.500,00") formül olamaz, olduğu gibi kalır.
+ */
+export const excelMetni = (v: unknown): string => {
+  const s = String(v ?? '');
+  return FORMUL_BASLANGICI.test(s) && !SAYI_GIBI.test(s) ? `'${s}` : s;
+};
+
 export const excelHtml = (motorlar: Motor[], { canAlis, canKar }: { canAlis: boolean; canKar: boolean }): string => {
   const formatDate = (d: TarihGirdisi) => tarihYaz(d, '');
   const num = (v: Sayi) => sayiYaz(v);
@@ -49,7 +62,7 @@ export const excelHtml = (motorlar: Motor[], { canAlis, canKar }: { canAlis: boo
         m.yevmiye_no || '',
         formatDate(m.satis_tarihi || m.tarih),
       ];
-      return '<tr>' + cells.map((c) => `<td style="border:1px solid #555;padding:8px;font-size:12px;">${escape(c)}</td>`).join('') + '</tr>';
+      return '<tr>' + cells.map((c) => `<td style="border:1px solid #555;padding:8px;font-size:12px;">${escape(excelMetni(c))}</td>`).join('') + '</tr>';
     })
     .join('');
   const headerHtml =
