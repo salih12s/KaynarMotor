@@ -9,16 +9,18 @@ const assert = require('node:assert/strict');
 const { sunucuBaslat } = require('./yardimci');
 
 const SON = Date.now().toString(36);
-let s,
-  api,
-  admin,
-  kullaniciId;
+let s, api, admin, kullaniciId;
 
 before(async () => {
   s = await sunucuBaslat();
   api = s.api;
   admin = s.admin;
-  const k = await api('POST', '/api/auth/users', { kullanici_adi: `yetki_dogrula_${SON}`, sifre: 'Gucluuu-sifre1', ad_soyad: 'Yetki Deneme', rol: 'personel' }, admin);
+  const k = await api(
+    'POST',
+    '/api/auth/users',
+    { kullanici_adi: `yetki_dogrula_${SON}`, sifre: 'Gucluuu-sifre1', ad_soyad: 'Yetki Deneme', rol: 'personel' },
+    admin,
+  );
   assert.equal(k.durum, 201);
   kullaniciId = k.govde.id;
 });

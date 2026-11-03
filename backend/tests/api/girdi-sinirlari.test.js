@@ -7,9 +7,7 @@ const { describe, it, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { sunucuBaslat } = require('./yardimci');
 
-let s,
-  api,
-  admin;
+let s, api, admin;
 before(async () => {
   s = await sunucuBaslat();
   api = s.api;

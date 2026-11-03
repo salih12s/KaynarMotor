@@ -12,8 +12,8 @@ const assert = require('node:assert/strict');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { sahteDb } = require('./sahteDb');
-const servis = require('../../services/auth.service');
-const { sifreParmagi } = require('../../middleware/auth');
+const servis = require('../../auth/auth.service');
+const { sifreParmagi } = require('../../platform/middleware/auth');
 
 const SIFRE = 'GucluSifre1';
 const OZET = bcrypt.hashSync(SIFRE, 4); // düşük maliyet: yalnızca test hızı için
@@ -128,7 +128,10 @@ describe('kayıt (herkese açık)', () => {
   // istemciye 500 olarak sızıyordu. Kontrol zaten 400 + aynı mesajı veriyor; yarışta da aynısı beklenir.
   it('eşzamanlı aynı ad: kontrol geçip INSERT UNIQUE ihlaline düşerse 500 değil 400 (kontrolle aynı mesaj)', async () => {
     const dup = Object.assign(new Error("Duplicate entry 'yeni' for key 'kullanicilar_kullanici_adi_key'"), { code: 'ER_DUP_ENTRY' });
-    await assert.rejects(servis.kayitOl(sahteDb([['INSERT INTO kullanicilar', dup]]), gecerli), (h) => h.status === 400 && h.message === 'Bu kullanıcı adı zaten kullanılıyor');
+    await assert.rejects(
+      servis.kayitOl(sahteDb([['INSERT INTO kullanicilar', dup]]), gecerli),
+      (h) => h.status === 400 && h.message === 'Bu kullanıcı adı zaten kullanılıyor',
+    );
   });
 
   it('UNIQUE dışındaki veritabanı hataları gizlenmez, olduğu gibi iletilir', async () => {
@@ -160,7 +163,11 @@ describe('admin: kullanıcı oluşturma ve şifre sıfırlama', () => {
   it('geçersiz rol (admin dahil) sessizce personel olmaz: 400 "Geçersiz rol", kayıt yazılmaz', async () => {
     for (const rol of ['admin', 'x', '', 5]) {
       const db = sahteDb();
-      await assert.rejects(servis.kullaniciOlustur(db, { ...gecerli, rol }), (h) => h.status === 400 && h.message === 'Geçersiz rol', `rol: ${JSON.stringify(rol)}`);
+      await assert.rejects(
+        servis.kullaniciOlustur(db, { ...gecerli, rol }),
+        (h) => h.status === 400 && h.message === 'Geçersiz rol',
+        `rol: ${JSON.stringify(rol)}`,
+      );
       assert.equal(sorgular(db, 'INSERT INTO kullanicilar').length, 0);
     }
   });
@@ -171,7 +178,10 @@ describe('admin: kullanıcı oluşturma ve şifre sıfırlama', () => {
 
   it('eşzamanlı aynı ad: INSERT UNIQUE ihlaline düşerse 500 değil 400 (kontrolle aynı mesaj)', async () => {
     const dup = Object.assign(new Error("Duplicate entry 'muh1' for key 'kullanicilar_kullanici_adi_key'"), { code: 'ER_DUP_ENTRY' });
-    await assert.rejects(servis.kullaniciOlustur(sahteDb([['INSERT INTO kullanicilar', dup]]), gecerli), (h) => h.status === 400 && h.message === 'Bu kullanıcı adı zaten kullanılıyor');
+    await assert.rejects(
+      servis.kullaniciOlustur(sahteDb([['INSERT INTO kullanicilar', dup]]), gecerli),
+      (h) => h.status === 400 && h.message === 'Bu kullanıcı adı zaten kullanılıyor',
+    );
   });
 
   it('şifre sıfırlama: kısa şifre 400; olmayan kullanıcı 404; başarıda HASH yazılır', async () => {

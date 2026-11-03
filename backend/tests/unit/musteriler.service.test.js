@@ -7,7 +7,7 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 const { sahteDb } = require('./sahteDb');
-const servis = require('../../services/musteriler.service');
+const servis = require('../../musteriler/musteriler.service');
 
 const VAR_MI = (db, parca) => db.cagrilar.some((c) => c.sql.includes(parca));
 
@@ -106,7 +106,11 @@ describe('ekle ve güncelle: ad soyad zorunlu', () => {
   it('ekle: ad yok/boş/boşluk ise 400 "Ad soyad zorunludur", veritabanına gidilmez', async () => {
     for (const ad of adsizlar) {
       const db = sahteDb();
-      await assert.rejects(servis.ekle(db, { ad_soyad: ad, telefon: '0555', adres: 'x' }), (h) => h.status === 400 && h.message === 'Ad soyad zorunludur', JSON.stringify(ad));
+      await assert.rejects(
+        servis.ekle(db, { ad_soyad: ad, telefon: '0555', adres: 'x' }),
+        (h) => h.status === 400 && h.message === 'Ad soyad zorunludur',
+        JSON.stringify(ad),
+      );
       assert.equal(db.cagrilar.length, 0);
     }
   });
@@ -114,7 +118,11 @@ describe('ekle ve güncelle: ad soyad zorunlu', () => {
   it('güncelle: adı boşaltmak 400, veritabanına gidilmez', async () => {
     for (const ad of adsizlar) {
       const db = sahteDb();
-      await assert.rejects(servis.guncelle(db, 5, { ad_soyad: ad, telefon: '0555', adres: 'x' }), (h) => h.status === 400 && h.message === 'Ad soyad zorunludur', JSON.stringify(ad));
+      await assert.rejects(
+        servis.guncelle(db, 5, { ad_soyad: ad, telefon: '0555', adres: 'x' }),
+        (h) => h.status === 400 && h.message === 'Ad soyad zorunludur',
+        JSON.stringify(ad),
+      );
       assert.equal(db.cagrilar.length, 0);
     }
   });

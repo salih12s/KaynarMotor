@@ -25,7 +25,7 @@ before(async () => {
   s = await sunucuBaslat();
   api = s.api;
   admin = s.admin;
-  pool = require('../../database/db').pool;
+  pool = require('../../platform/database/db').pool;
   const kur = async (ad, utc) => {
     const r = await api('POST', '/api/is-emirleri', { musteri_ad_soyad: `Rapor ${ad} ${SON}${++sayac}`, durum: 'tamamlandi', parcalar: [] }, admin);
     assert.equal(r.durum, 201, JSON.stringify(r.govde));

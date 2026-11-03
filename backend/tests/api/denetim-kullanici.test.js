@@ -8,18 +8,13 @@ const assert = require('node:assert/strict');
 const { sunucuBaslat } = require('./yardimci');
 
 const SON = Date.now().toString(36);
-let s,
-  api,
-  admin,
-  pool,
-  kullaniciId,
-  kullaniciAdi;
+let s, api, admin, pool, kullaniciId, kullaniciAdi;
 
 before(async () => {
   s = await sunucuBaslat();
   api = s.api;
   admin = s.admin;
-  pool = require('../../database/db').pool;
+  pool = require('../../platform/database/db').pool;
   kullaniciAdi = `denetim_k_${SON}`;
   const k = await api('POST', '/api/auth/users', { kullanici_adi: kullaniciAdi, sifre: 'Gucluuu-sifre1', ad_soyad: 'Denetim Deneme', rol: 'personel' }, admin);
   assert.equal(k.durum, 201);
@@ -30,7 +25,10 @@ after(async () => {
   if (s) await s.durdur();
 });
 
-const loglar = async (tip, id) => (await pool.query('SELECT islem_detay FROM aktivite_log WHERE hedef_tablo = $1 AND hedef_id = $2 AND islem_tipi = $3 ORDER BY id', ['kullanicilar', id, tip])).rows.map((r) => r.islem_detay);
+const loglar = async (tip, id) =>
+  (
+    await pool.query('SELECT islem_detay FROM aktivite_log WHERE hedef_tablo = $1 AND hedef_id = $2 AND islem_tipi = $3 ORDER BY id', ['kullanicilar', id, tip])
+  ).rows.map((r) => r.islem_detay);
 
 describe('yetki değişikliği günlüğü', () => {
   it('YETKI_DEGISTIR türüyle ve eski → yeni değerle yazılır; APPROVE etiketi kullanılmaz', async () => {

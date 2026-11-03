@@ -42,7 +42,10 @@ describe('ikinci el motor: kısmi PUT satış tarihini silmez', () => {
     assert.ok(tarihMi(sonra.satis_tarihi, '2026-10-05'), `satis_tarihi korunmalı, şimdi: ${sonra.satis_tarihi}`);
 
     await api('PUT', `/api/ikinci-el-motor/${id}`, { satis_tarihi: '2026-10-07' }, admin);
-    assert.ok(tarihMi((await api('GET', `/api/ikinci-el-motor/${id}`, undefined, admin)).govde.satis_tarihi, '2026-10-07'), 'açıkça gönderilen tarih değişmeli');
+    assert.ok(
+      tarihMi((await api('GET', `/api/ikinci-el-motor/${id}`, undefined, admin)).govde.satis_tarihi, '2026-10-07'),
+      'açıkça gönderilen tarih değişmeli',
+    );
   });
 });
 

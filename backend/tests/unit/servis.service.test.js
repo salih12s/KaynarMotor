@@ -10,8 +10,8 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 const { sahteDb } = require('./sahteDb');
-const isEmri = require('../../services/isEmirleri.service');
-const gecmis = require('../../services/servisGecmisi.service');
+const isEmri = require('../../servis/isEmirleri.service');
+const gecmis = require('../../servis/servisGecmisi.service');
 
 const ADMIN = { id: 1, kullanici_adi: 'admin', ad_soyad: 'Admin', rol: 'admin' };
 const PERSONEL = { id: 2, kullanici_adi: 'ali', ad_soyad: 'Ali Usta', rol: 'personel' };
@@ -175,7 +175,11 @@ describe('iş emri: müşteri adı zorunlu', () => {
   it('oluştur: ad yok/boş ise 400 "Müşteri adı zorunludur", transaction ve fiş numarası kilidi hiç açılmaz', async () => {
     for (const ad of adsizlar) {
       const db = kayitDb();
-      await assert.rejects(isEmri.olustur(db, { musteri_ad_soyad: ad, parcalar: [] }, ADMIN), (h) => h.status === 400 && h.message === 'Müşteri adı zorunludur', JSON.stringify(ad));
+      await assert.rejects(
+        isEmri.olustur(db, { musteri_ad_soyad: ad, parcalar: [] }, ADMIN),
+        (h) => h.status === 400 && h.message === 'Müşteri adı zorunludur',
+        JSON.stringify(ad),
+      );
       assert.equal(db.olaylar.length, 0);
       assert.equal(db.cagrilar.length, 0);
     }
@@ -184,7 +188,11 @@ describe('iş emri: müşteri adı zorunlu', () => {
   it('güncelle: adı boşaltmak 400, veritabanına gidilmez', async () => {
     for (const ad of adsizlar) {
       const db = sahteDb();
-      await assert.rejects(isEmri.guncelle(db, 5, { musteri_ad_soyad: ad, parcalar: [] }, ADMIN), (h) => h.status === 400 && h.message === 'Müşteri adı zorunludur', JSON.stringify(ad));
+      await assert.rejects(
+        isEmri.guncelle(db, 5, { musteri_ad_soyad: ad, parcalar: [] }, ADMIN),
+        (h) => h.status === 400 && h.message === 'Müşteri adı zorunludur',
+        JSON.stringify(ad),
+      );
       assert.equal(db.cagrilar.length, 0);
     }
   });

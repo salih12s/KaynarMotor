@@ -6,10 +6,11 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 const { sahteDb } = require('./sahteDb');
-const ortak = require('../../rules/vitrinOrtak');
-const servis = require('../../services/ilanlar.service');
-const iletisim = require('../../services/iletisim.service');
-const medya = require('../../services/medya.service');
+const ortak = require('../../vitrin/vitrinOrtak');
+const medyaKurallari = require('../../platform/medya/medya');
+const servis = require('../../vitrin/ilanlar.service');
+const iletisim = require('../../vitrin/iletisim.service');
+const medya = require('../../vitrin/medya.service');
 
 const kul = (rol, ek = {}) => ({ id: 1, rol, motor_vitrin_yetkisi: false, aksesuar_vitrin_yetkisi: false, ...ek });
 const ADMIN = kul('admin');
@@ -58,27 +59,27 @@ describe('motor durumu ve sayı yardımcıları (saf)', () => {
 
 describe('medya doğrulama (saf)', () => {
   it("dataUrlMime: türü base64'ü çözmeden okur; küçük harfe çevirir; geçersizde null", () => {
-    assert.equal(ortak.dataUrlMime(PNG), 'image/png');
-    assert.equal(ortak.dataUrlMime('data:IMAGE/PNG;base64,AAAA'), 'image/png');
-    for (const kotu of ['image/png', 'data:image/png,AAAA', '', null, 5]) assert.equal(ortak.dataUrlMime(kotu), null, String(kotu));
+    assert.equal(medyaKurallari.dataUrlMime(PNG), 'image/png');
+    assert.equal(medyaKurallari.dataUrlMime('data:IMAGE/PNG;base64,AAAA'), 'image/png');
+    for (const kotu of ['image/png', 'data:image/png,AAAA', '', null, 5]) assert.equal(medyaKurallari.dataUrlMime(kotu), null, String(kotu));
   });
 
   it("görsel yalnız JPEG/PNG/WebP/GIF; video yalnız MP4/WebM/OGG/MOV (text/html XSS'i engellenir)", () => {
-    assert.equal(ortak.medyaHatasi([PNG], undefined), null);
-    assert.equal(ortak.medyaHatasi([PNG, 'data:text/html;base64,AAAA'], undefined), 'Görseller yalnızca JPEG, PNG, WebP veya GIF olabilir');
-    assert.equal(ortak.medyaHatasi([PNG, 'düz metin'], undefined), 'Görseller yalnızca JPEG, PNG, WebP veya GIF olabilir');
-    assert.equal(ortak.medyaHatasi(undefined, MP4), null);
-    assert.equal(ortak.medyaHatasi(undefined, 'data:application/x-msdownload;base64,AAAA'), 'Video yalnızca MP4, WebM, OGG veya MOV olabilir');
-    assert.equal(ortak.medyaHatasi(undefined, ''), null, 'boş video "yok" demektir');
+    assert.equal(medyaKurallari.medyaHatasi([PNG], undefined), null);
+    assert.equal(medyaKurallari.medyaHatasi([PNG, 'data:text/html;base64,AAAA'], undefined), 'Görseller yalnızca JPEG, PNG, WebP veya GIF olabilir');
+    assert.equal(medyaKurallari.medyaHatasi([PNG, 'düz metin'], undefined), 'Görseller yalnızca JPEG, PNG, WebP veya GIF olabilir');
+    assert.equal(medyaKurallari.medyaHatasi(undefined, MP4), null);
+    assert.equal(medyaKurallari.medyaHatasi(undefined, 'data:application/x-msdownload;base64,AAAA'), 'Video yalnızca MP4, WebM, OGG veya MOV olabilir');
+    assert.equal(medyaKurallari.medyaHatasi(undefined, ''), null, 'boş video "yok" demektir');
   });
 
   it('parseDataUrl: MIME izinli listede değilse null; geçerliyse mime + buffer', () => {
-    const r = ortak.parseDataUrl(PNG, ortak.IZINLI_GORSEL);
+    const r = medyaKurallari.parseDataUrl(PNG, medyaKurallari.IZINLI_GORSEL);
     assert.equal(r.mime, 'image/png');
     assert.ok(Buffer.isBuffer(r.buffer) && r.buffer.length > 0);
-    assert.equal(ortak.parseDataUrl('data:text/html;base64,AAAA', ortak.IZINLI_GORSEL), null);
-    assert.ok(ortak.parseDataUrl('data:text/html;base64,AAAA'), 'izinli liste verilmezse yalnızca biçim denetlenir');
-    assert.equal(ortak.parseDataUrl(null), null);
+    assert.equal(medyaKurallari.parseDataUrl('data:text/html;base64,AAAA', medyaKurallari.IZINLI_GORSEL), null);
+    assert.ok(medyaKurallari.parseDataUrl('data:text/html;base64,AAAA'), 'izinli liste verilmezse yalnızca biçim denetlenir');
+    assert.equal(medyaKurallari.parseDataUrl(null), null);
   });
 
   it('bağlantılar yalnız http(s): javascript:, data:, ftp:, şemasız ve metin olmayan reddedilir; boş geçerli', () => {
@@ -92,9 +93,9 @@ describe('medya doğrulama (saf)', () => {
   });
 
   it('hamMb: base64 şişmesi (%33) hesaba katılır, en az 1 MB', () => {
-    assert.equal(ortak.hamMb(4 * 1048576), 3);
-    assert.equal(ortak.hamMb(10), 1);
-    assert.equal(ortak.cokBuyukMesaji(4 * 1048576), 'Dosya çok büyük (en fazla ~3 MB yüklenebilir)');
+    assert.equal(medyaKurallari.hamMb(4 * 1048576), 3);
+    assert.equal(medyaKurallari.hamMb(10), 1);
+    assert.equal(medyaKurallari.cokBuyukMesaji(4 * 1048576), 'Dosya çok büyük (en fazla ~3 MB yüklenebilir)');
   });
 });
 

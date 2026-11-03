@@ -24,7 +24,12 @@ before(async () => {
 after(() => s && s.durdur());
 
 const ara = (yol, q) => api('GET', `${yol}${encodeURIComponent(q)}`, undefined, admin);
-const icerir = (satir, alanlar, metin) => alanlar.some((a) => String(satir[a] ?? '').toLowerCase().includes(metin.toLowerCase()));
+const icerir = (satir, alanlar, metin) =>
+  alanlar.some((a) =>
+    String(satir[a] ?? '')
+      .toLowerCase()
+      .includes(metin.toLowerCase()),
+  );
 
 describe('müşteri araması: % ve _ düz karakter', () => {
   const ALANLAR = ['ad_soyad', 'telefon'];

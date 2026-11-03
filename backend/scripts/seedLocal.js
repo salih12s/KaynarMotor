@@ -4,7 +4,7 @@
  *   npm run seed          (proje kökünde ya da backend klasöründe)
  *
  * NE YAPAR
- *  - Şema yoksa oluşturur (database/initDb.ts ile aynı kurulum).
+ *  - Şema yoksa oluşturur (platform/database/initDb.ts ile aynı kurulum).
  *  - İş verisi tablolarını BOŞALTIR (DELETE; MariaDB'de TRUNCATE işlemi örtük commit yapıp
  *    transaction'ı bozardı, bu yüzden kayıt numaraları 1'den değil kaldığı yerden devam eder)
  *    ve örnek veriyle yeniden doldurur
@@ -56,9 +56,9 @@ if (sorunlar.length > 0) {
 // Kilit geçildikten SONRA yüklenir: db.js bağlantı ayarını require anında ortamdan okur.
 const bcrypt = require('bcryptjs');
 const os = require('os');
-const { pool } = require('../database/db');
-const { initializeDatabase } = require('../database/initDb');
-const { hesaplaKomisyon, detectPlatform } = require('../rules/komisyon');
+const { pool } = require('../platform/database/db');
+const { initializeDatabase } = require('../platform/database/initDb');
+const { hesaplaKomisyon, detectPlatform } = require('../eticaret/komisyon');
 
 // ---------------------------------------------------------------------------
 // Yardımcılar

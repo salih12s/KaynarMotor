@@ -38,7 +38,7 @@ before(async () => {
   s = await sunucuBaslat();
   api = s.api;
   admin = s.admin;
-  pool = require('../../database/db').pool;
+  pool = require('../../platform/database/db').pool;
 });
 after(async () => {
   if (s) s.durdur();

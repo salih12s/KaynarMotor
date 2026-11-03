@@ -9,17 +9,13 @@ const assert = require('node:assert/strict');
 const { sunucuBaslat } = require('./yardimci');
 
 const SON = Date.now().toString(36);
-let s,
-  api,
-  admin,
-  pool,
-  ikinciAdminId;
+let s, api, admin, pool, ikinciAdminId;
 
 before(async () => {
   s = await sunucuBaslat();
   api = s.api;
   admin = s.admin;
-  pool = require('../../database/db').pool;
+  pool = require('../../platform/database/db').pool;
   const r = await pool.query(
     `INSERT INTO kullanicilar (kullanici_adi, sifre, ad_soyad, rol, onay_durumu) VALUES ($1, 'x', 'Koruma Admin', 'admin', 'onaylandi') RETURNING id`,
     [`admin_koruma_${SON}`],

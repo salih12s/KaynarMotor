@@ -6,7 +6,7 @@
  */
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { degisiklikOzeti } = require('../../lib/degisiklik');
+const { degisiklikOzeti } = require('../../platform/lib/degisiklik');
 
 const ALANLAR = ['alis_fiyati', 'satis_fiyati', 'durum', 'satis_tarihi'];
 

@@ -8,9 +8,7 @@ const assert = require('node:assert/strict');
 const { sunucuBaslat } = require('./yardimci');
 
 const YOK = 99999999;
-let s,
-  api,
-  admin;
+let s, api, admin;
 
 before(async () => {
   s = await sunucuBaslat();

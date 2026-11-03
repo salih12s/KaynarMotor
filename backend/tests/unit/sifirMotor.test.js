@@ -10,11 +10,11 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 const { sahteDb } = require('./sahteDb');
-const motorServis = require('../../services/ikinciElMotor.service');
-const sifirServis = require('../../services/sifirMotor.service');
-const { sanitizeSifirMotor } = require('../../rules/sifirMotor.gorunum');
-const hesap = require('../../rules/raporlar.hesap');
-const { alanlariSil, KAR_ALANLARI } = require('../../middleware/yetki');
+const motorServis = require('../../motor/ikinciElMotor.service');
+const sifirServis = require('../../motor/sifirMotor.service');
+const { sanitizeSifirMotor } = require('../../motor/sifirMotor.gorunum');
+const hesap = require('../../raporlar/raporlar.hesap');
+const { alanlariSil, KAR_ALANLARI } = require('../../platform/middleware/yetki');
 
 const kul = (rol, ek = {}) => ({
   id: 10,

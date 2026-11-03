@@ -19,7 +19,7 @@ before(async () => {
   s = await sunucuBaslat();
   api = s.api;
   admin = s.admin;
-  pool = require('../../database/db').pool;
+  pool = require('../../platform/database/db').pool;
 });
 after(async () => {
   if (pool) await pool.end(); // açık kalırsa test süreci çıkmaz
@@ -27,7 +27,13 @@ after(async () => {
 });
 
 const sonLog = async (tablo, id, tip) =>
-  (await pool.query('SELECT islem_detay FROM aktivite_log WHERE hedef_tablo = $1 AND hedef_id = $2 AND islem_tipi = $3 ORDER BY id DESC LIMIT 1', [tablo, id, tip])).rows[0]?.islem_detay;
+  (
+    await pool.query('SELECT islem_detay FROM aktivite_log WHERE hedef_tablo = $1 AND hedef_id = $2 AND islem_tipi = $3 ORDER BY id DESC LIMIT 1', [
+      tablo,
+      id,
+      tip,
+    ])
+  ).rows[0]?.islem_detay;
 
 describe('motor güncelleme günlüğü: eski → yeni', () => {
   it('alış ve satış fiyatı değişince günlükte alan, eski ve yeni değer yazar; kişisel veri yazmaz', async () => {
