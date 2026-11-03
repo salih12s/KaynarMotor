@@ -84,7 +84,7 @@ adı `_test` ile biten veritabanında, E2E yalnızca `test_kaynar_e2e` adlı tek
 
 Uygulama başlangıçta PostgreSQL üzerinde çalışıyordu; MariaDB'ye geçişte şu farklar bilinçli olarak yönetildi:
 
-- **Geçersiz kayıt numarası:** `/api/.../abc` ya da `5abc` **400** döner (`core/middleware/idDogrula.ts`). Eskiden PostgreSQL 500 veriyordu;
+- **Geçersiz kayıt numarası:** `/api/.../abc` ya da `5abc` **400** döner (`middleware/idDogrula.ts`). Eskiden PostgreSQL 500 veriyordu;
   MariaDB `5abc`'yi sessizce `5` yapıp başka kaydı etkileyebilirdi.
 - **Eşit sıralama anahtarlı satırların sırası:** SQL'de garanti değildi; aynı tarihli kayıtlar arasında PostgreSQL fiziksel sırayı, MariaDB id
   sırasını izler. Sıralama kuralının kendisi (tarihe göre azalan) testle doğrulanır.

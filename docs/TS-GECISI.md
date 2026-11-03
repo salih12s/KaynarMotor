@@ -18,26 +18,32 @@ istek → server.ts (CORS, helmet, gövde, kimlik, yetki, kâr gizleme)
       → *.controller.ts   HTTP: isteği oku, doğrula (zod), servisi çağır, DENETİM GÜNLÜĞÜ, yanıtı yaz
       → *.service.ts      iş kuralları; express BİLMEZ; hatayı IstemciHatasi sınıflarıyla bildirir
       → *.repository.ts   yalnızca SQL; iş kuralı YOK
-      → core/db.ts        havuz, transaction (pool.withTransaction), SQL uyum katmanı (sqlParams)
+      → database/db.ts    havuz, transaction (pool.withTransaction), SQL uyum katmanı (sqlParams)
 ```
+
+Klasör düzeni **katmana göre** (özelliğe göre değil): `routes/`, `controllers/`, `services/`, `repositories/`, `schemas/`, `rules/` (saf kurallar);
+altyapı `middleware/`, `database/`, `lib/`. Bir özelliğin dosyaları adı aynı kalarak katman klasörlerine dağılır
+(`services/musteriler.service.ts`). Kuralı `backend/tests/unit/mimari.test.js` zorlar (R1-R5).
 
 | Dosya | Görevi | Neden ayrı |
 |---|---|---|
-| `X.routes.ts` | URL ve middleware | Hangi yolun kimden geçtiği tek bakışta görünür |
-| `X.controller.ts` | HTTP + günlük | Servis HTTP bilmediği için testi kolay |
-| `X.service.ts` | İş kuralı (kâr, yetki, stok, tamamlama tarihi) | Sunucu ve veritabanı olmadan test edilir (Fake db) |
-| `X.repository.ts` | SQL | SQL tek yerde; kural değişince SQL'e dokunulmaz |
-| `X.schemas.ts` | zod gövde/sorgu şemaları | Alan adları ve tipler belgelenir. Girdisi olmayan uçlarda (veresiye, servis geçmişi) yoktur |
-| `X.gorunum.ts` / `X.hesap.ts` | Saf kurallar (kim neyi görür, rapor toplamları) | DB'siz, tablo gibi test |
+| `routes/X.routes.ts` | URL ve middleware | Hangi yolun kimden geçtiği tek bakışta görünür |
+| `controllers/X.controller.ts` | HTTP + günlük | Servis HTTP bilmediği için testi kolay |
+| `services/X.service.ts` | İş kuralı (kâr, yetki, stok, tamamlama tarihi) | Sunucu ve veritabanı olmadan test edilir (Fake db) |
+| `repositories/X.repository.ts` | SQL | SQL tek yerde; kural değişince SQL'e dokunulmaz |
+| `schemas/X.schemas.ts` | zod gövde/sorgu şemaları | Alan adları ve tipler belgelenir. Girdisi olmayan uçlarda (veresiye, servis geçmişi) yoktur |
+| `rules/X.gorunum.ts` / `rules/X.hesap.ts` | Saf kurallar (kim neyi görür, rapor toplamları) | DB'siz, tablo gibi test |
 
-Modüller: `auth`, `musteriler`, `servis` (iş emirleri + QR geçmişi), `aksesuar` (satış + stok), `yedek-parca` (satış + stok),
+Özellikler: `auth`, `musteriler`, `servis` (iş emirleri + QR geçmişi), `aksesuar` (satış + stok), `yedek-parca` (satış + stok),
 `eticaret`, `motor` (ikinci el + belgeler), `raporlar` (+ veresiye), `vitrin` (ilanlar + medya + iletişim).
 
-Ortak: `core/tipler.ts` (`Kullanici`, `req.user`, `BaglamDb`), `core/dogrula.ts` (`GecersizIstek` 400, `BulunamadiHatasi` 404,
-`YetkiHatasi` 403, `dogrula()`), `core/kontrolcu.ts` (`sarmala`: try/catch + hata yanıtı), `core/semalar.ts`
-(gevşek zod parçaları), `core/sayi.ts`, `core/env.ts` (.env'i HER ŞEYDEN önce yükler; `server.ts` ilk içe aktarır).
+Ortak: `lib/tipler.ts` (`Kullanici`, `req.user`, `BaglamDb`), `lib/dogrulama/dogrula.ts` (`GecersizIstek` 400, `BulunamadiHatasi` 404,
+`YetkiHatasi` 403, `dogrula()`), `lib/http/kontrolcu.ts` (`sarmala`: try/catch + hata yanıtı), `lib/dogrulama/semalar.ts`
+(gevşek zod parçaları), `lib/dogrulama/sayi.ts`, `lib/env.ts` (.env'i HER ŞEYDEN önce yükler; `server.ts` ilk içe aktarır).
 
 ### Yeni özellik eklemek
+(Her dosya kendi katman klasörüne gider: `schemas/X.schemas.ts`, `repositories/X.repository.ts`, `services/X.service.ts`, `controllers/X.controller.ts`, `routes/X.routes.ts`;
+yanlış klasör ya da katman ihlali `mimari.test.js`'te kırmızı olur.)
 1. `schemas.ts`: gövde/sorgu alanlarını yaz (sözleşmeyi bozmamak için türleri gevşek tut, özel mesajları service'te ver).
 2. `repository.ts`: SQL fonksiyonları (`db: Veritabani` alır; transaction içinde `tx` aynı arayüzdür).
 3. `service.ts`: kuralları yaz; `db: BaglamDb` ilk parametre; durum için `IstemciHatasi` fırlat; transaction `db.withTransaction(async (tx) => ...)`.
@@ -66,7 +72,7 @@ eşitlemesi, stok kodu değişince parça kodu taşıma, tamamlama tarihi, yapı
 - **Yedek parça satışları toplam gelire/kâra girmiyor** (raporlar): mevcut davranış `tests/unit/raporlar.test.js` ile sabitlendi.
 - Raporlarda `'2026-01-01'` gömülü tarih (eski aktarılmış motorlar) duruyor.
 - `scripts/` ve `tests/` JS kaldı (tsx ile çalışır). `checkJs` kapalı. İstenirse ayrı iş olarak TS'ye çevrilir.
-- `core/db.ts` ve `core/sqlParams.ts` yalnızca tip eklendi (eski PostgreSQL ile karşılaştırma aracı iş bitince depodan kaldırıldı); davranış testleri (34 sqlParams birim testi + tüm API testleri) yeşil.
+- `database/db.ts` ve `database/sqlParams.ts` yalnızca tip eklendi (eski PostgreSQL ile karşılaştırma aracı iş bitince depodan kaldırıldı); davranış testleri (34 sqlParams birim testi + tüm API testleri) yeşil.
 - Medya önbelleği 10 dk: silinen ilanın görseli bir süre bellekten sunulabilir (tasarım, `MedyaOnbellegi` açıklamasında).
 
 ## Tuzaklar

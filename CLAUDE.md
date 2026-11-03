@@ -6,19 +6,20 @@ açıktır: gerçek müşteri verisi, parola, token ve kullanıcı adı **commit
 
 ## Mimari
 - `backend/`: Express + **TypeScript (strict)** + mysql2 + zod; `tsx` ile çalışır, `esbuild` tek dosyaya paketler.
-  Her özellik kendi klasöründe: `X.routes / controller / service / repository / schemas.ts` (sade fonksiyonlar).
-  service express bilmez (hata `IstemciHatasi` sınıflarıyla), denetim günlüğü controller'da, saf kurallar `*.gorunum.ts` / `*.hesap.ts`.
-  Klasörler: `core/{veritabani,dogrulama,http,gunluk,onbellek,middleware}`, `shared/`, `modules/<alan>/<özellik>/`.
+  **Katman klasörleri** (2026-11-03, özellik başına klasör yerine): `routes/ controllers/ services/ repositories/ schemas/` + `rules/` (saf kurallar:
+  `*.gorunum.ts`, `*.hesap.ts`, `komisyon.ts`); altyapı `middleware/ database/ lib/`. Bir özelliğin dosyaları katman klasörlerine dağılır, adı aynı kalır
+  (`services/musteriler.service.ts`, `repositories/musteriler.repository.ts` ...). service express bilmez (hata `IstemciHatasi` sınıflarıyla), denetim günlüğü
+  controller'da. **Katman kuralı `backend/tests/unit/mimari.test.js` ile zorlanır** (R1-R5: sıra, express, altyapı, doğru klasör, eski klasörler yok).
   **Ayrıntı ve "yeni özellik ekleme" adımları: `docs/TS-GECISI.md`.**
 - `frontend/`: **Vite 8** (derleme + `npm start`, port 3100, `vite.config.mjs`; testler **Vitest** + jsdom, `npm test`; ESLint 9 düz yapılandırma `eslint.config.mjs`, tip bilgili kurallar; **TypeScript strict, %100 `.ts/.tsx`, `allowJs: false`, `any` yok**: `npm run typecheck`) + React + MUI, rota bazlı `React.lazy` kod bölme; geçiş planı `docs/VITE-TS-YOL-HARITASI.md`. `src/features/<alan>/`. Bölme sürüyor (bkz. `docs/FRONTEND-BOLME-RAPORU.md`): **büyük dosyaların hepsi bölündü** (Raporlar, IsEmirleri, Vitrin, MotorStok, IkinciElMotor, Storefront, ETicaret, Aksesuarlar)
 - Roller: admin, personel (modül yetkileri), yatırımcı, muhasebeci. **Kâr yalnızca admin görür.** Alan düzeyinde görünürlük:
-  `backend/modules/motor/ikinciElMotor/ikinciElMotor.gorunum.ts` + `core/middleware/yetki.ts` (`kariGizle`).
+  `backend/rules/ikinciElMotor.gorunum.ts` + `middleware/yetki.ts` (`kariGizle`).
   **İstisna (2026-10-22): e-ticaret kârı, `eticaret_yetkisi` olan herkese açıktır** (`/api/eticaret` `kariGizle` dışında; arayüzde `karGor`).
 
 - **Sıfır motor (CANLIDA 2026-10-27, Hostinger build 01a17a57, arayüz main.17b29eca.js; kaynak `sifir-motor` dalı a2fd23d,
   GitHub'a push edilmedi; geri dönüş `deploy/yedek/kaynarmotor-hostinger-2026-10-26-vite-ts-canli.zip`, DB değişikliği yalnız ekleme
   olduğu için geri dönüşte DB'ye dokunmak gerekmez):** sıfır stok bir MODEL listesidir (`sifir_motorlar` +
-  `sifir_motor_gorseller`; `backend/modules/motor/sifirMotor/`, arayüz Motor Stok > Sıfır sekmesi). Adet tutulmaz: satış
+  `sifir_motor_gorseller`; `backend/{routes,controllers,services,repositories}/sifirMotor.*`, arayüz Motor Stok > Sıfır sekmesi). Adet tutulmaz: satış
   `ikinci_el_motorlar`'a `motor_durumu = 'sifir'` + `sifir_motor_id` ile yazılır, model stoktan DÜŞMEZ. Raporda sıfır satışlar
   adede/gelire/toplam kâra girer, kârı ayrı (`motorSifir*`, `sifir_kar` `KAR_ALANLARI`'nda). Vitrin ilanı `sifir_motor_id` ile
   modele bağlanır (bilgi + fotoğraf oradan gelir, liste fiyatı senkron, satış ilanı kaldırmaz). Müşteriye sorulmadan seçilen

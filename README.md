@@ -285,7 +285,7 @@ sequenceDiagram
     actor U as Servis personeli
     participant P as Panel (React)
     participant M as Middleware zinciri
-    participant R as modules/servis/isEmirleri/isEmirleri.routes.ts
+    participant R as routes/isEmirleri.routes.ts
     participant DB as MariaDB
 
     U->>P: Yeni iş emri: müşteri, plaka, parçalar
@@ -337,8 +337,8 @@ flowchart LR
 
 ### Tasarım kararları
 
-- **Şema kod içinde yönetilir.** ORM yoktur. Tablolar ve migration'lar `core/veritabani/initDb.ts` içinde `CREATE TABLE IF NOT EXISTS` ve kademeli `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` ile tanımlanır. Sunucu her açılışta şemayı eksiksiz hâle getirir, bu da deploy'u tek adıma indirir.
-- **Yetkilendirme sunucu tarafındadır.** Arayüzdeki route guard'lar yalnızca gezinmeyi düzenler; asıl kontrol `backend/core/middleware/yetki.ts` içindedir ve API'ye bağlıdır. Hassas alanlar (kâr, alış fiyatı, müşteri bilgisi) yetkisi olmayan kullanıcının yanıtından sunucuda temizlenir. Gizleme arayüzde değil, veri katmanında yapılır.
+- **Şema kod içinde yönetilir.** ORM yoktur. Tablolar ve migration'lar `database/initDb.ts` içinde `CREATE TABLE IF NOT EXISTS` ve kademeli `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` ile tanımlanır. Sunucu her açılışta şemayı eksiksiz hâle getirir, bu da deploy'u tek adıma indirir.
+- **Yetkilendirme sunucu tarafındadır.** Arayüzdeki route guard'lar yalnızca gezinmeyi düzenler; asıl kontrol `backend/middleware/yetki.ts` içindedir ve API'ye bağlıdır. Hassas alanlar (kâr, alış fiyatı, müşteri bilgisi) yetkisi olmayan kullanıcının yanıtından sunucuda temizlenir. Gizleme arayüzde değil, veri katmanında yapılır.
 - **Okuma serbest, yazma yetkili.** Stok gibi birçok ekranın aradığı uçlarda GET istekleri açıktır, POST/PUT/PATCH/DELETE ise modül yetkisine bağlıdır (`yazmaYetkisi`).
 - **Veritabanına dayanıklı başlangıç.** Backend veritabanı henüz hazır değilken de ayağa kalkar (`/api/health` yanıt verir) ve bağlantıyı artan gecikmelerle yeniden dener. Bu, barındırmadaki soğuk başlatma senaryolarına karşı dayanıklılık sağlar.
 - **Para ve stok işlemleri transaction içindedir.** Çok adımlı yazma işlemleri (iş emri + parçalar + stok düşümü) tek transaction'da yürür. Fiş numarası üretimi tek satırlık bir kilit tablosunda satır kilidiyle (`SELECT … FOR UPDATE`) serileştirilir.
@@ -460,28 +460,18 @@ yük/stres testleri (load, stress) yok (eşzamanlılık API testlerinde var), E2
 
 ```
 KaynarMotor/
-├── backend/                     # TypeScript (strict) + Express; her özellik routes/controller/service/repository/schemas
+├── backend/                     # TypeScript (strict) + Express; KATMAN klasörleri: routes → controllers → services → repositories
 │   ├── server.ts                # Express app, CORS, route mount, DB init
-│   ├── core/                    # Altyapı: hiçbir iş alanına bağlı değil
-│   │   ├── env.ts               # .env yükleme + JWT_SECRET denetimi (her şeyden önce)
-│   │   ├── tipler.ts            # Kullanici, req.user, BaglamDb tipleri
-│   │   ├── veritabani/          # db (havuz, transaction), sqlParams ($1 → MariaDB), sqlText, initDb (şema/migration)
-│   │   ├── dogrulama/           # dogrula (hata sınıfları, zod), semalar, sayi
-│   │   ├── http/                # kontrolcu (sarmala), asyncHata
-│   │   ├── gunluk/              # activityLogger (denetim kaydı), denetimKaydi (yazma istekleri için ara katman)
-│   │   ├── onbellek/            # medyaOnbellegi (LRU)
-│   │   └── middleware/          # auth (JWT), yetki (modül/rol/kâr gizleme), rateLimit, idDogrula, tutarDogrula
-│   ├── shared/                  # Modüller arası ortak iş yardımcıları (stok hareketi, alt kayıtlar)
-│   ├── modules/                 # İş alanları; her özellik KENDİ klasöründe (routes/controller/service/repository/schemas)
-│   │   ├── auth/                # giriş, kayıt, kullanıcı ve yetki yönetimi
-│   │   ├── musteriler/          # müşteri uçları + otomatik müşteri eşleştirme
-│   │   ├── servis/              # isEmirleri/ + servisGecmisi/ (QR)
-│   │   ├── aksesuar/            # aksesuarlar/ (satış) + aksesuarStok/
-│   │   ├── yedek-parca/         # yedekParcalar/ (satış) + yedekParcaStok/
-│   │   ├── motor/               # ikinciElMotor/ (+ gorunum: kim neyi görür) + satisBelgeleri/
-│   │   ├── eticaret/            # pazaryeri satışları + komisyon hesabı
-│   │   ├── vitrin/              # ilanlar/ + medya/ + iletisim/ (+ vitrinOrtak)
-│   │   └── raporlar/            # raporlar/ (+ hesap) + veresiye/
+│   ├── routes/                  # URL → middleware → controller (auth, musteriler, isEmirleri, aksesuarlar, aksesuarStok, yedekParcalar, yedekParcaStok,
+│   │                            #   ikinciElMotor, sifirMotor, satisBelgeleri, eticaret, ilanlar, medya, iletisim, raporlar, veresiye, servisGecmisi)
+│   ├── controllers/             # HTTP: isteği oku, doğrula, servisi çağır, denetim günlüğü, yanıtı yaz
+│   ├── services/                # İş kuralları; express bilmez, hatayı IstemciHatasi sınıflarıyla bildirir
+│   ├── repositories/            # Yalnızca SQL; iş kuralı yok
+│   ├── schemas/                 # zod gövde/sorgu şemaları
+│   ├── rules/                   # Saf kurallar (DB'siz): kim neyi görür (*.gorunum), rapor toplamları (*.hesap), komisyon hesabı, vitrinOrtak
+│   ├── middleware/              # auth (JWT), yetki (modül/rol/kâr gizleme), rateLimit, idDogrula, tutarDogrula
+│   ├── database/                # db (havuz, transaction), sqlParams ($1 → MariaDB), sqlText, initDb (şema/migration)
+│   ├── lib/                     # env (.env yükleme + JWT_SECRET), tipler, dogrulama/, http/ (sarmala), gunluk/, onbellek/ (LRU), stok, altKayitlar
 │   ├── tests/                   # unit (Fake veritabanı) / api / smoke
 │   └── scripts/                 # seed, paketleme/test yardımcıları, MariaDB araçları (bkz. docs/TS-GECISI.md)
 ├── frontend/

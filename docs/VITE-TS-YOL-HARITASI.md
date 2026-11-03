@@ -198,7 +198,7 @@ Aşamada çıkan notlar:
 
 - TypeScript 6.0.3, `strict: true`, `moduleResolution: bundler`, `noEmit`; `npm run typecheck` paketleme betiğine (`package-hostinger.cjs`) ve CI/yerel doğrulama zincirine girdi (Vite tip denetlemez).
 - Ortam değişkeni `import.meta.env.VITE_API_URL` (tek yer: `shared/api/istemci.ts`, `AuthContext` oradaki `API_URL`'i kullanır). Paketleme `VITE_API_URL=/api` verir.
-- API tipleri kararı: **(a)** elle yazılmış `frontend/src/shared/tipler/*`. Tipler backend'in `core/veritabani/initDb.ts` şemasından türetildi; MariaDB `DECIMAL` sürücüden **string** döndüğü için para/sayı alanları `Sayi = number | string | null | undefined` ve okuma `sayiDegeri()` ile yapılıyor. Sunucu rol bazında alan sildiği için (kâr yalnızca admin) `Motor` gibi tiplerde alanlar isteğe bağlı.
+- API tipleri kararı: **(a)** elle yazılmış `frontend/src/shared/tipler/*`. Tipler backend'in `database/initDb.ts` şemasından türetildi; MariaDB `DECIMAL` sürücüden **string** döndüğü için para/sayı alanları `Sayi = number | string | null | undefined` ve okuma `sayiDegeri()` ile yapılıyor. Sunucu rol bazında alan sildiği için (kâr yalnızca admin) `Motor` gibi tiplerde alanlar isteğe bağlı.
 
 ## Aşama 4 sonuçları (2026-10-25/26)
 
