@@ -119,3 +119,20 @@ describe('#36 aksesuar satışı PUT: eşzamanlı iki düzenleme stoğu kaydırm
     }
   });
 });
+
+describe('#37 kullanıcı oluşturma: aynı adla eşzamanlı istekler 500 vermez', () => {
+  it(`tam biri 201, diğerleri kontrolle aynı 400; tek kayıt kalır (${TEKRAR} tekrar)`, async () => {
+    for (let i = 0; i < TEKRAR; i++) {
+      const ad = benzersiz('yaris_');
+      const govde = { kullanici_adi: ad, sifre: 'Gucluuu-sifre1', ad_soyad: 'Yarış Kullanıcısı', rol: 'personel' };
+      const yanitlar = await Promise.all([1, 2, 3, 4].map(() => api('POST', '/api/auth/users', govde, admin)));
+
+      const durumlar = yanitlar.map((y) => y.durum).sort();
+      assert.deepEqual(durumlar, [201, 400, 400, 400], `tekrar ${i + 1}: ${JSON.stringify(yanitlar.map((y) => [y.durum, y.govde && y.govde.message]))}`);
+      for (const y of yanitlar.filter((x) => x.durum === 400)) assert.equal(y.govde.message, 'Bu kullanıcı adı zaten kullanılıyor');
+
+      const liste = (await api('GET', '/api/auth/users', undefined, admin)).govde;
+      assert.equal(liste.filter((k) => k.kullanici_adi === ad).length, 1, `tekrar ${i + 1}: aynı adla birden fazla kayıt`);
+    }
+  });
+});

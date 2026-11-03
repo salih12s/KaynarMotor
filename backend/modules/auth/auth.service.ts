@@ -6,6 +6,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { kullaniciOnbellegiTemizle, sifreParmagi } from '../../core/middleware/auth';
 import { BulunamadiHatasi, GecersizIstek, IstemciHatasi, sifreSorunu } from '../../core/dogrulama/dogrula';
+import { isUniqueViolation } from '../../core/veritabani/db';
 import type { BaglamDb, Kullanici, Veritabani } from '../../core/tipler';
 import type { GirisGovdesi, KullaniciOlusturGovdesi, SifreGovdesi, YetkiGovdesi } from './auth.schemas';
 import { YETKI_ALANLARI } from './auth.schemas';
@@ -35,6 +36,17 @@ export class GirisHatasi extends IstemciHatasi {
 
 const metinMi = (v: unknown): v is string => typeof v === 'string';
 
+const KULLANICI_ADI_ALINMIS = 'Bu kullanıcı adı zaten kullanılıyor';
+
+/**
+ * "Ad var mı?" kontrolü ile INSERT arasında aynı adla ikinci bir istek araya girebilir (kontrol-sonra-yaz yarışı); UNIQUE kısıt
+ * veriyi korur ama veritabanı hatası 500 olarak sızardı. Ön kontrolle aynı 400 yanıtına çevrilir; başka hatalar olduğu gibi iletilir.
+ */
+const kullaniciAdiCakismasiniCevir = (hata: unknown): never => {
+  if (isUniqueViolation(hata)) throw new GecersizIstek(KULLANICI_ADI_ALINMIS);
+  throw hata;
+};
+
 /** Kullanıcı adı ve ad soyad dolu metin mi? (nesne/dizi/boşluk reddedilir) */
 const adlarGecerli = (kullaniciAdi: unknown, adSoyad: unknown): boolean =>
   metinMi(kullaniciAdi) && metinMi(adSoyad) && kullaniciAdi.trim() !== '' && adSoyad.trim() !== '';
@@ -50,10 +62,14 @@ export const kayitOl = async (db: Veritabani, govde: KullaniciOlusturGovdesi) =>
   const sifreHatasi = sifreSorunu(sifre);
   if (sifreHatasi) throw new GecersizIstek(sifreHatasi);
 
-  if (await repo.kullaniciAdiVarMi(db, kullanici_adi as string)) throw new GecersizIstek('Bu kullanıcı adı zaten kullanılıyor');
+  if (await repo.kullaniciAdiVarMi(db, kullanici_adi as string)) throw new GecersizIstek(KULLANICI_ADI_ALINMIS);
 
   const ozet = await bcrypt.hash(sifre as string, 10);
-  return repo.kayitEkle(db, kullanici_adi as string, ozet, ad_soyad as string);
+  try {
+    return await repo.kayitEkle(db, kullanici_adi as string, ozet, ad_soyad as string);
+  } catch (hata) {
+    return kullaniciAdiCakismasiniCevir(hata);
+  }
 };
 
 /**
@@ -154,10 +170,14 @@ export const kullaniciOlustur = async (db: Veritabani, govde: KullaniciOlusturGo
   if (sifreHatasi) throw new GecersizIstek(sifreHatasi);
   const yeniRol = GECERLI_ROLLER.includes(rol as string) ? (rol as string) : 'personel';
 
-  if (await repo.kullaniciAdiVarMi(db, kullanici_adi as string)) throw new GecersizIstek('Bu kullanıcı adı zaten kullanılıyor');
+  if (await repo.kullaniciAdiVarMi(db, kullanici_adi as string)) throw new GecersizIstek(KULLANICI_ADI_ALINMIS);
 
   const ozet = await bcrypt.hash(sifre as string, 10);
-  return repo.adminKullaniciEkle(db, kullanici_adi as string, ozet, ad_soyad as string, yeniRol);
+  try {
+    return await repo.adminKullaniciEkle(db, kullanici_adi as string, ozet, ad_soyad as string, yeniRol);
+  } catch (hata) {
+    return kullaniciAdiCakismasiniCevir(hata);
+  }
 };
 
 /**

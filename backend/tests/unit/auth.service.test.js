@@ -123,6 +123,18 @@ describe('kayıt (herkese açık)', () => {
     assert.ok(await bcrypt.compare(SIFRE, ekleme.params[1]));
     assert.ok(!ekleme.sql.includes('onaylandi'), 'kayıt onay bekler (varsayılan)');
   });
+
+  // Regression (E01'de canlı ölçüldü): "ad var mı?" kontrolü ile INSERT arasında ikinci istek araya girerse UNIQUE ihlali
+  // istemciye 500 olarak sızıyordu. Kontrol zaten 400 + aynı mesajı veriyor; yarışta da aynısı beklenir.
+  it('eşzamanlı aynı ad: kontrol geçip INSERT UNIQUE ihlaline düşerse 500 değil 400 (kontrolle aynı mesaj)', async () => {
+    const dup = Object.assign(new Error("Duplicate entry 'yeni' for key 'kullanicilar_kullanici_adi_key'"), { code: 'ER_DUP_ENTRY' });
+    await assert.rejects(servis.kayitOl(sahteDb([['INSERT INTO kullanicilar', dup]]), gecerli), (h) => h.status === 400 && h.message === 'Bu kullanıcı adı zaten kullanılıyor');
+  });
+
+  it('UNIQUE dışındaki veritabanı hataları gizlenmez, olduğu gibi iletilir', async () => {
+    const baska = Object.assign(new Error('Deadlock'), { code: 'ER_LOCK_DEADLOCK' });
+    await assert.rejects(servis.kayitOl(sahteDb([['INSERT INTO kullanicilar', baska]]), gecerli), (h) => h === baska);
+  });
 });
 
 describe('admin: kullanıcı oluşturma ve şifre sıfırlama', () => {
@@ -146,6 +158,11 @@ describe('admin: kullanıcı oluşturma ve şifre sıfırlama', () => {
 
   it('zorunlu alan mesajı farklıdır: "Kullanıcı adı, şifre ve ad soyad zorunludur"', async () => {
     await assert.rejects(servis.kullaniciOlustur(sahteDb(), { ...gecerli, ad_soyad: '' }), (h) => h.message === 'Kullanıcı adı, şifre ve ad soyad zorunludur');
+  });
+
+  it('eşzamanlı aynı ad: INSERT UNIQUE ihlaline düşerse 500 değil 400 (kontrolle aynı mesaj)', async () => {
+    const dup = Object.assign(new Error("Duplicate entry 'muh1' for key 'kullanicilar_kullanici_adi_key'"), { code: 'ER_DUP_ENTRY' });
+    await assert.rejects(servis.kullaniciOlustur(sahteDb([['INSERT INTO kullanicilar', dup]]), gecerli), (h) => h.status === 400 && h.message === 'Bu kullanıcı adı zaten kullanılıyor');
   });
 
   it('şifre sıfırlama: kısa şifre 400; olmayan kullanıcı 404; başarıda HASH yazılır', async () => {
