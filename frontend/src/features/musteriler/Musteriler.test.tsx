@@ -193,6 +193,17 @@ describe('Müşteriler: arama', () => {
 
 // ---- Ekleme / düzenleme / silme ----------------------------------------------------------------------------------
 describe('Müşteriler: ekleme, düzenleme, silme', () => {
+  // Regression: Kaydet'e çift tıklamak aynı müşteriyi iki kez oluşturuyordu.
+  test("Kaydet'e çift tıklamak (yanıt gelmeden) tek müşteri oluşturur", async () => {
+    vi.mocked(musteriService.create).mockReturnValue(new Promise(() => {}) as never);
+    const user = await ekranAc();
+    const p = await yeniAc(user);
+    await user.type(within(p).getByLabelText(/Ad Soyad/), 'Çift Tık');
+    await user.dblClick(within(p).getByRole('button', { name: 'Kaydet' }));
+    await waitFor(() => expect(musteriService.create).toHaveBeenCalled());
+    expect(musteriService.create).toHaveBeenCalledTimes(1);
+  });
+
   test('"Yeni Müşteri": boş form; "Kaydet" create çağırır, pencere kapanır, liste yenilenir', async () => {
     const user = await ekranAc();
     const p = await yeniAc(user);

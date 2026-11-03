@@ -382,6 +382,20 @@ describe('E-Ticaret: satış formu', () => {
     expect(within(p).queryByText(/^Net Kâr/)).not.toBeInTheDocument();
   });
 
+  // Regression: Kaydet'e çift tıklamak iki e-ticaret satışı ve iki stok düşümü demekti.
+  test("Kaydet'e çift tıklamak (yanıt gelmeden) tek satış oluşturur", async () => {
+    const user = await ekranAc();
+    // ekranAc() mock'ları yeniden kurar: "yanıt hiç gelmesin" ayarı ondan SONRA yapılmalı, yoksa silinir ve create anında çözülür
+    vi.mocked(eticaretService.createSale).mockReturnValue(new Promise(() => {}) as never);
+    const p = await yeniAc(user);
+    await sec(user, p, 'Platform', 'Trendyol (%15.00)');
+    await user.type(alan('Ürün Adı *'), 'Çift Tık');
+    await user.type(alan('Ürün Satış Fiyatı (₺)'), '1000');
+    await user.dblClick(within(p).getByRole('button', { name: 'Kaydet' }));
+    await waitFor(() => expect(eticaretService.createSale).toHaveBeenCalled());
+    expect(eticaretService.createSale).toHaveBeenCalledTimes(1);
+  });
+
   test("kaydet: yük (form alanları olduğu gibi) createSale'e gider; pencere kapanır, liste yenilenir; hata gösterilir", async () => {
     const user = await ekranAc();
     const cagri = vi.mocked(eticaretService.getSales).mock.calls.length;

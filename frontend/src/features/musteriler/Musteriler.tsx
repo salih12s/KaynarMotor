@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { hataMesaji } from '../../shared/api/istemci';
+import { useTekSeferlik } from '../../shared/utils/tekSeferlik';
 import KisiIkon from '@mui/icons-material/PersonOutlined';
 import { BilgiKarti, BolumBasligi, Damga, DialogBasligi, IslemDugmesi, Plaka, sagaSutunlar, useOnay, bildir } from '../../shared/ui';
 import MotorIkon from '@mui/icons-material/TwoWheelerOutlined';
@@ -44,6 +45,7 @@ const sonAra = sonIstek();
 
 const Musteriler = () => {
   const onay = useOnay();
+  const { calistir } = useTekSeferlik();
   const isMobile = useMediaQuery(useTheme().breakpoints.down('sm'));
   const [musteriler, setMusteriler] = useState<Musteri[]>([]);
   const [search, setSearch] = useState('');
@@ -100,7 +102,7 @@ const Musteriler = () => {
     setError('');
   };
 
-  const handleSave = async () => {
+  const kaydet = async () => {
     try {
       if (dialog.data) {
         await musteriService.update(dialog.data.id, formData);
@@ -113,6 +115,8 @@ const Musteriler = () => {
       setError(hataMesaji(err, 'Hata oluştu'));
     }
   };
+  // Çift tıklama / yanıt beklerken yeniden tıklama aynı kaydı ikinci kez oluşturmasın (useTekSeferlik)
+  const handleSave = () => calistir(kaydet);
 
   const handleDelete = async (id: number) => {
     const musteri = musteriler.find((m) => m.id === id);

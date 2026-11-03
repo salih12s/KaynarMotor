@@ -505,6 +505,18 @@ describe('İş Emirleri: yeni iş emri formu', () => {
     await waitFor(() => expect(vi.mocked(isEmriService.getAll).mock.calls.length).toBe(cagri + 1));
   });
 
+  // Regression (E04, canlı ölçüm): Kaydet'e çift tıklamak İKİ iş emri açıyordu (düğme kilitlenmiyor, fiş numarası ikisine ayrı verilir).
+  test("Kaydet'e çift tıklamak (yanıt gelmeden) tek iş emri oluşturur", async () => {
+    const { user } = await ekranAc();
+    // ekranAc() mock'ları yeniden kurar: "yanıt hiç gelmesin" ayarı ondan SONRA yapılmalı, yoksa silinir ve create anında çözülür
+    vi.mocked(isEmriService.create).mockReturnValue(new Promise(() => {}) as never);
+    const p = await yeniAc(user);
+    await user.type(alan('Ad Soyad *'), 'Çift Tık');
+    await user.dblClick(within(p).getByRole('button', { name: 'Kaydet' }));
+    await waitFor(() => expect(isEmriService.create).toHaveBeenCalled());
+    expect(isEmriService.create).toHaveBeenCalledTimes(1);
+  });
+
   test('plaka büyük harfe çevrilir; araç ve arıza alanları yüke girer', async () => {
     const { user } = await ekranAc();
     const p = await yeniAc(user);

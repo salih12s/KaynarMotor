@@ -1,6 +1,7 @@
 import { useOnay, bildir } from '../../../shared/ui';
 import { sayiDegeri } from '../../../shared/utils/bicim';
 import { hataMesaji } from '../../../shared/api/istemci';
+import { useTekSeferlik } from '../../../shared/utils/tekSeferlik';
 import { useState, useEffect, useCallback } from 'react';
 import type { AksesuarStok, EticaretIstatistik, EticaretSatis, Platform } from '../../../shared/tipler';
 import { eticaretService } from '../eticaretApi';
@@ -22,6 +23,7 @@ interface PlatformDialogDurumu {
 // seçili platforma göre canlı komisyon hesabı.
 export const useETicaret = () => {
   const onay = useOnay();
+  const { calistir } = useTekSeferlik();
   const [satislar, setSatislar] = useState<EticaretSatis[]>([]);
   const [platformlar, setPlatformlar] = useState<Platform[]>([]);
   const [stokOptions, setStokOptions] = useState<AksesuarStok[]>([]);
@@ -107,7 +109,7 @@ export const useETicaret = () => {
   const canliPlatformTipi = detectPlatform(selectedPlatformObj?.platform_adi);
   const canliHesap = hesaplaKomisyon(sf.satis_fiyati, sf.alis_fiyati, sf.komisyon_orani, sf.kdv_orani, sf.kargo_ucreti, sf.adet, canliPlatformTipi);
 
-  const handleSatisSave = async () => {
+  const kaydetSatis = async () => {
     setError('');
     try {
       if (satisDialog.data) {
@@ -121,6 +123,8 @@ export const useETicaret = () => {
       setError(hataMesaji(err, 'Hata'));
     }
   };
+  // Çift tıklama / yanıt beklerken yeniden tıklama aynı kaydı ikinci kez oluşturmasın (useTekSeferlik)
+  const handleSatisSave = () => calistir(kaydetSatis);
 
   const handleSatisDelete = async (id: number) => {
     if (!(await onay('Bu satışı silmek istediğinizden emin misiniz?'))) return;

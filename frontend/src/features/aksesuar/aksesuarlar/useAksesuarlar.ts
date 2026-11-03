@@ -1,5 +1,6 @@
 import { useOnay, bildir } from '../../../shared/ui';
 import { hataMesaji } from '../../../shared/api/istemci';
+import { useTekSeferlik } from '../../../shared/utils/tekSeferlik';
 import { useState, useEffect, useCallback, type KeyboardEvent } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { sonIstek } from '../../../shared/utils/sonIstek';
@@ -33,6 +34,7 @@ interface SatisDialogDurumu {
 // Aksesuar satış sayfasının sunucu verisi ve pencere durumları: satışlar, istatistik, stok listesi, ekle/düzenle/sil, ürün satırları,
 // barkod okutma, toplam/indirim/kâr hesabı. Başka sayfadan `state.openDetailId` ile gelinirse detay otomatik açılır.
 export const useAksesuarlar = () => {
+  const { calistir } = useTekSeferlik();
   const onay = useOnay();
   const location = useLocation();
   const navigate = useNavigate();
@@ -150,7 +152,7 @@ export const useAksesuarlar = () => {
 
   const { toplamSatis, toplamMaliyet, indirim, netToplam, kar } = hesapla(parcalar, formData.indirim);
 
-  const handleSave = async () => {
+  const kaydet = async () => {
     setError('');
     try {
       // `odeme_tamamlandi` yalnızca ekran içindir; sunucuya kalan ödeme olarak gider
@@ -168,6 +170,8 @@ export const useAksesuarlar = () => {
       setError(hataMesaji(err, 'Hata oluştu'));
     }
   };
+  // Çift tıklama / yanıt beklerken yeniden tıklama aynı kaydı ikinci kez oluşturmasın (useTekSeferlik)
+  const handleSave = () => calistir(kaydet);
 
   const handleDelete = async (id: number) => {
     if (!(await onay('Silmek istediğinizden emin misiniz?'))) return;

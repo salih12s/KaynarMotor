@@ -274,6 +274,18 @@ describe('Aksesuarlar: detay penceresi', () => {
 
 // ---- Satış formu -------------------------------------------------------------------------------------------------
 describe('Aksesuarlar: satış formu', () => {
+  // Regression: Kaydet'e çift tıklamak iki satış ve iki stok düşümü demekti.
+  test("Kaydet'e çift tıklamak (yanıt gelmeden) tek satış oluşturur", async () => {
+    const user = await ekranAc();
+    // ekranAc() mock'ları yeniden kurar: "yanıt hiç gelmesin" ayarı ondan SONRA yapılmalı, yoksa silinir ve create anında çözülür
+    vi.mocked(aksesuarService.create).mockReturnValue(new Promise(() => {}) as never);
+    const p = await yeniAc(user);
+    await user.type(alan('Ad Soyad *'), 'Çift Tık');
+    await user.dblClick(within(p).getByRole('button', { name: 'Kaydet' }));
+    await waitFor(() => expect(aksesuarService.create).toHaveBeenCalled());
+    expect(aksesuarService.create).toHaveBeenCalledTimes(1);
+  });
+
   test('yeni satış: varsayılanlar; boş formla kaydedilince yük biçimi (kalan ödeme 0, odeme_tamamlandi yük dışı)', async () => {
     const user = await ekranAc();
     const p = await yeniAc(user);

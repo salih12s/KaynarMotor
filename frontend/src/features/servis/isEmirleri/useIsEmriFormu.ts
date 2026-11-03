@@ -1,5 +1,6 @@
 import { useState, type KeyboardEvent } from 'react';
 import { hataMesaji } from '../../../shared/api/istemci';
+import { useTekSeferlik } from '../../../shared/utils/tekSeferlik';
 import { sonIstek } from '../../../shared/utils/sonIstek';
 import { isEmriService } from '../servisApi';
 import { musteriService } from '../../musteriler/musteriApi';
@@ -17,6 +18,7 @@ export type StokSecenegi = (AksesuarStok | YedekParcaStok) & { stok_kaynak: stri
 
 // Yeni iş emri / düzenleme penceresinin tüm durumu ve işlemleri. `yenile`: kaydedince listeyi yeniden çeker.
 export const useIsEmriFormu = ({ yenile }: { yenile: () => void }) => {
+  const { calistir } = useTekSeferlik();
   const [modalOpen, setModalOpen] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
   const [formData, setFormData] = useState<IsEmriFormu>(bosForm());
@@ -134,7 +136,7 @@ export const useIsEmriFormu = ({ yenile }: { yenile: () => void }) => {
     }
   };
 
-  const handleSave = async () => {
+  const kaydet = async () => {
     setError('');
     if (!formData.musteri_ad_soyad.trim()) {
       setError('Ad Soyad zorunlu');
@@ -156,6 +158,8 @@ export const useIsEmriFormu = ({ yenile }: { yenile: () => void }) => {
       setError(hataMesaji(err, 'Kaydetme hatası'));
     }
   };
+  // Çift tıklama / yanıt beklerken yeniden tıklama aynı kaydı ikinci kez oluşturmasın (useTekSeferlik)
+  const handleSave = () => calistir(kaydet);
 
   return {
     modalOpen,
