@@ -25,6 +25,7 @@ import { useAuth } from '../features/auth/AuthContext';
 import { useCustomTheme } from './ThemeContext';
 import { authService } from '../features/auth/authApi';
 import { FONT, MENU_RENK, RENK, ISLEM } from './tokenlar';
+import { taksitGorebilirMi } from './rotaYetkileri';
 
 const KENAR_GENISLIK = 216;
 const MOBIL_GENISLIK = 300;
@@ -151,7 +152,7 @@ const Layout = () => {
       ],
     },
     { title: 'E-Ticaret', path: '/eticaret', icon: <StoreIcon />, show: !!(isAdmin || hasEticaret), kod: 'eticaret' },
-    { title: 'Taksit Hesaplama', path: '/taksit-hesaplama', icon: <CalculateIcon />, show: !isYatirimci && !isMuhasebeci, kod: 'taksit' },
+    { title: 'Taksit Hesaplama', path: '/taksit-hesaplama', icon: <CalculateIcon />, show: taksitGorebilirMi(user), kod: 'taksit' },
     {
       title: 'Yedek Parça',
       icon: <SettingsIcon />,

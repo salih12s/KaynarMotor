@@ -9,6 +9,7 @@ import { AuthProvider, useAuth } from '../features/auth/AuthContext';
 import type { Kullanici } from '../shared/tipler';
 import { CustomThemeProvider, useCustomTheme } from './ThemeContext';
 import { RENK } from './tokenlar';
+import { taksitGorebilirMi } from './rotaYetkileri';
 
 // Rota bazlı kod bölme: vitrin ziyaretçisi yönetim panelinin kodunu indirmez. Her sayfa kendi parçasıdır; ortak kütüphaneler (MUI vb.) paylaşılan parçada kalır.
 const Layout = lazy(() => import('./Layout'));
@@ -49,6 +50,15 @@ const AdminRoute = ({ children }: RotaProps) => {
   if (loading) return null;
   if (!user) return <Navigate to="/login" />;
   if (user.rol !== 'admin') return <Navigate to="/" />;
+  return children;
+};
+
+// Taksit Hesaplama: menüdeki kuralla AYNI fonksiyon (rotaYetkileri); eskiden menüde gizli, adresle açılıyordu
+const TaksitRoute = ({ children }: RotaProps) => {
+  const { user, loading } = useAuth();
+  if (loading) return null;
+  if (!user) return <Navigate to="/login" />;
+  if (!taksitGorebilirMi(user)) return <Navigate to="/" />;
   return children;
 };
 
@@ -361,7 +371,14 @@ const ThemedApp = () => {
                     </YedekParcaRoute>
                   }
                 />
-                <Route path="/taksit-hesaplama" element={<TaksitHesaplama />} />
+                <Route
+                  path="/taksit-hesaplama"
+                  element={
+                    <TaksitRoute>
+                      <TaksitHesaplama />
+                    </TaksitRoute>
+                  }
+                />
                 <Route
                   path="/veresiye"
                   element={
