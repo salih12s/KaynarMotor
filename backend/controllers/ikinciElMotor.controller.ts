@@ -45,12 +45,14 @@ export const olustur = sarmala('Motor satış ekleme hatası:', async (req, res)
 
 export const guncelle = sarmala('Motor satış güncelleme hatası:', async (req, res) => {
   const id = Number(req.params.id);
-  const kayit = await servis.guncelle(pool, id, dogrula(motorGuncelleGovdesi, req.body), req.user);
+  const iz: { degisiklik?: string } = {};
+  const kayit = await servis.guncelle(pool, id, dogrula(motorGuncelleGovdesi, req.body), req.user, iz);
   await logAktivite({
     kullanici_id: req.user.id,
     kullanici_adi: req.user.kullanici_adi,
     islem_tipi: ISLEM_TIPLERI.MOTOR_SATIS_GUNCELLE,
-    islem_detay: `2. El Motor #${id} güncellendi`,
+    // Fiyat/yatırımcı/durum değiştiyse eski → yeni değerleriyle (kişisel veri yazılmaz); değişmediyse eski kısa biçim
+    islem_detay: `2. El Motor #${id} güncellendi${iz.degisiklik ? `: ${iz.degisiklik}` : ''}`,
     hedef_tablo: 'ikinci_el_motorlar',
     hedef_id: id,
   });

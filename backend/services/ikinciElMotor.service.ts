@@ -5,6 +5,7 @@
  */
 import { BulunamadiHatasi, GecersizIstek, YetkiHatasi } from '../lib/dogrulama/dogrula';
 import { bosuSifir } from '../lib/dogrulama/sayi';
+import { degisiklikOzeti } from '../lib/degisiklik';
 import type { BaglamDb, Kullanici, Veritabani } from '../lib/tipler';
 import { upsertMusteri } from './musteriler.service';
 import { motorKapsami, muhasebeMotorGorur, sanitizeMotor, sanitizeOzet } from '../rules/ikinciElMotor.gorunum';
@@ -165,7 +166,29 @@ export const olustur = async (db: BaglamDb, govde: MotorOlusturGovdesi, kullanic
  * alan kümeleri gönderir (ör. Motor Stok formunda satış alanları yoktur); eksik alanın 0/NULL yazılıp satış verisini
  * silmesi engellenir. Açıkça gönderilen değer (boş metin dahil) uygulanır.
  */
-export const guncelle = async (db: BaglamDb, id: number, govde: MotorGuncelleGovdesi, kullanici: Kullanici) => {
+/**
+ * Denetim günlüğünde izlenen alanlar (eski → yeni yazılır): fiyat, masraf, ödeme, durum, yatırımcı. Kişisel veri (alıcı/satıcı adı, TC,
+ * telefon, adres) bilerek YOK: günlüğe yazılmaz (KVKK). Kâr ayrıca izlenmez, bu alanlardan türetilir.
+ */
+export const MOTOR_IZLENEN_ALANLAR = [
+  'alis_fiyati',
+  'satis_fiyati',
+  'masraflar',
+  'komisyoncu_tutari',
+  'noter_alis',
+  'noter_satis',
+  'liste_fiyati',
+  'kalan_odeme',
+  'durum',
+  'yatirimci_id',
+  'yatirimci_kar',
+  'satis_tarihi',
+] as const;
+
+/**
+ * Motor kaydını günceller. `iz` verilirse `iz.degisiklik`e "alan: eski → yeni" özeti yazılır (controller günlüğe koyar); yanıt biçimi değişmez.
+ */
+export const guncelle = async (db: BaglamDb, id: number, govde: MotorGuncelleGovdesi, kullanici: Kullanici, iz?: { degisiklik?: string }) => {
   const satir = await db.withTransaction(async (tx) => {
     const mevcut = await repo.kilitleyerekOku(tx, id);
     if (!mevcut) throw new BulunamadiHatasi('Kayıt bulunamadı');
@@ -269,6 +292,9 @@ export const guncelle = async (db: BaglamDb, id: number, govde: MotorGuncelleGov
       vitrin_cc: bosuSifir(al('vitrin_cc')) || null,
       vitrin_hasar: al('vitrin_hasar') || null,
     });
+
+    // Denetim izi: hangi izlenen alan kaçtan kaça değişti (eski satır `mevcut`, yeni satır `guncel`)
+    if (iz) iz.degisiklik = degisiklikOzeti(mevcut, guncel as Record<string, unknown>, MOTOR_IZLENEN_ALANLAR);
 
     // Motor yeni satıldıysa, bağlı vitrin/site ilanını otomatik yayından kaldır
     if (yeniSatildi) await repo.vitrinIlaniniYayindanKaldir(tx, id);
