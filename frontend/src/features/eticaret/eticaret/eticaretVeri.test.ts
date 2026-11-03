@@ -83,4 +83,15 @@ describe('platformSuz ve hesaplaToplamKar', () => {
     expect(hesaplaToplamKar(satislar)).toBeCloseTo(beklenen);
     expect(hesaplaToplamKar([])).toBe(0);
   });
+
+  // Regression: `kdv_orani || 20` KDV %0'ı (geçerli bir oran) sessizce %20 yapıyordu.
+  test('KDV %0 olan satış %20 KDV ile hesaplanmaz', () => {
+    const kdvsuz = kayitlar<EticaretSatis>([
+      { id: 3, platform_id: 1, platform_adi: 'Trendyol', satis_fiyati: 1000, alis_fiyati: 600, komisyon_orani: 15, kdv_orani: 0, kargo_ucreti: 50, adet: 1 },
+    ]);
+    const kdv0 = hesaplaKomisyon(1000, 600, 15, 0, 50, 1, 'trendyol').netKar;
+    const kdv20 = hesaplaKomisyon(1000, 600, 15, 20, 50, 1, 'trendyol').netKar;
+    expect(kdv0).not.toBeCloseTo(kdv20); // senaryo gerçekten ayırt edici
+    expect(hesaplaToplamKar(kdvsuz)).toBeCloseTo(kdv0);
+  });
 });

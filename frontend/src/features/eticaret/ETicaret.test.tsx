@@ -87,7 +87,7 @@ const YETKISIZ = { rol: 'personel' }; // sayfaya normalde giremez; kâr yine de 
 
 const tl = (v: Sayi) => parseFloat(String(v || 0)).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const hesap = (s: { satis_fiyati: Sayi; alis_fiyati: Sayi; komisyon_orani: Sayi; kdv_orani?: Sayi; kargo_ucreti?: Sayi; adet: Sayi; platform_adi: string }) =>
-  hesaplaKomisyon(s.satis_fiyati, s.alis_fiyati, s.komisyon_orani, s.kdv_orani || 20, s.kargo_ucreti || 0, s.adet, detectPlatform(s.platform_adi));
+  hesaplaKomisyon(s.satis_fiyati, s.alis_fiyati, s.komisyon_orani, s.kdv_orani, s.kargo_ucreti || 0, s.adet, detectPlatform(s.platform_adi));
 
 // ---- Yardımcılar -------------------------------------------------------------------------------------------------
 type Kullanim = ReturnType<typeof userEvent.setup>;

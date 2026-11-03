@@ -23,7 +23,7 @@ const SatisDetayModal = ({ open, data, onClose, onDuzenle, isMobile, karGor }: S
   if (!data) return <Dialog {...dialogProps} />;
   const s = data;
   const detayPlatformTipi = detectPlatform(s.platform_adi);
-  const h = hesaplaKomisyon(s.satis_fiyati, s.alis_fiyati, s.komisyon_orani, s.kdv_orani || 20, s.kargo_ucreti || 0, s.adet, detayPlatformTipi);
+  const h = hesaplaKomisyon(s.satis_fiyati, s.alis_fiyati, s.komisyon_orani, s.kdv_orani, s.kargo_ucreti || 0, s.adet, detayPlatformTipi);
   return (
     <Dialog {...dialogProps}>
       <DialogBasligi baslik="E-Ticaret Satış Detayı" onKapat={onClose} />

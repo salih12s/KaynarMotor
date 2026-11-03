@@ -38,7 +38,7 @@ const ETicaret = ({ rapor, hesaplananEticaretKar, isMobile, onDetay }: ETicaretP
               const satis = sayiDegeri(e.satis_fiyati);
               const alis = sayiDegeri(e.alis_fiyati);
               const pt = detectPlatform(e.platform_adi);
-              const hesap = hesaplaKomisyon(e.satis_fiyati, e.alis_fiyati, e.komisyon_orani, e.kdv_orani || 20, e.kargo_ucreti || 0, e.adet, pt);
+              const hesap = hesaplaKomisyon(e.satis_fiyati, e.alis_fiyati, e.komisyon_orani, e.kdv_orani, e.kargo_ucreti || 0, e.adet, pt);
               const netKar = hesap.netKar;
               return (
                 <Paper key={i} sx={{ p: 1.5 }} onClick={() => onDetay(e)}>
@@ -90,7 +90,7 @@ const ETicaret = ({ rapor, hesaplananEticaretKar, isMobile, onDetay }: ETicaretP
                   const komisyonOrani = sayiDegeri(e.komisyon_orani);
                   const kargoUcreti = sayiDegeri(e.kargo_ucreti);
                   const pt = detectPlatform(e.platform_adi);
-                  const hesap = hesaplaKomisyon(e.satis_fiyati, e.alis_fiyati, e.komisyon_orani, e.kdv_orani || 20, e.kargo_ucreti || 0, e.adet, pt);
+                  const hesap = hesaplaKomisyon(e.satis_fiyati, e.alis_fiyati, e.komisyon_orani, e.kdv_orani, e.kargo_ucreti || 0, e.adet, pt);
                   const netKar = hesap.netKar;
                   return (
                     <TableRow key={i} hover>

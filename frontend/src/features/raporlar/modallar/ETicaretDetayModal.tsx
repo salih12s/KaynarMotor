@@ -30,7 +30,7 @@ const ETicaretDetayModal = ({ open, data, onClose, isMobile }: Props) => {
   const kdvOrani = sayiDegeri(e.kdv_orani, 20);
   const kargoUcreti = sayiDegeri(e.kargo_ucreti);
   const pt = detectPlatform(e.platform_adi);
-  const hesap = hesaplaKomisyon(e.satis_fiyati, e.alis_fiyati, e.komisyon_orani, e.kdv_orani || 20, e.kargo_ucreti || 0, e.adet, pt);
+  const hesap = hesaplaKomisyon(e.satis_fiyati, e.alis_fiyati, e.komisyon_orani, e.kdv_orani, e.kargo_ucreti || 0, e.adet, pt);
   const komisyonTutari = hesap.komisyonTutari;
   const toplamSatis = satis * miktar;
   const toplamAlis = alis * miktar;

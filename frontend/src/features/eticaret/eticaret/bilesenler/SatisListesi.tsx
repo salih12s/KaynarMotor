@@ -26,7 +26,7 @@ const SatisListesi = ({ satislar, platformFiltre, isMobile, karGor, onDetay, onD
       {filtered.length === 0 && <Alert severity="info">Kayıt yok</Alert>}
       {filtered.map((s) => {
         const sPlatformTipi = detectPlatform(s.platform_adi);
-        const sHesap = hesaplaKomisyon(s.satis_fiyati, s.alis_fiyati, s.komisyon_orani, s.kdv_orani || 20, s.kargo_ucreti || 0, s.adet, sPlatformTipi);
+        const sHesap = hesaplaKomisyon(s.satis_fiyati, s.alis_fiyati, s.komisyon_orani, s.kdv_orani, s.kargo_ucreti || 0, s.adet, sPlatformTipi);
         return (
           <Paper key={s.id} sx={{ p: 1.5 }} onClick={() => onDetay(s)}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
@@ -84,7 +84,7 @@ const SatisListesi = ({ satislar, platformFiltre, isMobile, karGor, onDetay, onD
         <TableBody>
           {filtered.map((s) => {
             const sPlatformTipi = detectPlatform(s.platform_adi);
-            const sHesap = hesaplaKomisyon(s.satis_fiyati, s.alis_fiyati, s.komisyon_orani, s.kdv_orani || 20, s.kargo_ucreti || 0, s.adet, sPlatformTipi);
+            const sHesap = hesaplaKomisyon(s.satis_fiyati, s.alis_fiyati, s.komisyon_orani, s.kdv_orani, s.kargo_ucreti || 0, s.adet, sPlatformTipi);
             return (
               <TableRow key={s.id} hover>
                 <TableCell sx={{ fontWeight: 700 }}>{s.urun_adi}</TableCell>

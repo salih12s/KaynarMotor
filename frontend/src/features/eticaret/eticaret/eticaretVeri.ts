@@ -77,6 +77,6 @@ export const platformSuz = (satislar: EticaretSatis[], platformFiltre: string | 
 export const hesaplaToplamKar = (satislar: EticaretSatis[]): number =>
   satislar.reduce((t, s) => {
     const pt = detectPlatform(s.platform_adi);
-    const h = hesaplaKomisyon(s.satis_fiyati, s.alis_fiyati, s.komisyon_orani, s.kdv_orani || 20, s.kargo_ucreti || 0, s.adet, pt);
+    const h = hesaplaKomisyon(s.satis_fiyati, s.alis_fiyati, s.komisyon_orani, s.kdv_orani, s.kargo_ucreti || 0, s.adet, pt);
     return t + h.netKar;
   }, 0);

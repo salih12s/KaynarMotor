@@ -9,7 +9,7 @@ export const hesaplaToplamlar = (rapor: AralikRaporu | null | undefined) => {
   const hesaplananEticaretKar =
     rapor?.eticaret?.reduce((t, e) => {
       const pt = detectPlatform(e.platform_adi);
-      const h = hesaplaKomisyon(e.satis_fiyati, e.alis_fiyati, e.komisyon_orani, e.kdv_orani || 20, e.kargo_ucreti || 0, e.adet, pt);
+      const h = hesaplaKomisyon(e.satis_fiyati, e.alis_fiyati, e.komisyon_orani, e.kdv_orani, e.kargo_ucreti || 0, e.adet, pt);
       return t + h.netKar;
     }, 0) || 0;
   const yedekParcaKar = rapor ? sayiDegeri(rapor.yedekParcaToplamDeger) - sayiDegeri(rapor.yedekParcaToplamMaliyet) : 0;

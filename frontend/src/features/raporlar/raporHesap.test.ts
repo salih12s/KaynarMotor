@@ -58,6 +58,21 @@ describe('hesaplaToplamlar', () => {
     expect(t.hesaplananEticaretKar).toBeCloseTo(beklenen * 2);
     expect(t.duzeltilmisTotalKar).toBeCloseTo(beklenen * 2);
   });
+
+  // Regression: `kdv_orani || 20` KDV %0'ı (geçerli bir oran) sessizce %20 yapıyordu.
+  test('KDV %0 olan e-ticaret satışı %20 KDV ile hesaplanmaz', () => {
+    const satir = { platform_adi: 'Trendyol', satis_fiyati: 1000, alis_fiyati: 600, komisyon_orani: 15, kdv_orani: 0, kargo_ucreti: 50, adet: 1 };
+    const kdv0 = hesaplaKomisyon(1000, 600, 15, 0, 50, 1, 'trendyol').netKar;
+    const kdv20 = hesaplaKomisyon(1000, 600, 15, 20, 50, 1, 'trendyol').netKar;
+    expect(kdv0).not.toBeCloseTo(kdv20); // senaryo gerçekten ayırt edici
+    expect(toplamlar({ eticaret: [satir], toplam: {} }).hesaplananEticaretKar).toBeCloseTo(kdv0);
+  });
+
+  test('KDV boş (null) gelirse varsayılan %20 uygulanır', () => {
+    const satir = { platform_adi: 'Trendyol', satis_fiyati: 1000, alis_fiyati: 600, komisyon_orani: 15, kdv_orani: null, kargo_ucreti: 50, adet: 1 };
+    const kdv20 = hesaplaKomisyon(1000, 600, 15, 20, 50, 1, 'trendyol').netKar;
+    expect(toplamlar({ eticaret: [satir], toplam: {} }).hesaplananEticaretKar).toBeCloseTo(kdv20);
+  });
 });
 
 describe('yatirimciOzetBirlestir', () => {
