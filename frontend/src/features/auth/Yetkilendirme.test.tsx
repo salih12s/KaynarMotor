@@ -32,6 +32,15 @@ describe('Yetkilendirme', () => {
     expect(screen.queryByText('Reddedilen Muhasebeci')).not.toBeInTheDocument();
   });
 
+  // Regression (karar 2026-11-04): ekran "Motor Satış'a alış fiyatı dahil değil" diyordu, ama sunucu Motor Satış'a alış fiyatını ve masrafı
+  // hem gösterir hem düzenletir (gorunum.ts, ikinciElMotor.service.ts). Metin gerçeği söyler; kâr ise kapsam dışıdır (yalnız admin görür).
+  test('Motor Satış açıklaması gerçeği söyler: alış fiyatı ve masraf kapsanır, kâr kapsanmaz', async () => {
+    render(<Yetkilendirme />);
+    await screen.findByText('Onaylı Personel');
+    expect(screen.getByText(/satış geçmişi ve alış fiyatı ile masrafı/)).toHaveTextContent(/Kâr kapsam dışıdır \(yalnız admin görür\)/);
+    expect(screen.queryByText(/alış fiyatı ve kâr hariç/)).not.toBeInTheDocument();
+  });
+
   test('sayfa içinde "Yetkilendirme" başlığı tekrarlanmaz (üst çubukta zaten var)', async () => {
     render(<Yetkilendirme />);
     await screen.findByText('Onaylı Personel');

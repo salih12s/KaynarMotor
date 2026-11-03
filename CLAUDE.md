@@ -15,6 +15,12 @@ açıktır: gerçek müşteri verisi, parola, token ve kullanıcı adı **commit
 - Roller: admin, personel (modül yetkileri), yatırımcı, muhasebeci. **Kâr yalnızca admin görür.** Alan düzeyinde görünürlük:
   `backend/rules/ikinciElMotor.gorunum.ts` + `middleware/yetki.ts` (`kariGizle`).
   **İstisna (2026-10-22): e-ticaret kârı, `eticaret_yetkisi` olan herkese açıktır** (`/api/eticaret` `kariGizle` dışında; arayüzde `karGor`).
+  **Alış fiyatı ≠ maliyet; görünürlük kararı (Salih, 2026-11-04), kod buna göre BİLEREK böyledir:**
+  (1) **Motorun alış fiyatı** (`ikinci_el_motorlar`/`sifir_motorlar` `alis_fiyati`) ve masrafı: admin, `alis_fiyati_gor` VE **Motor Satış yetkisi** (okuma + düzenleme); kâr kapsam dışı.
+  (2) **Stoktaki alış fiyatı** (`aksesuar_stok`/`yedek_parca_stok` `alis_fiyati`): stoğu okuyan herkese açık (iş emrinde maliyet bundan otomatik dolar).
+  (3) **Satış satırı maliyeti** (`parcalar.maliyet`, `aksesuar_parcalar.maliyet`, `toplam_maliyet`): modül yetkisi olan personel görür; satış fiyatı − maliyet = kâr
+  olduğundan "kâr yalnızca admin" kuralı bu yoldan **bilinçli olarak delinmiştir**, kapatmak istenirse ayrı bir iş (yazsın-ama-görmesin).
+  (4) Tamamlanmış satışı düzenleme/silme: yalnız servis iş emrinde admin kuralı var; aksesuar, yedek parça, e-ticaret satışında modül yetkisi yeter.
 
 - **Sıfır motor (CANLIDA 2026-10-27, Hostinger build 01a17a57, arayüz main.17b29eca.js; kaynak `sifir-motor` dalı a2fd23d,
   GitHub'a push edilmedi; geri dönüş `deploy/yedek/kaynarmotor-hostinger-2026-10-26-vite-ts-canli.zip`, DB değişikliği yalnız ekleme

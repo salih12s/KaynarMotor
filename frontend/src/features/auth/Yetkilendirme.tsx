@@ -24,8 +24,9 @@ import { RENK } from '../../app/tokenlar';
 import { authService } from './authApi';
 import type { Kullanici, YetkiBayraklari } from '../../shared/tipler';
 
-// Motor Satış yetkisi ile birlikte verilen görüntüleme yetkileri
-// (satış fiyatı, müşteri bilgisi ve satış geçmişi Motor Satış'ın içinde gelir — alış fiyatı ve kâr DAHİL DEĞİL)
+// Motor Satış yetkisi ile birlikte verilen görüntüleme yetkileri bayrak olarak işaretlenir (satış fiyatı, müşteri bilgisi, satış geçmişi).
+// Karar (2026-11-04): Motor Satış ALIŞ FİYATINI ve MASRAFI da kapsar; sunucu bunu `motor_satis_yetkisi`nden kendisi çıkarır
+// (rules/ikinciElMotor.gorunum.ts, services/ikinciElMotor.service.ts), ayrı bayrak gerekmez. KÂR kapsam dışıdır (yalnız admin).
 const MOTOR_SATIS_KAPSAMI = ['satis_fiyati_gor', 'musteri_gor', 'satis_gecmisi_gor'];
 
 // İşlem (modül) yetkileri — tüm yetkilendirme tek bir tabloda toplanır
@@ -69,7 +70,7 @@ const Yetkilendirme = () => {
   const handleToggle = async (user: Kullanici, key: keyof YetkiBayraklari, value: boolean) => {
     setError('');
     setSuccess('');
-    // Motor Satış yetkisi açılınca/kapanınca alış-satış fiyatı, kâr, müşteri ve satış geçmişi yetkileri de birlikte değişir
+    // Motor Satış yetkisi açılınca/kapanınca satış fiyatı, müşteri ve satış geçmişi bayrakları da birlikte değişir (alış fiyatı sunucuda ms'den gelir)
     const payload: Partial<Record<keyof YetkiBayraklari, boolean>> =
       key === 'motor_satis_yetkisi' ? { motor_satis_yetkisi: value, ...Object.fromEntries(MOTOR_SATIS_KAPSAMI.map((k) => [k, value])) } : { [key]: value };
     const oncekiUser = user; // hata olursa geri almak için
@@ -105,8 +106,8 @@ const Yetkilendirme = () => {
     <Box>
       {/* Sayfa başlığı üst çubukta (Layout) zaten var; burada tekrarlanmaz */}
       <Typography variant="body2" color="text.secondary" mb={3}>
-        Personelin hangi işlemleri yapabileceğini buradan ayarlayın. <strong>Motor Satış</strong> yetkisi; satış fiyatı, müşteri bilgisi ve satış geçmişi
-        görüntüleme yetkilerini de kapsar (alış fiyatı ve kâr hariç).
+        Personelin hangi işlemleri yapabileceğini buradan ayarlayın. <strong>Motor Satış</strong> yetkisi; satış fiyatı, müşteri bilgisi, satış geçmişi ve alış
+        fiyatı ile masrafı görüntüleme/düzenleme yetkilerini de kapsar. Kâr kapsam dışıdır (yalnız admin görür).
       </Typography>
       {error && (
         <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')}>
