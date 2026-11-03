@@ -10,3 +10,4 @@ export { OnayProvider, useOnay } from './Onay';
 export { BildirimProvider, bildir } from './Bildirim';
 export { sagaSutunlar } from './sagaSutunlar';
 export { default as MevcutStok } from './MevcutStok';
+export { default as HataSiniri } from './HataSiniri';

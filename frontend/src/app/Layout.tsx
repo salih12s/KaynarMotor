@@ -26,6 +26,7 @@ import { useCustomTheme } from './ThemeContext';
 import { authService } from '../features/auth/authApi';
 import { FONT, MENU_RENK, RENK, ISLEM } from './tokenlar';
 import { taksitGorebilirMi } from './rotaYetkileri';
+import { HataSiniri } from '../shared/ui';
 
 const KENAR_GENISLIK = 216;
 const MOBIL_GENISLIK = 300;
@@ -373,7 +374,10 @@ const Layout = () => {
         )}
 
         <Box sx={{ px: { xs: 1.75, md: 3.5 }, pt: { xs: 1.75, md: 1.5 }, pb: { xs: 2, md: 5 } }}>
-          <Outlet />
+          {/* Sayfa çökerse yalnız bu alan uyarıya döner (menü ayakta kalır); başka sayfaya geçilince (key) hata temizlenir */}
+          <HataSiniri key={pathname}>
+            <Outlet />
+          </HataSiniri>
         </Box>
       </Box>
 
