@@ -2,7 +2,7 @@
 import express, { Router } from 'express';
 import type { NextFunction, Request, Response } from 'express';
 import * as kontrolcu from './satisBelgeleri.controller';
-import { MAX_BOYUT } from './satisBelgeleri.service';
+import { MAX_BOYUT } from './satisBelgeleri.schemas';
 
 const router = Router();
 

@@ -9,7 +9,6 @@ import type { Kullanici, Veritabani } from '../../../core/tipler';
 import * as repo from './satisBelgeleri.repository';
 import type { ArsivSatiri } from './satisBelgeleri.repository';
 
-export const MAX_BOYUT = 10 * 1024 * 1024; // dosya başına 10 MB
 const MAX_ADET = 30; // satış başına
 
 const baslar = (buf: Buffer, bytes: number[]) => bytes.every((b, i) => buf[i] === b);
