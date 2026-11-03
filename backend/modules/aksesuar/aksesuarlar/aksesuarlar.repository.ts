@@ -125,7 +125,7 @@ export const parcalariSil = async (db: Veritabani, aksesuarId: number) => {
 export const guncelle = async (db: Veritabani, id: number, s: SatisGuncelleme) => {
   await db.query(
     `UPDATE aksesuarlar SET ad_soyad=$1, telefon=$2, odeme_sekli=$3, aciklama=$4, durum=$5,
-     odeme_detaylari=$6, satis_tarihi=$7, toplam_maliyet=$8, toplam_satis=$9, kar=$10,
+     odeme_detaylari=$6, satis_tarihi=COALESCE($7, satis_tarihi), toplam_maliyet=$8, toplam_satis=$9, kar=$10,
      tamamlama_tarihi=COALESCE($11, tamamlama_tarihi), kalan_odeme=$13, indirim=$14, updated_at=CURRENT_TIMESTAMP WHERE id=$12`,
     [
       s.ad_soyad,
