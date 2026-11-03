@@ -353,7 +353,7 @@ describe('Aksesuar Stok: toplu içe aktarma', () => {
     await user.click(within(p).getByRole('button', { name: 'İçe Aktar' }));
     await waitFor(() => expect(aksesuarStokService.topluEkle).toHaveBeenCalledTimes(1));
     expect(aksesuarStokService.topluEkle).toHaveBeenCalledWith([
-      { stok_kodu: 'AKS001', stok_adi: 'Ayna', alis_fiyati: '50', satis_fiyati: '100', giren_miktar: '20' },
+      { stok_kodu: 'AKS001', stok_adi: 'Ayna', alis_fiyati: 50, satis_fiyati: 100, giren_miktar: 20 },
       { stok_kodu: 'AKS002', stok_adi: 'Zincir', alis_fiyati: 0, satis_fiyati: 0, giren_miktar: 0 },
     ]);
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
@@ -373,6 +373,30 @@ describe('Aksesuar Stok: toplu içe aktarma', () => {
     const [satirlar] = vi.mocked(aksesuarStokService.topluEkle).mock.calls[0] as unknown as [Record<string, string>[]];
     expect(satirlar).toHaveLength(1);
     for (const alan of ['alis_fiyati', 'satis_fiyati', 'giren_miktar']) expect(Number.isFinite(Number(satirlar[0][alan]))).toBe(true);
+  });
+
+  // Regression: Türkçe biçim ("1.250,50") eskiden ham metin gidiyor, sunucuda parseFloat ile 1,25 oluyordu.
+  test('Excel yapıştırması: Türkçe sayı biçimi (binlik nokta, ondalık virgül) doğru okunur', async () => {
+    const user = await ekranAc();
+    const p = await importAc(user);
+    await user.click(within(p).getByRole('textbox'));
+    await user.paste('AKS003\tKask\t1.250,50\t2.000,5\t1.000');
+    await user.click(within(p).getByRole('button', { name: 'İçe Aktar' }));
+    await waitFor(() => expect(aksesuarStokService.topluEkle).toHaveBeenCalledTimes(1));
+    expect(aksesuarStokService.topluEkle).toHaveBeenCalledWith([
+      { stok_kodu: 'AKS003', stok_adi: 'Kask', alis_fiyati: 1250.5, satis_fiyati: 2000.5, giren_miktar: 1000 },
+    ]);
+  });
+
+  test('sayı olmayan hücre satır numarasıyla bildirilir; hiçbir satır sunucuya gönderilmez ve pencere açık kalır', async () => {
+    const user = await ekranAc();
+    const p = await importAc(user);
+    await user.click(within(p).getByRole('textbox'));
+    await user.paste('AKS001\tAyna\t50\t100\t20\nAKS002\tZincir\tabc\t10\t1');
+    await user.click(within(p).getByRole('button', { name: 'İçe Aktar' }));
+    expect(await within(p).findByText(/Satır 2/)).toBeInTheDocument();
+    expect(aksesuarStokService.topluEkle).not.toHaveBeenCalled();
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
   });
 
   test('sunucu hatası pencerede gösterilir ve pencere açık kalır', async () => {

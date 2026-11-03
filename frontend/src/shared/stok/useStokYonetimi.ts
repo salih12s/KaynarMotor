@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { AxiosResponse } from 'axios';
 import { hataMesaji, type Govde } from '../api/istemci';
 import { useOnay, bildir } from '../ui';
-import { sayiDegeri, type Sayi } from '../utils/bicim';
+import { sayiDegeri, trSayi, type Sayi } from '../utils/bicim';
 import { sonIstek } from '../utils/sonIstek';
 
 /** Ortak stok satırı: özet ve süzgeç yalnız bu alanlara bakar. */
@@ -125,10 +125,22 @@ export const useStokYonetimi = <T extends StokSatiri, F extends { stok_kodu: str
         .trim()
         .split('\n')
         .filter((l) => l.trim());
-      const items = lines.map((line) => {
+      const items = [];
+      for (const [i, line] of lines.entries()) {
         const parts = line.split('\t').map((p) => p.trim());
-        return { stok_kodu: parts[0] || '', stok_adi: parts[1] || '', alis_fiyati: parts[2] || 0, satis_fiyati: parts[3] || 0, giren_miktar: parts[4] || 0 };
-      });
+        // Sayı sütunları Türkçe biçimde olabilir (Excel): trSayi ile okunur; çevrilemeyen hücre satır numarasıyla bildirilir, hiçbir satır gönderilmez
+        const [alis, satis, miktar] = [trSayi(parts[2]), trSayi(parts[3]), trSayi(parts[4])];
+        const kotu = [
+          ['alış fiyatı', alis, parts[2]],
+          ['satış fiyatı', satis, parts[3]],
+          ['miktar', miktar, parts[4]],
+        ].find(([, deger]) => Number.isNaN(deger));
+        if (kotu) {
+          setError(`Satır ${i + 1}: ${kotu[0]} sayı değil ("${kotu[2]}")`);
+          return;
+        }
+        items.push({ stok_kodu: parts[0] || '', stok_adi: parts[1] || '', alis_fiyati: alis, satis_fiyati: satis, giren_miktar: miktar });
+      }
       await servis.topluEkle(items);
       setImportDialog(false);
       setImportText('');

@@ -18,6 +18,23 @@ export const sayiYaz = (v: Sayi): string => sayiDegeri(v).toLocaleString('tr-TR'
 // 1.500,00 (en az 2 ondalık)
 export const paraYaz = (v: Sayi): string => sayiDegeri(v).toLocaleString('tr-TR', { minimumFractionDigits: 2 });
 
+/**
+ * Türkçe yazılmış (Excel'den yapıştırılan) sayı metni → sayı. Türkçe: nokta binlik, virgül ondalık ("1.250,50" → 1250,5).
+ * Eskiden ham metin sunucuya gidiyor ve `parseFloat` ile okunuyordu: "1.250,50" → 1,25 (fiyat 1000 kat küçülür), "1250,5" → 1250 (ondalık kaybolur).
+ * Virgül yoksa yalnız "1.250" / "1.250.000" gibi binlik gruplu biçim binlik sayılır (içe aktarma Türkçe bir iş aracıdır);
+ * "12.5" gibi diğer noktalı değerler ondalık kalır. Boş → 0; sayı olmayan ya da belirsiz → NaN (çağıran satırı reddeder, sessizce 0 yapmaz).
+ */
+export const trSayi = (ham: unknown): number => {
+  let s = String(ham ?? '').replace(/[\s₺]|TL/gi, '');
+  if (s === '') return 0;
+  if (s.includes(',')) {
+    // nokta yalnız ondalık virgülden ÖNCE ve 3'lü binlik gruplarında olabilir; virgül tek
+    if (!/^-?(\d{1,3}(\.\d{3})+|\d*),\d+$/.test(s)) return NaN;
+    s = s.replace(/\./g, '').replace(',', '.');
+  } else if (/^-?\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g, '');
+  return /^-?(\d+(\.\d+)?|\.\d+)$/.test(s) ? Number(s) : NaN;
+};
+
 /** Tarih alanı: sunucudan ISO metni, formlardan YYYY-AA-GG metni ya da Date gelir. */
 export type TarihGirdisi = string | number | Date | null | undefined;
 

@@ -312,7 +312,7 @@ describe('Yedek Parça Stok: toplu içe aktarma', () => {
     await user.click(within(p).getByRole('button', { name: 'İçe Aktar' }));
     await waitFor(() => expect(yedekParcaStokService.topluEkle).toHaveBeenCalledTimes(1));
     expect(yedekParcaStokService.topluEkle).toHaveBeenCalledWith([
-      { stok_kodu: 'Y001', stok_adi: 'Rulman', alis_fiyati: '50', satis_fiyati: '100', giren_miktar: '20' },
+      { stok_kodu: 'Y001', stok_adi: 'Rulman', alis_fiyati: 50, satis_fiyati: 100, giren_miktar: 20 },
       { stok_kodu: 'Y002', stok_adi: 'Civata', alis_fiyati: 0, satis_fiyati: 0, giren_miktar: 0 },
     ]);
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
