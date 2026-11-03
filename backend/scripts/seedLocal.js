@@ -946,8 +946,8 @@ const seed = async (client) => {
     const adminSifre = process.env.ADMIN_INITIAL_PASSWORD || DEMO_SIFRE;
     await client.query(
       `INSERT INTO kullanicilar (kullanici_adi, sifre, ad_soyad, rol, onay_durumu)
-       VALUES ('admin', $1, $2, 'Admin', 'admin', 'onaylandi')`,
-      [await bcrypt.hash(adminSifre, 10), adminSifre],
+       VALUES ('admin', $1, 'Admin', 'admin', 'onaylandi')`,
+      [await bcrypt.hash(adminSifre, 10)],
     );
     adminOlusturuldu = true;
   }
@@ -956,12 +956,12 @@ const seed = async (client) => {
     const yetkiDegerleri = YETKI_ALANLARI.map((y) => k.yetkiler.includes(y));
     await client.query(
       `INSERT INTO kullanicilar (kullanici_adi, sifre, ad_soyad, rol, onay_durumu, ${YETKI_ALANLARI.join(', ')})
-       VALUES ($1, $2, $3, $4, $5, $6, ${YETKI_ALANLARI.map((_, i) => `$${i + 7}`).join(', ')})
+       VALUES ($1, $2, $3, $4, $5, ${YETKI_ALANLARI.map((_, i) => `$${i + 6}`).join(', ')})
        ON DUPLICATE KEY UPDATE
          sifre = VALUES(sifre), ad_soyad = VALUES(ad_soyad),
          rol = VALUES(rol), onay_durumu = VALUES(onay_durumu),
          ${YETKI_ALANLARI.map((y) => `${y} = VALUES(${y})`).join(', ')}`,
-      [k.kullanici_adi, sifreHash, DEMO_SIFRE, k.ad_soyad, k.rol, k.onay || 'onaylandi', ...yetkiDegerleri],
+      [k.kullanici_adi, sifreHash, k.ad_soyad, k.rol, k.onay || 'onaylandi', ...yetkiDegerleri],
     );
     const kayit = await client.query('SELECT id FROM kullanicilar WHERE kullanici_adi = $1', [k.kullanici_adi]);
     kullanicilar[k.kullanici_adi] = { id: kayit.rows[0].id, ad_soyad: k.ad_soyad, kullanici_adi: k.kullanici_adi };
