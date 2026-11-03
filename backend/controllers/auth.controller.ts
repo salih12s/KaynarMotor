@@ -104,7 +104,18 @@ export const reddet = sarmala('Kullanıcı red hatası:', async (req, res) => {
 });
 
 export const kullaniciSil = sarmala('Kullanıcı silme hatası:', async (req, res) => {
-  await servis.kullaniciSil(pool, Number(req.params.id), req.user);
+  const id = Number(req.params.id);
+  const iz: { hedef?: string } = {};
+  await servis.kullaniciSil(pool, id, req.user, iz);
+  // Eskiden hiç yazılmıyordu: kimin silindiği iz bırakmıyordu
+  await logAktivite({
+    kullanici_id: req.user.id,
+    kullanici_adi: req.user.kullanici_adi,
+    islem_tipi: ISLEM_TIPLERI.KULLANICI_SIL,
+    islem_detay: `Kullanıcı #${id}${iz.hedef ? ` (${iz.hedef})` : ''} silindi`,
+    hedef_tablo: 'kullanicilar',
+    hedef_id: id,
+  });
   res.json({ message: 'Kullanıcı silindi' });
 });
 
@@ -142,12 +153,14 @@ export const yatirimcilar = sarmala('Yatırımcı listesi hatası:', async (_req
 
 export const yetkileriGuncelle = sarmala('Yetki güncelleme hatası:', async (req, res) => {
   const id = Number(req.params.id);
-  await servis.yetkileriGuncelle(pool, id, dogrula(yetkiGovdesi, govdeyiOku(req)));
+  const iz: { degisiklik?: string; hedef?: string } = {};
+  await servis.yetkileriGuncelle(pool, id, dogrula(yetkiGovdesi, govdeyiOku(req)), iz);
   await logAktivite({
     kullanici_id: req.user.id,
     kullanici_adi: req.user.kullanici_adi,
-    islem_tipi: ISLEM_TIPLERI.APPROVE,
-    islem_detay: `Kullanıcı #${id} yetkileri güncellendi`,
+    // Eskiden APPROVE (onay) etiketiyle ve değersiz yazılıyordu; artık kendi türü, hedef kullanıcı ve eski → yeni değerler
+    islem_tipi: ISLEM_TIPLERI.YETKI_DEGISTIR,
+    islem_detay: `Kullanıcı #${id}${iz.hedef ? ` (${iz.hedef})` : ''} yetkileri güncellendi: ${iz.degisiklik || 'değişiklik yok'}`,
     hedef_tablo: 'kullanicilar',
     hedef_id: id,
   });

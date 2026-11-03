@@ -48,6 +48,17 @@ export const kullanicilar = async (db: Veritabani) =>
 export const rolBul = async (db: Veritabani, id: number): Promise<string | null> =>
   (await db.query<{ rol: string }>('SELECT rol FROM kullanicilar WHERE id = $1', [id])).rows[0]?.rol ?? null;
 
+/** Kullanıcı adı; kullanıcı yoksa null (denetim günlüğünde "kim silindi" için). */
+export const kullaniciAdiBul = async (db: Veritabani, id: number): Promise<string | null> =>
+  (await db.query<{ kullanici_adi: string }>('SELECT kullanici_adi FROM kullanicilar WHERE id = $1', [id])).rows[0]?.kullanici_adi ?? null;
+
+/**
+ * Yetki bayraklarının MEVCUT değerleri + kullanıcı adı (denetim günlüğünde eski → yeni için). `kolonlar` service'te izinli listeden
+ * (YETKI_ALANLARI) süzülür: SQL'e kullanıcı girdisi yazılmaz. Kullanıcı yoksa undefined.
+ */
+export const yetkileriOku = async (db: Veritabani, id: number, kolonlar: readonly string[]) =>
+  (await db.query(`SELECT kullanici_adi, ${kolonlar.join(', ')} FROM kullanicilar WHERE id = $1`, [id])).rows[0] as Record<string, unknown> | undefined;
+
 export const onayDurumuAyarla = async (db: Veritabani, id: number, durum: 'onaylandi' | 'reddedildi') => {
   await db.query('UPDATE kullanicilar SET onay_durumu = $1 WHERE id = $2', [durum, id]);
 };

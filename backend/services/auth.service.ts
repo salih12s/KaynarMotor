@@ -5,6 +5,7 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { kullaniciOnbellegiTemizle, sifreParmagi } from '../middleware/auth';
+import { degisiklikOzeti } from '../lib/degisiklik';
 import { BulunamadiHatasi, GecersizIstek, IstemciHatasi, sifreSorunu } from '../lib/dogrulama/dogrula';
 import { isUniqueViolation } from '../database/db';
 import type { BaglamDb, Kullanici, Veritabani } from '../lib/tipler';
@@ -156,11 +157,12 @@ export const reddet = async (db: Veritabani, id: number) => {
  * KORUNUR: yalnızca bağlantı boşaltılır (eskiden FK yüzünden "Sunucu hatası" veriyor ve kullanıcı silinemiyordu).
  * Silinen kullanıcının token'ı hemen geçersiz olur.
  */
-export const kullaniciSil = async (db: BaglamDb, id: number, silen: Kullanici) => {
+export const kullaniciSil = async (db: BaglamDb, id: number, silen: Kullanici, iz?: { hedef?: string }) => {
   if (id === silen.id) throw new GecersizIstek('Kendinizi silemezsiniz');
   const rol = await repo.rolBul(db, id);
   if (rol === null) throw new BulunamadiHatasi('Kullanıcı bulunamadı');
   if (rol === 'admin') throw new GecersizIstek('Admin hesabı silinemez');
+  if (iz) iz.hedef = (await repo.kullaniciAdiBul(db, id)) ?? undefined; // silmeden ÖNCE: günlükte "kim silindi" için
   await db.withTransaction(async (tx) => {
     await repo.isEmirleriBaginiKopar(tx, id);
     await repo.kullaniciSil(tx, id);
@@ -225,13 +227,19 @@ const yetkiDegeri = (alan: string, deger: unknown): boolean => {
 };
 
 /** Alan bazlı yetki bayraklarını günceller; yalnızca bilinen alanlar işlenir, değerler açıkça boolean'a çevrilir. Etki anında. */
-export const yetkileriGuncelle = async (db: Veritabani, id: number, govde: YetkiGovdesi) => {
+export const yetkileriGuncelle = async (db: Veritabani, id: number, govde: YetkiGovdesi, iz?: { degisiklik?: string; hedef?: string }) => {
   const alanlar: Array<[string, boolean]> = [];
   for (const alan of YETKI_ALANLARI) {
     if (alan in govde) alanlar.push([alan, yetkiDegeri(alan, (govde as Record<string, unknown>)[alan])]);
   }
   if (alanlar.length === 0) throw new GecersizIstek('Güncellenecek geçerli alan yok');
+  // Denetim izi: `iz` verilirse (controller) güncellemeden ÖNCE eski değerler okunur; verilmezse ek sorgu yoktur
+  const eski = iz ? await repo.yetkileriOku(db, id, alanlar.map(([kolon]) => kolon)) : undefined;
   if ((await repo.yetkiGuncelle(db, id, alanlar)) === 0) throw new BulunamadiHatasi('Kullanıcı bulunamadı');
+  if (iz && eski) {
+    iz.hedef = String(eski.kullanici_adi ?? '');
+    iz.degisiklik = degisiklikOzeti(eski, Object.fromEntries(alanlar), alanlar.map(([kolon]) => kolon));
+  }
   kullaniciOnbellegiTemizle(id); // yetki değişikliği (alma ve verme) anında uygulanır
 };
 

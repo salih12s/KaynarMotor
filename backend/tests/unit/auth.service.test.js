@@ -270,6 +270,35 @@ describe('admin: silme, onay ve yetki', () => {
     await assert.rejects(servis.yetkileriGuncelle(sahteDb(), 99, { kar_gor: true }), (h) => h.status === 404 && h.message === 'Kullanıcı bulunamadı');
   });
 
+  // Denetim izi: controller `iz` verirse servis eski değerleri okuyup "alan: eski → yeni" özetini ve hedef kullanıcı adını doldurur.
+  // `iz` verilmezse ek sorgu YOK (mevcut davranış ve sorgu sırası korunur).
+  it('iz verilirse: yetki farkı eski → yeni yazılır, değişmeyen alan yazılmaz; hedef kullanıcı adı döner', async () => {
+    const db = sahteDb([
+      ['SELECT kullanici_adi, ', [{ kullanici_adi: 'ali', kar_gor: false, servis_yetkisi: true }]],
+      ['UPDATE kullanicilar SET', [{}]],
+    ]);
+    const iz = {};
+    await servis.yetkileriGuncelle(db, 4, { kar_gor: true, servis_yetkisi: true }, iz);
+    assert.equal(iz.degisiklik, 'kar_gor: false → true');
+    assert.equal(iz.hedef, 'ali');
+  });
+
+  it('iz verilmezse ek SELECT çalışmaz (ilk sorgu doğrudan UPDATE)', async () => {
+    const db = sahteDb([['UPDATE kullanicilar SET', [{}]]]);
+    await servis.yetkileriGuncelle(db, 4, { kar_gor: true });
+    assert.match(db.cagrilar[0].sql, /^UPDATE kullanicilar SET/);
+  });
+
+  it('silme: iz verilirse silinen kullanıcının adı iz.hedef olarak döner', async () => {
+    const db = sahteDb([
+      ['SELECT rol FROM kullanicilar', [{ rol: 'personel' }]],
+      ['SELECT kullanici_adi FROM kullanicilar', [{ kullanici_adi: 'ali' }]],
+    ]);
+    const iz = {};
+    await servis.kullaniciSil(db, 9, { id: 5 }, iz);
+    assert.equal(iz.hedef, 'ali');
+  });
+
   it('geçerli alan yoksa 400 "Güncellenecek geçerli alan yok"', async () => {
     const db = sahteDb();
     await assert.rejects(servis.yetkileriGuncelle(db, 4, { rol: 'admin', x: 1 }), (h) => h.status === 400 && h.message === 'Güncellenecek geçerli alan yok');
