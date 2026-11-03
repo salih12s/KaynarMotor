@@ -8,16 +8,16 @@ const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 const { sahteDb } = require('./sahteDb');
 
-const musteriler = require('../../modules/musteriler/musteriler.service');
-const isEmirleri = require('../../modules/servis/isEmirleri/isEmirleri.service');
-const aksesuarlar = require('../../modules/aksesuar/aksesuarlar/aksesuarlar.service');
-const aksesuarStok = require('../../modules/aksesuar/aksesuarStok/aksesuarStok.service');
-const yedekParcalar = require('../../modules/yedek-parca/yedekParcalar/yedekParcalar.service');
-const yedekParcaStok = require('../../modules/yedek-parca/yedekParcaStok/yedekParcaStok.service');
-const eticaret = require('../../modules/eticaret/eticaret.service');
-const motor = require('../../modules/motor/ikinciElMotor/ikinciElMotor.service');
-const ilanlar = require('../../modules/vitrin/ilanlar/ilanlar.service');
-const auth = require('../../modules/auth/auth.service');
+const musteriler = require('../../services/musteriler.service');
+const isEmirleri = require('../../services/isEmirleri.service');
+const aksesuarlar = require('../../services/aksesuarlar.service');
+const aksesuarStok = require('../../services/aksesuarStok.service');
+const yedekParcalar = require('../../services/yedekParcalar.service');
+const yedekParcaStok = require('../../services/yedekParcaStok.service');
+const eticaret = require('../../services/eticaret.service');
+const motor = require('../../services/ikinciElMotor.service');
+const ilanlar = require('../../services/ilanlar.service');
+const auth = require('../../services/auth.service');
 
 const ADMIN = { id: 1, kullanici_adi: 'admin', ad_soyad: 'Admin', rol: 'admin' };
 

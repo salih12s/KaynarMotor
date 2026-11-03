@@ -7,8 +7,8 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 const { sahteDb } = require('./sahteDb');
-const stok = require('../../modules/yedek-parca/yedekParcaStok/yedekParcaStok.service');
-const satis = require('../../modules/yedek-parca/yedekParcalar/yedekParcalar.service');
+const stok = require('../../services/yedekParcaStok.service');
+const satis = require('../../services/yedekParcalar.service');
 
 const sorgular = (db, parca) => db.cagrilar.filter((c) => c.sql.includes(parca));
 

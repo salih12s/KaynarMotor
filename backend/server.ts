@@ -1,5 +1,5 @@
-// Ortam değişkenleri HER ŞEYDEN ÖNCE yüklenir (core/db gibi modüller içe aktarılırken ortamı okur) ve JWT_SECRET denetlenir.
-import './core/env';
+// Ortam değişkenleri HER ŞEYDEN ÖNCE yüklenir (database/db gibi modüller içe aktarılırken ortamı okur) ve JWT_SECRET denetlenir.
+import './lib/env';
 
 import fs from 'node:fs';
 import path from 'node:path';
@@ -7,13 +7,13 @@ import cors from 'cors';
 import express from 'express';
 import type { NextFunction, Request, Response } from 'express';
 import helmet from 'helmet';
-import './core/http/asyncHata'; // async işleyicide fırlatılan hata istemciyi yanıtsız bırakmasın (500 dönsün)
-import { denetimKaydi } from './core/gunluk/denetimKaydi';
-import { pool } from './core/veritabani/db';
-import { initializeDatabase } from './core/veritabani/initDb';
-// Kimlik doğrulama ve yetkilendirme middleware'leri (bkz. core/middleware/)
-import { authenticateToken } from './core/middleware/auth';
-import { negatifTutarEngelle } from './core/middleware/tutarDogrula';
+import './lib/http/asyncHata'; // async işleyicide fırlatılan hata istemciyi yanıtsız bırakmasın (500 dönsün)
+import { denetimKaydi } from './lib/gunluk/denetimKaydi';
+import { pool } from './database/db';
+import { initializeDatabase } from './database/initDb';
+// Kimlik doğrulama ve yetkilendirme middleware'leri (bkz. middleware/)
+import { authenticateToken } from './middleware/auth';
+import { negatifTutarEngelle } from './middleware/tutarDogrula';
 import {
   modulYetkisi,
   yazmaYetkisi,
@@ -23,23 +23,23 @@ import {
   kariGizle,
   AKSESUAR_STOK_OKUYANLAR,
   YEDEK_PARCA_STOK_OKUYANLAR,
-} from './core/middleware/yetki';
+} from './middleware/yetki';
 // Modül yolları (her biri routes → controller → service → repository katmanlarıdır)
-import authRoutes from './modules/auth/auth.routes';
-import musteriRoutes from './modules/musteriler/musteriler.routes';
-import isEmriRoutes from './modules/servis/isEmirleri/isEmirleri.routes';
-import aksesuarRoutes from './modules/aksesuar/aksesuarlar/aksesuarlar.routes';
-import aksesuarStokRoutes from './modules/aksesuar/aksesuarStok/aksesuarStok.routes';
-import ikinciElMotorRoutes from './modules/motor/ikinciElMotor/ikinciElMotor.routes';
-import satisBelgeRoutes from './modules/motor/satisBelgeleri/satisBelgeleri.routes';
-import sifirMotorRoutes, { sifirMotorGorselRoutes } from './modules/motor/sifirMotor/sifirMotor.routes';
-import eticaretRoutes from './modules/eticaret/eticaret.routes';
-import yedekParcaRoutes from './modules/yedek-parca/yedekParcalar/yedekParcalar.routes';
-import yedekParcaStokRoutes from './modules/yedek-parca/yedekParcaStok/yedekParcaStok.routes';
-import raporRoutes from './modules/raporlar/raporlar/raporlar.routes';
-import veresiyeRoutes from './modules/raporlar/veresiye/veresiye.routes';
-import vitrinRoutes from './modules/vitrin/ilanlar/ilanlar.routes';
-import servisGecmisiRoutes from './modules/servis/servisGecmisi/servisGecmisi.routes';
+import authRoutes from './routes/auth.routes';
+import musteriRoutes from './routes/musteriler.routes';
+import isEmriRoutes from './routes/isEmirleri.routes';
+import aksesuarRoutes from './routes/aksesuarlar.routes';
+import aksesuarStokRoutes from './routes/aksesuarStok.routes';
+import ikinciElMotorRoutes from './routes/ikinciElMotor.routes';
+import satisBelgeRoutes from './routes/satisBelgeleri.routes';
+import sifirMotorRoutes, { sifirMotorGorselRoutes } from './routes/sifirMotor.routes';
+import eticaretRoutes from './routes/eticaret.routes';
+import yedekParcaRoutes from './routes/yedekParcalar.routes';
+import yedekParcaStokRoutes from './routes/yedekParcaStok.routes';
+import raporRoutes from './routes/raporlar.routes';
+import veresiyeRoutes from './routes/veresiye.routes';
+import vitrinRoutes from './routes/ilanlar.routes';
+import servisGecmisiRoutes from './routes/servisGecmisi.routes';
 
 const app = express();
 const PORT = process.env.PORT || 5100;
@@ -120,7 +120,7 @@ app.use('/api', negatifTutarEngelle);
 // Yetkilendirme kuralları frontend/src/App.jsx içindeki route guard'larıyla birebir
 // eşleşecek şekilde seçilmiştir. Bazı uçlar sahibi olmadıkları ekranlar tarafından da
 // OKUMA amaçlı kullanıldığından (ör. stok araması servis/e-ticaret/rapor ekranlarında),
-// bu uçlarda yalnızca yazma işlemleri yetkiye bağlanır — bkz. core/middleware/yetki.ts.
+// bu uçlarda yalnızca yazma işlemleri yetkiye bağlanır — bkz. middleware/yetki.ts.
 app.use('/api/auth', authRoutes);
 // Müşteri: arama uçları tüm modüllerdeki formlar tarafından kullanılır,
 // yönetim uçları admin'e kısıtlıdır — kural route dosyası içinde uygulanır.

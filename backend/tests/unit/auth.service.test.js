@@ -12,8 +12,8 @@ const assert = require('node:assert/strict');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { sahteDb } = require('./sahteDb');
-const servis = require('../../modules/auth/auth.service');
-const { sifreParmagi } = require('../../core/middleware/auth');
+const servis = require('../../services/auth.service');
+const { sifreParmagi } = require('../../middleware/auth');
 
 const SIFRE = 'GucluSifre1';
 const OZET = bcrypt.hashSync(SIFRE, 4); // düşük maliyet: yalnızca test hızı için

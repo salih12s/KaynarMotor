@@ -4,7 +4,7 @@
  */
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { aramaIcerir, aramaDeseni } = require('../../core/veritabani/sqlText');
+const { aramaIcerir, aramaDeseni } = require('../../database/sqlText');
 
 test('aramaIcerir: düz metin %...% içine alınır; Türkçe küçük harf ve ı → i kuralı aramaDeseni ile aynı', () => {
   assert.equal(aramaIcerir('YILMAZ'), '%yilmaz%');

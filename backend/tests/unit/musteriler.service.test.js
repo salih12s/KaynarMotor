@@ -7,7 +7,7 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 const { sahteDb } = require('./sahteDb');
-const servis = require('../../modules/musteriler/musteriler.service');
+const servis = require('../../services/musteriler.service');
 
 const VAR_MI = (db, parca) => db.cagrilar.some((c) => c.sql.includes(parca));
 

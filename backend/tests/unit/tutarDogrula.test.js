@@ -6,7 +6,7 @@
  */
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { negatifBul, negatifTutarEngelle } = require('../../core/middleware/tutarDogrula');
+const { negatifBul, negatifTutarEngelle } = require('../../middleware/tutarDogrula');
 
 test('negatif tutar alanı bulunur; ad döner (iç içe nesne ve dizide de)', () => {
   assert.equal(negatifBul({ satis_fiyati: -1 }), 'satis_fiyati');

@@ -37,7 +37,7 @@ before(async () => {
   s = await sunucuBaslat();
   api = s.api;
   admin = s.admin;
-  pool = require('../../core/veritabani/db').pool;
+  pool = require('../../database/db').pool;
 });
 after(async () => {
   if (s) s.durdur();

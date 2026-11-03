@@ -19,7 +19,7 @@ before(async () => {
   s = await sunucuBaslat();
   api = s.api;
   admin = s.admin;
-  pool = require('../../core/veritabani/db').pool;
+  pool = require('../../database/db').pool;
   const r = await pool.query(
     `INSERT INTO kullanicilar (kullanici_adi, sifre, ad_soyad, rol, onay_durumu) VALUES ($1, 'x', 'Koruma Admin', 'admin', 'onaylandi') RETURNING id`,
     [`admin_koruma_${SON}`],

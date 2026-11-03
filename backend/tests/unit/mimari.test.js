@@ -1,14 +1,19 @@
 /*
- * MİMARİ testi: docs/TS-GECISI.md'deki katman kuralını makineye zorlatır (yeni kod kuralı sessizce bozamasın).
+ * MİMARİ testi: backend klasör düzenini ve katman kuralını makineye zorlatır (yeni kod kuralı sessizce bozamasın).
  *
- *   routes → controller → service → repository → veritabanı
- *   (HTTP)   (istek/yanıt)  (iş kuralı)  (SQL)
+ *   routes/ → controllers/ → services/ → repositories/ → database/
+ *   (HTTP)    (istek/yanıt)   (iş kuralı)  (SQL)
+ *
+ * Klasörler: routes, controllers, services, repositories, schemas, rules (saf kurallar: *.gorunum, *.hesap, komisyon, vitrinOrtak)
+ * Altyapı:   middleware, database, lib
  *
  * R1  Katman sırası (yalnızca ÇALIŞMA ZAMANI içe aktarmaları; `import type` serbest: çalışma zamanında bağ kurmaz).
  *     routes → controller, schemas · controller → service, schemas, gorunum, hesap · service → repository, schemas, gorunum, hesap
  *     repository → (başka katman yok) · gorunum/hesap saf kuraldır → yalnızca gorunum, hesap
  * R2  `express` yalnızca routes ve controller'da (service/repository/saf kurallar HTTP bilmez; tip olarak bile).
- * R3  core/ ve shared/ modules/'a bağlanamaz (bağımlılık içeriden dışarı akmaz).
+ * R3  Altyapı klasörleri (middleware, database, lib) katman klasörlerine bağlanamaz (bağımlılık içeriden dışarı akmaz).
+ * R4  Dosya doğru klasörde: *.service.ts yalnız services/'te, *.routes.ts yalnız routes/'ta ... (gorunum/hesap/katmansız → rules/).
+ * R5  Eski klasörler (modules/, core/, shared/) geri gelmez.
  *
  * Bilinen istisna eklemek için ISTISNALAR'a "dosya -> hedef" yazılır ve gerekçesi belirtilir; liste büyütülmemeli.
  */
@@ -31,7 +36,13 @@ const IZINLI = {
 const KATMANLAR = Object.keys(IZINLI);
 const EXPRESS_YASAK = ['service', 'repository', 'schemas', 'gorunum', 'hesap'];
 
-// "<modules'a göre dosya yolu> -> <içe aktarılan>": gerekçe. Boş olması hedeftir.
+// Dosya adı soneki → bulunması gereken klasör
+const KLASOR = { routes: 'routes', controller: 'controllers', service: 'services', repository: 'repositories', schemas: 'schemas', gorunum: 'rules', hesap: 'rules' };
+const KATMAN_KLASORLERI = ['routes', 'controllers', 'services', 'repositories', 'schemas', 'rules'];
+const ALTYAPI_KLASORLERI = ['middleware', 'database', 'lib'];
+const ESKI_KLASORLER = ['modules', 'core', 'shared'];
+
+// "<backend'e göre dosya yolu> -> <içe aktarılan>": gerekçe. Boş olması hedeftir.
 const ISTISNALAR = {};
 
 const katman = (dosyaAdi) => {
@@ -51,6 +62,8 @@ const icAktarmalar = (kaynak) => {
 
 const tsDosyalari = (klasor) => {
   const cikti = [];
+  const yol = path.join(KOK, klasor);
+  if (!fs.existsSync(yol)) return cikti;
   const gez = (d) => {
     for (const e of fs.readdirSync(d, { withFileTypes: true })) {
       const p = path.join(d, e.name);
@@ -59,15 +72,17 @@ const tsDosyalari = (klasor) => {
       } else if (p.endsWith('.ts')) cikti.push(p);
     }
   };
-  gez(klasor);
+  gez(yol);
   return cikti;
 };
 
+const katmanDosyalari = () => KATMAN_KLASORLERI.flatMap(tsDosyalari);
 const goreli = (dosya) => path.relative(KOK, dosya).split(path.sep).join('/');
+const ilkKlasor = (dosya) => goreli(dosya).split('/')[0];
 
-const modulIhlalleri = () => {
+const katmanIhlalleri = () => {
   const ihlal = [];
-  for (const dosya of tsDosyalari(path.join(KOK, 'modules'))) {
+  for (const dosya of katmanDosyalari()) {
     const k = katman(dosya);
     if (!k) continue;
     for (const { hedef, tip } of icAktarmalar(fs.readFileSync(dosya, 'utf8'))) {
@@ -79,21 +94,31 @@ const modulIhlalleri = () => {
       }
       if (tip || !hedef.startsWith('.')) continue; // tip içe aktarması ve paketler R1 dışı
       const hk = katman(hedef + '.ts');
-      if (!hk || hk === k) continue; // katmansız yardımcı (core, ortak dosya) ya da aynı katman
+      if (!hk || hk === k) continue; // katmansız yardımcı (lib, rules/komisyon) ya da aynı katman
       if (!IZINLI[k].includes(hk)) ihlal.push(`R1 ${anahtar} (${k} → ${hk} yasak; izinli: ${IZINLI[k].join(', ') || 'hiçbiri'})`);
     }
   }
   return ihlal;
 };
 
-const icdenDisaIhlalleri = () => {
+const altyapiIhlalleri = () => {
   const ihlal = [];
-  for (const klasor of ['core', 'shared']) {
-    for (const dosya of tsDosyalari(path.join(KOK, klasor))) {
-      for (const { hedef } of icAktarmalar(fs.readFileSync(dosya, 'utf8'))) {
-        if (hedef.startsWith('.') && /(^|\/)modules(\/|$)/.test(hedef)) ihlal.push(`R3 ${goreli(dosya)} -> ${hedef} (${klasor}/ modules'a bağlanamaz)`);
-      }
+  for (const dosya of ALTYAPI_KLASORLERI.flatMap(tsDosyalari)) {
+    for (const { hedef } of icAktarmalar(fs.readFileSync(dosya, 'utf8'))) {
+      if (!hedef.startsWith('.')) continue;
+      const hedefKlasor = ilkKlasor(path.resolve(path.dirname(dosya), hedef));
+      if (KATMAN_KLASORLERI.includes(hedefKlasor)) ihlal.push(`R3 ${goreli(dosya)} -> ${hedef} (${ilkKlasor(dosya)}/ ${hedefKlasor}/ klasörüne bağlanamaz)`);
     }
+  }
+  return ihlal;
+};
+
+const yerlesimIhlalleri = () => {
+  const ihlal = [];
+  for (const dosya of katmanDosyalari()) {
+    const k = katman(dosya);
+    const beklenen = k ? KLASOR[k] : 'rules'; // katmansız yardımcılar (komisyon, vitrinOrtak) rules/ altında
+    if (ilkKlasor(dosya) !== beklenen) ihlal.push(`R4 ${goreli(dosya)} (${k || 'katmansız'} dosyası ${beklenen}/ içinde olmalı)`);
   }
   return ihlal;
 };
@@ -125,27 +150,36 @@ test('tarayıcı: import, import type, export-from, yan etkili import ve require
 });
 
 test('tarayıcı: katman dosya adından bulunur', () => {
-  assert.equal(katman('modules/musteriler/musteriler.service.ts'), 'service');
-  assert.equal(katman('modules/motor/ikinciElMotor/ikinciElMotor.gorunum.ts'), 'gorunum');
-  assert.equal(katman('modules/vitrin/vitrin.ortak.ts'), null);
+  assert.equal(katman('services/musteriler.service.ts'), 'service');
+  assert.equal(katman('rules/ikinciElMotor.gorunum.ts'), 'gorunum');
+  assert.equal(katman('rules/vitrinOrtak.ts'), null);
 });
 
-test('tarayıcı: gerçekten dosya buluyor (her modülde controller ve service var)', () => {
-  const dosyalar = tsDosyalari(path.join(KOK, 'modules'));
-  assert.ok(dosyalar.length > 50, `beklenenden az dosya: ${dosyalar.length}`);
-  for (const k of ['routes', 'controller', 'service', 'repository']) {
-    assert.ok(dosyalar.some((d) => katman(d) === k), `${k} katmanında dosya bulunamadı`);
-  }
+test('tarayıcı: gerçekten dosya buluyor (her katman klasöründe dosya var)', () => {
+  assert.ok(katmanDosyalari().length > 60, `beklenenden az dosya: ${katmanDosyalari().length}`);
+  for (const klasor of KATMAN_KLASORLERI) assert.ok(tsDosyalari(klasor).length > 0, `${klasor}/ boş ya da yok`);
+  for (const klasor of ALTYAPI_KLASORLERI) assert.ok(tsDosyalari(klasor).length > 0, `${klasor}/ boş ya da yok`);
 });
 
 // --- Kurallar ---
 
 test('R1+R2: katman sırası bozulmamış, service/repository express bilmiyor', () => {
-  assert.deepEqual(modulIhlalleri(), []);
+  assert.deepEqual(katmanIhlalleri(), []);
 });
 
-test("R3: core/ ve shared/ modules/'a bağlanmıyor", () => {
-  assert.deepEqual(icdenDisaIhlalleri(), []);
+test('R3: middleware/, database/ ve lib/ katman klasörlerine bağlanmıyor', () => {
+  assert.deepEqual(altyapiIhlalleri(), []);
+});
+
+test('R4: her dosya kendi katman klasöründe (service → services/, routes → routes/ ...)', () => {
+  assert.deepEqual(yerlesimIhlalleri(), []);
+});
+
+test('R5: eski klasörler (modules/, core/, shared/) geri gelmedi', () => {
+  assert.deepEqual(
+    ESKI_KLASORLER.filter((k) => fs.existsSync(path.join(KOK, k))),
+    [],
+  );
 });
 
 test('istisna listesi boş kalmalı (büyütmek için gerekçe şart)', () => {
